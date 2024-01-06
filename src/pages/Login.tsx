@@ -9,7 +9,7 @@ import {
   IonItem,
   IonLabel, IonNote,
   IonPage,
-  IonRow, IonText, IonTitle, IonToolbar
+  IonRow, IonText, IonTitle, IonToolbar, useIonToast
 } from "@ionic/react";
 import {useKeycloak} from "../store/hook/AuthProvider";
 import {useForm} from "react-hook-form";
@@ -27,14 +27,24 @@ const Login: FC = () => {
 
   const loginData: LoginCredentials = {email: "", password: "", stayLoggedIn: false};
   const {keycloak} = useKeycloak();
+  const [showToast] = useIonToast();
 
   const {handleSubmit, control, register} = useForm({defaultValues: loginData});
 
 
-  const onSubmit = (data: any) => {
-    keycloak.login(data.email, data.password)
+  const onSubmit = async (data: any) => {
+    const succesfullLogin = await keycloak.login(data.email, data.password)
       // .then(() => history.push("/"))
-      .catch((err) => console.log(err));
+
+    if (!succesfullLogin) {
+      showToast({
+        message:
+          "Ihre Login Daten sind nicht korrekt. Bitte versuchen Sie es erneut.",
+        duration: 4500,
+        color: "warning",
+      });
+    }
+    
   }
 
   return (

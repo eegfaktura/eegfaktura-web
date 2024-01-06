@@ -168,21 +168,26 @@ export class KeycloakService {
     };
 
     const timeLocal = new Date().getTime();
-    return new Promise<boolean>((resolve, reject) => {
-      fetch(url, {
-        method: 'POST',
-        headers: {'Content-Type': "application/x-www-form-urlencoded"},
-        body: new URLSearchParams(data),
-      })
-        .then((response: Response) => response.json())
-        .then((jwt: jwtToken) => this.saveToken(jwt, timeLocal))
-        // .then(() => {
-        //   localStorage.setItem("user", username);
-        //   localStorage.setItem("passwd", password);
-        // })
-        .catch((err) => reject(false))
-
-      resolve(true);
+    return new Promise<boolean>(async (resolve, reject) => {
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams(data),
+        });
+        if (response.status === 200) {
+          const jwt = await response.json();
+          this.saveToken(jwt, timeLocal);
+          // Optionally, perform additional actions here if needed.
+          // localStorage.setItem("user", username);
+          // localStorage.setItem("passwd", password);
+          resolve(true); // Resolve the promise as true for a successful login.
+        } else {
+          resolve(false); // Reject the promise for a failed login.
+        }
+      } catch (err) {
+        resolve(false); // Handle unexpected errors and reject the promise.
+      }
     })
 
   }
