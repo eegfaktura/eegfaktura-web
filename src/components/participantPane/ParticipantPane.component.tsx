@@ -471,13 +471,28 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = ({
         clearingDocumentDate: documentDate? documentDate.toISOString().substring(0,10) : documentDate} as ClearingPreviewRequest;
       dispatcher(
         fetchEnergyBills({tenant, invoiceRequest}))
-        .then(() => {
+        .then((returnValue: any) => {
+                              returnValue.payload.billing.abstractText =
+                                'Abrechnung fehlgeschlagen: Cannot invoke "java.lang.Boolean.booleanValue()" because the return value of "org.vfeeg.eegfaktura.billing.domain.BillingMasterdata.getTariffUseVat()" is null';
+            if (
+              returnValue.payload.billing.abstractText
+                .toString()
+                .includes("Abrechnung fehlgeschlagen")
+            ) {
+              presentAlert({
+                subHeader: "Fehler bei der Vorschauerstellung",
+                message:
+                  "Bei der Erstellung der Vorschau ist ein Fehler aufgetreten. Bitte prüfen Sie die Stammdaten und achten Sie vor allem darauf, bei allen Nutzern & Zählpunkten einen Tarif zu setzen. Wiederholen Sie den Vorgang, wenn allen Daten korrigiert wurden.",
+                buttons: ["OK"],
+              });
+            }
             dispatcher(fetchBillingRun({
               tenant: tenant,
               clearingPeriodType: activePeriod.type,
               clearingPeriodIdentifier: createPeriodIdentifier(activePeriod.type,
                 activePeriod.year, activePeriod.segment)
             }))
+
           }
         );
     }
