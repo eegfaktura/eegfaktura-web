@@ -472,8 +472,6 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = ({
       dispatcher(
         fetchEnergyBills({tenant, invoiceRequest}))
         .then((returnValue: any) => {
-                              returnValue.payload.billing.abstractText =
-                                'Abrechnung fehlgeschlagen: Cannot invoke "java.lang.Boolean.booleanValue()" because the return value of "org.vfeeg.eegfaktura.billing.domain.BillingMasterdata.getTariffUseVat()" is null';
             if (
               returnValue.payload.billing.abstractText
                 .toString()
