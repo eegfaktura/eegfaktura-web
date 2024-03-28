@@ -107,6 +107,7 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
         case "EZP":
           return (
             <div>
+              <NumberInputForm label={t("centPerKWh")} control={control} name={"centPerKWh"}/>
               <NumberInputForm label="Arbeitspreis in ct/kWh (netto)" control={control} name={"centPerKWh"}/>
             </div>
           )
