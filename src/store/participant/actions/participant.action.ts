@@ -121,7 +121,7 @@ export const confirmParticipant = createAsyncThunk(
     return await Api.eegService.confirmParticipant(tenant, participantId);
   }
 )
-
+/*
 export const archiveParticipant = createAsyncThunk(
   `${featureKey}/archive`,
   async (arg: {participant: EegParticipant, tenant: string}, { rejectWithValue }) => {
@@ -137,3 +137,4 @@ export const archiveParticipant = createAsyncThunk(
     }
   }
 )
+*/

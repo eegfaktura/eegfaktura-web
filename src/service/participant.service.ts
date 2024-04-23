@@ -8,7 +8,7 @@ export class ParticipantService extends BaseService {
     super(authService);
   }
 
-  async archiveParticipant(tenant: string, id: string): Promise<any> {
+  /*async archiveParticipant(tenant: string, id: string): Promise<any> {
     const token = await this.lookupToken()
     return fetch(`${API_API_SERVER}/participant/${id}`, {
       method: 'DELETE',
@@ -17,8 +17,8 @@ export class ParticipantService extends BaseService {
         'Accept-Type': 'application/json'
       },
     }).then(this.handleErrors).then(res => res.json());
-  }
-
+  }*/
+  
   async updateParticipantPartial(tenant: string, id: string, value: { path: string, value: any }): Promise<EegParticipant> {
     const token = await this.lookupToken()
     return fetch(`${API_API_SERVER}/participant/v2/${id}`, {

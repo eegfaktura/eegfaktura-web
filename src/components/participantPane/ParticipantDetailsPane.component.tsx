@@ -25,7 +25,6 @@ import {Metering} from "../../models/meteringpoint.model";
 import MemberFormComponent from "../MemberForm.component";
 import MeterFormComponent from "./MeterForm.component";
 import {
-  archiveParticipant,
   confirmParticipant, moveMeteringPoint, participantsSelector1, removeMeteringPoint,
   selectedMeterSelector,
   selectedParticipantSelector, selectParticipantById,
@@ -199,35 +198,8 @@ const ParticipantDetailsPaneComponent: FC = () => {
     }
   }
 
-  const archive = (sp: EegParticipant) => {
-    participantAlert({
-      subHeader: "Mitglied archivieren",
-      message: "Das Mitglied ist nach dem ARCHIVIERUNG'S Prozess in deiner Übersicht nicht mehr verhanden.",
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel',
-        },
-        {
-          text: 'OK',
-          role: 'confirm',
-        },
-      ],
-      onDidDismiss: (e: CustomEvent) => {
-        if (e.detail.role === 'confirm') {
-          dispatcher(archiveParticipant({participant: sp, tenant: tenant!.tenant}))
-            .unwrap()
-            .catch(() => {
-              toaster({
-                message: 'Mitglied konnte nicht gelöscht werden. Bitte kontaktieren Sie ihren Administrator.',
-                duration: 4500,
-                color: "danger"
-              })
-            })
-        }
-      },
-    })
-  }
+
+  
 
   const hasStatusCode = (meter: Metering) => {
     return !!(meter && meter.statusCode && meterInvalidCodes.includes(meter.statusCode))
@@ -239,15 +211,6 @@ const ParticipantDetailsPaneComponent: FC = () => {
       <div className={"details-body"} style={{display: "flex", flexDirection: "column", height: "100%"}}>
         <div className={"details-header"}>
           <div><h4>{selectedParticipant.firstname} {selectedParticipant.lastname}</h4></div>
-          <div style={{minWidth: "240px"}}>
-            <IonItem button lines="none" style={{fontSize: "12px", marginRight: "60px"}}
-                     className={"participant-header"}
-                     onClick={() => archive(selectedParticipant)}>
-              <IonIcon icon={trashBin} slot="start"
-                       style={{marginRight: "10px", fontSize: "16px"}}></IonIcon>
-              <IonLabel>Benutzer archivieren</IonLabel>
-            </IonItem>
-          </div>
         </div>
         <div style={{display: "flex", flexDirection: "row", height: "100%"}}>
           <div style={{display: "flex", flexDirection: "column", width: "50%"}}>
