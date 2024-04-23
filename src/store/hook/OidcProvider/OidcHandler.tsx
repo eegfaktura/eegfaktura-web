@@ -26,7 +26,7 @@ export const OidcHandler: FC<PropsWithChildren & {hasTried: () => boolean}> = ({
     })()
   }, [auth, hasTriedSignin]);
 
-  if (auth.isLoading) {
+  if (auth.isLoading || !auth.isAuthenticated) {
     return (
       <div className="full-screen-center">
         <IonSpinner style={{margin: "auto", height: "48px", width: "48px"}}/>

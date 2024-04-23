@@ -168,6 +168,21 @@ export class EegService extends EegBaseService {
     }).then(this.handleErrors).then(res => res.json());
   }
 
+  async updateMeteringPointPartFact(tenant: string, participantId: string, meter: string, partFact: number): Promise<Metering> {
+    const token = await this.lookupToken()
+    // return new Promise<Metering>((resolve, reject) => resolve(meter));
+    const body = {partFact: partFact}
+    return await fetch(`${API_API_SERVER}/meteringpoint/${participantId}/update/${meter}/partfact`, {
+      method: 'PUT',
+      headers: {
+        ...this.getSecureHeaders(token, tenant),
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(body)
+    }).then(this.handleErrors).then(res => res.json());
+  }
+
   async moveMeteringPoint(tenant: string, sParticipantId: string, dParticipantId: string, meter: Metering): Promise<Metering> {
     const token = await this.lookupToken()
     // return new Promise<Metering>((resolve, reject) => resolve(meter));

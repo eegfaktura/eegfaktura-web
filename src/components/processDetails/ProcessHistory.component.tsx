@@ -259,13 +259,12 @@ const ProcessHistoryComponent: FC<ProcessHistoryComponentProps> = ({eeg, edaProc
       case "EC_PRTFACT_CHANGE": {
         const history_ec_prt_fact_change = msg.map((e) => {
           e.date = new Date(e.date)
-          e.meteringPoint = e.message.meterList ? e.message.meterList.length > 0 ?
-            e.message.meterList[0].meteringPoint ? "-" : "-" : "-" : "-"
+          e.meteringPoint = e.message.meterList ? e.message.meterList.length > 0 ? e.message.meterList[0].meteringPoint : "-" : "-"
           e.meteringPoints = e.message.meterList ? e.message.meterList.map((m: any) => m.meteringPoint) : []
           switch (e.processType) {
             case "ANFORDERUNG_CPF":
               e.responseCode = e.message.meterList ? e.message.meterList.length > 0 ?
-                (e.message.meterList[0].partFact+' %') ? "" : "" : "" : ""
+                (e.message.meterList[0].partFact+' %') : "" : ""
               return e
             default:
               e.responseCode = e.message.responseData.reduce((z: string, r: Record<string, any>) => r.responseCode ? EdaResponseCode.getMessage(r.responseCode[0]) : z, "-")

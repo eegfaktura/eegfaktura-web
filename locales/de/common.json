@@ -75,7 +75,9 @@
     },
     "podList": {
       "title": "Teilnehmerliste anfordern",
-      "desc": "Anfordern der Teilnehmer einer EEG."
+      "desc": "Anfordern der Teilnehmer einer EEG.",
+      "info": "Nachdem der Antrag an den Netzbetreiber übermittelt wurde, wird automatisch eine E-Mail an den zuständigen Verantwortlichen der EEG gesendet, sobald eine Antwort vorliegt. Die Bearbeitung dieses Vorgangs kann je nach Netzbetreiber einige Zeit in Anspruch nehmen und erfolgt daher asynchron.",
+      "submit": "Zählpunktliste anfordern"
     },
     "activateMeter": {
       "title": "Zählpunkt aktivieren",

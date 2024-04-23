@@ -1,7 +1,7 @@
 import React, {ClipboardEvent, FC, useEffect, useState} from "react";
 import {IonButton, IonCol, IonGrid, IonIcon, IonList, IonRow, useIonAlert} from "@ionic/react";
 import SelectForm from "../form/SelectForm.component";
-import InputForm from "../form/InputForm.component";
+import InputForm, {PartialChangeFunction} from "../form/InputForm.component";
 import CheckboxComponent from "../form/Checkbox.component";
 import {Metering} from "../../models/meteringpoint.model";
 import {EegTariff} from "../../models/eeg.model";
@@ -18,9 +18,10 @@ interface MeterFormElementProps {
   participant?: EegParticipant
   meterReadOnly?: boolean
   onChange?: (values: {name: string, value: any}[], event?: any) => void
+  onPartChange?: PartialChangeFunction
 }
 
-const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterReadOnly, onChange}) => {
+const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterReadOnly, onChange, onPartChange}) => {
 
   const {t} = useLocale("common")
   const area = useEegArea()
@@ -64,6 +65,14 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
     const value = s === 0 ? "CONSUMPTION" : "GENERATION"
     setValue(`direction`, value);
     _onChange && _onChange("direction", value)
+  }
+
+  const onChangePartFact = (name: string, pf: any, e: any) => {
+    if (onPartChange) {
+      onPartChange(name, pf, e)
+    } else {
+      _onChange && _onChange(name, pf, e)
+    }
   }
 
   const handleMeterPaste = (e: ClipboardEvent<HTMLIonInputElement>) => {
@@ -134,8 +143,8 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
                    onPaste={handleMeterPaste}
                    onChangePartial={_onChange}
         />
-        <InputForm name={"partFact"} label={t("process.partFact.label")} control={control} rules={{required: true}}
-                   type="number" onChangePartial={_onChange} protectedControl={!isChangeable()}/>
+        <InputForm name={"partFact"} label={t("process.partFact.label")} control={control} isNumber={true} rules={{required: true}}
+                   type="number" inputmode="numeric" onChangePartial={onChangePartFact} protectedControl={!isChangeable()}/>
         {area && area === 'BEG' && <>
             <InputForm name={"gridOperatorId"} label={t("gridOperator_id")} control={control} rules={{required: true}}
                        type="text" onChangePartial={_onChange} protectedControl={!(isChangeable() && status !== 'INACTIVE')}/>

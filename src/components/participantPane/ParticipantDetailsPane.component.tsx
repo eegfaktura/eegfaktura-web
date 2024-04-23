@@ -202,7 +202,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
   
 
   const hasStatusCode = (meter: Metering) => {
-    return !!(meter && meter.statusCode && meterInvalidCodes.includes(meter.statusCode))
+    return !!(meter && (meter.status === 'INVALID' || meter.status === 'REJECTED') && meter.statusCode && meterInvalidCodes.includes(meter.statusCode))
   }
   if (!selectedParticipant) {
     return <></>

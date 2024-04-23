@@ -96,6 +96,15 @@ export const updateMeteringPoint = createAsyncThunk(
   }
 )
 
+export const updateMeteringPointPartFact = createAsyncThunk(
+  `${featureKey}/meter/update/participantPartFact`,
+  async (args: {tenant: string, participantId: string, meter: string, value: number}) => {
+    const {tenant, participantId, meter, value} = args
+    const res = await Api.eegService.updateMeteringPointPartFact(tenant, participantId, meter, value);
+    return {meter: res, participantId: participantId}
+  }
+)
+
 export const moveMeteringPoint = createAsyncThunk(
   `${featureKey}/meter/move`,
   async (args: {tenant: string, sParticipantId: string, dParticipantId: string, meter: Metering}) => {

@@ -11,7 +11,7 @@ import {
   saveNewParticipant,
   selectMetering,
   selectParticipant,
-  updateMeteringPoint,
+  updateMeteringPoint, updateMeteringPointPartFact,
   updateParticipant,
   updateParticipantPartial
 } from "../actions/participant.action";
@@ -78,6 +78,19 @@ export const reducer = createReducer(initialState, builder =>
               meters: state.entities[participantId] ?
                 state.entities[participantId]!.meters.map(m => m.meteringPoint === meter.meteringPoint ? meter : m) : undefined}
         })
+    })
+    .addCase(updateMeteringPointPartFact.fulfilled, (state, action) => {
+      const {meter, participantId} = action.payload;
+      return adapter.updateOne({...state, selectedMeter: meter.meteringPoint,
+        selectedParticipant: state.selectedParticipant
+          ? {...state.selectedParticipant,
+            meters: state.selectedParticipant.meters.map(m => m.meteringPoint === meter.meteringPoint ? meter: m)}
+          : undefined
+      }, {id: participantId, changes:
+          {...state.entities[participantId],
+            meters: state.entities[participantId] ?
+              state.entities[participantId]!.meters.map(m => m.meteringPoint === meter.meteringPoint ? meter : m) : undefined}
+      })
     })
     .addCase(moveMeteringPoint.fulfilled, (state, action) => {
       const {meter, sParticipantId, dParticipantId} = action.payload;

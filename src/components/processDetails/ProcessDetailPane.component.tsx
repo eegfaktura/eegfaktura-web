@@ -16,6 +16,7 @@ import DatepickerComponent from "../dialogs/datepicker.component";
 import ProcessRevokeMeteringpointComponent from "./ProcessRevokeMeteringpoint.component";
 import ProcessChangeParticipantFactorComponent from "./ProcessChangeParticipantFactor.component";
 import {Api} from "../../service";
+import ProcessPodListComponent from "./ProcessPodList.component";
 
 
 interface ProcessDetailPaneComponentProps {
@@ -44,7 +45,7 @@ const ProcessDetailPaneComponent: FC<ProcessDetailPaneComponentProps> = ({
         case 'EC_PRTFACT_CHANGE':
           return <ProcessChangeParticipantFactorComponent eeg={eeg} meters={meters} participants={participants} edaProcess={selectedProcess}/>
         case 'EC_PODLIST':
-          return <div><IonButton onClick={() => Api.eegService.syncMeteringPointList(eeg.rcNumber)}>Zählpunktliste anfordern</IonButton></div>
+          return <ProcessPodListComponent eeg={eeg} edaProcess={selectedProcess}/>
         case 'HISTORY':
           return <ProcessHistoryComponent eeg={eeg} edaProcess={selectedProcess} today={new Date()}/>
       }

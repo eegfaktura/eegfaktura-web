@@ -110,9 +110,9 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
           <InputForm name={"contact.email"} label={t("email")} control={control} rules={{
             required: t("warnings.email", {context: "missing"}),
             pattern: {
-              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i,
+              value: /^([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4};*)+$/i,
               message: t("warnings.email", {context: "wrong"})}
-          }} type="text" error={errors.contact?.email} onChangePartial={onUpdateBaseData}/>
+          }} isEmail={true} multiple={true} error={errors.contact?.email} onChangePartial={onUpdateBaseData}/>
           <InputForm name={"vatNumber"} label={t("uid")}control={control} type="text" onChangePartial={onUpdateBaseData}/>
         </IonList>
       {/*</form>*/}

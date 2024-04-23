@@ -25,12 +25,12 @@ const initApiServices = async (config: AppConfig): Promise<AuthService> => {
     client_id: config.resource,
     redirect_uri: window.location.origin,
     automaticSilentRenew: false,
-    userStore: new WebStorageStateStore({
-      store: sessionStorage
-    }),
-    revokeTokensOnSignout: true,
+    // userStore: new WebStorageStateStore({
+    //   store: sessionStorage
+    // }),
+    // revokeTokensOnSignout: true,
     post_logout_redirect_uri: window.location.origin,
-    includeIdTokenInSilentSignout: true,
+    // includeIdTokenInSilentSignout: true,
   } as UserManagerSettings;
 
   const authService = new AuthService(userManagerConfig)

@@ -616,7 +616,9 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
       const filterEntries = (d: EegParticipant) => {
         return [
           d.lastname.toLowerCase().indexOf(query) > -1 ||
-            d.firstname.toLowerCase().indexOf(query) > -1,
+          d.firstname.toLowerCase().indexOf(query) > -1 ||
+          d.participantNumber.toLowerCase().indexOf(query) > -1 ||
+          (d.contact && d.contact.email.toLowerCase().indexOf(query) > -1),
           filterMetering(d),
         ];
       };

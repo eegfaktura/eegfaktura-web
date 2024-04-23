@@ -5,5 +5,10 @@
   "E_1021_tariff_create": "Tarif konnte nicht generiert werden.",
   "intern": {
     "empty_eeg": "Keine aktive EEG geladen"
+  },
+
+  "process": {
+    "podList_ok": "Zählpunktliste konnte erfolgreich angefordert werden.",
+    "podList_error": "Zählpunktliste konnte nicht erfolgreich angefordert werden."
   }
 }
