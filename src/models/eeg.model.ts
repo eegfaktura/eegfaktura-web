@@ -148,6 +148,7 @@ export interface EegTariff {
   discount?: string
   useMeteringPointFee: boolean
   meteringPointFee?: number
+  meteringPointVat?: number
 }
 
 export enum MONTHNAME {

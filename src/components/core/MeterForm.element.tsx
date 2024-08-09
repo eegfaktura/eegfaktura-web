@@ -99,6 +99,14 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
       t("producer_tariff")
   }
 
+  const validatePartFaktor = (value: string) => {
+    const n = Number(value)
+    if (isNaN(n)) {
+      return false
+    }
+    return n <= 100 && n > 0
+  }
+
   return (
     <>
       <IonGrid>
@@ -143,7 +151,9 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
                    onPaste={handleMeterPaste}
                    onChangePartial={_onChange}
         />
-        <InputForm name={"partFact"} label={t("process.partFact.label")} control={control} isNumber={true} rules={{required: true}}
+        <InputForm name={"partFact"} label={t("process.partFact.label")} control={control} isNumber={true}
+                   // rules={{required: true, validate: validatePartFaktor || 'error message'}}
+                   rules={{required:true, validate: validatePartFaktor || "error message"}}
                    type="number" inputmode="numeric" onChangePartial={onChangePartFact} protectedControl={!isChangeable()}/>
         {area && area === 'BEG' && <>
             <InputForm name={"gridOperatorId"} label={t("gridOperator_id")} control={control} rules={{required: true}}

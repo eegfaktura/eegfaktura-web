@@ -40,7 +40,8 @@ export class AuthService extends UserManager {
     this.claims = {}
 
     Log.setLogger(console);
-    Log.setLevel(Log.DEBUG);
+    // Log.setLevel(Log.DEBUG);
+    Log.setLevel(Log.ERROR);
 
     this._logoutActive = false;
   }

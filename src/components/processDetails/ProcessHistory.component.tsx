@@ -91,9 +91,14 @@ const ProcessHistoryComponent: FC<ProcessHistoryComponentProps> = ({eeg, edaProc
                     style={{gridColumnStart: "1", gridColumnEnd: "4", fontSize: "12px"}}>Conversation-Id: {id}</span>
             {hl.map((h, ii) => (
               <React.Fragment key={"line_item" + ii}>
-                <span style={{gridColumnStart: "1"}}>{h.date.toDateString()}</span>
-                <span style={{gridColumnStart: "2"}}>{h.processType}</span>
-                <span style={{gridColumnStart: "3"}}>{h.responseCode}</span>
+                <span style={{gridColumnStart: "1"}}>
+                  <div>
+                    <div style={{fontSize: "0.9em"}}>{h.date.toDateString()}</div>
+                    <div style={{fontSize: "0.8em"}}>{h.date.toLocaleTimeString()}</div>
+                  </div>
+                </span>
+                <span style={{gridColumnStart: "2", margin: "auto 0"}}>{h.processType}</span>
+                <span style={{gridColumnStart: "3", margin: "auto 0"}}>{h.responseCode}</span>
               </React.Fragment>
             ))}
             <span

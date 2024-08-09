@@ -34,14 +34,24 @@ interface BasicSelectFormProps {
   multiple?: IsMulti,
   onChangePartial?: (name: string, value: any, event?: any) => void,
   interfaceOptions?: any,
+  defaultValue?: string,
 }
 
-export const BasicSelectComponent: FC<BasicSelectFormProps> = ({control, name, label, options, error, rules, multiple, ...rest}) => {
+const getDefaultOption = (options: SelectOptions[], defaultValue?: string) => {
+  if (defaultValue) {
+    const found = options.find(o => o.value === defaultValue)
+    return found === undefined ? null : found
+  }
+  return null
+}
+
+export const BasicSelectComponent: FC<BasicSelectFormProps> = ({control, name, label, options, error, rules, multiple, defaultValue, ...rest}) => {
   const [isClearable, setIsClearable] = useState(true);
   const [isSearchable, setIsSearchable] = useState(true);
   // const [selectedValue, setSelectedValue] = useState<IsMulti extends boolean ? SelectOptions[] | null : SelectOptions | null>(null)
-  const [selectedValue, setSelectedValue] = useState<OnChangeValue<SelectOptions, IsMulti>>(null)
+  const [selectedValue, setSelectedValue] = useState<OnChangeValue<SelectOptions, IsMulti>>(getDefaultOption(options, defaultValue))
   const controlValue = useWatch({control, name: name, defaultValue: undefined})
+
 
   useEffect(() => {
     if (!controlValue) {
@@ -57,6 +67,7 @@ export const BasicSelectComponent: FC<BasicSelectFormProps> = ({control, name, l
     if(selectedOptions) {
       change(multiple ? (selectedOptions as SelectOptions[]).map(s => s.value) : (selectedOptions as SelectOptions).value);
     }
+    console.log("SET SELECTED OPTION", selectedOptions)
     setSelectedValue(selectedOptions)
   }
 
@@ -72,6 +83,7 @@ export const BasicSelectComponent: FC<BasicSelectFormProps> = ({control, name, l
           rules={rules}
           render={({field}) => {
             const {onChange, value} = field;
+            console.log("DEFAULT VALUE", value)
             return (
               <>
                 <Select
@@ -98,6 +110,7 @@ export const BasicSelectComponent: FC<BasicSelectFormProps> = ({control, name, l
                   options={options}
                   onChange={onSelectionChanged(onChange)}
                   value={selectedValue}
+                  defaultValue={options.find(o => o.value === value)}
                   isDisabled={rest.disabled}
                 />
               </>

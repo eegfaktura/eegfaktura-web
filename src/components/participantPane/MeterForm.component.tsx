@@ -34,7 +34,7 @@ const MeterFormComponent: FC<MeterFromComponentProps> = ({meteringPoint}) => {
 
   // const {handleSubmit, control, watch, formState: {errors, isDirty, dirtyFields}, reset, clearErrors} = useForm<Metering>({mode: 'onBlur', defaultValues: {...meteringPoint}, values: metering});
 
-  const formMethods = useForm<Metering>({defaultValues: metering});
+  const formMethods = useForm<Metering>({defaultValues: metering, mode: "all"});
   const {handleSubmit, formState: { dirtyFields}, reset, setValue} = formMethods
 
   useEffect(() => {
@@ -65,12 +65,19 @@ const MeterFormComponent: FC<MeterFromComponentProps> = ({meteringPoint}) => {
     if (invalid || !isDirty) {
       return
     }
+
+    const _factValue = Number(value)
+    if (isNaN(_factValue) || _factValue > 100 || _factValue < 1) {
+      reset()
+      return
+    }
+
     console.log("OnChangePartFact", name, value, typeof value, formMethods)
     // setValue(name as keyof Metering, value, {shouldDirty: true, shouldValidate: true})
     const participantId = participant?.id;
     if (participantId && metering) {
       const meter = metering.meteringPoint
-      await dispatcher(updateMeteringPointPartFact({tenant, participantId, meter, value}))
+      await dispatcher(updateMeteringPointPartFact({tenant, participantId, meter, value: _factValue}))
       reset({[name]: value})
     }
   }

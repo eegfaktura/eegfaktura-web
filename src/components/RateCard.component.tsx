@@ -3,6 +3,7 @@ import {EegTariff} from "../models/eeg.model";
 import {IonCard, IonCardContent, IonCol, IonGrid, IonIcon, IonLabel, IonRow} from "@ionic/react";
 import {bug, person} from "ionicons/icons";
 import {eegPlug, eegSolar} from "../eegIcons";
+import {useLocale} from "../store/hook/useLocale";
 
 interface RateCardComponentProps {
   rate: EegTariff;
@@ -11,7 +12,7 @@ interface RateCardComponentProps {
 }
 
 const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect}) => {
-
+  const {t} = useLocale("common")
   const defineIcon = (type: string) => {
     switch (type) {
       case "EEG":
@@ -38,15 +39,15 @@ const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect
         return (
           <div>
             <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
-              <p>Mitgliedsbeitrag</p>
+              <p>{t("participantFee_card")}</p>
               <p>{(Number(rate.participantFee)) + " €"}</p>
             </div>
             {rate.useVat && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
-                <p>Umsatzsteuer</p>
+                <p>{t('vatInPercent_card')}</p>
                 <p>{(rate.vatInPercent && rate.vatInPercent.length > 0 ? rate.vatInPercent : "0") + " %"}</p>
             </div>}
             {rate.discount && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
-              <p>Rabatt</p>
+              <p>{t('discount_card')}</p>
               <p>{rate.discount + " %"}</p>
             </div>}
           </div>
@@ -55,23 +56,23 @@ const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect
         return (
           <div>
             <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
-              <p>Cent pro kWh</p>
+              <p>{t("centPerKWh_card")}</p>
               <p>{rate.centPerKWh ? rate.centPerKWh.toString().replace(".", ",") + " Cent" : ''}</p>
             </div>
             {rate.useVat && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
-                <p>Umsatzsteuer</p>
+                <p>{t('vatInPercent_card')}</p>
                 <p>{(rate.vatInPercent && rate.vatInPercent.length > 0 ? rate.vatInPercent : "0") + " %"}</p>
             </div>}
             {rate.useMeteringPointFee && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
-                <p>Zählpunktgebühr</p>
+                <p>{t('meteringPointFee_card')}</p>
                 <p>{rate.meteringPointFee + " €"}</p>
             </div>}
             {rate.freeKWh && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
-              <p>Inklusive kWh</p>
+              <p>{t('freeKWh_card')}</p>
               <p>{rate.freeKWh + " kWh"}</p>
             </div>}
             {rate.discount && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
-              <p>Rabatt</p>
+              <p>{t('discount_card')}</p>
               <p>{rate.discount + " %"}</p>
             </div>}
           </div>
@@ -80,19 +81,19 @@ const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect
         return (
           <div>
             <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
-              <p>Cent pro kWh</p>
+              <p>{t("centPerKWh_card")}</p>
               <p>{rate.centPerKWh ? rate.centPerKWh.toString().replace(".", ",") + " Cent" : ''}</p>
             </div>
             {rate.useVat && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
-                <p>Umsatzsteuer</p>
+                <p>{t('vatInPercent_card')}</p>
                 <p>{(rate.vatInPercent && rate.vatInPercent.length > 0 ? rate.vatInPercent : "0") + " %"}</p>
             </div>}
             {rate.useMeteringPointFee && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
-                <p>Zählpunktgebühr</p>
+                <p>{t('meteringPointFee_card')}</p>
                 <p>{rate.meteringPointFee + " €"}</p>
             </div>}
             {rate.discount && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
-              <p>Rabatt</p>
+              <p>{t('discount_card')}</p>
               <p>{rate.discount + " %"}</p>
             </div>}
           </div>

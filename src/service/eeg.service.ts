@@ -429,9 +429,9 @@ export class EegService extends EegBaseService {
     }).then(this.handleErrors).then(response => response.blob());
   }
 
-  async syncMeteringPointList(tenant: string): Promise<void> {
+  async syncMeteringPointList(tenant: string, operatorId: string): Promise<void> {
     const token = await this.lookupToken()
-    return await fetch(`${API_API_SERVER}/eeg/sync/participants`, {
+    return await fetch(`${API_API_SERVER}/eeg/sync/participants/${operatorId}`, {
       method: 'POST',
       headers: {
         ...this.getSecureHeaders(token, tenant),
@@ -455,7 +455,7 @@ export class EegService extends EegBaseService {
     }).then(this.handleErrors); // Response with 201 - no Content
   }
 
-  async revokeMeteringPoint(tenant: string, participantId: string, meters: {meter: string, direction: string}[], from: number, reason?: string): Promise<any> {
+  async revokeMeteringPoint(tenant: string, participantId: string, meters: {meter: string, direction: string, consentId: string}[], from: number, reason?: string): Promise<any> {
     const token = await this.lookupToken()
 
     const body = {meteringPoints: meters, from: from, reason: reason}
@@ -469,7 +469,7 @@ export class EegService extends EegBaseService {
     }).then(this.handleErrors).then(res => res.json());
   }
 
-  async changeMeterPartitionFactor(tenant: string, meters: {meter: string, direction: MeterDirectionType, activation: Date, partFact: number}[]): Promise<any> {
+  async changeMeterPartitionFactor(tenant: string, meters: {meter: string, direction: MeterDirectionType, gridOperatorId: string, activation: Date, partFact: number}[]): Promise<any> {
     const token = await this.lookupToken()
 
     const body = {meteringPoints: meters}
@@ -534,6 +534,7 @@ export class EegService extends EegBaseService {
       },
     }).then(this.handleErrors).then(res => res.json());
   }
+
   async getHistories(tenant: string, beginTimestamp: number, endTimestamp: number): Promise<EdaHistories> {
     const token = await this.lookupToken()
     return await fetch(`${API_API_SERVER}/process/history?start=${beginTimestamp}&end=${endTimestamp}`, {
@@ -542,6 +543,16 @@ export class EegService extends EegBaseService {
         ...this.getSecureHeaders(token, tenant),
       },
     }).then((res) => this.handleErrors(res)).then(res => res.json());
+  }
+
+  async getGridOperators(tenant: string): Promise<Record<string, string>> {
+    const token = await this.lookupToken()
+    return await fetch(`${API_API_SERVER}/eeg/gridoperators`, {
+      method: 'GET',
+      headers: {
+        ...this.getSecureHeaders(token, tenant),
+      },
+    }).then(this.handleErrors).then(res => res.json());
   }
 }
 

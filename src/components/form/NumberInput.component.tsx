@@ -44,12 +44,14 @@ const NumberInput: FC<NumberInput> = ({
                                         onKeyUp = noop
                                       }) => {
 
-  const [value, setValue] = useState<string>(initialValue ? initialValue.toString().replace('.', ',') : "");
+  const [value, setValue] = useState<string>("");
   const [cursor, setCursor] = useState<number | null>(null);
   const inputRef = useRef<HTMLIonInputElement>()
 
+
   useEffect(() => {
-    initialValue && setValue(formatValue(initialValue.toString()))
+    console.log("NumberInput", name, value)
+    setValue(initialValue ? formatValue(initialValue.toString()) : "")
   }, [initialValue]);
 
   // useEffect(() => {
@@ -201,8 +203,9 @@ const NumberInputForm = <T extends FieldValues>(props: NumberInputFormProps<T>) 
         rules={rules}
         render={({field, fieldState, formState}) => {
           const {onChange, value, name, ref} = field;
+          console.log("Input: ", name, value)
           return (
-            <NumberInput onChange={onChange} name={name} label={label} placeholder={placeholder} initialValue={value}
+            <NumberInput onChange={onChange} name={name} label={label} placeholder={placeholder} initialValue={value || undefined}
                          decimalScale={2}/>)
         }}
       />

@@ -1,5 +1,5 @@
 import React, {FC, forwardRef, useEffect, useState} from "react";
-import {IonButton, IonContent, IonInput, IonItem} from "@ionic/react";
+import {IonButton, IonContent, IonInput, IonItem, useIonToast} from "@ionic/react";
 import InputForm from "../form/InputForm.component";
 import SelectForm from "../form/SelectForm.component";
 import DatePicker from "react-datepicker";
@@ -15,6 +15,7 @@ import {Api} from "../../service";
 import {meteringDisplayName} from "../../util/FilterHelper";
 import {useLocale} from "../../store/hook/useLocale";
 import {JoinStrings} from "../../util/Helper.util";
+import moment from "moment";
 
 interface ProcessValues {
   communityId: string | undefined
@@ -38,6 +39,8 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
   }
 
   const {t} = useLocale("common")
+  const {t: errorT} = useLocale("error")
+
   const {handleSubmit, reset,
     control, watch,
     setValue, formState} = useForm<ProcessValues>({defaultValues: processValues})
@@ -46,16 +49,25 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
   const [reason, setReason] = useState<string|undefined>()
   const [meteringPoints, participantId] = watch(['meteringPoints', 'participantId'])
 
-  // useEffect(() => {
-  //   if (!participantId) {
-  //     if (meteringPoint) {
-  //       const p = participants.find(p => p.meters.find(m => m.meteringPoint === meteringPoint))
-  //       if (p) {
-  //         setValue('participantId', p.id)
-  //       }
-  //     }
-  //   }
-  // }, [meteringPoints])
+  const [toaster] = useIonToast();
+
+  const infoToast = (message: string) => {
+    toaster({
+      message: message,
+      duration: 3500,
+      position: "bottom",
+    });
+  };
+
+  const errorToast = (message: string) => {
+    toaster({
+      message: message,
+      duration: 25500,
+      position: "bottom",
+      color: "danger",
+      buttons: [{text: "OK"}],
+    });
+  };
 
   useEffect(() => {
     if (participantId) {
@@ -73,14 +85,18 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
 
       const meter = meters.filter((m) => data.meteringPoints?.find((s:string) => s === m.meteringPoint))
       if (meter) {
-        Api.eegService.revokeMeteringPoint(
-          eeg.id.toUpperCase(), data.participantId,
-          meter.map(m => {return {meter: m.meteringPoint, direction: m.direction}}),
-          consentEndDate.getTime(), reason)
-          .finally(() => {
-            reset()
-            setConsentEndDate(null)
-          })
+        if (meter.filter(m => !(m.consentId && m.consentId.length > 0)).length === 0) {
+          Api.eegService.revokeMeteringPoint(
+            eeg.id.toUpperCase(), data.participantId,
+            meter.map(m => {return {meter: m.meteringPoint, direction: m.direction, consentId: m.consentId}}),
+            consentEndDate.getTime(), reason)
+            .finally(() => {
+              reset()
+              setConsentEndDate(null)
+            })
+        } else {
+          errorToast(errorT("process.revoke_consentIdEmpty"))
+        }
       }
     }
   }
@@ -122,6 +138,7 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
                   setConsentEndDate(update);
                 }}
                 customInput={<Component/>}
+                minDate={moment(Date.now()).add(1, 'day').toDate()}
               />
             </div>
             <IonItem lines="none" style={{zIndex: "0"}}>

@@ -1,7 +1,7 @@
-import React, {FC, useEffect} from "react";
+import React, {FC} from "react";
 import {IonCard, IonCardContent, IonCol, IonGrid, IonList, IonListHeader, IonRow} from "@ionic/react";
 import InputFormComponent from "./form/InputForm.component";
-import {FieldValues, useForm, useFormContext} from "react-hook-form";
+import {useFormContext} from "react-hook-form";
 import {EegTariff} from "../models/eeg.model";
 import CheckboxComponent from "./form/Checkbox.component";
 import ToggleButtonComponent from "./ToggleButton.component";
@@ -22,7 +22,7 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
       watch,
       reset,
       formState: {errors}
-    } = useFormContext<EegTariff>() //useForm({defaultValues: rate, values: rate, mode: 'all'});
+    } = useFormContext<EegTariff>()
 
     const setShowVat = (s: boolean) => {
       if (!s) {
@@ -83,6 +83,9 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
                                  checked={useMeteringPointFee!}/>
               {useMeteringPointFee &&
                 <NumberInputForm label={t("meteringPointFee")} control={control} name="meteringPointFee"/>}
+              {useMeteringPointFee && currentRateType === 'EZP' &&
+                <NumberInputForm label={t("meteringPointVat")} control={control} name="meteringPointVat"/>}
+
             </>
         )
       }

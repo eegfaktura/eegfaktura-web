@@ -3,15 +3,12 @@ import ProcessHeaderComponent from "./ProcessHeader.component";
 import ProcessContentComponent from "./ProcessContent.component";
 import CorePageTemplate from "../core/CorePage.template";
 import InputForm from "../form/InputForm.component";
-import {BasicSelectComponent, SelectOptions} from "../form/BasicSelect.component";
-import SelectForm from "../form/SelectForm.component";
-import DatePicker from "react-datepicker";
+import {BasicSelectComponent} from "../form/BasicSelect.component";
 import {IonButton, IonItem} from "@ionic/react";
 import {EdaProcess, Eeg} from "../../models/eeg.model";
 import {Metering, MeteringStatusType} from "../../models/meteringpoint.model";
 import {EegParticipant} from "../../models/members.model";
 import {useForm} from "react-hook-form";
-import {filterActiveMeter} from "../../util/FilterHelper.unit";
 import {FilterByMeterState, meteringDisplayName} from "../../util/FilterHelper";
 import {Api} from "../../service";
 import {useLocale} from "../../store/hook/useLocale";
@@ -70,7 +67,7 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
       if (meter) {
         Api.eegService.changeMeterPartitionFactor(
           eeg.id.toUpperCase(),
-          meter.map(m => {return {meter: m.meteringPoint, direction: m.direction, activation: m.participantState.activeSince, partFact: data.partFact || 100}}))
+          meter.map(m => {return {meter: m.meteringPoint, direction: m.direction, gridOperatorId: m.gridOperatorId, activation: m.participantState.activeSince, partFact: data.partFact || 100}}))
           .finally(() => {
             reset()
           })

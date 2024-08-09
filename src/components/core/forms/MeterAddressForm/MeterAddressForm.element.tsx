@@ -114,13 +114,13 @@ const MeterAddressFormElement: FC<MeterAddressFormElementProps> = ({
                           label={"Status"}
                           onChangePartial={_onChange}
               />
-            {currentMeterState === "ACTIVE" &&
-                <DatePickerFormElement control={control} name={"participantState.activeSince"} label="Aktiv seit"
-                                       placeholder={"Datum"} error={errors?.registeredSince} onChangeDate={_onChange}/>
-
-              // <DatePickerCoreElement initialValue={watch("participantState.activeSince")} onChange={_onChange} name={"participantState.activeSince"} label={"Aktiv seit"}/>
-            }
           </>
+      }
+      {currentMeterState === "ACTIVE" &&
+          <DatePickerFormElement control={control} name={"participantState.activeSince"} label="Aktiv seit"
+                                 placeholder={"Datum"} error={errors?.registeredSince} onChangeDate={_onChange}/>
+
+        // <DatePickerCoreElement initialValue={watch("participantState.activeSince")} onChange={_onChange} name={"participantState.activeSince"} label={"Aktiv seit"}/>
       }
     </IonList>
   )

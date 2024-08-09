@@ -80,7 +80,7 @@ const RateDetailPaneComponent: FC<RateDetailPaneComponentProps> = ({onSubmit, su
 
   if (selectedTariff) {
     return (
-      <div className={"details-body"} style={{height: "100%"}}>
+      <div className={"details-body"} style={{height: "100%", display: "flex", flexDirection: "column"}}>
         <div className={"details-header"}>
           <div><h4>{selectedTariff.name}</h4></div>
           <div style={{minWidth: "200px"}}>
@@ -92,13 +92,13 @@ const RateDetailPaneComponent: FC<RateDetailPaneComponentProps> = ({onSubmit, su
           </div>
         </div>
         <FormProvider {...formMethods}>
-          <div style={{display: "flex", flexDirection: "column"}}>
+          <div style={{display: "flex", flexDirection: "column", flexGrow: "1", overflow: "auto"}}>
             <div className={"rate-component"} style={{maxWidth: "600px",}}>
               <RateComponent rate={selectedTariff} onSubmit={onSubmit} submitId={submitId} mode={getMode()}/>
             </div>
           </div>
         </FormProvider>
-        <div className={"details-footer"}>
+        <div>
           <IonFooter>
             <IonToolbar className={"ion-padding-horizontal"}>
               <IonButton fill="clear" slot="start" onClick={() => dispatcher(selectRate(undefined))}>Zurück</IonButton>

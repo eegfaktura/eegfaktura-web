@@ -2,13 +2,12 @@ import React, {FC, useEffect, useState} from "react";
 import BarComponent from "../core/Bar.component";
 import {activeMeterEnergyArray, useAppSelector} from "../../store";
 import {Metering} from "../../models/meteringpoint.model";
-import {PieSeriesType, ReportSeriesType} from "../../pages/Dashbaord.page";
+import {PieSeriesType} from "../../pages/Dashbaord.page";
 import {EegTariff} from "../../models/eeg.model";
 import {selectedPeriodSelector} from "../../store/energy";
 import {getPreviousPeriod} from "../../util/Helper.util";
-import {activeTenant, selectedTenant} from "../../store/eeg";
 import {IonContent, IonIcon, IonPopover} from "@ionic/react";
-import {helpCircle, helpCircleOutline} from "ionicons/icons";
+import {helpCircleOutline} from "ionicons/icons";
 import {Api} from "../../service";
 import {useTenant} from "../../store/hook/Eeg.provider";
 

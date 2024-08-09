@@ -91,6 +91,10 @@ export class EdaResponseCode {
         return "ConsentID und Zählpunkt passen nicht zusammen"
       case 188:
         return "Teilnahmefaktor von 100 % würde überschritten werden"
+      case 189:
+        return "Zählpunkt ist der Gemeinschafts-ID nicht zugeordnet"
+      case 196:
+        return "Teilnahme-Limit wird überschritten"
     }
     return code.toString()
   }

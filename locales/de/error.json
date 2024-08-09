@@ -10,6 +10,7 @@
 
   "process": {
     "podList_ok": "Zählpunktliste konnte erfolgreich angefordert werden.",
-    "podList_error": "Zählpunktliste konnte nicht erfolgreich angefordert werden."
+    "podList_error": "Zählpunktliste konnte nicht erfolgreich angefordert werden.",
+    "revoke_consentIdEmpty": "Für diesen Zählpunkt fehlt noch die Consent-ID. Ohne dieser Information kann der Abmeldeprozess nicht ausgeführt werden. Versuchen Sie die Teilnehmerliste anzufordern, damit die Consent-ID mit den Zählpunkten abgeglichen werden kann."
   }
 }

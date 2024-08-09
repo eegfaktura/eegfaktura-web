@@ -98,22 +98,10 @@ import {
 } from "../../util/FilterHelper.unit";
 import moment from "moment";
 import {Api} from "../../service";
+import {buildAllocationMapFromSelected, filterMeters} from "./ParticipantPane.functions";
+import {initializeParticipantEffect} from "./ParticipantPane.effects";
 
-interface ParticipantPaneProps {
-  // participants: EegParticipant[];
-  // periods: { begin: string, end: string };
-  // activePeriod: SelectedPeriod | undefined;
-  // onUpdatePeriod: (e: SelectCustomEvent<number>) => void;
-}
-
-const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
-  {
-    // participants,
-    // periods,
-    // activePeriod,
-    // onUpdatePeriod
-  }
-) => {
+const ParticipantPaneComponent: FC = () => {
   const dispatcher = useAppDispatch();
   const {tenant, ecId, rcNr} = useTenant()
   // const ato = useAppSelector(activeTenant);
@@ -128,9 +116,7 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
   const selectBillIsFetching = useAppSelector(selectBillFetchingSelector);
   const billingRunErrorMessage = useAppSelector(billingRunErrorSelector);
 
-  const {
-    eeg,
-  } = useContext(EegContext)
+  const {eeg} = useContext(EegContext)
 
   let documentDatePreview: Date = new Date();
   let documentDateBilling: Date = new Date();
@@ -185,8 +171,6 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
         (r, e) => (isParticipantActivated(participants, e[0]) && e[1]) || r,
         false
       );
-      // console.log("Show Billing: ", nextBillingEnabled);
-
       setBillingEnabled(nextBillingEnabled);
       if (!nextBillingEnabled) toggleShowAmount(false);
     }
@@ -198,66 +182,14 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
     }
   }, [billingRunErrorMessage]);
 
-  useEffect(() => {
-    const sorted = participants.sort((a, b) => {
-      const meterAOK = a.meters.reduce(
-        (i, m) => m.status === "ACTIVE" && i,
-        true
-      );
-      const meterBOK = b.meters.reduce(
-        (i, m) => m.status === "ACTIVE" && i,
-        true
-      );
-
-      if (a.status !== "ACTIVE" && b.status === "ACTIVE") {
-        return -1;
-      }
-
-      if (b.status !== "ACTIVE" && a.status === "ACTIVE") {
-        return 1;
-      }
-
-      if (b.status !== "ACTIVE" || a.status !== "ACTIVE") {
-        if (meterAOK === meterBOK) {
-          return 0;
-        } else if (!meterAOK && meterBOK) {
-          return -1;
-        }
-        return 1;
-      }
-
-      if (meterAOK && !meterBOK) {
-        return 1;
-      } else if (!meterAOK && meterBOK) {
-        return -1;
-      }
-      return 0;
-    });
-    // setCheckedParticipant(sorted.map(() => false))
-    const filteredAndSorted = filterMeters(sorted);
-    setSortedParticipants(sorted);
-    setResult(filteredAndSorted);
-  }, [participants]);
+  useEffect(
+    initializeParticipantEffect({participants, setSortedParticipants, setResult, hideProducers, hideConsumers}),
+    [participants])
 
   useEffect(() => {
-    const filteredAndSorted = filterMeters(sortedParticipants, false);
+    const filteredAndSorted = filterMeters(sortedParticipants, hideProducers, hideConsumers, false);
     setResult(filteredAndSorted);
   }, [hideConsumers, hideProducers]);
-
-  const filterMeters = (p: EegParticipant[], showEmptyMembers: boolean = true) => {
-    return p
-      .map((ip) => {
-        return {
-          ...ip,
-          meters: ip.meters.filter((m) => {
-            if (m.direction === "GENERATION" && hideProducers) return false;
-            if (m.direction === "CONSUMPTION" && hideConsumers) return false;
-            return true;
-          }),
-        } as EegParticipant;
-      })
-      .filter((m) => (m.meters.length > 0 || showEmptyMembers) || !(hideProducers || hideConsumers));
-  };
 
   const infoToast = (message: string) => {
     toaster({
@@ -276,36 +208,10 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
     });
   };
 
-  const buildAllocationMapFromSelected = (): MeteringEnergyGroupType[] => {
-    const participantMap = participants.reduce(
-      (r, p) => ({ ...r, [p.id]: p }),
-      {} as Record<string, EegParticipant>
-    );
-
-    // Object.entries(checkedParticipant).forEach(c => {if (!!participantMap[c[0]]) console.log("Checked Participant not in Map", c)} )
-
-    return Object.entries(checkedParticipant)
-      .filter((c) => participantMap[c[0]])
-      .flatMap((r) => [
-        ...participantMap[r[0]].meters.filter((m) => m.tariff_id !== null),
-      ])
-      .map((m) => {
-        return {
-          meteringPoint: m.meteringPoint,
-          allocationKWh: energyMeterGroup[m.meteringPoint],
-        } as MeteringEnergyGroupType;
-      });
-  };
-
-  const selectAll = (
-    event: IonCheckboxCustomEvent<CheckboxChangeEventDetail>
-  ) => {
+  const selectAll = (event: IonCheckboxCustomEvent<CheckboxChangeEventDetail>) => {
     participants.forEach((p) => {
       if (p.status === "ACTIVE") {
-        const tariffConfigured = p.meters.reduce(
-          (c, e) => c || (e.tariff_id !== undefined && e.tariff_id !== null),
-          p.tariffId !== undefined && p.tariffId != null
-        );
+        const tariffConfigured = p.meters.reduce((c, e) => c || (e.tariff_id !== undefined && e.tariff_id !== null), p.tariffId !== undefined && p.tariffId != null);
         if (tariffConfigured) {
           setCheckedParticipant(p.id, event.detail.checked);
         }
@@ -313,12 +219,12 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
     });
   };
 
-  const onCheckParticipant =
-    (p: EegParticipant) => (e: CheckboxCustomEvent) => {
-      if (p.status === "ACTIVE") {
-        setCheckedParticipant(p.id, e.detail.checked);
-      }
-    };
+  const onCheckParticipant = (p: EegParticipant) => (e: CheckboxCustomEvent) => {
+    if (p.status === "ACTIVE") {
+      setCheckedParticipant(p.id, e.detail.checked);
+    }
+  };
+
   const activateBilling = (c: boolean) => {
     if (c) {
       presentAlert({
@@ -477,7 +383,8 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
       if (type === 0) {
         const ap = participantsSelector1(store.getState())
         const meta = selectMetaRecord(store.getState())
-        const [start, end] = data
+        const [start, end] = data as [Date, Date]
+        const _end = moment(end).add(1, 'day');
         const exportdata = {
           start: start.getTime(),
           end: end.getTime(),
@@ -489,7 +396,7 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
                   .filter(
                     (m) =>
                       (m.status === "ACTIVE" || m.status === 'INACTIVE') &&
-                      filterActiveMeter(meta, m, moment(start), moment(end))
+                      filterActiveMeter(meta, m, moment(start), moment(_end))
                   )
                   .map((m) => {
                     return {
@@ -550,7 +457,7 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
     if (activePeriod) {
       documentDate?.setHours(12);
       const invoiceRequest = {
-        allocations: buildAllocationMapFromSelected(),
+        allocations: buildAllocationMapFromSelected(participants, checkedParticipant, energyMeterGroup),
         tenantId: tenant,
         preview: preview,
         clearingPeriodIdentifier: createPeriodIdentifier(
@@ -638,10 +545,10 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
     if (query && query.length > 0) {
       const filterEntries = (d: EegParticipant) => {
         return [
-          d.lastname.toLowerCase().indexOf(query) > -1 ||
-          d.firstname.toLowerCase().indexOf(query) > -1 ||
-          d.participantNumber.toLowerCase().indexOf(query) > -1 ||
-          (d.contact && d.contact.email.toLowerCase().indexOf(query) > -1),
+          (d.lastname && d.lastname.toLowerCase().indexOf(query) > -1) ||
+          (d.firstname && d.firstname.toLowerCase().indexOf(query) > -1) ||
+          (d.participantNumber && d.participantNumber.toLowerCase().indexOf(query) > -1) ||
+          (d.contact && d.contact.email && d.contact.email.toLowerCase().indexOf(query) > -1),
           filterMetering(d),
         ];
       };

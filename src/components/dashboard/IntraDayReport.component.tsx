@@ -2,10 +2,8 @@ import {FC, useEffect, useState} from "react";
 import {Bar, BarChart, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
 import {useAppSelector} from "../../store";
 import {selectedPeriodSelector} from "../../store/energy";
-import {activeTenant, selectedTenant} from "../../store/eeg";
 
 import "./eeg-card.scss"
-import LoadSharingComponent from "./LoadSharing.component";
 import {periodDisplayString} from "../../util/Helper.util";
 import {IonSpinner} from "@ionic/react";
 import {Api} from "../../service";

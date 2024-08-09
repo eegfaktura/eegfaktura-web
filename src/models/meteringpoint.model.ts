@@ -16,6 +16,7 @@ export type MeterDirectionType = "GENERATION" | "CONSUMPTION"
 
 export interface Metering {
   meteringPoint: string;
+  consentId: string;
   direction: MeterDirectionType;
   ownValue: number;
   totalValue: number;
