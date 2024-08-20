@@ -7,6 +7,8 @@ import * as billing from './billing';
 import * as billingRun from './billingRun';
 import * as billingConfig from './billingConfig';
 
+import user from './user';
+
 import {combineReducers, configureStore, createSelector, Middleware} from "@reduxjs/toolkit";
 import {activeMetersSelector, updateParticipantPartial} from "./participant";
 import {meteringEnergyGroup11} from "./energy";
@@ -14,6 +16,7 @@ import {Metering} from "../models/meteringpoint.model";
 import {ErrorState, setErrorState} from "./eeg";
 import i18next from '../util/I18n'
 import {saveNewRate} from "./rate";
+import {userApi} from "./user/userApi";
 
 /**
  * Reducer
@@ -26,6 +29,8 @@ export const reducer = combineReducers({
   [billing.featureKey]: billing.reducer,
   [billingRun.featureKey]: billingRun.reducer,
   [billingConfig.featureKey]: billingConfig.reducer,
+  [userApi.reducerPath]: userApi.reducer,
+  user,
 });
 
 const errorMiddleware: Middleware = store => next => action => {
@@ -55,7 +60,9 @@ export const store = configureStore({
   // middleware,
   devTools: true,
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(errorMiddleware),
+    getDefaultMiddleware()
+      .concat(errorMiddleware)
+      .concat(userApi.middleware),
 });
 
 
@@ -71,6 +78,7 @@ export function setupStore(preloadedState?: any) {
  */
 export type State = ReturnType<typeof reducer>;
 export type AppStore = ReturnType<typeof setupStore>
+export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
 

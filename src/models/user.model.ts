@@ -7,4 +7,6 @@ export interface UserData {
   id: string;
   verified: boolean;
   emailIsVerified: boolean;
+  tenants: string[];
+  tenant: string;
 }

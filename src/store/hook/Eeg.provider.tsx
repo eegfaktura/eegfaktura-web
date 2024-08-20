@@ -11,11 +11,13 @@ import {setSelectedPeriod} from "../energy";
 import {Api} from "../../service";
 import {useSelector} from "react-redux";
 import {useAuth} from "react-oidc-context";
+import {useGetUserQuery, useLazyGetUserQuery, userApi} from "../user/userApi";
 
 
 export interface EegState {
   eeg?: Eeg
   tenant?: string
+  getTenants: () => {tenant: string; name: string;}[] | undefined
   isAdmin: () => boolean
   isOwner: () => boolean
   isUser: () => boolean
@@ -24,6 +26,7 @@ export interface EegState {
 }
 
 const initialState: EegState = {
+  getTenants: () => [],
   isAdmin: () => false,
   isOwner: () => false,
   isUser: () => false,
@@ -43,6 +46,10 @@ export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
   const roles = useRoles();
   const auth = useAuth();
   const [toaster] = useIonToast()
+
+  const [getUser] = useLazyGetUserQuery()
+  const selectUsersResult = userApi.endpoints.getUser.select()
+  const userData = useSelector(selectUsersResult)
 
   const [activeTenant, setActiveTenant] = useState<string>()
 
@@ -127,26 +134,9 @@ export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
         dispatch(fetchRatesModel({tenant: activeTenant})),
         dispatch(fetchParticipantModel({tenant: activeTenant})),
       ])
+      getUser()
     }
   }, [activeTenant])
-
-  // const initOne = async () => {
-  //   // let initTenant = tenant
-  //
-  //   if (!initTenant) {
-  //     const storedTenant = localStorage.getItem("tenant")
-  //     if (storedTenant) {
-  //       dispatch(selectTenant(storedTenant))
-  //       setInitTenant(storedTenant)
-  //     }
-  //   }
-  //   await initApplication()
-  // }
-
-  // useEffect(() => {
-  //   console.log("Dispatch / tenant changed")
-  //
-  // }, [dispatch, tenant])
 
   const _setTenant = (tenant: string) => {
     setActiveTenant(tenant)
@@ -157,6 +147,7 @@ export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
   const value = {
     eeg: eeg,
     tenant: activeTenant,
+    getTenants: () => userData.data,
     isAdmin: () => roles ? roles.findIndex(r => r === "/EEG_ADMIN") >= 0 : false,
     isOwner: () => roles ? roles.findIndex(r => r === "/EEG_OWNER") >= 0 : false,
     isUser: () => roles ? roles.findIndex(r => r === "/EEG_USER") >= 0 : false,
@@ -204,4 +195,9 @@ export const useTenantSwitch = () => {
 export const useTenant = () => {
   const c = useContext(EegContext)
   return {tenant: c.tenant, ecId: c.eeg?.communityId, rcNr: c.eeg?.rcNumber} as ActiveTenant
+}
+
+export const useTenantDescription = () => {
+  const c = useContext(EegContext)
+  return c.getTenants()
 }

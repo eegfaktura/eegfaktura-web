@@ -119,4 +119,8 @@ ion-note {
 
 ion-item.selected {
   --color: var(--ion-color-primary);
-} 
+}
+
+.user-popup-menu {
+  --width: 350px;
+}

@@ -269,7 +269,7 @@ export class EegService extends EegBaseService {
         ...this.getSecureHeaders(token, tenant),
         'Accept': 'application/json',
       },
-    }).then(this.handleErrors).then(res => res.json());
+    }).then(this.handleErrors).then(res => res.json()).then(res => res.sort((a: InvoiceDocumentResponse, b:InvoiceDocumentResponse) => b.name.localeCompare(a.name)));
   }
 
   async downloadBillingDocument(tenant: string, filedataId: string): Promise<Blob> {

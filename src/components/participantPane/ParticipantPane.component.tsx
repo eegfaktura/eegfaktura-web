@@ -78,7 +78,7 @@ import {
   reformatDateTimeStamp,
 } from "../../util/Helper.util";
 import DatepickerPopover from "../dialogs/datepicker.popover";
-import { ExcelReportRequest, InvestigatorCP } from "../../models/reports.model";
+import {ExcelReportRequest, InvestigatorCP, ParticipantCp} from "../../models/reports.model";
 import UploadPopup from "../dialogs/upload.popup";
 import {EegContext, useRefresh, useTenant} from "../../store/hook/Eeg.provider";
 import {
@@ -403,10 +403,12 @@ const ParticipantPaneComponent: FC = () => {
                       meteringPoint: m.meteringPoint,
                       direction: m.direction,
                       name: p.firstname + " " + p.lastname,
-                    } as InvestigatorCP;
+                      activeSince: moment(m.participantState.activeSince).valueOf(),
+                      inactiveSince: moment(m.participantState.inactiveSince).valueOf(),
+                    } as ParticipantCp;
                   })
               ),
-            [] as InvestigatorCP[]
+            [] as ParticipantCp[]
           ),
         } as ExcelReportRequest
         return Api.energyService.createReport({tenant, ecId, rcNr}, exportdata);

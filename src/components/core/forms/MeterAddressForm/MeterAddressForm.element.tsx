@@ -100,7 +100,7 @@ const MeterAddressFormElement: FC<MeterAddressFormElementProps> = ({
       }
       { showActivationMode && offline === 'OFFLINE' &&
           <InputForm name={"activationCode"} label="Activierungs-Code" control={control} rules={{required: "ActivierungsCode erforderlich"}} type="text"
-                     counter={true} maxlength={33} error={errors?.city} onChangePartial={_onChange}/>
+                     counter={true} maxlength={35} error={errors?.activationCode} onChangePartial={_onChange}/>
       }
       {isAdmin() && !isOnline &&
           <>

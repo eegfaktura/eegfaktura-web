@@ -62,7 +62,7 @@ const MeteringPointOfflineElement: FC<{m: Metering}> = ({m}) => {
             <IonInput labelPlacement="floating"
                       label="Aktivierungs Code"
                       onIonChange={(e) => onActivationCodeChanged(e.target.value as string)}
-                      counter={true} maxlength={33}></IonInput>
+                      counter={true} maxlength={35}></IonInput>
           </IonItem>
         </div>)
       }

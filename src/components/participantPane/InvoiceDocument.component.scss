@@ -1,0 +1,17 @@
+.invoiceDocument-menu {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px;
+  margin: 10px;
+
+  & .item {
+    width: 100%;
+    padding: 6px;
+    font-size: 0.9em;
+    cursor: pointer;
+    &.selected {
+      border-bottom: 2px solid var(--ion-color-primary);
+      font-size: 1em;
+    }
+  }
+}

@@ -7,9 +7,9 @@ import {
   IonLabel,
   IonList,
   IonMenu,
-  IonMenuToggle, IonModal, IonPopover,
+  IonMenuToggle, IonModal, IonPopover, IonSelect, IonSelectOption,
   IonTitle,
-  IonToolbar, useIonPopover,
+  IonToolbar, SelectCustomEvent, useIonPopover,
 } from '@ionic/react';
 
 import {useLocation} from 'react-router-dom';
@@ -22,7 +22,7 @@ import React, {FC, useEffect, useRef, useState} from "react";
 import {eegAvatar, eegChartBubble, eegChatIcon, eegProcess} from "../eegIcons";
 import {useAppSelector} from "../store";
 import {eegSelector} from "../store/eeg";
-import {useAccessGroups} from "../store/hook/Eeg.provider";
+import {useAccessGroups, useTenant, useTenantDescription, useTenantSwitch} from "../store/hook/Eeg.provider";
 import {useUser} from "../store/hook/AuthProvider";
 import {AuthService} from "../service/auth.service";
 import {User} from "oidc-client-ts";
@@ -33,11 +33,28 @@ import {useLocale} from "../store/hook/useLocale";
 const UserDetailPopover:FC<{authSvc: AuthService | undefined}> = ({authSvc}) => {
   const {t} = useLocale("common")
   const [user, setUser] = useState<User|null>()
+  const [sortedTenants, setSortedTenants] = useState<{tenant: string, name: string}[] | undefined>(undefined)
+  const tenants = useTenantDescription()
+  const tenant = useTenant()
+  const switchTenant = useTenantSwitch()
+
   useEffect(() => {
     if (authSvc) {
       authSvc?.getUser().then(u => setUser(u))
     }
   }, [authSvc]);
+
+  useEffect(() => {
+    if (tenants) {
+      setSortedTenants([...tenants].sort((a, b) => a.tenant.localeCompare(b.tenant)))
+    }
+  }, [tenants])
+
+  const onSwitchTenant = (e: SelectCustomEvent<string>) => {
+    const tenant = e.detail.value;
+    switchTenant(tenant)
+  }
+
   return (
     <IonContent className="ion-padding">
       <IonItem>
@@ -48,6 +65,19 @@ const UserDetailPopover:FC<{authSvc: AuthService | undefined}> = ({authSvc}) => 
         </IonAvatar>
         <IonLabel style={{fontSize: "14px"}}>{user?.profile.email}</IonLabel>
       </IonToolbar>
+        </div>
+      </IonItem>
+      <IonItem lines="none">
+        <div style={{padding:'10px', width:"100%"}}>
+          <IonSelect fill="outline" label="Auswahl Gemeinschaft" labelPlacement={"floating"} className="select-box"
+                     value={tenant.tenant}
+                     onIonChange={onSwitchTenant}
+          >
+            {sortedTenants && sortedTenants.map((o, idx) => (
+                <IonSelectOption key={idx} value={o.tenant}>{o.tenant}-{o.name}</IonSelectOption>
+              )
+            )}
+          </IonSelect>
         </div>
       </IonItem>
       <div style={{marginTop: "16px"}}>
@@ -182,7 +212,7 @@ const Menu: FC = () => {
           </IonChip>
         </IonToolbar>
       </IonHeader>
-      <IonPopover ref={popover} isOpen={popoverOpen} onDidDismiss={() => setPopoverOpen(false)} side="bottom" alignment="end" size="auto" style={{"--width": "300px"}}>
+      <IonPopover className="user-popup-menu" ref={popover} isOpen={popoverOpen} onDidDismiss={() => setPopoverOpen(false)} side="bottom" alignment="end" size="auto" dismissOnSelect={true} reference="trigger">
         <UserDetailPopover authSvc={authSvr} />
       </IonPopover>
       <IonContent>
