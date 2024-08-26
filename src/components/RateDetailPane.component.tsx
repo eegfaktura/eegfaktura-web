@@ -14,12 +14,9 @@ import {
 import {trashBin} from "ionicons/icons";
 import RateComponent from "./Rate.component";
 import {useAppDispatch, useAppSelector} from "../store";
-import {archiveRate, selectedRateSelector, selectRate, selectRateById} from "../store/rate";
-import {selectedTenant} from "../store/eeg";
-import {HttpError} from "../service/base.service";
+import {archiveRate, selectedRateSelector, selectRate} from "../store/rate";
 import {participantsSelector1} from "../store/participant";
 import {FormProvider, useForm} from "react-hook-form";
-import {EegParticipant} from "../models/members.model";
 import {useTenant} from "../store/hook/Eeg.provider";
 
 interface RateDetailPaneComponentProps {

@@ -55,10 +55,10 @@ const MeterCardComponent: FC<MeterCardComponentProps> = ({participant, meter, hi
   }
   const isPending = () => participant.status === 'PENDING';
   const isGenerator = (m: Metering) => m.direction === 'GENERATION';
-  const isMeterPending = () => isPending() || meter.status === 'NEW' || meter.status === 'PENDING';
-  const isMeterRejected = () => meter.status === "REVOKED" || meter.status === "REJECTED"
-  const isMeterActive = () => meter.status === "ACTIVE" || meter.status === "INACTIVE"
-  const isMeterInactive = () => meter.status === "INACTIVE"
+  const isMeterPending = () => isPending() || meter.processState === 'NEW' || meter.processState === 'PENDING';
+  const isMeterRejected = () => meter.processState === "REVOKED" || meter.processState === "REJECTED"
+  const isMeterActive = () => meter.processState === "ACTIVE" || meter.processState === "INACTIVE"
+  const isMeterInactive = () => meter.processState === "INACTIVE"
 
   const meterValue = () => {
     if (report && report.allocated) {

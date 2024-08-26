@@ -130,10 +130,10 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
                                     }
                                   })} label={t("participant")}/>
             <BasicSelectComponent control={control} name={"meteringPoint"}
-                                  options={useableMeters.filter(p => p.status !== 'ACTIVE' /*&& p.status !== 'APPROVED' && p.status !== 'PENDING'*/).map((p) => {
+                                  options={useableMeters.filter(p => p.processState !== 'ACTIVE' /*&& p.status !== 'APPROVED' && p.status !== 'PENDING'*/).map((p) => {
                                     return {
                                       value: p.meteringPoint,
-                                      label: JoinStrings(" ", "", meteringDisplayName(p), p.status)
+                                      label: JoinStrings(" ", "", meteringDisplayName(p), p.processState)
                                     }
                                   })} label={t("metering")} rules={{required: true}}/>
 

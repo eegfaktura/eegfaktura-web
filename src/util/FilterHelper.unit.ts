@@ -28,14 +28,12 @@ export const filterActiveParticipantAndMeter = (participants: EegParticipant[], 
 
 export const filterActiveMeter = <T extends Record<string, EnergyMeta>>(meta: T, m: Metering, start: moment.Moment, end: moment.Moment) => {
   const metaInfo = meta[m.meteringPoint]
-  if (m.meteringPoint === "AT0030000000000000000000000051361") {
-    const peter = 1;
-    console.log(metaInfo)
-  }
   if (metaInfo) {
     try {
-      const startDate = moment(metaInfo.period_start, "DD.MM.YYYY HH:mm:ss")
-      const endDate = moment(metaInfo.period_end, "DD.MM.YYYY HH:mm:ss")
+      const pattern = "DD.MM.YYYY HH:mm:ss"
+      const patternLen = pattern.length;
+      const startDate = moment(metaInfo.period_start.substring(0,patternLen), pattern)
+      const endDate = moment(metaInfo.period_end.substring(0,19), "DD.MM.YYYY HH:mm:ss")
 
       if (startDate.isBefore(end) && endDate.isAfter(start)) {
         return true

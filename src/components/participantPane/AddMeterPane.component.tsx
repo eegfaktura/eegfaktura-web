@@ -26,14 +26,15 @@ const AddMeterPaneComponent: FC = () => {
   const {gridOperatorId, gridOperatorName} = useGridOperator()
 
   const meter = {
-    status: isOnline ? "NEW" : "ACTIVE",
+    status: isOnline ? "INIT" : "ACTIVE",
+    processState: isOnline ? "NEW" : "ACTIVE",
     participantId: "",
     meteringPoint: "",
     direction: "CONSUMPTION",
     registeredSince: moment.utc().toDate(),
     gridOperatorName: gridOperatorName,
     gridOperatorId: gridOperatorId,
-    participantState: {activeSince: new Date(Date.now()), inactiveSince: moment.utc([2999, 11, 31]).toDate()} as ParticipantState,
+    // participantState: {activeSince: new Date(Date.now()), inactiveSince: moment.utc([2999, 11, 31]).toDate()} as ParticipantState,
     activationMode: 'ONLINE'
   } as Metering
 

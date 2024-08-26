@@ -25,12 +25,12 @@ describe("<ParticipantPane/> Functions", () => {
       meters: [{
         meteringPoint: "AT0000000000000000000000000000001",
         direction: 'CONSUMPTION',
-        status: 'ACTIVE'
+        processState: 'ACTIVE'
       } as Metering,
       {
         meteringPoint: "AT0000000000000000000000000000002",
         direction: 'CONSUMPTION',
-        status: 'ACTIVE'
+        processState: 'ACTIVE'
       } as Metering],
       optionals: {} as Optionals,
       participantNumber: "001",

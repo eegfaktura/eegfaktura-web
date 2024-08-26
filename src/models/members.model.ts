@@ -10,6 +10,7 @@ export interface EegParticipant {
   titleAfter: string;
   firstname: string;
   lastname: string;
+  vatNumber: string;
   taxNumber: string;
   residentAddress: Address;
   billingAddress: Address;

@@ -1,8 +1,8 @@
-import {Metering, MeteringStatusType} from "../models/meteringpoint.model";
+import {Metering, MeteringProcessStateType} from "../models/meteringpoint.model";
 
 
-export function FilterByMeterState(meters: Metering[], status: MeteringStatusType[]): Metering[] {
-  return meters.filter(m => status.includes(m.status))
+export function FilterByMeterState(meters: Metering[], status: MeteringProcessStateType[]): Metering[] {
+  return meters.filter(m => status.includes(m.processState))
 }
 
 export const meteringDisplayName = (m: Metering): string => {

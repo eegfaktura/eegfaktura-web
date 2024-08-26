@@ -52,12 +52,19 @@
   "account-owner": "Kontoinhaber",
   "participant-since": "Mitglied seit ...",
   "date": "Datum",
+  "phone": "Telefon",
+  "website": "Webseite",
   "warnings": {
     "email_missing": "Email Adresse fehlt!",
     "email_wrong": "Email Adresse ist nicht valide!",
     "firstname_missing": "Vorname fehlt!",
     "lastname_missing": "Nachname fehlt!",
-    "company-name_missing": "Firmenname fehlt!"
+    "company-name_missing": "Firmenname fehlt!",
+    "city_missing": "Ort fehlt!",
+    "zip_missing": "PLZ fehlt!",
+    "street_missing": "Straße fehlt!",
+    "street-number_missing": "Hausnummer fehlt!",
+    "account-owner_missing": "Kontoinhaber fehlt!"
   },
   "alerts": {
     "changeDirection_0": "Energierichtung zu einen $t(producer) ändern? Es gilt zu beachten, dass diese Änderung nicht mit dem Netzbetreiber kommuniziert wird. Die Änderung wird nur in EEGFaktura vollzogen und keine Auswirkung beim Netzbetreiber!",
@@ -107,6 +114,9 @@
     "CR_REQ_PT": "Anfordern von Energiedaten",
     "CR_MSG": "Versenden der Energiedaten",
     "CM_REV_IMP": "Datenfreigabe-Aufhebung"
+  },
+  "headers": {
+    "bank-data": "Bankdaten"
   },
   "menu": {
     "changePassword": "Passwort ändern",

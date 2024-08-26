@@ -34,13 +34,13 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
   const [selectedDirection, setSelectedDirection] = useState(0);
   const [withWechselrichter, setWithWechselrichter] = useState(false);
 
-  const [direction, status] = watch(['direction', 'status'])
+  const [direction, processState] = watch(['direction', 'processState'])
 
   const isChangeable = () => {
     if (meterReadOnly === undefined) {
       return true
     }
-    return !meterReadOnly || status === 'NEW' || status === 'INVALID' || status === 'INACTIVE' || status === 'REJECTED' || status === 'REVOKED'
+    return !meterReadOnly || processState === 'NEW' || processState === 'INVALID' || processState === 'INACTIVE' || processState === 'REJECTED' || processState === 'REVOKED'
   }
 
   useEffect(() => {
@@ -157,9 +157,9 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
                    type="number" inputmode="numeric" onChangePartial={onChangePartFact} protectedControl={!isChangeable()}/>
         {area && area === 'BEG' && <>
             <InputForm name={"gridOperatorId"} label={t("gridOperator_id")} control={control} rules={{required: true}}
-                       type="text" onChangePartial={_onChange} protectedControl={!(isChangeable() && status !== 'INACTIVE')}/>
+                       type="text" onChangePartial={_onChange} protectedControl={!(isChangeable() && processState !== 'INACTIVE')}/>
             <InputForm name={"gridOperatorName"} label={t("gridOperator_name")} control={control} rules={{required: true}}
-                       type="text" onChangePartial={_onChange} protectedControl={!(isChangeable() && status !== 'INACTIVE')}/>
+                       type="text" onChangePartial={_onChange} protectedControl={!(isChangeable() && processState !== 'INACTIVE')}/>
         </>}
         <CheckboxComponent label={t("inverterCheckbox_label")} setChecked={setWithWechselrichter}
                            checked={withWechselrichter} style={{paddingTop: "0px"}}></CheckboxComponent>

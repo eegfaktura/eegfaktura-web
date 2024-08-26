@@ -6,7 +6,7 @@ import InputForm from "../form/InputForm.component";
 import {BasicSelectComponent} from "../form/BasicSelect.component";
 import {IonButton, IonItem} from "@ionic/react";
 import {EdaProcess, Eeg} from "../../models/eeg.model";
-import {Metering, MeteringStatusType} from "../../models/meteringpoint.model";
+import {Metering, MeteringProcessStateType} from "../../models/meteringpoint.model";
 import {EegParticipant} from "../../models/members.model";
 import {useForm} from "react-hook-form";
 import {FilterByMeterState, meteringDisplayName} from "../../util/FilterHelper";
@@ -47,7 +47,7 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
   const [participantId] = watch(['participantId'])
 
   useEffect(() => {
-    const statusPattern:MeteringStatusType[] = ['ACTIVE']
+    const statusPattern:MeteringProcessStateType[] = ['ACTIVE']
     if (participantId) {
       const p = participants.find(p=> p.id === participantId)
       if (p) {

@@ -3,7 +3,8 @@ export interface ParticipantState {
   inactiveSince: Date
 }
 
-export type MeteringStatusType = "NEW" | "PENDING" | "APPROVED" | "ACTIVE" | "INACTIVE" | "REJECTED" | "REVOKED" | "INVALID"
+export type MeteringStateType = "INIT" | "ACTIVE" | "INACTIVE"
+export type MeteringProcessStateType = "NEW" | "PENDING" | "APPROVED" | "ACTIVE" | "INACTIVE" | "REJECTED" | "REVOKED" | "INVALID"
 export type MeterDirectionType = "GENERATION" | "CONSUMPTION"
 
 // type MapMeterType<PropType> =
@@ -29,13 +30,14 @@ export interface Metering {
   streetNumber: string;
   city: string;
   zip: string,
-  status: MeteringStatusType,
+  status: MeteringStateType,
   statusCode: number,
   registeredSince: Date,
   gridOperatorId: string,
   gridOperatorName: string,
   modifiedAt: number,
   modifiedBy: string,
+  processState: MeteringProcessStateType,
   participantState: ParticipantState,
   partFact: number,
   activationCode?: string

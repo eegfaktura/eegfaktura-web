@@ -32,7 +32,7 @@ const MeterAddressFormElement: FC<MeterAddressFormElementProps> = ({
   const {isAdmin} = useAccessGroups()
 
   // const isEditable = setValue !== undefined
-  const currentMeterState = watch ? watch("status") : "NEW"
+  const currentMeterProcessState = watch ? watch("processState") : "NEW"
   const offline = watch ? watch("activationMode") : 'ONLINE'
 
   const isTakeOverAddressEnabled = () => participant !== undefined && isEditable
@@ -116,7 +116,7 @@ const MeterAddressFormElement: FC<MeterAddressFormElementProps> = ({
               />
           </>
       }
-      {currentMeterState === "ACTIVE" &&
+      {currentMeterProcessState === "ACTIVE" &&
           <DatePickerFormElement control={control} name={"participantState.activeSince"} label="Aktiv seit"
                                  placeholder={"Datum"} error={errors?.registeredSince} onChangeDate={_onChange}/>
 

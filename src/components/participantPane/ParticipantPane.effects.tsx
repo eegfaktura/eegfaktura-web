@@ -15,11 +15,11 @@ export const initializeParticipantEffect = (options: InitializeParticipantProps)
   return () => {
     const sorted = participants.sort((a, b) => {
       const meterAOK = a.meters.reduce(
-        (i, m) => m.status === "ACTIVE" && i,
+        (i, m) => m.processState === "ACTIVE" && i,
         true
       );
       const meterBOK = b.meters.reduce(
-        (i, m) => m.status === "ACTIVE" && i,
+        (i, m) => m.processState === "ACTIVE" && i,
         true
       );
 

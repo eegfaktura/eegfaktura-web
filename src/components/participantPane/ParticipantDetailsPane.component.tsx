@@ -110,10 +110,10 @@ const ParticipantDetailsPaneComponent: FC = () => {
   const [toaster] = useIonToast();
   const [participantAlert] = useIonAlert();
 
-  const isMeterNew = () => selectedMeter?.status === 'NEW';
-  const isMeterActive = () => selectedMeter?.status === "ACTIVE" || selectedMeter?.status === "INACTIVE"
-  const isMeterInactive = () => selectedMeter?.status !== "ACTIVE"
-  const isMeterPending = () => selectedMeter?.status === "PENDING"
+  const isMeterNew = () => selectedMeter?.processState === 'NEW';
+  const isMeterActive = () => selectedMeter?.processState === "ACTIVE" || selectedMeter?.processState === "INACTIVE"
+  const isMeterInactive = () => selectedMeter?.processState !== "ACTIVE"
+  const isMeterPending = () => selectedMeter?.processState === "PENDING"
 
   const isGenerator = () => selectedMeter?.direction === 'GENERATION';
 
@@ -192,7 +192,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
   const meterStatusText = (meter: Metering) => {
     return (
       <div>
-        <span>{t(`meter.status_text_${meter.status}`)}</span>
+        <span>{t(`meter.status_text_${meter.processState}`)}</span>
         {hasStatusCode(meter) && <span> <strong>{t(`meter.status_code_${meter.statusCode}`)}</strong></span>}
       </div>
     )
@@ -260,11 +260,11 @@ const ParticipantDetailsPaneComponent: FC = () => {
   }
 
   const hasStatusCode = (meter: Metering) => {
-    return !!(meter && (meter.status === 'INVALID' || meter.status === 'REJECTED') && meter.statusCode && meterInvalidCodes.includes(meter.statusCode))
+    return !!(meter && (meter.processState === 'INVALID' || meter.processState === 'REJECTED') && meter.statusCode && meterInvalidCodes.includes(meter.statusCode))
   }
 
   const renderMeterStatus = (selectedMeter: Metering) => {
-    switch (selectedMeter.status) {
+    switch (selectedMeter.processState) {
       case 'INACTIVE':
         return (
           <IonCard color="secondary-light">
@@ -281,7 +281,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
               <IonIcon icon={eegSandClass} slot="start"/>
               <IonLabel>{meterStatusText(selectedMeter)}</IonLabel>
             </IonItem>
-            {selectedMeter.status === "INVALID" &&
+            {selectedMeter.processState === "INVALID" &&
                 <IonItem>
                     <IonButton color="warning" slot="end" size="small" fill="outline"
                                onClick={() => onRemoveMeteringPoint()}>Löschen</IonButton>
@@ -401,9 +401,9 @@ const ParticipantDetailsPaneComponent: FC = () => {
                       <IonIcon icon={caretForwardOutline} slot="start"></IonIcon>
                       <div>
                         <div
-                          className={"detail-header"}>{`Zählpunkt ${selectedMeter.status === "ACTIVE" ? "aktiv" : "inaktiv"}`}</div>
+                          className={"detail-header"}>{`Zählpunkt ${selectedMeter.processState === "ACTIVE" ? "aktiv" : "inaktiv"}`}</div>
                       </div>
-                      <IonToggle slot="end" checked={selectedMeter.status === "ACTIVE"}
+                      <IonToggle slot="end" checked={selectedMeter.processState === "ACTIVE"}
                                  disabled={true}></IonToggle>
                     </IonItem>
                     {isMeterActive() && report && activePeriod &&

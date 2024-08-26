@@ -142,8 +142,8 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
                                     return {value: p.id, label: JoinStrings(" ", "-", p.participantNumber, p.lastname, p.firstname)}
                                   })} label={t("participant")} disabled={selectEntire}/>
             <BasicSelectComponent control={control} name={"meteringPoints"}
-                                  options={useableMeters.filter(p => p.status === 'ACTIVE').map((p) => {
-                                    return {value: p.meteringPoint, label: JoinStrings(" ", "", meteringDisplayName(p), p.status)}
+                                  options={useableMeters.filter(p => p.processState === 'ACTIVE').map((p) => {
+                                    return {value: p.meteringPoint, label: JoinStrings(" ", "", meteringDisplayName(p), p.processState)}
                                   })} label={t("metering")} multiple={true} rules={{required: true}} disabled={selectEntire}/>
             <div className="form-element">
               <DatePicker
