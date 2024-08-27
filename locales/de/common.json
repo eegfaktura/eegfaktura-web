@@ -7,6 +7,8 @@
   "gridOperator_name": "Netzbetreiber Name",
   "participant": "Mitglied",
   "participant-nr": "Mitglieds-Nr",
+  "participant_active-since": "Aktiv seit",
+  "participant_active-for": "Aktiv am",
   "participant-title_before": "Titel (Vor)",
   "participant-title_after": "Titel (Nach)",
   "participant-title_company": "Firma",

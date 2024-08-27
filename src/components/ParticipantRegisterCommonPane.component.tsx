@@ -9,6 +9,7 @@ import {useFormContext} from "react-hook-form";
 import {useMaskito} from "@maskito/react";
 import {IbanInputForm} from "./form/IbanInputForm";
 import {useLocale} from "../store/hook/useLocale";
+import DatePickerFormElement from "./form/DatePickerForm.element";
 
 interface ParticipantRegisterCommonPaneComponentProps {
   participant: EegParticipant;
@@ -113,12 +114,14 @@ const ParticipantRegisterCommonPaneComponent: FC<ParticipantRegisterCommonPaneCo
                        rules={{required: t("warnings.account-owner_missing")}} type="text" error={errors.accountInfo?.owner}/>
           </IonList>
           <IonList>
-            <IonListHeader>Steuer Angaben</IonListHeader>
+            <IonListHeader style={{margin: "10px 0 5px 0"}}>Steuer Angaben</IonListHeader>
             <InputForm name={"vatNumber"} label={t("uid")} control={control} type="text"/>
           </IonList>
           <IonList>
-            <IonListHeader>Optional</IonListHeader>
+            <IonListHeader style={{margin: "10px 0 5px 0"}}>Optional</IonListHeader>
             <InputForm name={"optionals.website"} label={t("website")} control={control} type="text"/>
+            <DatePickerFormElement control={control} name={"participantSince"} label={t("participant_active-for")}
+                                   placeholder={"Datum"} error={errors?.participantSince}/>
           </IonList>
 
         </div>

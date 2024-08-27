@@ -81,6 +81,7 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
     data.residentAddress.zip = data.billingAddress.zip
     data.residentAddress.street = data.billingAddress.street
     data.residentAddress.streetNumber = data.billingAddress.streetNumber
+    data.meters = data.meters.map(m => {return {...m, registeredSince: data.participantSince} as Metering})
     onRegisterParticipant(data)
     reset()
   }
