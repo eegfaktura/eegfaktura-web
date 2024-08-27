@@ -100,6 +100,7 @@ import moment from "moment";
 import {Api} from "../../service";
 import {buildAllocationMapFromSelected, filterMeters} from "./ParticipantPane.functions";
 import {initializeParticipantEffect} from "./ParticipantPane.effects";
+import FilterSegmentComponent from "./FilterSegment.component";
 
 const ParticipantPaneComponent: FC = () => {
   const dispatcher = useAppDispatch();
@@ -696,6 +697,7 @@ const ParticipantPaneComponent: FC = () => {
               ></IonSearchbar>
             </IonToolbar>
           )}
+          <FilterSegmentComponent />
           <ParticipantPeriodHeaderComponent
             activePeriod={activePeriod}
             selectAll={selectAll}
