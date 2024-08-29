@@ -153,9 +153,9 @@ const ParticipantPaneComponent: FC = () => {
     hideMember,
   } = useContext(MemberViewContext);
 
-  // const [result, setResult] = useState<EegParticipant[]>(participants);
-  // const [sortedParticipants, setSortedParticipants] = useState<EegParticipant[]>(participants);
   const [presentAlert] = useIonAlert();
+
+  const [searchQuery, setSearchQuery] = useState<string | undefined>(undefined)
   const [searchActive, setSearchActive] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<string>('period');
 
@@ -187,23 +187,6 @@ const ParticipantPaneComponent: FC = () => {
     }
   }, [billingRunErrorMessage])
 
-  // useEffect(
-  //   initializeParticipantEffect({participants, setSortedParticipants, setResult, hideProducers, hideConsumers}),
-  //   [participants]
-  // )
-
-  // useEffect(
-  //   filterParticipantEffect({
-  //     selectedFilter,
-  //     sortedParticipants,
-  //     participants: allParticipants,
-  //     setResult,
-  //     hideConsumers,
-  //     hideProducers
-  //   }),
-  //   [selectedFilter]
-  // )
-
   const sortedParticipants1 = sortParticipants({participants, hideProducers, hideConsumers})
 
   const viewEntities = filterParticipant({
@@ -213,11 +196,6 @@ const ParticipantPaneComponent: FC = () => {
         hideConsumers,
         hideProducers
       })
-
-  // useEffect(() => {
-  //   const filteredAndSorted = filterMeters(sortedParticipants, hideProducers, hideConsumers, true)
-  //   setResult(filteredAndSorted)
-  // }, [hideConsumers, hideProducers])
 
   const infoToast = (message: string) => {
     toaster({
@@ -297,26 +275,7 @@ const ParticipantPaneComponent: FC = () => {
   };
 
   const onUpdatePeriodSelection = (selectedPeriod: SelectedPeriod) => {
-    // dispatcher(fetchEnergyReport({
-    //   tenant: tenant!,
-    //   year: selectedPeriod.year,
-    //   segment: selectedPeriod.segment,
-    //   type: selectedPeriod.type,
-    // }))
-
     dispatcher(setSelectedPeriod(selectedPeriod));
-    // dispatcher(fetchEnergyReportV2({tenant: tenant,
-    //   year: selectedPeriod.year,
-    //   segment: selectedPeriod.segment,
-    //   type: selectedPeriod.type,
-    //   participants: participants.map(p => {
-    //     return {
-    //       participantId: p.id,
-    //       meters: p.meters.map(m => {
-    //         return {meterId: m.meteringPoint, meterDir: m.direction, from: new Date(m.registeredSince).getTime(), until: new Date().getTime()} as MeterReport})
-    //     } as ParticipantReport
-    //   })}))
-
     dispatcher(
       fetchBillingRun({
         tenant: tenant,
@@ -328,8 +287,6 @@ const ParticipantPaneComponent: FC = () => {
         ),
       })
     );
-
-    // setUsedPeriod(idx)
   };
 
   const onSelectParticipant =
@@ -567,67 +524,8 @@ const ParticipantPaneComponent: FC = () => {
     }
   }
 
-  const [searchQuery, setSearchQuery] = useState<string | undefined>(undefined)
-
-  // const handleSearchInput = (ev: Event) => {
-  // const handleSearchInput = (e: React.MouseEvent<HTMLIonSearchbarElement, MouseEvent>) => {
   const handleSearchInput = (e: CustomEvent<SearchbarInputEventDetail>) => {
-    // const target = e.target as HTMLIonSearchbarElement;
-    console.log(e.detail.value)
     setSearchQuery(e.detail.value?.toLowerCase())
-    // let query = "";
-    // const target = ev.target as HTMLIonSearchbarElement;
-    // if (target) query = target.value!.toLowerCase();
-    //
-    // const isDefined = (o: Object):boolean => !!o
-    //
-    // if (query && query.length > 0) {
-    //   const filterEntries = (d: EegParticipant): [boolean, Metering[]] => {
-    //     return [
-    //       (d.lastname && d.lastname.toLowerCase().indexOf(query) > -1) ||
-    //       (d.firstname && d.firstname.toLowerCase().indexOf(query) > -1) ||
-    //       (d.participantNumber && d.participantNumber.toLowerCase().indexOf(query) > -1) ||
-    //       (!!d.contact && !!d.contact.email && d.contact.email.toLowerCase().indexOf(query) > -1),
-    //       filterMetering(d),
-    //     ];
-    //   };
-    //   const filterMetering = (d: EegParticipant): Metering[] => {
-    //     return (
-    //       d.meters.filter((m) => {
-    //         const eq =
-    //           m.equipmentName && m.equipmentName.length > 0
-    //             ? m.equipmentName.toLowerCase().indexOf(query) > -1
-    //             : false
-    //         return m.meteringPoint.toLowerCase().indexOf(query) > -1 || eq
-    //       })
-    //     );
-    //   };
-    //
-    //   // const origin = JSON.parse(
-    //   //   JSON.stringify(sortedParticipants)
-    //   // ) as EegParticipant[]
-    //
-    //   const sp = [...result].filter((d: EegParticipant) => {
-    //     const [matchParticipant, matchMeter] = filterEntries(d);
-    //     if (matchParticipant || matchMeter.length > 0) {
-    //       if (matchMeter.length > 0) {
-    //         // d.meters = d.meters.filter((m) => {
-    //         //   const eq =
-    //         //     m.equipmentName && m.equipmentName.length > 0
-    //         //       ? m.equipmentName.toLowerCase().indexOf(query) > -1
-    //         //       : false;
-    //         //   return m.meteringPoint.toLowerCase().indexOf(query) > -1 || eq;
-    //         // });
-    //         d.meters = matchMeter;
-    //       }
-    //       return true;
-    //     }
-    //     return false;
-    //   });
-    //   setResult(sp);
-    // } else {
-    //   setResult(sortedParticipants);
-    // }
   };
 
   const viewPortRef = useRef<HTMLDivElement | null>(null);

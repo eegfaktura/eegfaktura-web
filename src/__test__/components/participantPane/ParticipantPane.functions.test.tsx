@@ -46,7 +46,7 @@ describe("<ParticipantPane/> Functions", () => {
     const checkedParticipants = {"1234567890": true}
     const meterGroup = {"AT0000000000000000000000000000001": 10, "AT0000000000000000000000000000002": 0}
 
-    const r = buildAllocationMapFromSelected(participants, checkedParticipants, meterGroup)
+    const r = buildAllocationMapFromSelected(participants, checkedParticipants)
     expect(r.length).toEqual(1)
     expect(r).toEqual([{meteringPoint: 'AT0000000000000000000000000000001', allocationKWh: 10}])
   });
