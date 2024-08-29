@@ -26,7 +26,7 @@ import MemberFormComponent from "../MemberForm.component";
 import MeterFormComponent from "./MeterForm.component";
 import {
   archiveParticipant,
-  confirmParticipant, moveMeteringPoint, participantsSelector1, removeMeteringPoint,
+  confirmParticipant, moveMeteringPoint, allParticipantsSelector, removeMeteringPoint,
   selectedMeterSelector,
   selectedParticipantSelector, selectParticipantById,
   updateParticipant, updateParticipantPartial
@@ -102,7 +102,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
   const {isAdmin} = useAccessGroups()
   // const [moveMeterModal] = useIonModal(MoveParticipantModel, {meter: selectedMeter, participants: participantsSelector1(store.getState())});
   const {showMoveMeteringModal} = useMoveMeteringPointHook(selectedMeter!,
-    participantsSelector1(store.getState()), (name: string, value: string, event?: any) => {
+    allParticipantsSelector(store.getState()), (name: string, value: string, event?: any) => {
     console.log("meter", value)
       dispatcher(moveMeteringPoint({tenant: tenant.tenant, sParticipantId: selectedParticipant!.id, dParticipantId: value, meter: selectedMeter!}))
     });

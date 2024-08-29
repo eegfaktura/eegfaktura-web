@@ -16,7 +16,7 @@ import {EdaProcess} from "../models/eeg.model";
 import * as process from "process";
 import {useAppSelector} from "../store";
 import {EegContext} from "../store/hook/Eeg.provider";
-import {activeParticipantsSelector1, meterSelector, participantsSelector1} from "../store/participant";
+import {activeParticipantsSelector1, meterSelector, allParticipantsSelector} from "../store/participant";
 import {selectedPeriodSelector} from "../store/energy";
 import {useLocale} from "../store/hook/useLocale";
 
@@ -24,7 +24,7 @@ const ProcessesPage: FC = () => {
 
   const activePeriod = useAppSelector(selectedPeriodSelector);
   // const participants = useAppSelector(activeParticipantsSelector1)
-  const participants = useAppSelector(participantsSelector1)
+  const participants = useAppSelector(allParticipantsSelector)
   const meters = useAppSelector(meterSelector)
   const {eeg} = useContext(EegContext)
   const {t} = useLocale("common")

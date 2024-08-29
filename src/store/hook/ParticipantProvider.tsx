@@ -2,7 +2,7 @@ import {createContext, FC, ReactNode, useCallback, useContext, useEffect, useSta
 import {EegParticipant} from "../../models/members.model";
 import {useAppDispatch, useAppSelector} from "../index";
 import {
-  activeParticipantsSelector1,
+  allParticipantsSelector,
   selectParticipant
 } from "../participant";
 import {EegTariff, RateTypeEnum} from "../../models/eeg.model";
@@ -10,10 +10,13 @@ import {clearEnergyState, fetchEnergyReportV2, selectedPeriodSelector} from "../
 import {activeTenant, selectedTenant} from "../eeg";
 import {MeterReport, ParticipantReport, SelectedPeriod} from "../../models/energy.model";
 import {useTenant} from "./Eeg.provider";
+import {filterActiveParticipantAndMeter} from "../../util/FilterHelper.unit";
+import {getPeriodDates} from "../../util/FilterHelper";
 
 
 export interface ParicipantState {
   participants: EegParticipant[]
+  allParticipants: EegParticipant[]
   activePeriod?: SelectedPeriod
   // selectedParticipant: EegParticipant | undefined
   // selectedParticipants: string[]
@@ -35,6 +38,7 @@ export interface ParicipantState {
 
 const initialState: ParicipantState = {
   participants: [],
+  allParticipants: [],
   activePeriod: undefined,
   // selectedParticipant: undefined,
   // selectedParticipants: [],
@@ -59,13 +63,15 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
   const dispatch = useAppDispatch();
   const tenant = useTenant()
   const activePeriod = useAppSelector(selectedPeriodSelector)
-  const participants = useAppSelector(activeParticipantsSelector1)
+  // const participants = useAppSelector(activeParticipantsSelector1)
+  const allParticipants = useAppSelector(allParticipantsSelector)
 
   const [state, setState] = useState<ParicipantState>(initialState);
   const [detailOpen, setDetailOpen] = useState<boolean>(false);
   const [enableBilling, setEnableBilling] = useState<boolean>(false)
   const [showAddMeterPane, setShowAddMeterPane] = useState<boolean>(false)
   const [checkedParticipants, setCheckedParticipants] = useState<Record<string, boolean>>({})
+  const [activeParticipants, setActiveParticipants] = useState<EegParticipant[]>([])
 
   const newRateFn = () => {
     setState({
@@ -101,8 +107,14 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
     // }
   }
 
+  useEffect(() => {
+    const[start, end] = getPeriodDates(activePeriod)
+    setActiveParticipants(filterActiveParticipantAndMeter(allParticipants, start, end))
+  }, [allParticipants]);
+
   const value = {
-    participants: participants,
+    participants: activeParticipants,
+    allParticipants: allParticipants,
     activePeriod: activePeriod,
     selectedRate: undefined,
     detailsPageOpen: detailOpen,
@@ -142,8 +154,8 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
   // }, [activePeriod]);
 
   const fetchEnergyReport = useCallback(() => {
-    if (tenant && activePeriod && participants && participants.length > 0) {
-      const participantsReport = participants.map(p => {
+    if (tenant && activePeriod && activeParticipants && activeParticipants.length > 0) {
+      const participantsReport = activeParticipants.map(p => {
         return {
           participantId: p.id,
           meters: p.meters.filter(m => !!m.participantState).map(m => {
@@ -153,10 +165,10 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
         } as ParticipantReport
       })
       dispatch(fetchEnergyReportV2({tenant: tenant, year: activePeriod.year, segment: activePeriod.segment, type: activePeriod.type, participants: participantsReport.filter(p => p.meters.length > 0)}))
-    } else if (participants && participants.length == 0) {
+    } else if (activeParticipants && activeParticipants.length == 0) {
       dispatch(clearEnergyState())
     }
-  }, [activePeriod, participants])
+  }, [activePeriod, activeParticipants])
 
   useEffect(() => {
     fetchEnergyReport()
@@ -172,9 +184,14 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
 export default ParticipantProvider;
 
 
-export const useParticipants = () => {
-  const {participants} = useContext(ParticipantContext)
-  return participants;
+// export const useParticipants = () => {
+//   const {participants} = useContext(ParticipantContext)
+//   return participants;
+// }
+
+export const useAllParticipants = () => {
+  const {allParticipants} = useContext(ParticipantContext)
+  return allParticipants;
 }
 
 // export const useRates = () => {

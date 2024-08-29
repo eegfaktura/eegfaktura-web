@@ -4,7 +4,7 @@ export interface ParticipantState {
 }
 
 export type MeteringStateType = "INIT" | "ACTIVE" | "INACTIVE"
-export type MeteringProcessStateType = "NEW" | "PENDING" | "APPROVED" | "ACTIVE" | "INACTIVE" | "REJECTED" | "REVOKED" | "INVALID"
+export type MeteringProcessStateType = "NEW" | "INIT" | "PENDING" | "APPROVED" | "ACTIVE" | "INACTIVE" | "REJECTED" | "REVOKED" | "INVALID"
 export type MeterDirectionType = "GENERATION" | "CONSUMPTION"
 
 // type MapMeterType<PropType> =
@@ -97,6 +97,7 @@ export interface InvoiceDocumentResponse {
 }
 
 export interface MeteringEnergyGroupType {
+  participantId: string;
   meteringPoint: string;
   allocationKWh: number;
 }

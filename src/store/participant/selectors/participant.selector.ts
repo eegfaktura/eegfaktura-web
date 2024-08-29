@@ -7,6 +7,7 @@ import {SelectedPeriod} from "../../../models/energy.model";
 import {selectedPeriodSelector} from "../../energy";
 import participants from "../../../pages/Participants";
 import {filterActiveParticipantAndMeter} from "../../../util/FilterHelper.unit";
+import {getPeriodDates} from "../../../util/FilterHelper";
 
 const {selectAll, selectById, selectEntities} = adapter.getSelectors();
 
@@ -27,32 +28,10 @@ export const isFetchingSelector = createSelector(
 //   selectAll
 // );
 
-export const participantsSelector1 = createSelector(
+export const allParticipantsSelector = createSelector(
   featureStateSelector,
   selectAll
 )
-
-const getPeriodDates = (period: SelectedPeriod) => {
-  switch (period.type) {
-    case 'Y':
-      return [
-        new Date(period.year, 0, 1, 0, 0, 0),
-        new Date(period.year, 12, 0, 0, 0, 0)
-      ]
-    case 'YQ':
-      return [
-        new Date(period.year, ((period.segment - 1) * 3), 1, 0, 0, 0),
-        new Date(period.year, ((period.segment) * 3), 0, 0, 0, 0)]
-    case 'YH':
-      return [
-        new Date(period.year, (period.segment - 1)  * 6, 1, 0, 0, 0),
-        new Date(period.year, period.segment * 6, 0, 0, 0, 0)]
-    default:
-      return [
-        new Date(period.year, period.segment - 1, 1, 0, 0, 0),
-        new Date(period.year, period.segment, 0, 0, 0, 0)]
-  }
-}
 
 /**
  * Selector: Returns Participants with active metering points
@@ -60,7 +39,7 @@ const getPeriodDates = (period: SelectedPeriod) => {
  * TODO: Return all participants and their active meteringpoints in cose of unset period informations
  */
 export const activeParticipantsSelector1 = createSelector(
-  participantsSelector1,
+  allParticipantsSelector,
   selectedPeriodSelector,
   (participants, period): EegParticipant[] => {
     if (period) {
@@ -85,7 +64,7 @@ export const selectParticipantById = (id: string) =>
   );
 
 export const meterSelector = createSelector(
-  participantsSelector1,
+  allParticipantsSelector,
   (participants) => participants.reduce((meterArray, p) => {
     return [...p.meters, ...meterArray]
   }, [] as Metering[]))

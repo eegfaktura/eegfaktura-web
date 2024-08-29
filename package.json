@@ -44,6 +44,7 @@
     "react-router": "^5.3.4",
     "react-router-dom": "^5.3.4",
     "react-select": "^5.8.0",
+    "react-viewport-list": "^7.1.2",
     "recharts": "^2.10.3",
     "uuid": "^9.0.1"
   },
