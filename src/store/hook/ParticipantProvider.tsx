@@ -7,7 +7,6 @@ import {
 } from "../participant";
 import {EegTariff, RateTypeEnum} from "../../models/eeg.model";
 import {clearEnergyState, fetchEnergyReportV2, selectedPeriodSelector} from "../energy";
-import {activeTenant, selectedTenant} from "../eeg";
 import {MeterReport, ParticipantReport, SelectedPeriod} from "../../models/energy.model";
 import {useTenant} from "./Eeg.provider";
 import {filterActiveParticipantAndMeter} from "../../util/FilterHelper.unit";

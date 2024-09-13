@@ -1,7 +1,7 @@
 
 import {render, RenderOptions} from "@testing-library/react";
 import {configureStore} from "@reduxjs/toolkit";
-import {AppStore, reducer, State} from "../store";
+import {AppStore, reducer} from "../store";
 import React, {PropsWithChildren} from "react";
 import { Provider } from 'react-redux'
 import {FormProvider, useForm} from "react-hook-form";

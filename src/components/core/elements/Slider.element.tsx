@@ -1,7 +1,6 @@
-import {ChangeEvent, ChangeEventHandler, FC, useState} from "react";
+import {ChangeEvent, FC, useState} from "react";
 
 import './Slider.element.scss'
-import {set} from "react-hook-form";
 
 const SliderElement: FC<{online: number, onSlide: (v: number) => void}> = ({online, onSlide}) => {
 

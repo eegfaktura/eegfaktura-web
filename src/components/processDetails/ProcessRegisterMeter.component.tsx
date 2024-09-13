@@ -1,7 +1,6 @@
 import React, {FC, forwardRef, useEffect, useState} from "react";
 import {IonButton, IonInput, IonItem} from "@ionic/react";
 import InputForm from "../form/InputForm.component";
-import SelectForm from "../form/SelectForm.component";
 import {useForm} from "react-hook-form";
 import {Metering} from "../../models/meteringpoint.model";
 import {EdaProcess, Eeg} from "../../models/eeg.model";
@@ -15,7 +14,6 @@ import {JoinStrings} from "../../util/Helper.util";
 import {meteringDisplayName} from "../../util/FilterHelper";
 import {useLocale} from "../../store/hook/useLocale";
 import CheckboxComponent from "../form/Checkbox.component";
-import InputComponent from "../form/Input.component";
 
 interface ProcessValues {
   communityId: string | undefined

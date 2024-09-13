@@ -1,5 +1,5 @@
 import React, {FC, useEffect, useState} from "react";
-import {Bar, BarChart, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
+import {Bar, BarChart, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
 
 import {periodDisplayString} from "../../util/Helper.util";
 import {IonIcon, IonSpinner, useIonPopover} from "@ionic/react";

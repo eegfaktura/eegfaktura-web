@@ -1,4 +1,4 @@
-import React, {useMemo} from "react";
+import {useMemo} from "react";
 import {EegParticipant} from "../../models/members.model";
 import {filterMeters} from "./ParticipantPane.functions";
 import moment from "moment";
@@ -11,8 +11,7 @@ interface SortParticipantProps {
 export const sortParticipants = (options: SortParticipantProps) => {
   const {participants, hideConsumers, hideProducers} = options
   return useMemo(() => {
-    const start = moment()
-    const sorted = participants.sort((a, b) => {
+    return participants.sort((a, b) => {
       const meterAOK = a.meters.reduce(
         (i, m) => m.processState === "ACTIVE" && i,
         true
@@ -45,8 +44,7 @@ export const sortParticipants = (options: SortParticipantProps) => {
         return -1;
       }
       return 0;
-    });
-    return sorted
+    })
   }, [participants, hideConsumers, hideProducers])
 }
 
@@ -87,7 +85,6 @@ export const filterParticipant = (options: FilterParticipantProps) => {
             }
           })
         return filterMeters(sorted3, hideProducers, hideConsumers, false)
-        break;
       default:
         return filterMeters(sortedParticipants, hideProducers, hideConsumers, hideMeter /*!(hideProducers || hideConsumers)*/)
     }

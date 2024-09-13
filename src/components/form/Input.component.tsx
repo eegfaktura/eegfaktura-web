@@ -1,10 +1,7 @@
 import React, {useCallback, useEffect} from "react";
 import {InputChangeEventDetail, IonInput} from "@ionic/react";
-import {TextFieldTypes} from "@ionic/core";
-import {ChangeHandler} from "react-hook-form/dist/types/form";
 import {ControllerRenderProps} from "react-hook-form/dist/types/controller";
 import {IonInputCustomEvent} from "@ionic/core/dist/types/components";
-import {ReducerType} from "@reduxjs/toolkit";
 import {RefCallBack} from "react-hook-form";
 
 // export interface InputProps {

@@ -1,6 +1,6 @@
 import React, {FC, useEffect, useState} from "react";
 import {ReportNamedData, SelectedPeriod} from "../../models/energy.model";
-import {Bar, BarChart, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
+import {Bar, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
 import {periodDisplayString} from "../../util/Helper.util";
 import {IonIcon, IonSpinner, useIonPopover} from "@ionic/react";
 import {ActiveTenant} from "../../models/eeg.model";
@@ -11,7 +11,7 @@ import {settings} from "ionicons/icons";
 import './LoadCurveReport.component.scss'
 import {calcXAxisNameV2} from "./LoadCurveReport.functions";
 import {transformData} from "./dashboard.functions";
-import {NameType, Payload, ValueType} from "recharts/types/component/DefaultTooltipContent";
+import {NameType, ValueType} from "recharts/types/component/DefaultTooltipContent";
 
 interface LoadSharingComponentProps {
   tenant: ActiveTenant;

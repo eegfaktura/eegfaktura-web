@@ -1,8 +1,7 @@
 import React, {FC, useMemo, useState} from "react";
 import {IonSelect, IonSelectOption, SelectCustomEvent} from "@ionic/react";
 import {SelectedPeriod} from "../../models/energy.model";
-import {MONTHNAME} from "../../models/eeg.model";
-import {calcCurrentPeriod, getPeriodSegment, periodDisplayString, yearMonth} from "../../util/Helper.util";
+import {calcCurrentPeriod, periodDisplayString, yearMonth} from "../../util/Helper.util";
 
 import "./PeriodSelector.element.scss"
 import {generatePeriodOptions} from "../../util/PeriodHelper.functions";

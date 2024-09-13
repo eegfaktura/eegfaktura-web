@@ -187,7 +187,7 @@ export class EnergyService extends BaseService {
         // 'Content-Type': 'multipart/form-data'
       },
       body: await uploadEnergyGraphqlMutation(tenant.rcNr, tenant.ecId, sheet, data)
-    }).then(this.handleErrors).then(this.handleGQLResponse).then(res => true);
+    }).then(this.handleErrors).then(this.handleGQLResponse).then(_ => true);
   }
 
   calcStartEndTime(selectedPeroid: SelectedPeriod): {start: number, end: number} {
@@ -204,7 +204,6 @@ export class EnergyService extends BaseService {
       default:
         return {start: new Date(year, 0).getTime(), end: new Date(year, 11, 31).getTime()}
     }
-    throw new Error("wrong period type. Expected [Y, YH, YQ, YM]. Got " + type)
   }
 }
 

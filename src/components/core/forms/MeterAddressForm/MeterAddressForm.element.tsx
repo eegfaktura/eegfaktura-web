@@ -1,5 +1,5 @@
 import React, {FC, useEffect, useState} from "react";
-import {set, useFormContext} from "react-hook-form";
+import {useFormContext} from "react-hook-form";
 import {Metering} from "../../../../models/meteringpoint.model";
 import {EegParticipant} from "../../../../models/members.model";
 import {IonList, IonListHeader} from "@ionic/react";

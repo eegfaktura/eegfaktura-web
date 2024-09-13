@@ -2,7 +2,6 @@ import React, {FC, useEffect} from "react";
 import {FormProvider, useForm} from "react-hook-form";
 import {useAppDispatch, useAppSelector} from "../../store";
 import {ratesSelector} from "../../store/rate";
-import {selectedTenant} from "../../store/eeg";
 import {
   selectedMeterSelector,
   selectedParticipantSelector,

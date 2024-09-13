@@ -13,7 +13,7 @@
     /*background: red;*/
     height: 80px;
     margin-top: auto;
-    box-shadow: 0px 4px 5px rgba(0, 0, 0, 0.14), 0px 1px 10px rgba(0, 0, 0, 0.12), 0px 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 5px rgba(0, 0, 0, 0.14), 0 1px 10px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.2);
     background: var(--ion-color-eeglight, #fff);
   }
 }
@@ -28,7 +28,7 @@
   overflow: hidden;
   & .fixed-header {
     background: var(--ion-color-eeglight);
-    box-shadow: 0px 1px 10px rgba(0, 0, 0, 0.06), 0px 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 }
 
@@ -42,7 +42,7 @@
   position: relative;
 
   & > .details-header {
-    padding: 10px 0px;
+    padding: 10px 0;
     display: flex;
     flex-direction: row;
     justify-content: space-between;

@@ -4,18 +4,16 @@ import {
   IonCol,
   IonContent,
   IonGrid,
-  IonItem,
-  IonList,
   IonRow,
   IonSelect,
   IonSelectOption
 } from "@ionic/react";
 
 import "./ChartProperty.popup.scss"
-import {generatePeriodOptions, getSegmentFromDate, transformPeriodFromSegment} from "../../util/PeriodHelper.functions";
+import {generatePeriodOptions, transformPeriodFromSegment} from "../../util/PeriodHelper.functions";
 import {CpPeriodType} from "../../models/reports.model";
 import moment from "moment";
-import {periodDisplayString, splitCpPeriod, splitDate} from "../../util/Helper.util";
+import {periodDisplayString, splitCpPeriod} from "../../util/Helper.util";
 import {ReportType, SelectedPeriod} from "../../models/energy.model";
 import cn from "classnames";
 

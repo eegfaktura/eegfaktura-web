@@ -1,14 +1,13 @@
 import React, {FC, useEffect, useState} from 'react';
 
-import Select, {ControlProps, components, Options, InputProps, ContainerProps, OnChangeValue} from 'react-select';
+import Select, {OnChangeValue} from 'react-select';
 import {Control, Controller, FieldError, useWatch} from "react-hook-form";
 import {SelectInterface} from "@ionic/core/dist/types/components/select/select-interface";
 import {IonSelectCustomEvent} from "@ionic/core/dist/types/components";
-import {IonContent, IonInput, IonItem, IonLabel, SelectChangeEventDetail} from "@ionic/react";
+import {IonLabel, SelectChangeEventDetail} from "@ionic/react";
+import {ActionMeta} from "react-select/dist/declarations/src/types";
 
 import "./BasicSelect.component.scss"
-import {ActionMeta} from "react-select/dist/declarations/src/types";
-import {activeMeterEnergyArray} from "../../store";
 
 export interface SelectOptions {
   readonly label: string,

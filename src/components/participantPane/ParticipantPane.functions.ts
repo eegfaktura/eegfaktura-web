@@ -1,6 +1,6 @@
 import {Metering, MeteringEnergyGroupType} from "../../models/meteringpoint.model";
 import {EegParticipant} from "../../models/members.model";
-import {meteringEnergyGroup1, meteringEnergyGroup11} from "../../store/energy";
+import {meteringEnergyGroup1} from "../../store/energy";
 import {store} from "../../store";
 
 export const buildAllocationMapFromSelected = (participants: EegParticipant[], checkedParticipant: Record<string, boolean>): MeteringEnergyGroupType[] => {

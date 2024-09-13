@@ -1,4 +1,4 @@
-import React, {FC, useCallback, useEffect, useState} from "react";
+import React, {FC, useEffect, useState} from "react";
 import BarComponent from "../core/Bar.component";
 import {activeMeterEnergyArray, useAppSelector} from "../../store";
 import {Metering} from "../../models/meteringpoint.model";

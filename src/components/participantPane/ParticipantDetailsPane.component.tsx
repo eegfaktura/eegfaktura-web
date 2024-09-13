@@ -1,13 +1,13 @@
-import React, {FC, useEffect, useState} from "react";
+import React, {FC,  useState} from "react";
 import {EegParticipant} from "../../models/members.model";
 import cn from "classnames";
 
 import "./ParticipantDetailsPane.compoenent.css"
 import {
-  IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader, IonContent, IonFooter,
+  IonButton, IonButtons, IonCard,
   IonIcon,
   IonItem,
-  IonLabel, IonPage,
+  IonLabel,
   IonTitle,
   IonToggle,
   IonToolbar, useIonAlert, useIonModal, useIonToast
@@ -17,7 +17,6 @@ import {
   documentTextOutline,
   logoEuro, moveOutline,
   person,
-  trashBin
 } from "ionicons/icons";
 import {eegExclamation, eegPlug, eegSandClass, eegShieldCrown, eegSolar, eegStar} from "../../eegIcons";
 import {store, useAppDispatch, useAppSelector} from "../../store";
@@ -28,23 +27,20 @@ import {
   archiveParticipant,
   confirmParticipant, moveMeteringPoint, allParticipantsSelector, removeMeteringPoint,
   selectedMeterSelector,
-  selectedParticipantSelector, selectParticipantById,
+  selectedParticipantSelector,
   updateParticipant, updateParticipantPartial
 } from "../../store/participant";
-import {formatMeteringPointString, GetWeek, JoinStrings} from "../../util/Helper.util";
-import {activeTenant, selectedTenant} from "../../store/eeg";
+import {formatMeteringPointString} from "../../util/Helper.util";
 import AllowParticipantDialog from "../dialogs/AllowParticipant.dialog";
 import {OverlayEventDetail} from "@ionic/react/dist/types/components/react-component-lib/interfaces";
 import InvoiceDocumentComponent from "./InvoiceDocument.component";
 import ContractDocumentComponent from "./ContractDocument.component";
 import {ratesSelector} from "../../store/rate";
-import {meteringInterReportSelectorV2, meteringReportSelectorV2, selectedPeriodSelector} from "../../store/energy";
+import {meteringInterReportSelectorV2, selectedPeriodSelector} from "../../store/energy";
 import MeterChartComponent from "./MeterChart.component";
 import {Api} from "../../service";
 import {useLocale} from "../../store/hook/useLocale";
 import {useAccessGroups, useTenant} from "../../store/hook/Eeg.provider";
-import {BasicSelectComponent} from "../form/BasicSelect.component";
-import {useForm} from "react-hook-form";
 import {useMoveMeteringPointHook} from "../../store/hook/MoveMeteringPoint.hook";
 import moment from "moment";
 

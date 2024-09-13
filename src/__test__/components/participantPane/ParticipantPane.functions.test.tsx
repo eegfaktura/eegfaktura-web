@@ -1,17 +1,7 @@
-import ParticipantPaneComponent from "../../../components/participantPane/ParticipantPane.component";
-import {render} from "@testing-library/react";
-import {renderWithProviders} from "../../test-utils";
-import React from "react";
 import {AccountInfo, Address, Contact, Optionals} from "../../../models/eeg.model";
 import {Metering} from "../../../models/meteringpoint.model";
 import {buildAllocationMapFromSelected} from "../../../components/participantPane/ParticipantPane.functions";
 import {EegParticipant} from "../../../models/members.model";
-// import configureStore from 'redux-mock-store' //ES6 modules
-import thunk from 'redux-thunk'
-
-
-// const middlewares = [thunk]
-// const mockStore = configureStore(middlewares);
 
 describe("<ParticipantPane/> Functions", () => {
   beforeAll(() => {

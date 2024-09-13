@@ -1,7 +1,7 @@
 import React, {FC, FormEvent, forwardRef, HTMLProps, useEffect, useState} from "react";
 import DatePicker from "react-datepicker";
 import {Control, Controller, FieldError, UseFormClearErrors, useWatch} from "react-hook-form";
-import {InputChangeEventDetail, IonInput} from "@ionic/react";
+import {IonInput} from "@ionic/react";
 
 import "./DatePickerForm.element.scss"
 import {IonInputCustomEvent} from "@ionic/core/dist/types/components";

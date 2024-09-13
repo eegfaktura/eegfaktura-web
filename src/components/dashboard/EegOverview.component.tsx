@@ -1,7 +1,6 @@
-import React, {FC, useEffect, useMemo, useState} from "react";
+import React, {FC,  useMemo} from "react";
 import {EegParticipant} from "../../models/members.model";
 import {EegTariff} from "../../models/eeg.model";
-import BarComponent from "../core/Bar.component";
 
 interface EegOverviewComponentProps {
   participants: EegParticipant[]

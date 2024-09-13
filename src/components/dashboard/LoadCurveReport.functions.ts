@@ -1,7 +1,4 @@
-import {SelectedPeriod} from "../../models/energy.model";
 import {MONTHNAME} from "../../models/eeg.model";
-import {GetWeek} from "../../util/Helper.util";
-
 
 export const calcXAxisNameV2 = (code: string, i: number) => {
   const ce = code.split(':')

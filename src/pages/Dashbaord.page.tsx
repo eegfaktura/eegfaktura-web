@@ -1,18 +1,6 @@
 import React, {FC, useCallback, useContext, useEffect, useMemo, useState} from "react";
 import {IonCard, IonCol, IonContent, IonGrid, IonPage, IonRow, IonSpinner} from "@ionic/react";
 import {
-  CartesianGrid,
-  Legend, Line,
-  LineChart,
-  RadialBar,
-  RadialBarChart,
-  ResponsiveContainer,
-  Tooltip, XAxis,
-  YAxis
-} from "recharts";
-import {
-  periodsSelector,
-  selectAllIntermediates,
   selectAllIntermediatesV2,
   selectedPeriodSelector
 } from "../store/energy";
@@ -21,9 +9,6 @@ import {useAppSelector} from "../store";
 import "./Dashboard.page.scss"
 import DashboardLayoutComponent from "../components/dashboard/DashboardLayout.component";
 import {ParticipantContext} from "../store/hook/ParticipantProvider";
-import {selectedTenant} from "../store/eeg";
-import {EegParticipant} from "../models/members.model";
-import {SelectedPeriod} from "../models/energy.model";
 
 export type PieSeriesType = {
   name: string;

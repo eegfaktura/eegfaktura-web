@@ -1,6 +1,6 @@
 import React, {FC, ReactNode, useEffect, useMemo, useState} from "react";
-import {EnergyPeriodType, IntermediateRecord, ReportNamedData, SelectedPeriod} from "../../models/energy.model";
-import {PieSeriesType, ReportSeriesType} from "../../pages/Dashbaord.page";
+import {ReportNamedData, SelectedPeriod} from "../../models/energy.model";
+import {PieSeriesType} from "../../pages/Dashbaord.page";
 import LoadSharingComponent from "./LoadSharing.component";
 import IntraDayReportComponent from "./IntraDayReport.component";
 import EnergyOverviewComponent from "./EnergyOverview.component";
