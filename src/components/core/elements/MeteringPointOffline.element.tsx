@@ -17,17 +17,13 @@ const MeteringPointOfflineElement: FC<{m: Metering}> = ({m}) => {
     m.activationCode = ''
   }, [m])
 
-  console.log("ACt METER: ", m, enabled)
-
   const onActivationModeChanged = (v: number) => {
     m.activationMode = v === 1 ? 'ONLINE' : 'OFFLINE'
-    console.log('onActivationModeChanged', m.activationMode)
     setMode(m.activationMode)
   }
 
   const onChangeEnabled = (v: IonCheckboxCustomEvent<CheckboxChangeEventDetail<any>>) => {
     m.enabled = v.target.checked
-    console.log('onChangeEnabled', m.enabled)
     setEnabled(m.enabled)
   }
 

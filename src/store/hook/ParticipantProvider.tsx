@@ -110,7 +110,7 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
   useEffect(() => {
     const[start, end] = getPeriodDates(activePeriod)
     setActiveParticipants(filterActiveParticipantAndMeter(allParticipants, start, end))
-  }, [allParticipants]);
+  }, [allParticipants, activePeriod]);
 
   const value = {
     participants: activeParticipants,

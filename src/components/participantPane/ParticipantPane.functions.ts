@@ -1,28 +1,7 @@
 import {Metering, MeteringEnergyGroupType} from "../../models/meteringpoint.model";
 import {EegParticipant} from "../../models/members.model";
-import {meteringEnergyGroup1} from "../../store/energy";
+import {meteringEnergyGroup1, meteringEnergyGroup11} from "../../store/energy";
 import {store} from "../../store";
-
-// export const buildAllocationMapFromSelected = (participants: EegParticipant[], checkedParticipant: Record<string, boolean>, energyMeterGroup: Record<string, number>): MeteringEnergyGroupType[] => {
-//   const participantMap = participants.reduce(
-//     (r, p) => ({ ...r, [p.id]: p }),
-//     {} as Record<string, EegParticipant>
-//   );
-//
-//   // Object.entries(checkedParticipant).forEach(c => {if (!!participantMap[c[0]]) console.log("Checked Participant not in Map", c)} )
-//
-//   return Object.entries(checkedParticipant)
-//     .filter((c) => participantMap[c[0]])
-//     .flatMap((r) => [
-//       ...participantMap[r[0]].meters.filter((m) => m.tariff_id !== null && energyMeterGroup[m.meteringPoint] !== 0),
-//     ])
-//     .map((m) => {
-//       return {
-//         meteringPoint: m.meteringPoint,
-//         allocationKWh: energyMeterGroup[m.meteringPoint],
-//       } as MeteringEnergyGroupType;
-//     });
-// };
 
 export const buildAllocationMapFromSelected = (participants: EegParticipant[], checkedParticipant: Record<string, boolean>): MeteringEnergyGroupType[] => {
   const participantReport = meteringEnergyGroup1(store.getState())

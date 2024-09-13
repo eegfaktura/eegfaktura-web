@@ -20,7 +20,7 @@ interface DatePickerFormProps {
   onChangeDate?: (name: string, value: any, event?: any) => void
 }
 
-const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, label, placeholder, error, onChangeDate}) => {
+const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, label, placeholder, error, disabled, onChangeDate}) => {
 
   const value = useWatch({control, name: name, defaultValue: undefined})
   const [showDate, setShowDate] = useState<Date>()
@@ -59,6 +59,7 @@ const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, l
           fill="outline"
           labelPlacement={"floating"}
           ref={ref}
+          disabled={disabled}
         />
     );
   });

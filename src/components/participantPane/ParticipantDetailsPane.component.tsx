@@ -103,7 +103,6 @@ const ParticipantDetailsPaneComponent: FC = () => {
   // const [moveMeterModal] = useIonModal(MoveParticipantModel, {meter: selectedMeter, participants: participantsSelector1(store.getState())});
   const {showMoveMeteringModal} = useMoveMeteringPointHook(selectedMeter!,
     allParticipantsSelector(store.getState()), (name: string, value: string, event?: any) => {
-    console.log("meter", value)
       dispatcher(moveMeteringPoint({tenant: tenant.tenant, sParticipantId: selectedParticipant!.id, dParticipantId: value, meter: selectedMeter!}))
     });
 
@@ -180,7 +179,6 @@ const ParticipantDetailsPaneComponent: FC = () => {
     if (ev.detail.role === 'confirm') {
       uploadFiles(tenant!.tenant, participant.id, ev.detail.data)
         .then(() => {
-          console.log(meters)
           return participant
         })
         .then(() => dispatcher(confirmParticipant(

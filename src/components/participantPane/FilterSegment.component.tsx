@@ -21,7 +21,7 @@ const FilterSegmentComponent: FC<FilterSegmentProps> = ({selectedOption, setSele
   const [filterAlert] = useIonAlert();
   const [selectedMenuItem, setSelectedMenuItem] = useState<number>(0)
   const [selectOption, setSelectOption] = useState<string>('init');
-  const {t} = useLocale()
+  const {t} = useLocale("common")
 
   useEffect(() => {
     switch(selectedOption) {
@@ -62,7 +62,7 @@ const FilterSegmentComponent: FC<FilterSegmentProps> = ({selectedOption, setSele
           text: 'Cancel',
           role: 'cancel',
           handler: () => {
-            console.log('Alert canceled');
+            // console.log('Alert canceled');
           },
         },
         {

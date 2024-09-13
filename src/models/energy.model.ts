@@ -90,6 +90,11 @@ export interface ProducerReport extends BaseReport {
 
 export type ReportType = 'YH' | "YQ" | 'YM' | 'Y'
 
+export type EnergyPeriodType = {
+  begin: string;
+  end: string;
+}
+
 export interface SelectedPeriod {
   type: ReportType
   year: number
@@ -118,4 +123,16 @@ export interface SummaryReportData {
   produced: number,
   qoVConsumer: number,
   qoVProducer: number,
+}
+
+export interface ReportNamedData extends SummaryReportData {
+  name: string
+  cntConsumer: number
+  cntProducer: number
+}
+
+export interface CombinedReportData {
+  reportName: string
+  reportData: ReportNamedData[]
+
 }

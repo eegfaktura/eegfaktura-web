@@ -108,6 +108,9 @@ class EegBaseService {
           if (isErrorResponse(errorBody)) {
             throw new Error(determineErrTxt(new ErrorResponse(errorBody.error)));
           } else {
+            if (!response || !response.statusText) {
+              throw new Error("Error while fetching data!")
+            }
             throw new Error(response.statusText)
           }
       }

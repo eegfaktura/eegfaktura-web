@@ -1,9 +1,10 @@
 import BaseService, {ENERGY_API_SERVER} from "./base.service";
 import {
+  CombinedReportData,
   EegEnergyReport,
   EnergyReportResponse,
   ParticipantReport,
-  RecordV2,
+  RecordV2, ReportNamedData,
   SelectedPeriod,
   SummaryReportData
 } from "../models/energy.model";
@@ -63,31 +64,57 @@ export class EnergyService extends BaseService {
   async fetchIntraDayReportV2(tenant: ActiveTenant, selectedPeroid: SelectedPeriod): Promise<SummaryReportData[]> {
     const token = await this.lookupToken()
 
-    const calcStartEndTime = (selectedPeroid: SelectedPeriod) => {
-      const year = selectedPeroid.year
-      const segment = selectedPeroid.segment
-      const type = selectedPeroid.type
-      switch (type) {
-        case "YM":
-          return {start: new Date(year, segment - 1).getTime(), end: new Date(year, segment, 0).getTime()}
-        case "YQ":
-          return {start: new Date(year, (segment * 3) - 3).getTime(), end: new Date(year, (segment * 3), 0).getTime()}
-        case "YH":
-          return {start: new Date(year, (segment * 6) - 6).getTime(), end: new Date(year, (segment * 6), 0).getTime()}
-        default:
-          return {start: new Date(year, 0).getTime(), end: new Date(year, 11, 31).getTime()}
-      }
-      throw new Error("wrong period type. Expected [Y, YH, YQ, YM]. Got " + type)
-    }
+    // const calcStartEndTime = (selectedPeroid: SelectedPeriod) => {
+    //   const year = selectedPeroid.year
+    //   const segment = selectedPeroid.segment
+    //   const type = selectedPeroid.type
+    //   switch (type) {
+    //     case "YM":
+    //       return {start: new Date(year, segment - 1).getTime(), end: new Date(year, segment, 0).getTime()}
+    //     case "YQ":
+    //       return {start: new Date(year, (segment * 3) - 3).getTime(), end: new Date(year, (segment * 3), 0).getTime()}
+    //     case "YH":
+    //       return {start: new Date(year, (segment * 6) - 6).getTime(), end: new Date(year, (segment * 6), 0).getTime()}
+    //     default:
+    //       return {start: new Date(year, 0).getTime(), end: new Date(year, 11, 31).getTime()}
+    //   }
+    //   throw new Error("wrong period type. Expected [Y, YH, YQ, YM]. Got " + type)
+    // }
 
-    return await fetch(`${ENERGY_API_SERVER}/eeg/v2/${tenant.ecId}/intradayreport`, {
+    return await fetch(`${ENERGY_API_SERVER}/eeg/v2/${tenant.ecId}/intra-day-report`, {
       method: 'POST',
       headers: {
         ...this.getSecureHeadersX(token, tenant.rcNr),
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(calcStartEndTime(selectedPeroid))
+      body: JSON.stringify(this.calcStartEndTime(selectedPeroid))
+    }).then(this.handleErrors).then(res => res.json());
+  }
+
+  async fetchLoadCurveReportV2(tenant: ActiveTenant, selectedPeroid: SelectedPeriod): Promise<ReportNamedData[]> {
+    const token = await this.lookupToken()
+    return await fetch(`${ENERGY_API_SERVER}/eeg/v2/${tenant.ecId}/load-curve-report`, {
+      method: 'POST',
+      headers: {
+        ...this.getSecureHeadersX(token, tenant.rcNr),
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(this.calcStartEndTime(selectedPeroid))
+    }).then(this.handleErrors).then(res => res.json());
+  }
+
+  async fetchCombinedReportV2(tenant: ActiveTenant, reports: string[], selectedPeroid: SelectedPeriod): Promise<CombinedReportData[]> {
+    const token = await this.lookupToken()
+    return await fetch(`${ENERGY_API_SERVER}/eeg/v2/${tenant.ecId}/combined-report`, {
+      method: 'POST',
+      headers: {
+        ...this.getSecureHeadersX(token, tenant.rcNr),
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({...this.calcStartEndTime(selectedPeroid), reports: reports})
     }).then(this.handleErrors).then(res => res.json());
   }
 
@@ -101,7 +128,7 @@ export class EnergyService extends BaseService {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({type: type, year: year, segment: segment})
-    }).then(this.handleErrors).then(res => res.json());
+    }).then(this.handleErrors).then(res => res.json()).then(res => res[0]);
   }
 
   async createReport(tenant: ActiveTenant, payload: ExcelReportRequest) {
@@ -163,6 +190,22 @@ export class EnergyService extends BaseService {
     }).then(this.handleErrors).then(this.handleGQLResponse).then(res => true);
   }
 
+  calcStartEndTime(selectedPeroid: SelectedPeriod): {start: number, end: number} {
+    const year = selectedPeroid.year
+    const segment = selectedPeroid.segment
+    const type = selectedPeroid.type
+    switch (type) {
+      case "YM":
+        return {start: new Date(year, segment - 1).getTime(), end: new Date(year, segment, 0).getTime()}
+      case "YQ":
+        return {start: new Date(year, (segment * 3) - 3).getTime(), end: new Date(year, (segment * 3), 0).getTime()}
+      case "YH":
+        return {start: new Date(year, (segment * 6) - 6).getTime(), end: new Date(year, (segment * 6), 0).getTime()}
+      default:
+        return {start: new Date(year, 0).getTime(), end: new Date(year, 11, 31).getTime()}
+    }
+    throw new Error("wrong period type. Expected [Y, YH, YQ, YM]. Got " + type)
+  }
 }
 
 // export const energyService = new EnergyService(authKeycloak);

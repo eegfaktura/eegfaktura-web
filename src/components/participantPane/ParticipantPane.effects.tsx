@@ -46,7 +46,6 @@ export const sortParticipants = (options: SortParticipantProps) => {
       }
       return 0;
     });
-    console.log("Duration: ", moment().diff(start));
     return sorted
   }, [participants, hideConsumers, hideProducers])
 }
@@ -57,9 +56,10 @@ interface FilterParticipantProps {
   participants: EegParticipant[],
   hideProducers: boolean,
   hideConsumers: boolean,
+  hideMeter: boolean,
 }
 export const filterParticipant = (options: FilterParticipantProps) => {
-  const {selectedFilter, sortedParticipants, participants, hideConsumers, hideProducers} = options
+  const {selectedFilter, sortedParticipants, participants, hideConsumers, hideProducers, hideMeter} = options
   return useMemo(() => {
     switch (selectedFilter) {
       case 'init':
@@ -89,7 +89,7 @@ export const filterParticipant = (options: FilterParticipantProps) => {
         return filterMeters(sorted3, hideProducers, hideConsumers, false)
         break;
       default:
-        return filterMeters(sortedParticipants, hideProducers, hideConsumers, false /*!(hideProducers || hideConsumers)*/)
+        return filterMeters(sortedParticipants, hideProducers, hideConsumers, hideMeter /*!(hideProducers || hideConsumers)*/)
     }
-  }, [selectedFilter, participants, sortedParticipants, hideConsumers, hideProducers])
+  }, [selectedFilter, participants, sortedParticipants, hideConsumers, hideProducers, hideMeter])
 }

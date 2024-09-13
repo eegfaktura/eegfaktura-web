@@ -55,7 +55,6 @@ const ProcessPodListComponent: FC<ProcessPodListComponentProps> = ({eeg, edaProc
   } = useForm<ProcessValues>({defaultValues: processValues})
 
   const request = (data: ProcessValues) => {
-    console.log("REQUEST", data);
     if (data.operatorId) {
       Api.eegService.syncMeteringPointList(eeg.rcNumber, data.operatorId)
         .then(() => infoToast(errorT("process.podList_ok")))
@@ -80,8 +79,10 @@ const ProcessPodListComponent: FC<ProcessPodListComponentProps> = ({eeg, edaProc
       {eeg.area === 'BEG' &&
           <div style={{paddingBottom: "15px"}}>
               <BasicSelectComponent control={control} name={"operatorId"}
-                                    options={getNetOperatorIds()} label={t("gridOperator_id")} multiple={false}
-                                    rules={{required: true}} defaultValue={processValues.operatorId}/>
+                                    options={getNetOperatorIds()} label={t("gridOperator-id")} multiple={false}
+                                    rules={{
+                                      required: true
+                                    }} defaultValue={processValues.operatorId}/>
           </div>
       }
       <IonButton onClick={handleSubmit(request)} disabled={!formState.isValid}>

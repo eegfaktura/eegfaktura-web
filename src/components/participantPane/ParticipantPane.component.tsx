@@ -9,7 +9,7 @@ import {
   IonCol,
   IonIcon,
   IonItem,
-  IonLabel,
+  IonLabel, IonList,
   IonRow,
   IonSearchbar,
   IonSpinner,
@@ -20,7 +20,7 @@ import {
   useIonToast,
 } from "@ionic/react";
 import {CheckboxChangeEventDetail} from "@ionic/core";
-import {IonCheckboxCustomEvent} from "@ionic/core/dist/types/components";
+import {IonCheckboxCustomEvent, IonSearchbarCustomEvent} from "@ionic/core/dist/types/components";
 import {
   createPeriodIdentifier,
   SelectedPeriod,
@@ -46,7 +46,6 @@ import {
   selectBillFetchingSelector,
 } from "../../store/billing";
 import {
-  meteringEnergyGroup11,
   selectMetaRecord,
   setSelectedPeriod,
 } from "../../store/energy";
@@ -77,7 +76,7 @@ import {
   reformatDateTimeStamp,
 } from "../../util/Helper.util";
 import DatepickerPopover from "../dialogs/datepicker.popover";
-import {ExcelReportRequest, InvestigatorCP, ParticipantCp} from "../../models/reports.model";
+import {ExcelReportRequest, ParticipantCp} from "../../models/reports.model";
 import UploadPopup from "../dialogs/upload.popup";
 import {EegContext, useRefresh, useTenant} from "../../store/hook/Eeg.provider";
 import {
@@ -97,13 +96,13 @@ import {
 } from "../../util/FilterHelper.unit";
 import moment from "moment";
 import {Api} from "../../service";
-import {buildAllocationMapFromSelected, filterMeters, filterSearchQuery} from "./ParticipantPane.functions";
+import {buildAllocationMapFromSelected, filterSearchQuery} from "./ParticipantPane.functions";
 import {
   filterParticipant,
   sortParticipants
 } from "./ParticipantPane.effects";
 import FilterSegmentComponent from "./FilterSegment.component";
-import {ViewportList} from "react-viewport-list";
+import {ViewportList, ViewportListRef} from "react-viewport-list";
 import HeaderFavButtonComponent from "../core/HeaderFavButton.component";
 
 const ParticipantPaneComponent: FC = () => {
@@ -194,7 +193,8 @@ const ParticipantPaneComponent: FC = () => {
         sortedParticipants: sortedParticipants1,
         participants: allParticipants,
         hideConsumers,
-        hideProducers
+        hideProducers,
+        hideMeter
       })
 
   const infoToast = (message: string) => {
@@ -217,7 +217,9 @@ const ParticipantPaneComponent: FC = () => {
   const selectAll = (event: IonCheckboxCustomEvent<CheckboxChangeEventDetail>) => {
     participants.forEach((p) => {
       if (p.status === "ACTIVE") {
-        const tariffConfigured = p.meters.reduce((c, e) => c || (e.tariff_id !== undefined && e.tariff_id !== null), p.tariffId !== undefined && p.tariffId != null);
+        const tariffConfigured =
+          p.meters.reduce((c, e) => c || (e.tariff_id !== undefined && e.tariff_id !== null && e.status !== 'INIT'),
+            p.tariffId !== undefined && p.tariffId != null);
         if (tariffConfigured) {
           setCheckedParticipant(p.id, event.detail.checked);
         }
@@ -346,14 +348,13 @@ const ParticipantPaneComponent: FC = () => {
     onDismiss: (type: number, startDate: Date, endDate: Date) => {
       loading({message: "Daten exportieren ..."});
       onExport(type, [startDate, endDate])
-        .then((b) => {
+        .then(_ => {
           dismissReport([startDate, endDate], "");
-          dismissLoading();
+          return dismissLoading();
         })
-        .catch((e) => {
+        .catch(e => {
           dismissReport(undefined);
-          dismissLoading();
-          errorToast("Export konnte nicht generiert werden." + e.toString());
+          dismissLoading().then(_ => errorToast("Export konnte nicht generiert werden." + e.toString()));
         });
     },
   });
@@ -487,10 +488,10 @@ const ParticipantPaneComponent: FC = () => {
             })
           );
         }
-        console.log("Valid 2 : ", previewValid);
-        var temp = activePeriod === undefined || !previewValid;
-
-        console.log("res : ", temp);
+        // console.log("Valid 2 : ", previewValid);
+        // var temp = activePeriod === undefined || !previewValid;
+        //
+        // console.log("res : ", temp);
       });
     }
   };
@@ -524,12 +525,30 @@ const ParticipantPaneComponent: FC = () => {
     }
   }
 
+  // const viewPortRef = useRef<HTMLDivElement | null>(null);
+  const viewPortRef = useRef(null);
+  const listRef = useRef<ViewportListRef | null>(null);
+  const popoverRef = useRef<HTMLIonToolbarElement>(null);
+
   const handleSearchInput = (e: CustomEvent<SearchbarInputEventDetail>) => {
     setSearchQuery(e.detail.value?.toLowerCase())
   };
 
-  const viewPortRef = useRef<HTMLDivElement | null>(null);
-  const popoverRef = useRef<HTMLIonToolbarElement>(null);
+  const handleSearchClear = (e:  IonSearchbarCustomEvent<void>) => {
+    if (selectedParticipant) {
+      const p_idx = findIndexInParticipantList(viewEntities, selectedParticipant.id)
+      console.log("Handle Search Clear", selectedParticipant, p_idx, viewEntities)
+      if (p_idx < 0) {
+        listRef.current?.scrollToIndex({index: 0, offset: p_idx})
+      }
+    }
+  }
+
+  const findIndexInParticipantList = (viewEntities: EegParticipant[], participantId: string) => {
+    return viewEntities.findIndex(v => v.id === participantId)
+  }
+
+  const viewPortItems = filterSearchQuery(viewEntities, searchQuery)
   return (
     <div className={"participant-pane"}>
       <div className={"pane-body"}>
@@ -572,6 +591,7 @@ const ParticipantPaneComponent: FC = () => {
                 style={{"--box-shadow": "undefined"}}
                 debounce={500}
                 onIonInput={handleSearchInput}
+                onIonClear={handleSearchClear}
               ></IonSearchbar>
             </IonToolbar>
           )}
@@ -581,12 +601,19 @@ const ParticipantPaneComponent: FC = () => {
             selectAll={selectAll}
             onUpdatePeriod={onUpdatePeriodSelection}
           />
-          <div className="scroll-container" ref={viewPortRef}>
+          <IonList className={"scroll-container"} ref={viewPortRef}>
             <ViewportList
+              ref={listRef}
               viewportRef={viewPortRef}
-              items={filterSearchQuery(viewEntities, searchQuery)}
-              initialPrerender={10}
-              initialIndex={9}
+              items={viewPortItems}
+              // initialPrerender={10}
+              // initialIndex={9}
+              // initialOffset={100}
+              // itemSize={viewPortItems.length}
+              // initialAlignToTop={false}
+              // overscan={10}
+              // withCache={false}
+              // itemMargin={8}
             >
               {(command) => {
                 if (command.meters.length > 0) {
@@ -651,7 +678,7 @@ const ParticipantPaneComponent: FC = () => {
                 }
               }}
             </ViewportList>
-          </div>
+          </IonList>
         </div>
         <div className={"pane-footer"}>
           {showAmount && (

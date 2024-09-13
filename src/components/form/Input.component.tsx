@@ -79,7 +79,6 @@ function Input<TValue, IsNumber extends boolean = false>(props: Omit<ControllerR
 
   const handleChange = async (e: IonInputCustomEvent<InputChangeEventDetail>) => {
     const value = evaluate(e.target.value) // as TValue
-    console.log("Handle Change TypeOf Value", typeof e.target.value, props.name, "ValueType", typeof value, typeof defaultValue)
     const changeFunc = async (value: TValue) => {
       onValueChanged && onValueChanged(value, e)
     }

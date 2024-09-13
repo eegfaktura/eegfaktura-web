@@ -75,7 +75,7 @@ const NumberInput1 = <T extends FieldValues>(props: NumberInputFormProps<T>) => 
   };
 
   const handleFormat = (event: FormEvent<HTMLIonInputElement>) => {
-    console.log(event)
+    // console.log(event)
     // if (isNumeric(values.detail.value)) {
     //
     // }

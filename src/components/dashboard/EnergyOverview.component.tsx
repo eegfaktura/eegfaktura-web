@@ -1,4 +1,4 @@
-import React, {FC, useEffect, useState} from "react";
+import React, {FC, useCallback, useEffect, useState} from "react";
 import BarComponent from "../core/Bar.component";
 import {activeMeterEnergyArray, useAppSelector} from "../../store";
 import {Metering} from "../../models/meteringpoint.model";
@@ -25,20 +25,22 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
   // const tenant = useAppSelector(activeTenant)
   const tenant = useTenant()
 
-  const [producedEnergy, setProducedEnergy] = useState<number>(0)
-  const [consumedEnergy, setConsumedEnergy] = useState<number>(0)
-  const [distributedEnergy, setDistributedEnergy] = useState<number>(0)
+  // const [producedEnergy, setProducedEnergy] = useState<number>(0)
+  // const [consumedEnergy, setConsumedEnergy] = useState<number>(0)
+  // const [distributedEnergy, setDistributedEnergy] = useState<number>(0)
   const [preProducedEnergy, setPreProducedEnergy] = useState<number>(0)
   const [preConsumedEnergy, setPreConsumedEnergy] = useState<number>(0)
   const [preDistributedEnergy, setPreDistributedEnergy] = useState<number>(0)
   const [cash, setCash] = useState<{taken: { energy: number, money: number }, spent: { energy: number, money: number }}>({taken: {energy: 0 , money: 0}, spent: {energy: 0, money: 0}})
 
-  useEffect(() => {
-    setProducedEnergy(produced.value)
-    setConsumedEnergy(consumed.value)
-    setDistributedEnergy(allocated.value)
-  }, [consumed, produced, allocated]);
+  const [producedEnergy, consumedEnergy, distributedEnergy] = [produced.value, consumed.value, allocated.value]
 
+  // useEffect(() => {
+  //   setProducedEnergy(produced.value)
+  //   setConsumedEnergy(consumed.value)
+  //   setDistributedEnergy(allocated.value)
+  // }, [consumed, produced, allocated]);
+  //
   useEffect(() => {
     meterGroup && rates && calculateSummary()
   }, [meterGroup, rates]);
@@ -57,20 +59,25 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
       })
     }
   }, [activePeriod]);
+
   const calculateSummary = () => {
     let consumerSum = 0
     let producerSum = 0
     let producerCash =0
     let consumerCash = 0
 
-    meterGroup.forEach(m => {
+    meterGroup.forEach((m,i) => {
       if (rates[m.meter.tariff_id]) {
-        if (m.meter.direction === "CONSUMPTION") {
-          consumerSum += m.utilization
-          consumerCash += meterCash(m.meter, m.utilization)
+        if (isNaN(m.utilization)) {
+          console.log("Meter has invalid energy values!", i, m)
         } else {
-          producerSum += m.utilization
-          producerCash += meterCash(m.meter, m.utilization)
+          if (m.meter.direction === "CONSUMPTION") {
+            consumerSum += m.utilization
+            consumerCash += meterCash(m.meter, m.utilization)
+          } else {
+            producerSum += m.utilization
+            producerCash += meterCash(m.meter, m.utilization)
+          }
         }
       }
     })

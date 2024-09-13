@@ -61,7 +61,6 @@ const MeterFormComponent: FC<MeterFromComponentProps> = ({meteringPoint}) => {
     event.persist && event.persist();
 
     const {invalid, isDirty} = formMethods.getFieldState(name as keyof Metering, formMethods.formState)
-    console.log("1.OnChangePartFact", name, formMethods.getFieldState(name as keyof Metering, formMethods.formState))
     if (invalid || !isDirty) {
       return
     }
@@ -72,7 +71,6 @@ const MeterFormComponent: FC<MeterFromComponentProps> = ({meteringPoint}) => {
       return
     }
 
-    console.log("OnChangePartFact", name, value, typeof value, formMethods)
     // setValue(name as keyof Metering, value, {shouldDirty: true, shouldValidate: true})
     const participantId = participant?.id;
     if (participantId && metering) {

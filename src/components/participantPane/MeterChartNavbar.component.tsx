@@ -47,7 +47,7 @@ const MeterChartNavbarComponent: FC<MeterChartNavbarComponentProps> = ({selected
     onSelectionChanged(selectedPeriod)
   }
 
-  const onChangePeriod = useCallback((selectedPeriod: SelectedPeriod | undefined)  =>{
+  const onChangePeriod = useCallback((selectedPeriod: SelectedPeriod | undefined) => {
     if (selectedPeriod) {
       setSelectedPeriod(selectedPeriod)
       updateSeries(selectedMeterId, selectedPeriod)

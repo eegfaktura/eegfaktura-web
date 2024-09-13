@@ -5,6 +5,7 @@ import {MONTHNAME} from "../../models/eeg.model";
 import {calcCurrentPeriod, getPeriodSegment, periodDisplayString, yearMonth} from "../../util/Helper.util";
 
 import "./PeriodSelector.element.scss"
+import {generatePeriodOptions} from "../../util/PeriodHelper.functions";
 
 interface PeriodSelectorElementProps {
   periods: {begin: string, end: string};
@@ -17,24 +18,24 @@ const PeriodSelectorElement: FC<PeriodSelectorElementProps> = ({periods, activeP
   const [periodOptions, setPeroidOptions] = useState<SelectedPeriod[]>([]);
   const [usedPeriod, setUsedPeriod] = useState(0)
 
-  const generatePeriodOptions = (period: 'YH' | "YQ" | 'YM' | 'Y', endMonth: number, endYear: number, beginMonth: number, beginYear: number) => {
-    const options: SelectedPeriod[] = [];
-    for (let y = beginYear; y <= endYear; y++) {
-      const em = y === endYear ? endMonth : 12
-      const bm = y === beginYear ? beginMonth : 1
-
-      const factor = period === "Y" ? 12 : period === 'YH' ? 6 : period === "YQ" ? 3 : 1
-
-      let m = (bm - 1 + (factor - (bm-1) % factor));
-      const _em = em-1+(factor - (em-1) % factor);
-      while (m <= _em) {
-        options.push({type: period, segment: getPeriodSegment(period, m), year: y})
-        m = (m  + (factor - (m) % factor))
-      }
-    }
-
-    return options.sort((a, b) => (a.year+(a.segment*0.01)) > (b.segment*0.01+b.year) ? -1 : 1);
-  }
+  // const generatePeriodOptions = (period: 'YH' | "YQ" | 'YM' | 'Y', endMonth: number, endYear: number, beginMonth: number, beginYear: number) => {
+  //   const options: SelectedPeriod[] = [];
+  //   for (let y = beginYear; y <= endYear; y++) {
+  //     const em = y === endYear ? endMonth : 12
+  //     const bm = y === beginYear ? beginMonth : 1
+  //
+  //     const factor = period === "Y" ? 12 : period === 'YH' ? 6 : period === "YQ" ? 3 : 1
+  //
+  //     let m = (bm - 1 + (factor - (bm-1) % factor));
+  //     const _em = em-1+(factor - (em-1) % factor);
+  //     while (m <= _em) {
+  //       options.push({type: period, segment: getPeriodSegment(period, m), year: y})
+  //       m = (m  + (factor - (m) % factor))
+  //     }
+  //   }
+  //
+  //   return options.sort((a, b) => (a.year+(a.segment*0.01)) > (b.segment*0.01+b.year) ? -1 : 1);
+  // }
 
   const onChange = (e: SelectCustomEvent<number>) => {
     const idx = e.detail.value;

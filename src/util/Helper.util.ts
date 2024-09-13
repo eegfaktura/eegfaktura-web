@@ -46,7 +46,7 @@ export const getPeriodSegment = (period: string, month: number) => {
   }
 }
 
-const splitCpPeriod = (cpPeriod: CpPeriodType) => {
+export const splitCpPeriod = (cpPeriod: CpPeriodType) => {
   const [beginMonth, beginYear] = yearMonth(cpPeriod.begin)
   const [endMonth, endYear] = yearMonth(cpPeriod.end)
 

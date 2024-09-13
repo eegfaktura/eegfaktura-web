@@ -50,7 +50,6 @@ const NumberInput: FC<NumberInput> = ({
 
 
   useEffect(() => {
-    console.log("NumberInput", name, value)
     setValue(initialValue ? formatValue(initialValue.toString()) : "")
   }, [initialValue]);
 
@@ -203,7 +202,6 @@ const NumberInputForm = <T extends FieldValues>(props: NumberInputFormProps<T>) 
         rules={rules}
         render={({field, fieldState, formState}) => {
           const {onChange, value, name, ref} = field;
-          console.log("Input: ", name, value)
           return (
             <NumberInput onChange={onChange} name={name} label={label} placeholder={placeholder} initialValue={value || undefined}
                          decimalScale={2}/>)

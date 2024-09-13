@@ -3,8 +3,8 @@
   "lastname": "Nachname",
   "company-name": "Firmenname",
   "communityId": "Gemeinschafts ID",
-  "gridOperator_id": "Netzbetreiber ID",
-  "gridOperator_name": "Netzbetreiber Name",
+  "gridOperator-id": "Netzbetreiber ID",
+  "gridOperator-name": "Netzbetreiber Name",
   "participant": "Mitglied",
   "participant-nr": "Mitglieds-Nr",
   "participant_active-since": "Aktiv seit ...",
@@ -41,6 +41,7 @@
   "meteringPointFee": "Zählpunktgebühr in €",
   "meteringPointVat": "Ust. für Zählpunktgebühr in %",
   "meteringPointFee_card": "Zählpunktgebühr",
+  "meteringPoint-active-since": "Aktiv seit ...",
   "useVat": "Umsatzsteuer anführen",
   "vatInPercent": "Umsatzsteuer in %",
   "vatInPercent_card": "Umsatzsteuer",
@@ -54,6 +55,7 @@
   "uid": "UID",
   "account-owner": "Kontoinhaber",
   "date": "Datum",
+  "state": "Status",
   "phone": "Telefon",
   "website": "Webseite",
   "warnings": {
@@ -66,7 +68,10 @@
     "zip_missing": "PLZ fehlt!",
     "street_missing": "Straße fehlt!",
     "street-number_missing": "Hausnummer fehlt!",
-    "account-owner_missing": "Kontoinhaber fehlt!"
+    "account-owner_missing": "Kontoinhaber fehlt!",
+    "gridoperator-id_missing": "Netzbetreiber-Id fehlt!",
+    "gridoperator-id_length": "Netzbetreiber-Id besteht aus 8 Zeichen",
+    "gridoperator-name_missing": "Netzbetreiber-Name fehlt"
   },
   "alerts": {
     "changeDirection_0": "Energierichtung zu einen $t(producer) ändern? Es gilt zu beachten, dass diese Änderung nicht mit dem Netzbetreiber kommuniziert wird. Die Änderung wird nur in EEGFaktura vollzogen und keine Auswirkung beim Netzbetreiber!",

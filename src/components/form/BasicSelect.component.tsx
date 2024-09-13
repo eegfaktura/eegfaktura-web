@@ -67,7 +67,6 @@ export const BasicSelectComponent: FC<BasicSelectFormProps> = ({control, name, l
     if(selectedOptions) {
       change(multiple ? (selectedOptions as SelectOptions[]).map(s => s.value) : (selectedOptions as SelectOptions).value);
     }
-    console.log("SET SELECTED OPTION", selectedOptions)
     setSelectedValue(selectedOptions)
   }
 
@@ -83,7 +82,6 @@ export const BasicSelectComponent: FC<BasicSelectFormProps> = ({control, name, l
           rules={rules}
           render={({field}) => {
             const {onChange, value} = field;
-            console.log("DEFAULT VALUE", value)
             return (
               <>
                 <Select

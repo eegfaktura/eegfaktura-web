@@ -156,10 +156,14 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
                    rules={{required:true, validate: validatePartFaktor || "error message"}}
                    type="number" inputmode="numeric" onChangePartial={onChangePartFact} protectedControl={!isChangeable()}/>
         {area && area === 'BEG' && <>
-            <InputForm name={"gridOperatorId"} label={t("gridOperator_id")} control={control} rules={{required: true}}
-                       type="text" onChangePartial={_onChange} protectedControl={!(isChangeable() && processState !== 'INACTIVE')}/>
-            <InputForm name={"gridOperatorName"} label={t("gridOperator_name")} control={control} rules={{required: true}}
-                       type="text" onChangePartial={_onChange} protectedControl={!(isChangeable() && processState !== 'INACTIVE')}/>
+            <InputForm name={"gridOperatorId"} label={t("gridOperator-id")} control={control} rules={{
+              required: t("warnings.gridOperator-id_missing"),
+              minLength: {value: 8, message: t("gridoperator-id_length")},
+              maxLength: {value: 8, message: t("gridoperator-id_length")},
+            }} type="text" onChangePartial={_onChange} protectedControl={!(isChangeable() && processState !== 'INACTIVE')}/>
+            <InputForm name={"gridOperatorName"} label={t("gridOperator-name")} control={control} rules={{
+              required: t("warnings.gridOperator-name_missing")
+            }} type="text" onChangePartial={_onChange} protectedControl={!(isChangeable() && processState !== 'INACTIVE')}/>
         </>}
         <CheckboxComponent label={t("inverterCheckbox_label")} setChecked={setWithWechselrichter}
                            checked={withWechselrichter} style={{paddingTop: "0px"}}></CheckboxComponent>

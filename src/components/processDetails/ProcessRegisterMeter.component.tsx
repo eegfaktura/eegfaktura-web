@@ -77,7 +77,6 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
   }, [participantId])
 
   const onRequest = (data: ProcessValues) => {
-    console.log("data", data, "participants", participants)
     if (data.meteringPoint) {
       const p = participants.find(p => p.meters.find(m => m.meteringPoint === data.meteringPoint))
       const meter = p?.meters.find(m => m.meteringPoint === data.meteringPoint)
@@ -86,11 +85,7 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
           .finally(() => {
             reset()
           })
-      } else {
-        console.log("p", p, "meter", meter, "data", data, "participants", participants)
       }
-    } else {
-      console.log("DATA:", data)
     }
   }
 
