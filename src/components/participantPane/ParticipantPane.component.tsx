@@ -103,7 +103,13 @@ import {
 } from "./ParticipantPane.effects";
 import FilterSegmentComponent from "./FilterSegment.component";
 import {ViewportList, ViewportListRef} from "react-viewport-list";
+import { VariableSizeList} from "react-window";
+import AutoSizer from "react-virtualized-auto-sizer";
+
 import HeaderFavButtonComponent from "../core/HeaderFavButton.component";
+import {Virtuoso} from "react-virtuoso";
+import {types} from "sass";
+import List = types.List;
 
 const ParticipantPaneComponent: FC = () => {
   const dispatcher = useAppDispatch();
@@ -527,28 +533,121 @@ const ParticipantPaneComponent: FC = () => {
 
   // const viewPortRef = useRef<HTMLDivElement | null>(null);
   const viewPortRef = useRef(null);
-  const listRef = useRef<ViewportListRef | null>(null);
+  // const listRef = useRef<ViewportListRef | null>(null);
+  const listRef = useRef<VariableSizeList>(null);
+  const rowHeights = useRef<Record<number, number>>({});
   const popoverRef = useRef<HTMLIonToolbarElement>(null);
 
   const handleSearchInput = (e: CustomEvent<SearchbarInputEventDetail>) => {
     setSearchQuery(e.detail.value?.toLowerCase())
   };
 
-  const handleSearchClear = (e:  IonSearchbarCustomEvent<void>) => {
-    if (selectedParticipant) {
-      const p_idx = findIndexInParticipantList(viewEntities, selectedParticipant.id)
-      console.log("Handle Search Clear", selectedParticipant, p_idx, viewEntities)
-      if (p_idx < 0) {
-        listRef.current?.scrollToIndex({index: 0, offset: p_idx})
+  // // const handleSearchClear = (e:  IonSearchbarCustomEvent<void>) => {
+  // //   if (selectedParticipant) {
+  // //     const p_idx = findIndexInParticipantList(viewEntities, selectedParticipant.id)
+  // //     console.log("Handle Search Clear", selectedParticipant, p_idx, viewEntities)
+  // //     if (p_idx < 0) {
+  // //       listRef.current?.scrollToIndex({index: 0, offset: p_idx})
+  // //     }
+  // //   }
+  // // }
+  //
+  // const findIndexInParticipantList = (viewEntities: EegParticipant[], participantId: string) => {
+  //   return viewEntities.findIndex(v => v.id === participantId)
+  // }
+
+  const viewPortItems = filterSearchQuery(viewEntities, searchQuery)
+
+  const ListRow = ({
+                     index,
+                     style
+                   }: {
+    index: number;
+    style: React.CSSProperties;
+  }) => {
+    const rowRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+      if (rowRef.current) {
+        setRowHeight(index, rowRef.current.clientHeight);
       }
+      // eslint-disable-next-line
+    }, [rowRef]);
+    const command = viewPortItems[index]
+    if (command.meters.length > 0) {
+      return (
+        <div
+          key={command.id}
+          onClick={onSelectParticipant(command)}
+          className={cn("participant", {
+            selected: command.id === selectedParticipant?.id,
+          })}
+        >
+          <MemberComponent
+            participant={command}
+            onCheck={onCheckParticipant(command)}
+            isChecked={
+              checkedParticipant && (checkedParticipant[command.id] || false)
+            }
+            hideMeter={hideMeter}
+            hideMember={hideMember}
+            showAmount={showAmount}
+            showDetailsPage={showDetailsPage}
+            onShowAddMeterPage={onShowAddMeterPage}
+          >
+            {hideMeter ||
+              command.meters.map((m, i) => (
+                <MeterCardComponent
+                  key={"meter" + i}
+                  participant={command}
+                  meter={m}
+                  hideMeter={false}
+                  showCash={showAmount}
+                  onSelect={onSelectMeter}
+                  isSelected={m.meteringPoint === selectedMeterId}
+                />
+              ))}
+          </MemberComponent>
+        </div>
+      );
+    } else {
+      return (
+        <div
+          key={command.id}
+          onClick={onSelectParticipant(command)}
+          className={cn("participant", {
+            selected: command.id === selectedParticipant?.id,
+          })}
+        >
+          <MemberComponent
+            participant={command}
+            onCheck={onCheckParticipant(command)}
+            isChecked={
+              checkedParticipant && (checkedParticipant[command.id] || false)
+            }
+            hideMeter={hideMeter}
+            hideMember={hideMember}
+            showAmount={showAmount}
+            showDetailsPage={showDetailsPage}
+            onShowAddMeterPage={onShowAddMeterPage}
+          />
+        </div>
+      );
     }
   }
 
-  const findIndexInParticipantList = (viewEntities: EegParticipant[], participantId: string) => {
-    return viewEntities.findIndex(v => v.id === participantId)
+  const setRowHeight = (index: number, size: number) => {
+    listRef.current?.resetAfterIndex(0);
+    rowHeights.current = { ...rowHeights.current, [index]: size };
   }
 
-  const viewPortItems = filterSearchQuery(viewEntities, searchQuery)
+ const getRowHeight = (index: number) => {
+    if (rowHeights.current) {
+      return rowHeights.current[index] + 8 || 82;
+    }
+    return 0
+ }
+
   return (
     <div className={"participant-pane"}>
       <div className={"pane-body"}>
@@ -591,7 +690,7 @@ const ParticipantPaneComponent: FC = () => {
                 style={{"--box-shadow": "undefined"}}
                 debounce={500}
                 onIonInput={handleSearchInput}
-                onIonClear={handleSearchClear}
+                // onIonClear={handleSearchClear}
               ></IonSearchbar>
             </IonToolbar>
           )}
@@ -601,11 +700,30 @@ const ParticipantPaneComponent: FC = () => {
             selectAll={selectAll}
             onUpdatePeriod={onUpdatePeriodSelection}
           />
-          <IonList className={"scroll-container"} ref={viewPortRef}>
-            <ViewportList
-              ref={listRef}
-              viewportRef={viewPortRef}
-              items={viewPortItems}
+          {/*<div className={"scroll-container"} ref={viewPortRef}>*/}
+          {/*<AutoSizer className={"scroll-container"} disableWidth={false}>*/}
+          {/*  {({ height, width }) => (*/}
+          {/*    <VariableSizeList*/}
+          {/*      className="List"*/}
+          {/*      height={height - 74}*/}
+          {/*      itemCount={viewPortItems.length}*/}
+          {/*      itemSize={getRowHeight}*/}
+          {/*      ref={listRef}*/}
+          {/*      width={width}*/}
+          {/*    >*/}
+          {/*      {ListRow}*/}
+          {/*    </VariableSizeList>*/}
+          {/*  )}*/}
+          {/*</AutoSizer>*/}
+            <Virtuoso
+              // ref={listRef}
+              // viewportRef={viewPortRef}
+              totalCount={viewPortItems.length}
+              itemSize={(el, field) => {
+                // console.log("ItemSize", el.scrollHeight, el.offsetHeight, el.style, el, field)
+                return el.offsetHeight === 0 ? 200 : el.offsetHeight
+              }}
+              // data={viewPortItems}
               // initialPrerender={10}
               // initialIndex={9}
               // initialOffset={100}
@@ -614,8 +732,8 @@ const ParticipantPaneComponent: FC = () => {
               // overscan={10}
               // withCache={false}
               // itemMargin={8}
-            >
-              {(command) => {
+              itemContent={(index) => {
+                const command = viewPortItems[index];
                 if (command.meters.length > 0) {
                   return (
                     <div
@@ -676,9 +794,9 @@ const ParticipantPaneComponent: FC = () => {
                     </div>
                   );
                 }
-              }}
-            </ViewportList>
-          </IonList>
+              }}>
+            </Virtuoso>
+          {/*</div>*/}
         </div>
         <div className={"pane-footer"}>
           {showAmount && (

@@ -1,7 +1,7 @@
 {
   "name": "vfeeg-app",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.2.16",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -45,6 +45,9 @@
     "react-router-dom": "^5.3.4",
     "react-select": "^5.8.0",
     "react-viewport-list": "^7.1.2",
+    "react-virtualized-auto-sizer": "^1.0.24",
+    "react-virtuoso": "^4.10.4",
+    "react-window": "^1.8.10",
     "recharts": "^2.10.3",
     "uuid": "^9.0.1"
   },
@@ -56,6 +59,7 @@
     "@testing-library/user-event": "^14.4.3",
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
+    "@types/react-window": "^1.8.8",
     "@types/uuid": "^9.0.7",
     "@vitejs/plugin-legacy": "^5.0.0",
     "@vitejs/plugin-react": "^4.0.1",

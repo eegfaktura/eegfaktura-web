@@ -35,6 +35,7 @@ export interface Metering {
   registeredSince: Date,
   gridOperatorId: string,
   gridOperatorName: string,
+  allocationFactor: number,
   modifiedAt: number,
   modifiedBy: string,
   processState: MeteringProcessStateType,

@@ -93,6 +93,11 @@
       "title": "Teilnehmer Faktor ändern",
       "desc": "Mit diesem Prozess kann der Teilnahmefaktor von aktiven Zählpunkten geändert werden. Zulässig ist eine Änderung pro Tag und je Energiegemeinschaft und Zählpunkt. Diese Änderung liegt in der Verantwortung der Energiegemeinschaft."
     },
+    "allocationFactor": {
+      "label": "Verteilungs Faktor in %",
+      "title": "Verteilungs Faktor ändern",
+      "desc": "Mit diesem Prozess kann der Verteilungsfaktor von aktiven Zählpunkten geändert werden."
+    },
     "podList": {
       "title": "Teilnehmerliste anfordern",
       "desc": "Anfordern der Teilnehmer einer EEG.",

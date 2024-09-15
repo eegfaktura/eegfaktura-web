@@ -69,9 +69,16 @@ function Input<TValue, IsNumber extends boolean = false>(props: Omit<ControllerR
 
   const evaluate = (value: string | number | null | undefined) => {
     if (isNumber) {
-      return !value || isNaN(parseInt(value as string, 10)) ? "" : parseInt(value as string, 10)
+      return !value || isNaN(parseInt(value as string, 10)) ? "" : parseNumber(value as string);
     }
     return value ? value.toString() : ""
+  }
+
+  const parseNumber = (value: string): number => {
+    if (Number.isInteger(value)) {
+      return parseInt(value, 10)
+    }
+    return parseFloat(value.replace(",", "."))
   }
 
   const handleChange = async (e: IonInputCustomEvent<InputChangeEventDetail>) => {

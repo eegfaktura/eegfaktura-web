@@ -9,9 +9,10 @@ import {useFormContext} from "react-hook-form";
 import ToggleButtonComponent from "../ToggleButton.component";
 import {eegPlug, eegSolar} from "../../eegIcons";
 import {EegParticipant} from "../../models/members.model";
-import {useAccessGroups, useEegArea} from "../../store/hook/Eeg.provider";
+import {useAccessGroups, useEegAllocation, useEegArea} from "../../store/hook/Eeg.provider";
 import {useLocale} from "../../store/hook/useLocale";
 import {swapHorizontalSharp} from "ionicons/icons";
+import NumberInputForm from "../form/NumberInput.component";
 
 interface MeterFormElementProps {
   rates: EegTariff[]
@@ -30,6 +31,8 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
 
   const {isAdmin} = useAccessGroups()
   const [presentAlert] = useIonAlert();
+
+  const allocationMode = useEegAllocation()
 
   const [selectedDirection, setSelectedDirection] = useState(0);
   const [withWechselrichter, setWithWechselrichter] = useState(false);
@@ -99,12 +102,20 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
       t("producer_tariff")
   }
 
-  const validatePartFaktor = (value: string) => {
+  const validatePartFactor = (value: string) => {
     const n = Number(value)
     if (isNaN(n)) {
       return false
     }
     return n <= 100 && n > 0
+  }
+
+  const validateAllocFactor = (value: string) => {
+    const n = Number(value)
+    if (isNaN(n)) {
+      return false
+    }
+    return n <= 100.0 && n > 0
   }
 
   return (
@@ -153,8 +164,14 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
         />
         <InputForm name={"partFact"} label={t("process.partFact.label")} control={control} isNumber={true}
                    // rules={{required: true, validate: validatePartFaktor || 'error message'}}
-                   rules={{required:true, validate: validatePartFaktor || "error message"}}
+                   rules={{required:true, validate: validatePartFactor || "error message"}}
                    type="number" inputmode="numeric" onChangePartial={onChangePartFact} protectedControl={!isChangeable()}/>
+        {allocationMode === 'STATIC' &&
+        <InputForm name={"allocationFactor"} label={t("process.allocationFactor.label")} control={control} isNumber={true}
+          // rules={{required: true, validate: validatePartFaktor || 'error message'}}
+                   rules={{required:true, validate: validateAllocFactor || "error message"}}
+                   type="number" inputmode="numeric" onChangePartial={_onChange} protectedControl={!isChangeable()}/>
+        }
         {area && area === 'BEG' && <>
             <InputForm name={"gridOperatorId"} label={t("gridOperator-id")} control={control} rules={{
               required: t("warnings.gridOperator-id_missing"),
