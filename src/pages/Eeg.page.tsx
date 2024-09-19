@@ -26,7 +26,7 @@ const EMPTY_EEG_ENTITY = {
   communityId: "", rcNumber: "", name: "",
   legal: "", salesTax: "", taxNumber: "", vatNumber: "",
   businessNr: "", settlement: "", description: "", gridOperator: "", operatorName: "",
-  settlementInterval: 'MONTHLY', allocationMode: "DYNAMIC", area: "LOCAL",
+  settlementInterval: 'MONTHLY', allocationMode: "DYNAMIC", area: "LOCAL", contactPerson: "",
   address: {city: "", type: "BILLING", street: "", streetNumber: "", zip: ""} as Address,
   contact: {email: "", phone: ""} as Contact,
   accountInfo: {bankName: "", iban: "", owner: "", sepa: false} as AccountInfo,
@@ -201,6 +201,8 @@ const EegPage: FC = () => {
                 <div className={"eeg-property-card"}>
                   <div className={"header"}>Kontakt</div>
                   <IonCard color="eeglight">
+                    <InputFormComponent name={"contactPerson"} label="Kontakt Person" control={control} readonly={!isAdmin()}
+                                    onChangePartial={onChangeField("contactPerson")}/>
                     <PhoneInputForm name={"contact.phone"} control={control} readonly={!isAdmin()} setValue={setValue}
                                         onChangePartial={onChangeField("phone")}/>
                     <InputFormComponent name={"contact.email"} label="E-Mail" control={control}

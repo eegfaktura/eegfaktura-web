@@ -303,7 +303,7 @@ export class EegService extends EegBaseService {
       headers: {
         ...this.getSecureHeaders(token, tenant),
       },
-    }).then(this.handleErrors).then(res => this.handleDownload(res, billingRunId+".xlsx"));
+    }).then(this.handleErrors).then(res => this.handleDownload(res, billingRunId+".xlsx", tenant));
   }
 
   async billingRunSendmail(tenant: string, billingRunId : string, token? : string): Promise<boolean> {

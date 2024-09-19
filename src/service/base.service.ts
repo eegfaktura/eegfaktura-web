@@ -135,7 +135,7 @@ class EegBaseService {
     })
   }
 
-  protected async handleDownload (response : Response, defaultFilename : string) : Promise<boolean> {
+  protected async handleDownload (response : Response, defaultFilename : string, tenant?: string) : Promise<boolean> {
     return response.blob().then(file => {
       //Build a URL from the file
       const fileURL = URL.createObjectURL(file);
@@ -149,6 +149,10 @@ class EegBaseService {
       }
       if (!filename)
         filename = defaultFilename
+
+      if(tenant) {
+        filename = `${tenant}_${filename}`
+      }
 
       const link = document.createElement('a');
       link.href = fileURL

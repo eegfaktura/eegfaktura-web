@@ -81,20 +81,20 @@ const MeterAddressFormElement: FC<MeterAddressFormElementProps> = ({
       {isTakeOverAddressEnabled() &&
           <CheckboxComponent label="Adresse vom Besitzer übernehmen" setChecked={takeOverAddress}
                              checked={withOwner} style={{paddingTop: "0px"}}></CheckboxComponent>}
-      <InputForm name={"street"} label={t("street")} control={control} rules={{required: t("street_missing")}} type="text"
+      <InputForm name={"street"} label={t("street")} control={control} rules={{required: t("warnings.street_missing")}} type="text"
                  error={errors?.street} disabled={disableAddressFields} onChangePartial={_onChange}/>
       <InputForm name={"streetNumber"} label={t("street_number")} control={control}
                  rules={{
-                   required: t("street-number_missing"),
+                   required: t("warnings.street-number_missing"),
                    pattern: {
                      value: /^[0-9A-Za-z\/\-\\\s]*$/,
                      message: "Ungültige Zeichen. Erlaubt sind 0-9, A-Z, a-z, \,/,-, ]"
                    }
                  }}
                  type="text" error={errors?.streetNumber} disabled={disableAddressFields} onChangePartial={_onChange}/>
-      <InputForm name={"zip"} label={t("street")} control={control} rules={{required: t("street_missing")}}
+      <InputForm name={"zip"} label={t("zip")} control={control} rules={{required: t("warnings.zip_missing")}}
                  type="text" error={errors?.zip} disabled={disableAddressFields} onChangePartial={_onChange}/>
-      <InputForm name={"city"} label={t("city")} control={control} rules={{required: t("city_missing")}} type="text"
+      <InputForm name={"city"} label={t("city")} control={control} rules={{required: t("warnings.city_missing")}} type="text"
                  error={errors?.city} disabled={disableAddressFields} onChangePartial={_onChange}/>
       {showActivationMode &&
       <CheckboxComponent label="Offline Registrierung" setChecked={onSetOffline}

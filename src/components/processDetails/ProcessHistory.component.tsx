@@ -1,4 +1,4 @@
-import React, {FC, useCallback, useEffect, useState} from "react";
+import React, {FC, useCallback, useEffect, useMemo, useState} from "react";
 import CorePageTemplate from "../core/CorePage.template";
 import {EdaHistories, EdaProcess, Eeg} from "../../models/eeg.model";
 import {IonAccordion, IonAccordionGroup, IonContent, IonIcon, IonItem, IonLabel, IonSearchbar} from "@ionic/react";
@@ -10,6 +10,8 @@ import {EdaHistory, EdaResponseCode} from "../../models/process.model";
 import {Api} from "../../service";
 import {GroupBy} from "../../util/Helper.util";
 import {useLocale} from "../../store/hook/useLocale";
+import {useAllParticipants} from "../../store/hook/ParticipantProvider";
+import {EegParticipant} from "../../models/members.model";
 
 interface ProcessHistoryComponentProps {
   eeg: Eeg
@@ -26,6 +28,8 @@ const ProcessHistoryComponent: FC<ProcessHistoryComponentProps> = ({eeg, edaProc
   // const today = new Date()
   const [historyDate, setHistoryDate] = useState<[Date | null, Date | null]>([new Date(today.getTime() - (86400000 * 14)), today])
 
+  const participants = useAllParticipants()
+
   const fetchHistory = useCallback(() => {
     const [beginDate, endDate] = historyDate
     if (beginDate && endDate) {
@@ -37,6 +41,10 @@ const ProcessHistoryComponent: FC<ProcessHistoryComponentProps> = ({eeg, edaProc
   useEffect(() => {
     fetchHistory()
   }, [fetchHistory]);
+
+  const meterParticipants = useMemo(() => {
+    return participants.reduce((pc, p) => {return {...pc, ...p.meters.reduce((c, m) => {return {...c, [m.meteringPoint]: p}}, {} as Record<string, EegParticipant>)}}, {}as Record<string, EegParticipant>)
+  }, [participants])
 
   const getEntriesForProcessId = (process: string): Record<string, EdaHistory[]> => {
     switch (process) {
@@ -87,8 +95,8 @@ const ProcessHistoryComponent: FC<ProcessHistoryComponentProps> = ({eeg, edaProc
         }}><strong>{headers[2]}</strong></span>
         {Object.entries(GroupBy(e, i => i.conversationId)).map(([id, hl], i) => (
           <React.Fragment key={"line" + id + i}>
-                  <span
-                    style={{gridColumnStart: "1", gridColumnEnd: "4", fontSize: "12px"}}>Conversation-Id: {id}</span>
+                  <div
+                    style={{/*display: "inline-block",*/ gridColumnStart: "1", gridColumnEnd: "4", fontSize: "12px"}}>Conversation-Id: {id}</div>
             {hl.map((h, ii) => (
               <React.Fragment key={"line_item" + ii}>
                 <span style={{gridColumnStart: "1"}}>
@@ -294,6 +302,17 @@ const ProcessHistoryComponent: FC<ProcessHistoryComponentProps> = ({eeg, edaProc
     }
   };
 
+  const renderMeterHeader = (meterId: string) => {
+    console.log("meter-Participants", meterParticipants)
+    const p = meterParticipants[meterId]
+    return <div>{meterId} <div style={{fontSize:"12px"}}>{p
+      ? (p.participantNumber.length === 0
+        ? ' '
+        : '(' + p.participantNumber + ') ') + (p.businessRole === 'EEG_PRIVATE' ? p.lastname : p.firstname)
+      : ''}</div>
+    </div>
+  }
+
   return (
     <>
       <ProcessHeaderComponent name={edaProcess.name}>
@@ -320,7 +339,7 @@ const ProcessHistoryComponent: FC<ProcessHistoryComponentProps> = ({eeg, edaProc
                             .map(([k, v], i) => (
                               <IonAccordion key={i} value={"cm_rev_imp_" + i}>
                                 <IonItem slot="header" color="light">
-                                  <IonLabel>{k}</IonLabel>
+                                  <IonLabel>{renderMeterHeader(k)}</IonLabel>
                                 </IonItem>
                                 {renderAccordionBody(p, v)}
                               </IonAccordion>

@@ -279,7 +279,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
               <IonIcon icon={eegSandClass} slot="start"/>
               <IonLabel>{meterStatusText(selectedMeter)}</IonLabel>
             </IonItem>
-            {selectedMeter.processState === "INVALID" &&
+            {(selectedMeter.processState === "INVALID" && selectedMeter.status === "INIT") &&
                 <IonItem>
                     <IonButton color="warning" slot="end" size="small" fill="outline"
                                onClick={() => onRemoveMeteringPoint()}>Löschen</IonButton>

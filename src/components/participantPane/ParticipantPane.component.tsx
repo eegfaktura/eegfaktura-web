@@ -9,28 +9,23 @@ import {
   IonCol,
   IonIcon,
   IonItem,
-  IonLabel, IonList,
+  IonLabel,
   IonRow,
   IonSearchbar,
   IonSpinner,
-  IonToolbar, SearchbarInputEventDetail,
+  IonToolbar,
+  SearchbarInputEventDetail,
   useIonAlert,
   useIonLoading,
   useIonPopover,
   useIonToast,
 } from "@ionic/react";
 import {CheckboxChangeEventDetail} from "@ionic/core";
-import {IonCheckboxCustomEvent, IonSearchbarCustomEvent} from "@ionic/core/dist/types/components";
-import {
-  createPeriodIdentifier,
-  SelectedPeriod,
-} from "../../models/energy.model";
+import {IonCheckboxCustomEvent} from "@ionic/core/dist/types/components";
+import {createPeriodIdentifier, SelectedPeriod,} from "../../models/energy.model";
 import ParticipantPeriodHeaderComponent from "./ParticipantPeriodHeader.component";
 import MemberComponent from "./Member.component";
-import {
-  ClearingPreviewRequest,
-  Metering,
-} from "../../models/meteringpoint.model";
+import {ClearingPreviewRequest, Metering,} from "../../models/meteringpoint.model";
 import MeterCardComponent from "./MeterCard.component";
 import {ParticipantContext} from "../../store/hook/ParticipantProvider";
 import {MemberViewContext} from "../../store/hook/MemberViewProvider";
@@ -45,10 +40,7 @@ import {
   resetParticipantAmounts,
   selectBillFetchingSelector,
 } from "../../store/billing";
-import {
-  selectMetaRecord,
-  setSelectedPeriod,
-} from "../../store/energy";
+import {selectMetaRecord, setSelectedPeriod,} from "../../store/energy";
 import ButtonGroup from "../ButtonGroup.component";
 import {
   add,
@@ -71,10 +63,7 @@ import {
   selectParticipant,
 } from "../../store/participant";
 import cn from "classnames";
-import {
-  isParticipantActivated,
-  reformatDateTimeStamp,
-} from "../../util/Helper.util";
+import {isParticipantActivated, reformatDateTimeStamp,} from "../../util/Helper.util";
 import DatepickerPopover from "../dialogs/datepicker.popover";
 import {ExcelReportRequest, ParticipantCp} from "../../models/reports.model";
 import UploadPopup from "../dialogs/upload.popup";
@@ -90,26 +79,17 @@ import {
 } from "../../store/billingRun";
 import DatePickerCoreElement from "../core/elements/DatePickerCore.element";
 
-import {
-  filterActiveMeter,
-  filterActiveParticipantAndMeter,
-} from "../../util/FilterHelper.unit";
+import {filterActiveMeter, filterActiveParticipantAndMeter,} from "../../util/FilterHelper.unit";
 import moment from "moment";
 import {Api} from "../../service";
 import {buildAllocationMapFromSelected, filterSearchQuery} from "./ParticipantPane.functions";
-import {
-  filterParticipant,
-  sortParticipants
-} from "./ParticipantPane.effects";
+import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
 import FilterSegmentComponent from "./FilterSegment.component";
-import {ViewportList, ViewportListRef} from "react-viewport-list";
-import { VariableSizeList} from "react-window";
-import AutoSizer from "react-virtualized-auto-sizer";
+import {VariableSizeList} from "react-window";
 
 import HeaderFavButtonComponent from "../core/HeaderFavButton.component";
 import {Virtuoso} from "react-virtuoso";
 import {types} from "sass";
-import List = types.List;
 
 const ParticipantPaneComponent: FC = () => {
   const dispatcher = useAppDispatch();
@@ -567,9 +547,11 @@ const ParticipantPaneComponent: FC = () => {
   }) => {
     const rowRef = useRef<HTMLDivElement | null>(null);
 
+    console.log("ListRow: ", index, style)
+
     useEffect(() => {
       if (rowRef.current) {
-        setRowHeight(index, rowRef.current.clientHeight);
+        setRowHeight(index, rowRef.current.offsetHeight);
       }
       // eslint-disable-next-line
     }, [rowRef]);
@@ -577,6 +559,7 @@ const ParticipantPaneComponent: FC = () => {
     if (command.meters.length > 0) {
       return (
         <div
+          ref={rowRef}
           key={command.id}
           onClick={onSelectParticipant(command)}
           className={cn("participant", {
@@ -613,6 +596,7 @@ const ParticipantPaneComponent: FC = () => {
     } else {
       return (
         <div
+          ref={rowRef}
           key={command.id}
           onClick={onSelectParticipant(command)}
           className={cn("participant", {
@@ -637,17 +621,86 @@ const ParticipantPaneComponent: FC = () => {
   }
 
   const setRowHeight = (index: number, size: number) => {
-    listRef.current?.resetAfterIndex(0);
+    // listRef.current?.resetAfterIndex(0);
+    console.log("setRowHeight", index, size)
     rowHeights.current = { ...rowHeights.current, [index]: size };
   }
 
  const getRowHeight = (index: number) => {
     if (rowHeights.current) {
+      console.log("getRowHeight", index, rowHeights.current[index] + 8 || 82)
       return rowHeights.current[index] + 8 || 82;
     }
-    return 0
+    console.log("getRowHeight", index, "Default 200")
+    return 200
  }
 
+
+ const RowElement:FC<{participant: EegParticipant}> = ({participant}) => {
+    const command = participant
+   if (command.meters.length > 0) {
+     return (
+       <div
+         key={command.id}
+         onClick={onSelectParticipant(command)}
+         className={cn("participant", {
+           selected: command.id === selectedParticipant?.id,
+         })}
+       >
+         <MemberComponent
+           participant={command}
+           onCheck={onCheckParticipant(command)}
+           isChecked={
+             checkedParticipant && (checkedParticipant[command.id] || false)
+           }
+           hideMeter={hideMeter}
+           hideMember={hideMember}
+           showAmount={showAmount}
+           showDetailsPage={showDetailsPage}
+           onShowAddMeterPage={onShowAddMeterPage}
+         >
+           {hideMeter ||
+             command.meters.map((m, i) => (
+               <MeterCardComponent
+                 key={"meter" + i}
+                 participant={command}
+                 meter={m}
+                 hideMeter={false}
+                 showCash={showAmount}
+                 onSelect={onSelectMeter}
+                 isSelected={m.meteringPoint === selectedMeterId}
+               />
+             ))}
+         </MemberComponent>
+       </div>
+     );
+   } else {
+     return (
+       <div
+         key={command.id}
+         onClick={onSelectParticipant(command)}
+         className={cn("participant", {
+           selected: command.id === selectedParticipant?.id,
+         })}
+       >
+         <MemberComponent
+           participant={command}
+           onCheck={onCheckParticipant(command)}
+           isChecked={
+             checkedParticipant && (checkedParticipant[command.id] || false)
+           }
+           hideMeter={hideMeter}
+           hideMember={hideMember}
+           showAmount={showAmount}
+           showDetailsPage={showDetailsPage}
+           onShowAddMeterPage={onShowAddMeterPage}
+         />
+       </div>
+     );
+   }
+ }
+
+ const [isScrolling, setIsScrolling] = useState<boolean>(false)
   return (
     <div className={"participant-pane"}>
       <div className={"pane-body"}>
@@ -715,13 +768,35 @@ const ParticipantPaneComponent: FC = () => {
           {/*    </VariableSizeList>*/}
           {/*  )}*/}
           {/*</AutoSizer>*/}
-            <Virtuoso
+          {/*  <AutoSizer disableWidth={true}>*/}
+          {/*    {({ height }) => {*/}
+          {/*      console.log("Autosizer: ", height)*/}
+          {/*      return(*/}
+          {/*  <ViewportList*/}
+
+          {/*    viewportRef={viewPortRef}*/}
+          {/*    items={viewPortItems}*/}
+          {/*    itemSize={Math.max(1, height / viewPortItems.length)}>*/}
+          {/*    {(item) => (*/}
+          {/*      <RowElement key={item.id} participant={item}/>*/}
+          {/*    )}*/}
+          {/*  </ViewportList>*/}
+          {/*      )}}*/}
+          {/*      </AutoSizer>*/}
+          {/*</div>*/}
+            <Virtuoso style={{overflowX: "hidden"}}
               // ref={listRef}
               // viewportRef={viewPortRef}
+              context={{isScrolling}}
+              isScrolling={setIsScrolling}
               totalCount={viewPortItems.length}
               itemSize={(el, field) => {
-                // console.log("ItemSize", el.scrollHeight, el.offsetHeight, el.style, el, field)
-                return el.offsetHeight === 0 ? 200 : el.offsetHeight
+                const index = parseInt(el.getAttribute("data-index") ?? "0");
+                const mp = /*hideMeter || hideMember ? 0 : */viewPortItems[index].meters.length
+                // console.log("ItemSize", el.scrollHeight, el.offsetHeight, h, el.getBoundingClientRect().height, el, field, hideMeter, hideMember, hideConsumers, hideProducers)
+                return el.offsetHeight === 0
+                  ? (hideMeter ? 0 : mp * 65) + (hideMember ? 0 : 55)
+                  : el.offsetHeight
               }}
               // data={viewPortItems}
               // initialPrerender={10}
@@ -732,8 +807,13 @@ const ParticipantPaneComponent: FC = () => {
               // overscan={10}
               // withCache={false}
               // itemMargin={8}
-              itemContent={(index) => {
+              itemContent={(index, _, {isScrolling}) => {
                 const command = viewPortItems[index];
+                // if (isScrolling) {
+                //   return (
+                //     <div style={{height: "200px", width: "100%"}}></div>
+                //   )
+                // }
                 if (command.meters.length > 0) {
                   return (
                     <div
@@ -796,7 +876,6 @@ const ParticipantPaneComponent: FC = () => {
                 }
               }}>
             </Virtuoso>
-          {/*</div>*/}
         </div>
         <div className={"pane-footer"}>
           {showAmount && (

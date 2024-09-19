@@ -1,3 +1,5 @@
+import {EegParticipant} from "./members.model";
+
 export interface EdaHistory {
   conversationId: string
   date: Date

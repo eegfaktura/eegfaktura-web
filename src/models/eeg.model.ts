@@ -11,6 +11,7 @@ export interface Eeg {
   description: string;
   gridOperator: string;
   operatorName: string;
+  contactPerson: string;
   settlementInterval: 'MONTHLY' | "ANNUAL" | "BIANNUAL" | "QUARTER";
   allocationMode: "DYNAMIC" | "STATIC"
   area: "LOCAL" | "REGIONAL" | "BEG" | "GEA"
