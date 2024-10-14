@@ -2,6 +2,7 @@ import {Control, FieldError, FieldValues, set, UseFormSetValue} from "react-hook
 import InputForm, {PartialChangeFunction} from "./InputForm.component";
 import {useMaskito} from "@maskito/react";
 import React, {ClipboardEvent} from "react";
+import { test } from "vitest";
 
 
 interface PhoneInputFormProps<T extends object> {

@@ -11,7 +11,6 @@ import {
 } from "../../../models/energy.model";
 import {calc, splitDate} from "../../../util/Helper.util";
 import {Metering, MeteringEnergyGroupType} from "../../../models/meteringpoint.model";
-import {buildSlice} from "@reduxjs/toolkit/dist/query/core/buildSlice";
 import {transformMeterReportToEnergySeries} from "../../../util/ReportHelper";
 import {activeMetersSelector} from "../../participant";
 
