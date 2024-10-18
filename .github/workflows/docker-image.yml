@@ -33,7 +33,7 @@ jobs:
           images: ${{ github.repository }}/${{ env.IMAGE_NAME }}
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: 9.12.1
           run_install: false
