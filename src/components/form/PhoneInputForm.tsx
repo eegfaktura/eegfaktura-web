@@ -3,7 +3,6 @@ import InputForm, {PartialChangeFunction} from "./InputForm.component";
 import {useMaskito} from "@maskito/react";
 import React, {ClipboardEvent} from "react";
 
-
 interface PhoneInputFormProps<T extends object> {
   name:string
   control: Control<T, any>
@@ -25,7 +24,7 @@ export function PhoneInputForm<T extends object>({setValue, ...props} : PhoneInp
   const handlePhonePaste = (e: ClipboardEvent<HTMLIonInputElement>) => {
     e.persist()
     e.clipboardData.items[0].getAsString(text=>{
-      setValue(props.name, test)
+      setValue(props.name, text)
       // setValue(props.name, text.replace(/\+/gi, "00").replace(/\s/gi,""))
       console.log("Clipboard-Text: ", text, text.replace(/\+/gi, "00").replace(/\s/gi,""))
     })

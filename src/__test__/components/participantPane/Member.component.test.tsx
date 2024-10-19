@@ -5,6 +5,7 @@ import {EegParticipant} from "../../../models/members.model";
 import {renderWithProviders} from "../../test-utils";
 import {AccountInfo, Address, Contact, Optionals} from "../../../models/eeg.model";
 import {Metering} from "../../../models/meteringpoint.model";
+import { describe, beforeAll, it, expect, vi } from "vitest";
 
 const defaultParticipant: EegParticipant = {
   accountInfo: {} as AccountInfo,
@@ -39,7 +40,7 @@ describe("<MemberComponent />", () => {
                        showDetailsPage={(e) => {}}
                        showAmount={false}
                        onCheck={(e) => {}}
-                       onShowAddMeterPage={(e) => () => jest.fn()} />);
+                       onShowAddMeterPage={(e) => () => vi.fn()} />);
     // console.log(container)
     // const role = screen.getByText(/Max Mustermann/)
     expect(screen.getByText(/Max Mustermann/)).toBeInTheDocument();
