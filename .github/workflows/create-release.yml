@@ -37,21 +37,36 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Determine version
+      - name: Determine version and update package.json
         id: determine_version
         run: |
+          # Get the current version from package.json
+          CURRENT_VERSION=$(jq -r .version package.json)
           if [ "${{ github.event.inputs.version }}" != "" ]; then
             NEW_VERSION=${{ github.event.inputs.version }}
+            # Check if the provided version is already set
+            if [ "$NEW_VERSION" != "$CURRENT_VERSION" ]; then
+              # Update package.json with the provided version
+              pnpm version $NEW_VERSION --no-git-tag-version
+            else
+              echo "Provided version $NEW_VERSION is already set in package.json. Skipping version update."
+            fi
           else
+            # Auto bump the version
             NEW_VERSION=$(pnpm version patch --no-git-tag-version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+")
           fi
-          ZIP_NAME="${{ github.event.repository.name }}-$NEW_VERSION.zip"
+          # Replace dots with underscores for the ZIP_NAME
+          ZIP_NAME="${{ github.event.repository.name }}-$(echo $NEW_VERSION | sed 's/\./_/g').zip"
           echo "New version: $NEW_VERSION"
+          echo "Zip name: $ZIP_NAME"
           echo "VERSION=$NEW_VERSION" >> $GITHUB_ENV
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
 
       - name: Run build
         run: pnpm run build
+
+      - name: Zip dist folder
+        run: zip -r ${{ env.ZIP_NAME }} dist
 
       - name: Commit version bump
         run: |
@@ -66,9 +81,6 @@ jobs:
         run: |
           git tag v${{ env.VERSION }}
           git push origin v${{ env.VERSION }}
-
-      - name: Zip dist folder
-        run: zip -r ${{ env.ZIP_NAME }} dist 
 
       - name: Create GitHub Release and attach dist folder
         if: ${{ env.ACT != 'true' }}
