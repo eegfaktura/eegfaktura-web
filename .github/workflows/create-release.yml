@@ -125,6 +125,8 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
+          # Get context metadata from the workflow and overrides some of them with current Git context, such as ref and sha
+          context: git
           # list of Docker images to use as base name for tags
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
@@ -133,6 +135,7 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
+            type=semver,pattern={{version}},value=v${{ env.VERSION }}
           # generate Docker labels based on the following events/attributes
           labels: |
             org.opencontainers.image.title="eegfaktura-web"
