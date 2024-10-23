@@ -42,6 +42,24 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=sha
+          # generate Docker labels based on the following events/attributes
+          labels: |
+            org.opencontainers.image.title="eegfaktura-web"
+            org.opencontainers.image.description="EEG Faktura web frontend"
+            org.opencontainers.image.source=${{ github.event.repository.html_url || '' }}
+            org.opencontainers.image.url=${{ github.event.repository.html_url || '' }}
+            org.opencontainers.image.version=${{ github.sha || '' }}
+            org.opencontainers.image.revision=${{ github.sha || '' }}
+            org.opencontainers.image.created=${{ github.event.head_commit.timestamp || '' }}
+            org.opencontainers.image.authors="eegfaktura@vfeeg.org"
+            org.opencontainers.image.vendor="Verein zur Förderung von Erneuerbaren Energiegemeinschaften"
+            org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id || '' }}
+            org.opencontainers.image.ref.name=${{ github.ref || '' }}
+            org.opencontainers.image.ref.branch=${{ github.ref_type == 'branch' && github.ref || '' }}
+            org.opencontainers.image.ref.tag=${{ github.ref_type == 'tag' && github.ref || '' }}
+            org.opencontainers.image.ref.sha=${{ github.sha || '' }}
+            org.opencontainers.image.repository=${{ github.repository || '' }}
+            org.opencontainers.image.repository.url=${{ github.event.repository.html_url || '' }}
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -60,9 +78,6 @@ jobs:
 
       - name: Run build
         run: pnpm run build
-
-      - name: Set version string
-        run: echo "IMAGE_VERSION=latest-$(date +'%Y%m%dT%H%M%S')" >> $GITHUB_ENV
 
       - name: Login to Container Registry
         if: ${{ env.ACT != 'true' }}
