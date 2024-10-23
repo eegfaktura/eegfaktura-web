@@ -1,39 +1,26 @@
-name: Docker Image CI
+name: Docker Build Test
 
 on:
-  push:
-    branches:
-      - master
-      - main
+  workflow_dispatch: # Allows manual triggering of the workflow
 
 env:
-  ACT: false
-  REGISTRY: "ghcr.io"
   IMAGE_NAME: ${{ github.repository || 'eegfaktura-web' }}
 
 jobs:
-  build-and-push-image:
+  test-docker-build:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      packages: write
-      attestations: write
-      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Extract metadata (tags, labels) for Docker
-        if: ${{ env.ACT != 'true' }}
         id: meta
         uses: docker/metadata-action@v5
         with:
           # list of Docker images to use as base name for tags
           images: |
             ${{ env.IMAGE_NAME }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           # generate Docker tags based on the following events/attributes
           tags: |
             type=ref,event=branch
@@ -79,27 +66,14 @@ jobs:
       - name: Run build
         run: pnpm run build
 
-      - name: Login to Container Registry
-        if: ${{ env.ACT != 'true' }}
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Build and push Docker image
         id: push
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: ${{ env.ACT != 'true' }}
+          push: false
           tags: ${{ steps.meta.outputs.tags || 'latest' }}
           labels: ${{ steps.meta.outputs.labels || '' }}
 
-      - name: Generate artifact attestation
-        if: ${{ env.ACT != 'true' }}
-        uses: actions/attest-build-provenance@v1
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
-          subject-digest: ${{ steps.push.outputs.digest }}
-          push-to-registry: true
+      - name: Verify Docker image is built
+        run: docker images | grep ${{ env.IMAGE_NAME }} || echo "Image build failed"

@@ -1,4 +1,4 @@
-FROM caddy/caddy
+FROM caddy:2.8.4
 
 ADD dist /var/www/html/vfeeg-web/
 
