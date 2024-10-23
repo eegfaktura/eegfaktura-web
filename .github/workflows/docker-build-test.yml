@@ -1,0 +1,79 @@
+name: Docker Build Test
+
+on:
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+env:
+  IMAGE_NAME: ${{ github.repository || 'eegfaktura-web' }}
+
+jobs:
+  test-docker-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          # list of Docker images to use as base name for tags
+          images: |
+            ${{ env.IMAGE_NAME }}
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+          # generate Docker labels based on the following events/attributes
+          labels: |
+            org.opencontainers.image.title="eegfaktura-web"
+            org.opencontainers.image.description="EEG Faktura web frontend"
+            org.opencontainers.image.source=${{ github.event.repository.html_url || '' }}
+            org.opencontainers.image.url=${{ github.event.repository.html_url || '' }}
+            org.opencontainers.image.version=${{ github.sha || '' }}
+            org.opencontainers.image.revision=${{ github.sha || '' }}
+            org.opencontainers.image.created=${{ github.event.head_commit.timestamp || '' }}
+            org.opencontainers.image.authors="eegfaktura@vfeeg.org"
+            org.opencontainers.image.vendor="Verein zur Förderung von Erneuerbaren Energiegemeinschaften"
+            org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id || '' }}
+            org.opencontainers.image.ref.name=${{ github.ref || '' }}
+            org.opencontainers.image.ref.branch=${{ github.ref_type == 'branch' && github.ref || '' }}
+            org.opencontainers.image.ref.tag=${{ github.ref_type == 'tag' && github.ref || '' }}
+            org.opencontainers.image.ref.sha=${{ github.sha || '' }}
+            org.opencontainers.image.repository=${{ github.repository || '' }}
+            org.opencontainers.image.repository.url=${{ github.event.repository.html_url || '' }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.1
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run build
+        run: pnpm run build
+
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: ${{ steps.meta.outputs.tags || 'latest' }}
+          labels: ${{ steps.meta.outputs.labels || '' }}
+
+      - name: Verify Docker image is built
+        run: docker images | grep ${{ env.IMAGE_NAME }} || echo "Image build failed"
