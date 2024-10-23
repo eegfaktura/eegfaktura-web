@@ -69,17 +69,31 @@ jobs:
         run: zip -r ${{ env.ZIP_NAME }} dist
 
       - name: Commit version bump
+        id: commit_version
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           git add package.json
-          git commit -m "chore: bump version to ${{ env.VERSION }}"
-          git push origin HEAD
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            echo "NO_CHANGES=true" >> $GITHUB_ENV
+          else
+            git commit -m "chore: bump version to ${{ env.VERSION }}"
+            git push origin HEAD
+            echo "NO_CHANGES=false" >> $GITHUB_ENV
+          fi
 
       - name: Create Git Tag
         if: ${{ env.ACT != 'true' }}
         run: |
-          git tag v${{ env.VERSION }}
+          if [ "${{ env.NO_CHANGES }}" == "true" ]; then
+            # Tag the last commit if no new commit was made
+            LAST_COMMIT_SHA=$(git rev-parse HEAD)
+            git tag v${{ env.VERSION }} $LAST_COMMIT_SHA
+          else
+            # Tag the new commit
+            git tag v${{ env.VERSION }}
+          fi
           git push origin v${{ env.VERSION }}
 
       - name: Create GitHub Release and attach dist folder
