@@ -42,7 +42,6 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
-            type=sha
           # generate Docker labels based on the following events/attributes
           labels: |
             org.opencontainers.image.title="eegfaktura-web"
