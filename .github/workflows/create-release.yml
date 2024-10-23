@@ -1,0 +1,79 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g., 1.0.0). Leave empty for auto version bump."
+        required: false
+        default: ""
+
+env:
+  ACT: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.1
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Determine version
+        id: determine_version
+        run: |
+          if [ "${{ github.event.inputs.version }}" != "" ]; then
+            NEW_VERSION=${{ github.event.inputs.version }}
+          else
+            NEW_VERSION=$(pnpm version patch --no-git-tag-version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+")
+          fi
+          ZIP_NAME="${{ github.event.repository.name }}-$NEW_VERSION.zip"
+          echo "New version: $NEW_VERSION"
+          echo "VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+
+      - name: Run build
+        run: pnpm run build
+
+      - name: Commit version bump
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add package.json
+          git commit -m "chore: bump version to ${{ env.VERSION }}"
+          git push origin HEAD
+
+      - name: Create Git Tag
+        if: ${{ env.ACT != 'true' }}
+        run: |
+          git tag v${{ env.VERSION }}
+          git push origin v${{ env.VERSION }}
+
+      - name: Zip dist folder
+        run: zip -r ${{ env.ZIP_NAME }} dist 
+
+      - name: Create GitHub Release and attach dist folder
+        if: ${{ env.ACT != 'true' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          files: ${{ env.ZIP_NAME }}
+          token: ${{ secrets.GITHUB_TOKEN }}
