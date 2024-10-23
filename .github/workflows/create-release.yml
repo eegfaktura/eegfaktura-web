@@ -30,40 +30,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract metadata (tags, labels) for Docker
-        if: ${{ env.ACT != 'true' }}
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          # list of Docker images to use as base name for tags
-          images: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          # generate Docker tags based on the following events/attributes
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-          # generate Docker labels based on the following events/attributes
-          labels: |
-            org.opencontainers.image.title="eegfaktura-web"
-            org.opencontainers.image.description="EEG Faktura web frontend"
-            org.opencontainers.image.source=${{ github.event.repository.html_url || '' }}
-            org.opencontainers.image.url=${{ github.event.repository.html_url || '' }}
-            org.opencontainers.image.version=${{ env.VERSION }}
-            org.opencontainers.image.revision=${{ github.sha || '' }}
-            org.opencontainers.image.created=${{ github.event.head_commit.timestamp || '' }}
-            org.opencontainers.image.authors="eegfaktura@vfeeg.org"
-            org.opencontainers.image.vendor="Verein zur Förderung von Erneuerbaren Energiegemeinschaften"
-            org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id || '' }}
-            org.opencontainers.image.ref.name=${{ github.ref || '' }}
-            org.opencontainers.image.ref.branch=${{ github.ref_type == 'branch' && github.ref || '' }}
-            org.opencontainers.image.ref.tag=${{ github.ref_type == 'tag' && github.ref || '' }}
-            org.opencontainers.image.ref.sha=${{ github.sha || '' }}
-            org.opencontainers.image.repository=${{ github.repository || '' }}
-            org.opencontainers.image.repository.url=${{ github.event.repository.html_url || '' }}
-
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -103,6 +69,32 @@ jobs:
           echo "Zip name: $ZIP_NAME"
           echo "VERSION=$NEW_VERSION" >> $GITHUB_ENV
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+
+      - name: Extract metadata (tags, labels) for Docker
+        if: ${{ env.ACT != 'true' }}
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          # list of Docker images to use as base name for tags
+          images: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+          # generate Docker labels based on the following events/attributes
+          labels: |
+            org.opencontainers.image.title="eegfaktura-web"
+            org.opencontainers.image.description="EEG Faktura web frontend"
+            org.opencontainers.image.authors="eegfaktura@vfeeg.org"
+            org.opencontainers.image.vendor="Verein zur Förderung von Erneuerbaren Energiegemeinschaften"
+            org.opencontainers.image.source=${{ github.event.repository.html_url || '' }}
+            org.opencontainers.image.url=${{ github.event.repository.html_url || '' }}
+            org.opencontainers.image.version=${{ env.VERSION }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ github.event.head_commit.timestamp || '' }}
+            org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id || '' }}
 
       - name: Run build
         run: pnpm run build
