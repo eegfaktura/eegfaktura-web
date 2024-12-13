@@ -5,6 +5,7 @@ import {store} from "../../store";
 
 export const buildAllocationMapFromSelected = (participants: EegParticipant[], checkedParticipant: Record<string, boolean>): MeteringEnergyGroupType[] => {
   const participantReport = meteringEnergyGroup1(store.getState())
+  console.log("participantReport", participantReport);
 
   return participantReport
     .filter(p => checkedParticipant[p.participantId] !== undefined && checkedParticipant[p.participantId])
@@ -17,7 +18,7 @@ export const buildAllocationMapFromSelected = (participants: EegParticipant[], c
             ? m.report.summary.production - m.report.summary.allocation
             : m.report.summary.utilization
         } as MeteringEnergyGroupType
-      }).filter(e => e.allocationKWh > 0)
+      })//.filter(e => e.allocationKWh > 0)
     })
 };
 

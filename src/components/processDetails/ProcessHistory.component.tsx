@@ -6,12 +6,13 @@ import {chevronForwardOutline} from "ionicons/icons";
 import ProcessHeaderComponent from "./ProcessHeader.component";
 import ProcessContentComponent from "./ProcessContent.component";
 import DateComponent from "../dialogs/date.component";
-import {EdaHistory, EdaResponseCode} from "../../models/process.model";
+import {EdaHistory, EdaHistoryGroup, EdaResponseCode} from "../../models/process.model";
 import {Api} from "../../service";
 import {GroupBy} from "../../util/Helper.util";
 import {useLocale} from "../../store/hook/useLocale";
 import {useAllParticipants} from "../../store/hook/ParticipantProvider";
 import {EegParticipant} from "../../models/members.model";
+import PaginationComponent from "../core/Pagination.component";
 
 interface ProcessHistoryComponentProps {
   eeg: Eeg
@@ -43,7 +44,11 @@ const ProcessHistoryComponent: FC<ProcessHistoryComponentProps> = ({eeg, edaProc
   }, [fetchHistory]);
 
   const meterParticipants = useMemo(() => {
-    return participants.reduce((pc, p) => {return {...pc, ...p.meters.reduce((c, m) => {return {...c, [m.meteringPoint]: p}}, {} as Record<string, EegParticipant>)}}, {}as Record<string, EegParticipant>)
+    return participants.reduce((pc, p) => {
+      return {...pc, ...p.meters.reduce((c, m) => {
+        return {...c, [m.meteringPoint]: p}
+      }, {} as Record<string, EegParticipant>)}
+    }, {} as Record<string, EegParticipant>)
   }, [participants])
 
   const getEntriesForProcessId = (process: string): Record<string, EdaHistory[]> => {
@@ -55,22 +60,27 @@ const ProcessHistoryComponent: FC<ProcessHistoryComponentProps> = ({eeg, edaProc
     }
   }
 
-  const getEntriesForProcess = useCallback((process: string): Record<string, EdaHistory[]> => {
+  const getEntriesForProcess = useCallback((process: string): Record<string, EdaHistoryGroup> => {
     if (entries) {
       const processEntries = getEntriesForProcessId(process)
       if (processEntries) {
-        return Object.entries(processEntries).reduce((g: Record<string, EdaHistory[]>, [k, v]) => {
+        return Object.entries(processEntries).reduce((g: Record<string, EdaHistoryGroup>, [k, v]) => {
           extractMessage(process, v).forEach(h => {
-            (h.meteringPoints && h.meteringPoints.length > 0) ? h.meteringPoints.forEach(m => {
-              g[m] = [...(g[m] || []), h]
-              g[m].sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : 0)
-            }) : (g['-'] = [...(g['-'] || []), h] || g['-'].sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+            (h.meteringPoints && h.meteringPoints.length > 0)
+              ? h.meteringPoints.forEach(m => {
+                g[m] || (g = {...g, [m]: {} as EdaHistoryGroup})
+                g[m].participant = meterParticipants[m]
+                g[m].histories = [...(g[m].histories || []), h]
+                g[m].histories.sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : 0)
+              })
+              : g /*(g['-'].histories = [...(g['-'].histories || []), h] || g['-'].histories.sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : 0))*/
           })
           return g
-        }, {})
+        }, {} as Record<string, EdaHistoryGroup>)
       }
     }
-    return {}
+    return {} as Record<string, EdaHistoryGroup>
+
   }, [entries])
 
   const sortHistories = (h: EdaHistory[]) => {
@@ -263,7 +273,9 @@ const ProcessHistoryComponent: FC<ProcessHistoryComponentProps> = ({eeg, edaProc
             default:
               e.meteringPoint = e.message.responseData.reduce((z: string, r: Record<string, any>) => r.meteringPoint ? r.meteringPoint : z, "-")
               e.meteringPoints = e.message.responseData.map((r: Record<string, any>) => r.meteringPoint)
-              e.responseCode = e.message.responseData.reduce((z: string, r: Record<string, any>) => r.responseCode ? EdaResponseCode.getMessage(r.responseCode[0]) : z, "-")
+              e.responseCode = e.message.responseData.reduce((z: string, r: Record<string, any>) => r.responseCode
+                ? r.responseCode.map((n:number) => EdaResponseCode.getMessage(n)).join(", ")
+                : z, "-")
               return e
           }
         })
@@ -313,6 +325,17 @@ const ProcessHistoryComponent: FC<ProcessHistoryComponentProps> = ({eeg, edaProc
     </div>
   }
 
+  const calcProcessFilter = (filter: string | undefined, m: string, v: EdaHistoryGroup): boolean => {
+    if (filter) {
+      return m.toLowerCase().indexOf(filter) !== -1 || (v.participant
+        ? (v.participant.lastname && v.participant.firstname.toLowerCase().indexOf(filter) !== -1
+          || v.participant.lastname.toLowerCase().indexOf(filter) !== -1
+          || v.participant.participantNumber.toLowerCase().indexOf(filter) !== -1)
+        : false)
+    }
+    return true
+  }
+
   return (
     <>
       <ProcessHeaderComponent name={edaProcess.name}>
@@ -334,16 +357,21 @@ const ProcessHistoryComponent: FC<ProcessHistoryComponentProps> = ({eeg, edaProc
                             <IonSearchbar debounce={500} onIonInput={(ev) => handleInput(ev)}></IonSearchbar>
                         </div>
                         <IonAccordionGroup>
-                          {Object.entries(getEntriesForProcess(p))
-                            .filter(([k, v]) => (processFilter[p] || '').length > 0 ? k.toLowerCase().indexOf(processFilter[p]!) !== -1 : true)
-                            .map(([k, v], i) => (
-                              <IonAccordion key={i} value={"cm_rev_imp_" + i}>
-                                <IonItem slot="header" color="light">
-                                  <IonLabel>{renderMeterHeader(k)}</IonLabel>
-                                </IonItem>
-                                {renderAccordionBody(p, v)}
-                              </IonAccordion>
-                            ))}
+                            <PaginationComponent
+                                elements={Object
+                                  .entries(getEntriesForProcess(p))
+                                  .filter(([k, v]) => (processFilter[p] || '').length > 0 ? calcProcessFilter(processFilter[p], k, v) /*k.toLowerCase().indexOf(processFilter[p]!) !== -1*/ : true)}
+                                perPage={20}
+                                renderEntry={(i, e) => {
+                                  const [k, v] = e
+                                  return (<IonAccordion key={i} value={"cm_rev_imp_" + i}>
+                                    <IonItem slot="header" color="light">
+                                      <IonLabel>{renderMeterHeader(k)}</IonLabel>
+                                    </IonItem>
+                                    {renderAccordionBody(p, v.histories)}
+                                  </IonAccordion>)
+                                }}>
+                            </PaginationComponent>
                         </IonAccordionGroup>
                     </div>
                 }

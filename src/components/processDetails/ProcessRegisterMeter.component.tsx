@@ -132,7 +132,7 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
 
             <CheckboxComponent label={"Offline Registrierung"} checked={offline} setChecked={setOffline}></CheckboxComponent>
             { offline && 
-              <InputForm name="activationCode" control={control} label={"Aktivierungs-Code"} counter={true} maxlength={33}/>
+              <InputForm name="activationCode" control={control} label={"Aktivierungs-Code"} counter={true} maxlength={35}/>
             }
             <IonItem lines="none" style={{zIndex: "0"}}>
               <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={!formState.isValid}>

@@ -220,6 +220,7 @@ export interface EegNotification {
   id: number;
   date: Date;
   type: 'ERROR' | 'MESSAGE' | 'NOTIFICATION';
+  process: string;
   message: Message;
 }
 

@@ -13,6 +13,11 @@ export interface EdaHistory {
   meteringTo?: Date
 }
 
+export interface EdaHistoryGroup {
+  histories: EdaHistory[]
+  participant: EegParticipant
+}
+
 export class EdaHistoryEntry {
   public constructor(
   public Tenant: string,
@@ -23,7 +28,6 @@ export class EdaHistoryEntry {
   public message: Record<string, any>,
   public processType: string,
   public protocol: string) {}
-
 }
 
 export class EdaResponseCode {

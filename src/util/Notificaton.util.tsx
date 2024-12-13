@@ -2,10 +2,10 @@ import {EegNotification} from "../models/eeg.model";
 import {ReactNode} from "react";
 
 
-export function buildNotificationText(type: string, notification: object): ReactNode {
+export function buildNotificationText(type: string, process: string, notification: object): ReactNode {
 
-  switch (type) {
-    case "EDA_PROCESS":
+  switch (process) {
+    case "EDA_PROCESS": {
       const n = notification as EegNotification
       switch (n.message.type) {
         case 'ZUSTIMMUNG_ECON':
@@ -49,14 +49,18 @@ export function buildNotificationText(type: string, notification: object): React
           return <p>Für die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurde die Anfrage auf <strong>ÄNDERUNG
             TEILNAHMEFAKTOR</strong> abgelehnt.</p>
         case 'ANFORDERUNG_CPF':
-          return <p>Für die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurden <strong><u>Änderungen des Teilnahmefaktors
+          return <p>Für die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurden <strong><u>Änderungen des
+            Teilnahmefaktors
             angefordert.</u></strong></p>
         case 'ANTWORT_CPF':
-          return <p>Für die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurden <strong><u>die Änderungen des Teilnahmefaktors
+          return <p>Für die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurden <strong><u>die Änderungen des
+            Teilnahmefaktors
             angenommen.</u></strong></p>
       }
+      break
+    }
+    case "EXCEL_IMPORT":
+      return (<p>Excel Stammdaten importiert </p>)
   }
-
-
   return ""
 }

@@ -108,7 +108,9 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
 
   useEffect(() => {
     const[start, end] = getPeriodDates(activePeriod)
-    setActiveParticipants(filterActiveParticipantAndMeter(allParticipants, start, end))
+    const _aps = filterActiveParticipantAndMeter(allParticipants, start, end)
+    setActiveParticipants(_aps)
+    fetchEnergyReport(_aps)
   }, [allParticipants, activePeriod]);
 
   const value = {
@@ -152,9 +154,9 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
   //   }
   // }, [activePeriod]);
 
-  const fetchEnergyReport = useCallback(() => {
-    if (tenant && activePeriod && activeParticipants && activeParticipants.length > 0) {
-      const participantsReport = activeParticipants.map(p => {
+  const fetchEnergyReport = (aps: EegParticipant[]) => {
+    if (tenant && activePeriod && aps && aps.length > 0) {
+      const participantsReport = aps.map(p => {
         return {
           participantId: p.id,
           meters: p.meters.filter(m => !!m.participantState).map(m => {
@@ -164,14 +166,18 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
         } as ParticipantReport
       })
       dispatch(fetchEnergyReportV2({tenant: tenant, year: activePeriod.year, segment: activePeriod.segment, type: activePeriod.type, participants: participantsReport.filter(p => p.meters.length > 0)}))
-    } else if (activeParticipants && activeParticipants.length == 0) {
+    } else if (!activeParticipants || activeParticipants.length == 0) {
       dispatch(clearEnergyState())
     }
-  }, [activePeriod, activeParticipants])
+  }
 
-  useEffect(() => {
-    fetchEnergyReport()
-  },[fetchEnergyReport])
+  // const fetchEnergyReportCallback = useCallback(() => {
+  //   fetchEnergyReport(activeParticipants)
+  // }, [tenant, activePeriod, activeParticipants])
+  //
+  // useEffect(() => {
+  //   fetchEnergyReportCallback()
+  // },[fetchEnergyReportCallback])
 
   return (
     <ParticipantContext.Provider value={value}>

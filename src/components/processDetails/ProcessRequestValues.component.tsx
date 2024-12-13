@@ -131,18 +131,12 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
             <InputForm name="communityId" label={t("communityId")} control={control} protectedControl={true}/>
             <CheckboxComponent label={t("process.requestValue.selectEntire")} setChecked={(c) => selectAllMeteringPoints(c)}
                                checked={selectEntire!}/>
-            {/*<SelectForm control={control} name={"participantId"} options={participants.sort((a,b) => a.lastname.localeCompare(b.lastname)).map((p) => {*/}
-            {/*  return {key: p.id, value: p.firstname + " " + p.lastname}*/}
-            {/*})} label={t("participant")} selectInterface={"popover"} disableEntire={selectEntire}/>*/}
-            {/*<SelectForm control={control} name={"meteringPoints"} options={useableMeters.map((p) => {*/}
-            {/*  return {key: p.meteringPoint, value: meteringDisplayName(p)}*/}
-            {/*})} label={t("metering")} selectInterface={"popover"} multiple={true} rules={{required: true}} disableEntire={selectEntire}/>*/}
             <BasicSelectComponent control={control} name={"participantId"}
                                   options={participants.sort((a,b) => a.lastname.localeCompare(b.lastname)).map((p) => {
                                     return {value: p.id, label: JoinStrings(" ", "-", p.participantNumber, p.lastname, p.firstname)}
                                   })} label={t("participant")} disabled={selectEntire}/>
             <BasicSelectComponent control={control} name={"meteringPoints"}
-                                  options={useableMeters.filter(p => p.processState === 'ACTIVE').map((p) => {
+                                  options={useableMeters.filter(p => p.processState === 'ACTIVE' || p.processState == 'INACTIVE').map((p) => {
                                     return {value: p.meteringPoint, label: JoinStrings(" ", "", meteringDisplayName(p), p.processState)}
                                   })} label={t("metering")} multiple={true} rules={{required: true}} disabled={selectEntire}/>
             <div className="form-element">

@@ -175,13 +175,13 @@ const ParticipantPaneComponent: FC = () => {
   const sortedParticipants1 = sortParticipants({participants, hideProducers, hideConsumers})
 
   const viewEntities = filterParticipant({
-        selectedFilter,
-        sortedParticipants: sortedParticipants1,
-        participants: allParticipants,
-        hideConsumers,
-        hideProducers,
-        hideMeter
-      })
+    selectedFilter,
+    sortedParticipants: sortedParticipants1,
+    participants: allParticipants,
+    hideConsumers,
+    hideProducers,
+    hideMeter
+  })
 
   const infoToast = (message: string) => {
     toaster({
@@ -346,7 +346,8 @@ const ParticipantPaneComponent: FC = () => {
   });
 
   const [uploadPopover, dismissUpload] = useIonPopover(UploadPopup, {
-    tenant,
+    tenant: tenant,
+    online: (eeg ? eeg.online : false),
     onDismiss: (data: any, role: string) => dismissUpload(data, role),
   });
 
@@ -395,7 +396,7 @@ const ParticipantPaneComponent: FC = () => {
       const [file, sheetName, type] = data;
       if (file && file.length === 1 && sheetName) {
         switch (type) {
-          case 0:
+          case 1:
             loading({message: "Energiedaten importieren ..."});
             Api.energyService
               .uploadEnergyFile({tenant, ecId, rcNr}, sheetName, file[0])
@@ -409,7 +410,7 @@ const ParticipantPaneComponent: FC = () => {
                 dismissLoading();
               });
             break;
-          case 1:
+          case 0:
             loading({message: "Stammdaten importieren ..."});
             Api.eegService
               .uploadMasterDataFile(tenant, sheetName, file[0])
@@ -623,84 +624,84 @@ const ParticipantPaneComponent: FC = () => {
   const setRowHeight = (index: number, size: number) => {
     // listRef.current?.resetAfterIndex(0);
     console.log("setRowHeight", index, size)
-    rowHeights.current = { ...rowHeights.current, [index]: size };
+    rowHeights.current = {...rowHeights.current, [index]: size};
   }
 
- const getRowHeight = (index: number) => {
+  const getRowHeight = (index: number) => {
     if (rowHeights.current) {
       console.log("getRowHeight", index, rowHeights.current[index] + 8 || 82)
       return rowHeights.current[index] + 8 || 82;
     }
     console.log("getRowHeight", index, "Default 200")
     return 200
- }
+  }
 
 
- const RowElement:FC<{participant: EegParticipant}> = ({participant}) => {
+  const RowElement: FC<{ participant: EegParticipant }> = ({participant}) => {
     const command = participant
-   if (command.meters.length > 0) {
-     return (
-       <div
-         key={command.id}
-         onClick={onSelectParticipant(command)}
-         className={cn("participant", {
-           selected: command.id === selectedParticipant?.id,
-         })}
-       >
-         <MemberComponent
-           participant={command}
-           onCheck={onCheckParticipant(command)}
-           isChecked={
-             checkedParticipant && (checkedParticipant[command.id] || false)
-           }
-           hideMeter={hideMeter}
-           hideMember={hideMember}
-           showAmount={showAmount}
-           showDetailsPage={showDetailsPage}
-           onShowAddMeterPage={onShowAddMeterPage}
-         >
-           {hideMeter ||
-             command.meters.map((m, i) => (
-               <MeterCardComponent
-                 key={"meter" + i}
-                 participant={command}
-                 meter={m}
-                 hideMeter={false}
-                 showCash={showAmount}
-                 onSelect={onSelectMeter}
-                 isSelected={m.meteringPoint === selectedMeterId}
-               />
-             ))}
-         </MemberComponent>
-       </div>
-     );
-   } else {
-     return (
-       <div
-         key={command.id}
-         onClick={onSelectParticipant(command)}
-         className={cn("participant", {
-           selected: command.id === selectedParticipant?.id,
-         })}
-       >
-         <MemberComponent
-           participant={command}
-           onCheck={onCheckParticipant(command)}
-           isChecked={
-             checkedParticipant && (checkedParticipant[command.id] || false)
-           }
-           hideMeter={hideMeter}
-           hideMember={hideMember}
-           showAmount={showAmount}
-           showDetailsPage={showDetailsPage}
-           onShowAddMeterPage={onShowAddMeterPage}
-         />
-       </div>
-     );
-   }
- }
+    if (command.meters.length > 0) {
+      return (
+        <div
+          key={command.id}
+          onClick={onSelectParticipant(command)}
+          className={cn("participant", {
+            selected: command.id === selectedParticipant?.id,
+          })}
+        >
+          <MemberComponent
+            participant={command}
+            onCheck={onCheckParticipant(command)}
+            isChecked={
+              checkedParticipant && (checkedParticipant[command.id] || false)
+            }
+            hideMeter={hideMeter}
+            hideMember={hideMember}
+            showAmount={showAmount}
+            showDetailsPage={showDetailsPage}
+            onShowAddMeterPage={onShowAddMeterPage}
+          >
+            {hideMeter ||
+              command.meters.map((m, i) => (
+                <MeterCardComponent
+                  key={"meter" + i}
+                  participant={command}
+                  meter={m}
+                  hideMeter={false}
+                  showCash={showAmount}
+                  onSelect={onSelectMeter}
+                  isSelected={m.meteringPoint === selectedMeterId}
+                />
+              ))}
+          </MemberComponent>
+        </div>
+      );
+    } else {
+      return (
+        <div
+          key={command.id}
+          onClick={onSelectParticipant(command)}
+          className={cn("participant", {
+            selected: command.id === selectedParticipant?.id,
+          })}
+        >
+          <MemberComponent
+            participant={command}
+            onCheck={onCheckParticipant(command)}
+            isChecked={
+              checkedParticipant && (checkedParticipant[command.id] || false)
+            }
+            hideMeter={hideMeter}
+            hideMember={hideMember}
+            showAmount={showAmount}
+            showDetailsPage={showDetailsPage}
+            onShowAddMeterPage={onShowAddMeterPage}
+          />
+        </div>
+      );
+    }
+  }
 
- const [isScrolling, setIsScrolling] = useState<boolean>(false)
+  const [isScrolling, setIsScrolling] = useState<boolean>(false)
   return (
     <div className={"participant-pane"}>
       <div className={"pane-body"}>
@@ -712,29 +713,29 @@ const ParticipantPaneComponent: FC = () => {
             ref={popoverRef}
           >
             <IonButtons slot="end">
-              <HeaderFavButtonComponent icon={search} onClick={() => setSearchActive(!searchActive)} />
-              {eeg && !eeg.online && (
-                <HeaderFavButtonComponent icon={cloudUploadOutline} onClick={(e: any) =>
-                  uploadPopover({
-                    event: e,
-                    size: "auto",
-                    side: "bottom",
-                    alignment: "start",
-                    cssClass: "upload-popover",
-                    onDidDismiss: (e: CustomEvent) => onImport(e.detail.data),
-                  })
-                } />
-              )}
+              <HeaderFavButtonComponent icon={search} onClick={() => setSearchActive(!searchActive)}/>
+              {/*{eeg && !eeg.online && (*/}
+              <HeaderFavButtonComponent icon={cloudUploadOutline} onClick={(e: any) =>
+                uploadPopover({
+                  event: e,
+                  size: "auto",
+                  side: "bottom",
+                  alignment: "start",
+                  cssClass: "upload-popover",
+                  onDidDismiss: (e: CustomEvent) => onImport(e.detail.data),
+                })
+              }/>
+              {/*)}*/}
               <HeaderFavButtonComponent icon={downloadOutline} onClick={(e: any) =>
-              reportPopover({
-                event: e,
-                size: "auto",
-                side: "bottom",
-                alignment: "start",
-                cssClass: "upload-popover",
-                // onDidDismiss: (e: CustomEvent) => onExport(e.detail.data),
-              })} />
-              <HeaderFavButtonComponent icon={add} routerLink="/page/addParticipant" routerDirection="root" />
+                reportPopover({
+                  event: e,
+                  size: "auto",
+                  side: "bottom",
+                  alignment: "start",
+                  cssClass: "upload-popover",
+                  // onDidDismiss: (e: CustomEvent) => onExport(e.detail.data),
+                })}/>
+              <HeaderFavButtonComponent icon={add} routerLink="/page/addParticipant" routerDirection="root"/>
             </IonButtons>
           </IonToolbar>
           {searchActive && (
@@ -784,98 +785,104 @@ const ParticipantPaneComponent: FC = () => {
           {/*      )}}*/}
           {/*      </AutoSizer>*/}
           {/*</div>*/}
-            <Virtuoso style={{overflowX: "hidden"}}
-              // ref={listRef}
-              // viewportRef={viewPortRef}
-              context={{isScrolling}}
-              isScrolling={setIsScrolling}
-              totalCount={viewPortItems.length}
-              itemSize={(el, field) => {
-                const index = parseInt(el.getAttribute("data-index") ?? "0");
-                const mp = /*hideMeter || hideMember ? 0 : */viewPortItems[index].meters.length
-                // console.log("ItemSize", el.scrollHeight, el.offsetHeight, h, el.getBoundingClientRect().height, el, field, hideMeter, hideMember, hideConsumers, hideProducers)
-                return el.offsetHeight === 0
-                  ? (hideMeter ? 0 : mp * 65) + (hideMember ? 0 : 55)
-                  : el.offsetHeight
-              }}
-              // data={viewPortItems}
-              // initialPrerender={10}
-              // initialIndex={9}
-              // initialOffset={100}
-              // itemSize={viewPortItems.length}
-              // initialAlignToTop={false}
-              // overscan={10}
-              // withCache={false}
-              // itemMargin={8}
-              itemContent={(index, _, {isScrolling}) => {
-                const command = viewPortItems[index];
-                // if (isScrolling) {
-                //   return (
-                //     <div style={{height: "200px", width: "100%"}}></div>
-                //   )
-                // }
-                if (command.meters.length > 0) {
-                  return (
-                    <div
-                      key={command.id}
-                      onClick={onSelectParticipant(command)}
-                      className={cn("participant", {
-                        selected: command.id === selectedParticipant?.id,
-                      })}
-                    >
-                      <MemberComponent
-                        participant={command}
-                        onCheck={onCheckParticipant(command)}
-                        isChecked={
-                          checkedParticipant && (checkedParticipant[command.id] || false)
-                        }
-                        hideMeter={hideMeter}
-                        hideMember={hideMember}
-                        showAmount={showAmount}
-                        showDetailsPage={showDetailsPage}
-                        onShowAddMeterPage={onShowAddMeterPage}
-                      >
-                        {hideMeter ||
-                          command.meters.map((m, i) => (
-                            <MeterCardComponent
-                              key={"meter" + i}
+          {viewPortItems.length > 0 &&
+          <Virtuoso style={{overflowX: "hidden"}}
+            // ref={listRef}
+            // viewportRef={viewPortRef}
+                    context={{isScrolling}}
+                    isScrolling={setIsScrolling}
+                    totalCount={viewPortItems.length}
+                    itemSize={(el, field) => {
+                      const index = parseInt(el.getAttribute("data-index") ?? "0");
+                      if (viewPortItems[index]) {
+                        const mp = /*hideMeter || hideMember ? 0 : */viewPortItems[index].meters.length
+                        // console.log("ItemSize", el.scrollHeight, el.offsetHeight, h, el.getBoundingClientRect().height, el, field, hideMeter, hideMember, hideConsumers, hideProducers)
+                        return el.offsetHeight === 0
+                          ? (hideMeter ? 0 : mp * 65) + (hideMember ? 0 : 55)
+                          : el.offsetHeight
+                      }
+                      console.log("ViewPortItems undefined", index, viewPortItems.length)
+                      return 200
+                    }}
+            // data={viewPortItems}
+            // initialPrerender={10}
+            // initialIndex={9}
+            // initialOffset={100}
+            // itemSize={viewPortItems.length}
+            // initialAlignToTop={false}
+            // overscan={10}
+            // withCache={false}
+            // itemMargin={8}
+                    itemContent={(index, _, {isScrolling}) => {
+                      const command = viewPortItems[index];
+                      // if (isScrolling) {
+                      //   return (
+                      //     <div style={{height: "200px", width: "100%"}}></div>
+                      //   )
+                      // }
+                      if (command.meters.length > 0) {
+                        return (
+                          <div
+                            key={command.id}
+                            onClick={onSelectParticipant(command)}
+                            className={cn("participant", {
+                              selected: command.id === selectedParticipant?.id,
+                            })}
+                          >
+                            <MemberComponent
                               participant={command}
-                              meter={m}
-                              hideMeter={false}
-                              showCash={showAmount}
-                              onSelect={onSelectMeter}
-                              isSelected={m.meteringPoint === selectedMeterId}
+                              onCheck={onCheckParticipant(command)}
+                              isChecked={
+                                checkedParticipant && (checkedParticipant[command.id] || false)
+                              }
+                              hideMeter={hideMeter}
+                              hideMember={hideMember}
+                              showAmount={showAmount}
+                              showDetailsPage={showDetailsPage}
+                              onShowAddMeterPage={onShowAddMeterPage}
+                            >
+                              {hideMeter ||
+                                command.meters.map((m, i) => (
+                                  <MeterCardComponent
+                                    key={"meter" + i}
+                                    participant={command}
+                                    meter={m}
+                                    hideMeter={false}
+                                    showCash={showAmount}
+                                    onSelect={onSelectMeter}
+                                    isSelected={m.meteringPoint === selectedMeterId}
+                                  />
+                                ))}
+                            </MemberComponent>
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <div
+                            key={command.id}
+                            onClick={onSelectParticipant(command)}
+                            className={cn("participant", {
+                              selected: command.id === selectedParticipant?.id,
+                            })}
+                          >
+                            <MemberComponent
+                              participant={command}
+                              onCheck={onCheckParticipant(command)}
+                              isChecked={
+                                checkedParticipant && (checkedParticipant[command.id] || false)
+                              }
+                              hideMeter={hideMeter}
+                              hideMember={hideMember}
+                              showAmount={showAmount}
+                              showDetailsPage={showDetailsPage}
+                              onShowAddMeterPage={onShowAddMeterPage}
                             />
-                          ))}
-                      </MemberComponent>
-                    </div>
-                  );
-                } else {
-                  return (
-                    <div
-                      key={command.id}
-                      onClick={onSelectParticipant(command)}
-                      className={cn("participant", {
-                        selected: command.id === selectedParticipant?.id,
-                      })}
-                    >
-                      <MemberComponent
-                        participant={command}
-                        onCheck={onCheckParticipant(command)}
-                        isChecked={
-                          checkedParticipant && (checkedParticipant[command.id] || false)
-                        }
-                        hideMeter={hideMeter}
-                        hideMember={hideMember}
-                        showAmount={showAmount}
-                        showDetailsPage={showDetailsPage}
-                        onShowAddMeterPage={onShowAddMeterPage}
-                      />
-                    </div>
-                  );
-                }
-              }}>
-            </Virtuoso>
+                          </div>
+                        );
+                      }
+                    }}>
+          </Virtuoso>
+          }
         </div>
         <div className={"pane-footer"}>
           {showAmount && (

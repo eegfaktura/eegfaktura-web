@@ -10,13 +10,13 @@ import {useTenant} from "../store/hook/Eeg.provider";
 
 const NotificationPage: FC = () => {
   const {tenant} = useTenant()
-  const [notifictions, setNotifications] = useState<{type: string, date: Date, notification: EegNotification}[]>([])
+  const [notifictions, setNotifications] = useState<{type: string, process: string, date: Date, notification: EegNotification}[]>([])
 
   useEffect(() => {
     Api.eegService.getNotifications(tenant, 0).then(r => {
       setNotifications(r.map(x => {
         x.message = new Message(x.message)
-        return {type: "EDA_PROCESS", date: x.date, notification: x}
+        return {type: x.type, process: x.process, date: x.date, notification: x}
       }))
     })
   }, [])

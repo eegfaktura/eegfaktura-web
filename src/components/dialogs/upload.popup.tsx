@@ -8,12 +8,13 @@ import "./upload.popover.scss"
 
 const UploadPopup: FC<{
   tenant: string
+  online: boolean
   onDismiss: (data: [files: FileList | null | undefined, sheet: string, type: number], role: string) => void
-}> = ({tenant, onDismiss}) => {
+}> = ({tenant, online, onDismiss}) => {
 
-  const [sheetName, setSheetName] = useState<[string, string]>(["Energiedaten", "EEG Stammdaten"])
+  const [sheetName, setSheetName] = useState<[string, string]>(["EEG Stammdaten", "Energiedaten"])
   const [file, setFile] = useState<FileList | null>();
-  const [selectedImportType, setSelectedImportType] = useState(0)
+  const [selectedImportType, setSelectedImportType] = useState<number>(online ? 0 : 1)
 
   const onChange = (evt: ChangeEvent<HTMLInputElement>) => {
     setFile(evt.target.files);
@@ -21,12 +22,12 @@ const UploadPopup: FC<{
   }
 
   const onChangeSheetname = (e: CustomEvent) => {
-    const [eSheet, sSheet] = sheetName
+    const [sSheet, eSheet] = sheetName
     switch (selectedImportType) {
-      case 0:
+      case 1:
         setSheetName([e.detail.value, sSheet])
         break;
-      case 1:
+      case 0:
         setSheetName([eSheet, e.detail.value])
         break;
     }
@@ -43,10 +44,10 @@ const UploadPopup: FC<{
         <IonRow>
           <IonCol size="auto">
             <ToggleButtonComponent
-              buttons={[{label: 'Energiedaten', icon: people}, {label: 'Stammdaten', icon: eegBusiness}]}
+              buttons={online ? [{label: 'Stammdaten', icon: eegBusiness}] : [{label: 'Stammdaten', icon: eegBusiness}, {label: 'Energiedaten', icon: people}]}
               onChange={setSelectedImportType}
               value={selectedImportType}
-              changeable={true}
+              changeable={!online}
             />
           </IonCol>
         </IonRow>

@@ -45,10 +45,15 @@ const MeterCardComponent: FC<MeterCardComponentProps> = ({participant, meter, hi
     if (report) {
       if ("consumed" in report) {
         if (report.consumed === 0) return 0
-        return Math.round((report.allocated / report.consumed) * 100);
+        if (isNaN(report.consumed) || isNaN(report.allocated)) return 0
+        return Math.round((report.allocated / report.consumed) * 100)
       } else {
-        if (report.total_production === 0) return 0
-        return Math.round((report.allocated / report.total_production) * 100);
+        if (report.produced === 0) return 0
+        if (isNaN(report.produced) || isNaN(report.allocated)) return 0
+        // return Math.round((Math.max(report.produced - report.allocated, 0) / report.produced) * 100)
+        if (isNaN(report.total_production) || report.total_production === 0) return 0
+        return Math.round((report.allocated / report.total_production) * 100)
+        // return Math.round((report.allocated / report.produced) * 100)
       }
     }
     return 0
@@ -61,14 +66,14 @@ const MeterCardComponent: FC<MeterCardComponentProps> = ({participant, meter, hi
   const isMeterInactive = () => meter.processState === "INACTIVE"
 
   const meterValue = () => {
-    if (report && report.allocated) {
+    if (report && !isNaN(report.allocated)) {
       if (showCash && tariff) {
         return (<><span>{bill.toFixed(2)}</span><span style={{fontSize:"12px"}}> €</span></>);
       }
       // return (<><span>{(Math.round(report?.allocated! * 10) / 10)}</span><span style={{fontSize:"10px"}}> kWh</span></>);
 
       let value = report.allocated.toFixed(2);
-      if ('produced' in report) {
+      if ('produced' in report && !isNaN(report.produced)) {
         value = (report.produced - report.allocated).toFixed(2)
       }
       // return (<><span>{report ? report?.allocated!.toFixed(2) : 0}</span><span style={{fontSize:"10px"}}> kWh</span></>);

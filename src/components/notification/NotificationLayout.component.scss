@@ -17,6 +17,19 @@
   }
 
   .notification-icon {
+    font-size: 14px;
+    &_NOTIFICATION {
+      color: #DC631E;
+      font-size: 24px;
+    }
+    &_MESSAGE {
+      color: #3f615a;
+      font-size: 24px;
+    }
+    &_ERROR {
+      color: #cf3c4f;
+      font-size: 24px;
+    }
     &_ANFORDERUNG_ECON {
       color: #3f615a;
     }
@@ -73,6 +86,9 @@
     }
     &_ERROR_MESSAGE {
       color: #cf3c4f;
+    }
+    &_EXCEL_IMPORT {
+      color: #DC631E;
     }
   }
 }
