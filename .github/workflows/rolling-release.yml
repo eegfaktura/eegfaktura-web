@@ -12,13 +12,14 @@ env:
   ACT: false
   REGISTRY: "ghcr.io"
   IMAGE_NAME: ${{ github.repository || 'eegfaktura-web' }}
+  ZIP_NAME: "eegfaktura-web.zip"
 
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
+      contents: write
       packages: write
       attestations: write
       id-token: write
@@ -79,6 +80,13 @@ jobs:
       - name: Run build
         run: pnpm run build
 
+      - name: Create GitHub Release and attach dist folder
+        if: ${{ env.ACT != 'true' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ZIP_NAME }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Login to Container Registry
         if: ${{ env.ACT != 'true' }}
         uses: docker/login-action@v3
@@ -95,6 +103,7 @@ jobs:
           push: ${{ env.ACT != 'true' }}
           tags: ${{ steps.meta.outputs.tags || 'latest' }}
           labels: ${{ steps.meta.outputs.labels || '' }}
+          annotations: ${{ steps.meta.outputs.annotations }}
 
       - name: Generate artifact attestation
         if: ${{ env.ACT != 'true' }}
