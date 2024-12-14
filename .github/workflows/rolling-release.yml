@@ -12,14 +12,13 @@ env:
   ACT: false
   REGISTRY: "ghcr.io"
   IMAGE_NAME: ${{ github.repository || 'eegfaktura-web' }}
-  ZIP_NAME: "eegfaktura-web.zip"
 
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write
+      contents: read
       packages: write
       attestations: write
       id-token: write
@@ -79,13 +78,6 @@ jobs:
 
       - name: Run build
         run: pnpm run build
-
-      - name: Create GitHub Release and attach dist folder
-        if: ${{ env.ACT != 'true' }}
-        uses: softprops/action-gh-release@v2
-        with:
-          files: ${{ env.ZIP_NAME }}
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Login to Container Registry
         if: ${{ env.ACT != 'true' }}
