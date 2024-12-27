@@ -90,19 +90,7 @@ const EegPage: FC = () => {
               <div className={"eeg-property-card"}>
                 <div className={"header"}>Einstellungen</div>
                 <IonCard color="eeglight">
-                  <div className="form-element">
-                    {/*<IonItem fill="outline">*/}
-                    {/*<IonLabel position="floating">RC Nummer</IonLabel>*/}
-                    <IonSelect fill="outline" label="Auswahl Gemeinschaft" labelPlacement={"floating"} className="select-box"
-                               value={tenant}
-                               onIonChange={onSwitchTenant}>
-                      {tenantsState && tenantsState.map((o, idx) => (
-                          <IonSelectOption key={idx} value={o}>{o}</IonSelectOption>
-                        )
-                      )}
-                    </IonSelect>
-                    {/*</IonItem>*/}
-                  </div>
+
                   {/*<form>*/}
                   <SelectForm label={"Abrechnungszeitraum"} placeholder={"Abrechnungszeitraum"} control={control}
                               name={"settlementInterval"} options={[
