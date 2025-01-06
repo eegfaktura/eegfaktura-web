@@ -1,9 +1,9 @@
 {
   "app" : {
     "realm": "EEGFaktura",
-    "auth-server-url": "http://localhost:7080//",
+    "auth-server-url": "https://localhost/auth/",
     "ssl-required": "external",
-    "resource": "at.ourproject.vfeeg.app",
+    "resource": "my-keycloak-client",
     "public-client": true,
     "verify-token-audience": true,
     "use-resource-role-mappings": true,
