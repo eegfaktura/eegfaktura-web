@@ -8,7 +8,7 @@ import {
 import {EegTariff, RateTypeEnum} from "../../models/eeg.model";
 import {clearEnergyState, fetchEnergyReportV2, selectedPeriodSelector} from "../energy";
 import {MeterReport, ParticipantReport, SelectedPeriod} from "../../models/energy.model";
-import {useTenant} from "./Eeg.provider";
+import {isEEGFetching, useTenant} from "./Eeg.provider";
 import {filterActiveParticipantAndMeter} from "../../util/FilterHelper.unit";
 import {getPeriodDates} from "../../util/FilterHelper";
 
@@ -65,6 +65,8 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
   // const participants = useAppSelector(activeParticipantsSelector1)
   const allParticipants = useAppSelector(allParticipantsSelector)
 
+  const isFechting = isEEGFetching()
+
   const [state, setState] = useState<ParicipantState>(initialState);
   const [detailOpen, setDetailOpen] = useState<boolean>(false);
   const [enableBilling, setEnableBilling] = useState<boolean>(false)
@@ -88,10 +90,6 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
 
   const showDetailPageFn = (participant: EegParticipant) => {
     dispatch(selectParticipant(participant.id))
-    // setState({
-    //   ...state,
-    //   // selectedParticipant: participant
-    // });
     setDetailOpen(true);
   }
 
@@ -101,9 +99,6 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
 
   const setEnableBillingFn = (state: boolean) => {
     setEnableBilling(state);
-    // if (!state) {
-    //   setCheckedParticipants({})
-    // }
   }
 
   useEffect(() => {
@@ -111,7 +106,7 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
     const _aps = filterActiveParticipantAndMeter(allParticipants, start, end)
     setActiveParticipants(_aps)
     fetchEnergyReport(_aps)
-  }, [allParticipants, activePeriod]);
+  }, [/*allParticipants, */activePeriod]);
 
   const value = {
     participants: activeParticipants,
@@ -139,20 +134,6 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
       }
     )}
   } as ParicipantState
-
-  // useEffect(() => {
-  //   Promise.all([
-  //     dispatch(fetchParticipantModel({tenant: "RC130100"}))
-  //     // dispatch(fetchRatesModel({tenant: "RC130100"}))
-  //     ]
-  //   )
-  // }, [])
-
-  // useEffect(() => {
-  //   if (activePeriod) {
-  //     dispatch(fetchParticipantModel({tenant: tenant, period: activePeriod}))
-  //   }
-  // }, [activePeriod]);
 
   const fetchEnergyReport = (aps: EegParticipant[]) => {
     if (tenant && activePeriod && aps && aps.length > 0) {

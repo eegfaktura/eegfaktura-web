@@ -18,6 +18,7 @@ interface OidcAuthState {
   token?: string
   tenants: string[]
   accessGroups: string[]
+  roles: string[]
   claims: Record<string, any>
   logoutActive: boolean
 }
@@ -97,6 +98,14 @@ export function createOidcAuthProvider<T extends OidcAuthProviderType & UserMana
     //   changeState(props)
     // }
 
+    async componentDidMount() {
+      const { authService } = this.props
+      if (authService) {
+        await authService.getToken()
+      }
+      return Promise.resolve()
+    }
+
     render() {
       const { children } = this.props
       // const { tenants, roles, claims, authService } = this.state
@@ -139,9 +148,14 @@ export const useTenants = () => {
 //   return roles;
 // }
 
-export const useRoles = () => {
+export const useGroups = () : string[] | undefined => {
   const {authService} = useContext(OidcAuthContext);
   return authService?.accessGroups;
+}
+
+export const useRoles1 = () => {
+  const {authService} = useContext(OidcAuthContext);
+  return authService?.roles;
 }
 
 export const useUser = () => {

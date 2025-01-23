@@ -14,7 +14,7 @@ import cn from "classnames";
 import {syncCircle} from "ionicons/icons";
 import {EegContext} from "../store/hook/Eeg.provider";
 import CorePageTemplate from "../components/core/CorePage.template";
-import {OidcAuthContext, useRoles, useTenants, useUser} from "../store/hook/AuthProvider";
+import {useTenants, useUser} from "../store/hook/AuthProvider";
 
 
 interface ProfileEntry {
@@ -45,7 +45,6 @@ const ProfilesPage: FC = () => {
   const {eeg} = useContext(EegContext);
   // const {tenants, roles, claims} = useContext(OidcAuthContext)
   const tenants = useTenants()
-  const roles = useRoles()
   const user = useUser()
 
   useEffect(() => {

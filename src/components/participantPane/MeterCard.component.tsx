@@ -50,9 +50,9 @@ const MeterCardComponent: FC<MeterCardComponentProps> = ({participant, meter, hi
       } else {
         if (report.produced === 0) return 0
         if (isNaN(report.produced) || isNaN(report.allocated)) return 0
-        // return Math.round((Math.max(report.produced - report.allocated, 0) / report.produced) * 100)
-        if (isNaN(report.total_production) || report.total_production === 0) return 0
-        return Math.round((report.allocated / report.total_production) * 100)
+        return Math.round((Math.max(report.produced - report.allocated, 0) / report.produced) * 100)
+        // if (isNaN(report.total_production) || report.total_production === 0) return 0
+        // return Math.round((report.allocated / report.total_production) * 100)
         // return Math.round((report.allocated / report.produced) * 100)
       }
     }

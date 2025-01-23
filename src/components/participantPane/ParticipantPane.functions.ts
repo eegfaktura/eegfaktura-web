@@ -7,10 +7,12 @@ export const buildAllocationMapFromSelected = (participants: EegParticipant[], c
   const participantReport = meteringEnergyGroup1(store.getState())
   console.log("participantReport", participantReport);
 
+  const activeMeters = participants.flatMap(p => p.meters.filter(m=>m.status !== "INIT").map(m => m.meteringPoint))
+
   return participantReport
     .filter(p => checkedParticipant[p.participantId] !== undefined && checkedParticipant[p.participantId])
     .flatMap(p => {
-      return p.meters.map(m => {
+      return p.meters.filter(m => activeMeters.includes(m.meterId)).map(m => {
         return {
           participantId: p.participantId,
           meteringPoint: m.meterId,

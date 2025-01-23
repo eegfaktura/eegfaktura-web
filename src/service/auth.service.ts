@@ -29,6 +29,7 @@ export class AuthService extends UserManager {
   token?: string
   tenants: string[]
   accessGroups: string[]
+  roles: string[]
   claims: Record<string, any>
   private _logoutActive: boolean
 
@@ -37,6 +38,7 @@ export class AuthService extends UserManager {
     super(settings);
     this.tenants = []
     this.accessGroups = []
+    this.roles = []
     this.claims = {}
 
     Log.setLogger(console);
@@ -77,6 +79,7 @@ export class AuthService extends UserManager {
       // this.resourceAccess = this.tokenParsed.resource_access;
       this.tenants = tokenParsed.tenant;
       this.accessGroups = tokenParsed.access_groups;
+      this.roles = tokenParsed.realm_access ? tokenParsed.realm_access.roles : [];
       this.claims = {"name": tokenParsed.name, "nick": tokenParsed.preferred_username, "email": tokenParsed.email}
 
       // this.onTokenReceived && this.onTokenReceived({tenants: this.tenants, claims: this.claims, accessGroups: this.accessGroups})
@@ -88,7 +91,7 @@ export class AuthService extends UserManager {
     const user = await this.getUser()
     if (user && user.expires_in) {
       const expiresIn = user.expires_in
-      if (expiresIn < 20) {
+      if (expiresIn < 30) {
         const u = await this.signinSilent()
         if (u) {
           return this.parseToken(u.access_token)

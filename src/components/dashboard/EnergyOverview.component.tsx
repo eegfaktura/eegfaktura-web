@@ -167,11 +167,11 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
               <div style={{display: "flex", flex: "1", padding: "0px 16px", gap: "10px", alignItems: "center"}}>
                 <BarComponent color="rgba(44, 245, 218, 0.3)"
                               percentage={getWidth(preConsumedEnergy, preDistributedEnergy)}/>
-                <div style={{flexBasis: "40%", fontSize: "10px"}}>{renderKWH(preDistributedEnergy)} *)</div>
+                <div style={{flexBasis: "40%", fontSize: "10px"}}>{renderKWH(preConsumedEnergy)} *)</div>
               </div>
               <div style={{display: "flex", flex: "1", padding: "0px 16px", gap: "10px", alignItems: "center"}}>
                 <BarComponent color="#0AF2D3" percentage={getWidth(consumedEnergy, distributedEnergy)}/>
-                <div style={{flexBasis: "40%", fontSize: "14px"}}>{renderKWH(distributedEnergy)}</div>
+                <div style={{flexBasis: "40%", fontSize: "14px"}}>{renderKWH(consumedEnergy)}</div>
               </div>
             </div>
           </div>

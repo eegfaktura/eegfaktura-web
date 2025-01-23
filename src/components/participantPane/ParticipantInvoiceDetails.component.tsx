@@ -92,6 +92,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
       </div>
     )
   }
+
   const getParticipantLine = (fee: number) => {
     if (fee > 0) {
       return (
