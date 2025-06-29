@@ -9,9 +9,9 @@ import {
   updateMeteringPointPartFact
 } from "../../store/participant";
 import {Metering} from "../../models/meteringpoint.model";
-import MeterFormElement from "../core/MeterForm.element";
-import EegPaneTemplate from "../core/EegPane.template";
-import MeterAddressFormElement from "../core/forms/MeterAddressForm/MeterAddressForm.element";
+import MeterFormElement from "./MeterForm.element";
+import EegPaneTemplate from "./EegPane.template";
+import MeterAddressFormElement from "./forms/MeterAddressForm/MeterAddressForm.element";
 import {useOnlineState, useTenant} from "../../store/hook/Eeg.provider";
 
 interface MeterFromComponentProps {

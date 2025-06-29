@@ -33,8 +33,10 @@ const MoveMeteringPointHook: FC<{meter: Metering, participants: EegParticipant[]
       <IonCardHeader>Zählpunkt verschieben</IonCardHeader>
       <IonCardContent>
         <BasicSelectComponent control={control} name="participantId"
-                              options={participants.sort((a,b) => a.lastname.localeCompare(b.lastname)).map((p) => {
-                                return {value: p.id, label: JoinStrings(" ", "-", p.participantNumber, p.lastname, p.firstname)}
+                              options={participants
+                                .sort((a,b) => a.lastname && b.lastname ? a.lastname.localeCompare(b.lastname) : a.firstname.localeCompare(b.firstname))
+                                .map((p) => {
+                                return {value: p.id, label: JoinStrings(" ", "-", p.participantNumber, p.lastname ? p.lastname : "", p.firstname)}
                               })} label={"Verschieben zu"} rules={{required: true}}/>
         <div style={{padding: "25px"}}>
           <p style={{paddingBottom: "20px"}}>

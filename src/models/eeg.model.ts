@@ -60,6 +60,10 @@ export interface AccountInfo {
   owner: string;
   bankName: string;
   sepa: boolean;
+  creditorId?: string;
+  mandateReference: string;
+  mandateDate?: Date;
+  sepaDirectDebit: SepaDirectDebitType;
 }
 
 export interface Optionals {
@@ -105,6 +109,8 @@ export interface EegRate {
   items: EegRateItem[];
 }
 
+export type SepaDirectDebitType = 'B2B' | 'CORE' | 'NONE';
+
 export enum RateTypeEnum {
   AHEAD = "Vorauszahlung",
   DISCOUNT = "Rabatt",
@@ -145,8 +151,8 @@ export interface EegTariff {
   baseFee?: string
   businessNr?: string
   centPerKWh?: number
-  freeKWh?: string
-  discount?: string
+  freeKWh?: number
+  discount?: number
   useMeteringPointFee: boolean
   meteringPointFee?: number
   meteringPointVat?: number

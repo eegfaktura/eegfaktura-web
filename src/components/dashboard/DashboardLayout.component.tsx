@@ -58,8 +58,8 @@ const DashboardLayoutComponent: FC<LoadSharingComponentProps> = ({consumed, prod
   return (
     <div style={{display: "flex", height: "100%", padding: "10px"}}>
       <div style={{flex: "1", display: "grid", gridTemplateColumns: "50% 50%", height: "100%"}}>
-        <div style={{display: "grid", gridTemplateRows: "50% 50%"}}>
-          <div className="eeg-card-border" style={{margin: "10px"}}>
+        <div style={{display: "grid", gridTemplateRows: "50% 50%", overflowY: "auto"}}>
+          <div className="eeg-card eeg-card-border" style={{margin: "10px"}}>
             <EegOverviewComponent participants={participants} rateMap={rates} />
           </div>
           <div className="eeg-card-border" style={{margin: "10px"}}>
@@ -74,7 +74,6 @@ const DashboardLayoutComponent: FC<LoadSharingComponentProps> = ({consumed, prod
             {showChart(combinedReport.intraday, <IntraDayReportComponent activePeriod={activePeriod} tenant={tenant}
                                                                            report={combinedReport.intraday}
                                                                            energyDate={energyDate}/>)}
-
           </div>
         </div>
       </div>

@@ -33,6 +33,7 @@ interface InputFormProps {
   isNumber?: boolean
   isEmail?: boolean
   multiple?:boolean
+  helperText?: string
 }
 
 const InputForm: (React.FC<InputFormProps>) =
@@ -98,6 +99,7 @@ const InputForm: (React.FC<InputFormProps>) =
       name={name}
       // ref={inputRef(ref)}
       controlRef={ref}
+      helperText={fieldState.error?.message}
       {...rest}></Input>)
 
   }

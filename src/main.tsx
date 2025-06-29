@@ -35,6 +35,7 @@ const initApiServices = async (config: AppConfig): Promise<AuthService> => {
 
   const authService = new AuthService(userManagerConfig)
 
+  Api.authService = authService;
   Api.eegService = new EegService(authService)
   Api.energyService = new EnergyService(authService)
   Api.fileService = new FileService(authService)

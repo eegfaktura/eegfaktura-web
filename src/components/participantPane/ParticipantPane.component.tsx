@@ -446,7 +446,6 @@ const ParticipantPaneComponent: FC = () => {
           : documentDate,
       } as ClearingPreviewRequest;
       dispatcher(fetchEnergyBills({tenant, invoiceRequest})).then((returnValue: any) => {
-        console.log("Billing Preview: ", activePeriod);
         if (
           returnValue.payload.billing.abstractText
             .toString()
@@ -538,88 +537,6 @@ const ParticipantPaneComponent: FC = () => {
   // }
 
   const viewPortItems = filterSearchQuery(viewEntities, searchQuery)
-
-  const ListRow = ({
-                     index,
-                     style
-                   }: {
-    index: number;
-    style: React.CSSProperties;
-  }) => {
-    const rowRef = useRef<HTMLDivElement | null>(null);
-
-    console.log("ListRow: ", index, style)
-
-    useEffect(() => {
-      if (rowRef.current) {
-        setRowHeight(index, rowRef.current.offsetHeight);
-      }
-      // eslint-disable-next-line
-    }, [rowRef]);
-    const command = viewPortItems[index]
-    if (command.meters.length > 0) {
-      return (
-        <div
-          ref={rowRef}
-          key={command.id}
-          onClick={onSelectParticipant(command)}
-          className={cn("participant", {
-            selected: command.id === selectedParticipant?.id,
-          })}
-        >
-          <MemberComponent
-            participant={command}
-            onCheck={onCheckParticipant(command)}
-            isChecked={
-              checkedParticipant && (checkedParticipant[command.id] || false)
-            }
-            hideMeter={hideMeter}
-            hideMember={hideMember}
-            showAmount={showAmount}
-            showDetailsPage={showDetailsPage}
-            onShowAddMeterPage={onShowAddMeterPage}
-          >
-            {hideMeter ||
-              command.meters.map((m, i) => (
-                <MeterCardComponent
-                  key={"meter" + i}
-                  participant={command}
-                  meter={m}
-                  hideMeter={false}
-                  showCash={showAmount}
-                  onSelect={onSelectMeter}
-                  isSelected={m.meteringPoint === selectedMeterId}
-                />
-              ))}
-          </MemberComponent>
-        </div>
-      );
-    } else {
-      return (
-        <div
-          ref={rowRef}
-          key={command.id}
-          onClick={onSelectParticipant(command)}
-          className={cn("participant", {
-            selected: command.id === selectedParticipant?.id,
-          })}
-        >
-          <MemberComponent
-            participant={command}
-            onCheck={onCheckParticipant(command)}
-            isChecked={
-              checkedParticipant && (checkedParticipant[command.id] || false)
-            }
-            hideMeter={hideMeter}
-            hideMember={hideMember}
-            showAmount={showAmount}
-            showDetailsPage={showDetailsPage}
-            onShowAddMeterPage={onShowAddMeterPage}
-          />
-        </div>
-      );
-    }
-  }
 
   const setRowHeight = (index: number, size: number) => {
     // listRef.current?.resetAfterIndex(0);

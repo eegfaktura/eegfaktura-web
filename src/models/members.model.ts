@@ -4,14 +4,14 @@ import {Metering} from "./meteringpoint.model";
 export interface EegParticipant {
   id: string;
   participantNumber:string,
-  tariffId: string
+  tariffId?: string
   participantSince: Date
-  titleBefore: string;
-  titleAfter: string;
+  titleBefore?: string;
+  titleAfter?: string;
   firstname: string;
-  lastname: string;
-  vatNumber: string;
-  taxNumber: string;
+  lastname?: string;
+  vatNumber?: string;
+  taxNumber?: string;
   residentAddress: Address;
   billingAddress: Address;
   contact: Contact;

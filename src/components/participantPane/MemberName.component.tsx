@@ -41,7 +41,7 @@ const MemberNameComponent: FC<MemberNameComponentProps> =
       if (participant.titleBefore) {
         name = participant.titleBefore + " "
       }
-      name += participant.firstname + " " + participant.lastname
+      name += participant.firstname + (participant.lastname ? (" " + participant.lastname) : "")
       if (participant.titleAfter) {
         name += ", " + participant.titleAfter
       }

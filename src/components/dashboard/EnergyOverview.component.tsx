@@ -69,7 +69,7 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
     meterGroup.forEach((m,i) => {
       if (rates[m.meter.tariff_id]) {
         if (isNaN(m.utilization)) {
-          console.log("Meter has invalid energy values!", i, m)
+          console.error("Meter has invalid energy values!", i, m)
         } else {
           if (m.meter.direction === "CONSUMPTION") {
             consumerSum += m.utilization
@@ -85,8 +85,8 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
   }
 
   const meterCash = (m: Metering, utilization: number) => {
-    const getDiscountFactor = (discount:string | undefined) => {
-      const d = discount ? Number(discount) : 0
+    const getDiscountFactor = (discount:number | undefined) => {
+      const d = discount ? discount : 0
       return d > 0 ? d / 100 : 1
     }
     if (m.tariff_id) {

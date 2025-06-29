@@ -56,7 +56,7 @@ export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
   const userData = useSelector(selectUsersResult)
 
   const [activeTenant, setActiveTenant] = useState<string>()
-  const [isFetching, setIsFetching] = useState<boolean>(false)
+  const [fetching, setFetching] = useState<boolean>(false)
 
   const errorToast = (message: string | undefined) => {
     toaster({
@@ -169,7 +169,7 @@ export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
   }
 
   const initApplication = useCallback(async () => {
-    setIsFetching(true)
+    setFetching(true)
     if (activeTenant && activeTenant.length > 0) {
       (await Promise.all([
         getUser(),
@@ -181,7 +181,7 @@ export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
         return getCurrentPeriod(eeg)
       }).then((a) => {
         dispatch(setSelectedPeriod(a))
-        setIsFetching(false)
+        setFetching(false)
       }))
     }
   }, [activeTenant])
@@ -195,7 +195,7 @@ export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
   const value = {
     eeg: eeg,
     tenant: activeTenant,
-    isFetching: isFetching,
+    isFetching: fetching,
     getTenants: () => userData.data,
     isAdmin: () => (groups ? groups.findIndex(r => r === "/EEG_ADMIN") >= 0 : false),
     isOwner: () => groups ? groups.findIndex(r => r === "/EEG_OWNER") >= 0 : false,

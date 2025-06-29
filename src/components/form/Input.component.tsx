@@ -51,6 +51,7 @@ interface InputProps<TValue, IsNumber extends boolean> {
   isEmail?:boolean
   mask?: React.RefCallback<HTMLElement>
   controlRef: RefCallBack
+  helperText?: string
   // onChange: (...event: any[]) => void
 }
 
@@ -69,9 +70,9 @@ function Input<TValue, IsNumber extends boolean = false>(props: Omit<ControllerR
 
   const evaluate = (value: string | number | null | undefined) => {
     if (isNumber) {
-      return !value || isNaN(parseInt(value as string, 10)) ? "" : parseNumber(value as string);
+      return !value || isNaN(parseInt(value as string, 10)) ? null : parseNumber(value as string);
     }
-    return value ? value.toString() : ""
+    return value ? value.toString() : null
   }
 
   const parseNumber = (value: string): number => {

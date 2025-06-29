@@ -33,6 +33,7 @@ const defaultParticipant: EegParticipant = {
 
 const ctxValue = (admin: boolean, owner: boolean, user: boolean) => { return {
   eeg: undefined,
+  isFetching: false,
   getTenants: () => {return [{tenant: "TE100100", name: "TEST EEG"}]},
   isAdmin: () => {return admin},
   isOwner: () => owner,

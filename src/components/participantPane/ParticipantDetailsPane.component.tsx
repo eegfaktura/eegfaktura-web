@@ -21,8 +21,8 @@ import {
 import {eegExclamation, eegPlug, eegSandClass, eegShieldCrown, eegSolar, eegStar} from "../../eegIcons";
 import {store, useAppDispatch, useAppSelector} from "../../store";
 import {Metering} from "../../models/meteringpoint.model";
-import MemberFormComponent from "../MemberForm.component";
-import MeterFormComponent from "./MeterForm.component";
+import MemberFormComponent from "../core/MemberForm.component";
+import MeterFormComponent from "../core/MeterForm.component";
 import {
   archiveParticipant,
   confirmParticipant, moveMeteringPoint, allParticipantsSelector, removeMeteringPoint,
@@ -43,6 +43,7 @@ import {useLocale} from "../../store/hook/useLocale";
 import {useAccessGroups, useTenant} from "../../store/hook/Eeg.provider";
 import {useMoveMeteringPointHook} from "../../store/hook/MoveMeteringPoint.hook";
 import moment from "moment";
+import {useDeleteParticipantMutation} from "../../store/participant/api";
 
 type DynamicComponentKey = "memberForm" | "meterForm" | "documentForm" | "invoiceForm" | "participantDocumentForm"
 
@@ -114,6 +115,8 @@ const ParticipantDetailsPaneComponent: FC = () => {
 
   const meterInvalidCodes = [56, 57, 76, 104, 156, 157, 158, 159, 172, 173, 177, 181, 184, 185, 196]
 
+  const [deleteParticipant] = useDeleteParticipantMutation()
+
   const onUpdateParticipant = (participant: EegParticipant) => {
     dispatcher(updateParticipant({
       tenant: tenant!.tenant,
@@ -127,7 +130,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
       participantId: participantId,
       value: {path: Object.keys(value)[0], value: Object.values(value)[0]}
     })).unwrap()
-      .then(() => console.log("Participant Updated"))
+      // .then(() => console.log("Participant Updated"))
       .catch((e) => console.error("Error by updating participant: ", e))
   }
 
@@ -320,13 +323,13 @@ const ParticipantDetailsPaneComponent: FC = () => {
                   <IonCard color="warning-light">
                     <IonItem lines="none" color="warning-light">
                       <IonIcon icon={eegStar} slot="start"/>
-                      <IonLabel>Möchtest du {selectedParticipant.lastname} in deine EEG
-                        aufnehmen?</IonLabel>
+                      <IonLabel>Möchtest du {selectedParticipant.lastname} in deine EEG aufnehmen?</IonLabel>
                     </IonItem>
-                    <IonItem lines="none" color="warning-light">
+                    <IonItem lines="none" color="warning-light" className="ion-align-items-baseline">
+                      <IonButton slot="end" color="warning-light" onClick={() => deleteParticipant({participantId: selectedParticipant.id})}
+                                 size="small">Nein, Löschen</IonButton>
                       <IonButton id="open-participant-allow-dialog" slot="end" color="warning"
-                                 size="default">Ja,
-                        Zulassen</IonButton>
+                                 size="default">Ja, Zulassen</IonButton>
                     </IonItem>
                   </IonCard>
                 </div>) : (<></>)}

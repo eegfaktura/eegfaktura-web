@@ -328,8 +328,8 @@ const ProcessHistoryComponent: FC<ProcessHistoryComponentProps> = ({eeg, edaProc
   const calcProcessFilter = (filter: string | undefined, m: string, v: EdaHistoryGroup): boolean => {
     if (filter) {
       return m.toLowerCase().indexOf(filter) !== -1 || (v.participant
-        ? (v.participant.lastname && v.participant.firstname.toLowerCase().indexOf(filter) !== -1
-          || v.participant.lastname.toLowerCase().indexOf(filter) !== -1
+        ? (v.participant.firstname.toLowerCase().indexOf(filter) !== -1
+          || (v.participant.lastname ? v.participant.lastname.toLowerCase().indexOf(filter) !== -1 : false)
           || v.participant.participantNumber.toLowerCase().indexOf(filter) !== -1)
         : false)
     }

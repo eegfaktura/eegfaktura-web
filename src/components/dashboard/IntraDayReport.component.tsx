@@ -96,8 +96,7 @@ const IntraDayReportComponent: FC<IntraDayReportComponentProps> = ({tenant, repo
           <IonIcon icon={settings} size="32px" color="primary" onClick={(e: any) =>
             properties({
               event: e,
-              onDidDismiss: (e: CustomEvent) => onSelectionChanged(e.detail.data), // console.log(`OnDidDismiss ${e.detail.data}`)
-              // size: "auto",
+              onDidDismiss: (e: CustomEvent) => onSelectionChanged(e.detail.data),
               cssClass: "property-popover"
             })}></IonIcon>
         </div>
@@ -107,7 +106,7 @@ const IntraDayReportComponent: FC<IntraDayReportComponentProps> = ({tenant, repo
             <div style={{fontSize: "14px"}}>Zeitraum: {periodDisplayString(selectedPeriod)}</div>
           </div>
           <div style={{display: "flex", flexFlow: "column", height: "100%", margin: "16px"}}>
-            <div className={"eeg-card eeg-card-border"}
+            <div className={"eeg-card-chart eeg-card-border"}
                  style={{flex: "1", width: "100%", height: "100%", minHeight: "100px"}}>
               <ResponsiveContainer width="100%" height="100%" minHeight="100px" minWidth="50px">
                 <BarChart width={600} height={400} data={data} margin={{top: 15, right: 15, bottom: 5, left: 0}}>

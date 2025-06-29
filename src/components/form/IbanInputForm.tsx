@@ -29,6 +29,19 @@ export function IbanInputForm<T extends object>(props : IbanInputFormProps<T>) {
       ...Array(4).fill(/\d/),
       ' ',
       ...Array(4).fill(/\d/),
+    // ],
+    // preprocessors: [
+    //   ({elementState, data}, actionType) => {
+    //     const {value, selection} = elementState;
+    //
+    //     return {
+    //       elementState: {
+    //         selection,
+    //         value,
+    //       },
+    //       data
+    //     };
+    //   },
     ]
   }
 
@@ -38,7 +51,7 @@ export function IbanInputForm<T extends object>(props : IbanInputFormProps<T>) {
 
   return (
     <InputForm label="IBAN"
-               rules={{required: "IBAN fehlt", minLength: {value: 24, message: "IBAN ist ungültig"}}}
+               rules={{required: "IBAN fehlt", minLength: {value: 16, message: "IBAN ist ungültig"}}}
                type="text"
                mask={ibanMask}
                {...props}

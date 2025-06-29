@@ -107,7 +107,7 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
       <ProcessContentComponent>
         <CorePageTemplate>
           <>
-            <InputForm name="communityId" label={t("communityId")} control={control} protectedControl={true}/>
+            <InputForm name="communityId" label={t("common-info.community-id")} control={control} protectedControl={true}/>
             {/*<SelectForm control={control} name={"participantId"} options={participants.map((p) => {*/}
             {/*  return {key: p.id, value: p.firstname + " " + p.lastname}*/}
             {/*})} label={"Mitglied"} selectInterface={"popover"} rules={{required: true}}/>*/}
@@ -116,10 +116,12 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
             {/*})} label={"Zählpunkt"} selectInterface={"popover"}  rules={{required: true}}/>*/}
 
             <BasicSelectComponent control={control} name={"participantId"}
-                                  options={participants.sort((a, b) => a.lastname.localeCompare(b.lastname)).map((p) => {
+                                  options={participants
+                                    .sort((a, b) => a.lastname && b.lastname ? a.lastname.localeCompare(b.lastname) : a.firstname.localeCompare(b.firstname))
+                                    .map((p) => {
                                     return {
                                       value: p.id,
-                                      label: JoinStrings(" ", "-", p.participantNumber, p.lastname, p.firstname)
+                                      label: JoinStrings(" ", "-", p.participantNumber, (p.lastname ? p.lastname : ""), p.firstname)
                                     }
                                   })} label={t("participant")}/>
             <BasicSelectComponent control={control} name={"meteringPoint"}

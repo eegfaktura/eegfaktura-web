@@ -79,7 +79,7 @@ const ProcessPodListComponent: FC<ProcessPodListComponentProps> = ({eeg, edaProc
       {eeg.area === 'BEG' &&
           <div style={{paddingBottom: "15px"}}>
               <BasicSelectComponent control={control} name={"operatorId"}
-                                    options={getNetOperatorIds()} label={t("gridOperator-id")} multiple={false}
+                                    options={getNetOperatorIds()} label={t("grid-operator.id")} multiple={false}
                                     rules={{
                                       required: true
                                     }} defaultValue={processValues.operatorId}/>

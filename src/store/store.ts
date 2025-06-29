@@ -17,6 +17,7 @@ import {ErrorState, setErrorState} from "./eeg";
 import i18next from '../util/I18n'
 import {saveNewRate} from "./rate";
 import {userApi} from "./user/userApi";
+import {participantApi} from "./participant/api";
 
 /**
  * Reducer
@@ -30,6 +31,7 @@ export const reducer = combineReducers({
   [billingRun.featureKey]: billingRun.reducer,
   [billingConfig.featureKey]: billingConfig.reducer,
   [userApi.reducerPath]: userApi.reducer,
+  [participantApi.reducerPath]: participantApi.reducer,
   user,
 });
 
@@ -62,7 +64,8 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(errorMiddleware)
-      .concat(userApi.middleware),
+      .concat(userApi.middleware)
+      .concat(participantApi.middleware),
 });
 
 

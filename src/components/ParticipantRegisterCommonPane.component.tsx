@@ -10,6 +10,9 @@ import {useMaskito} from "@maskito/react";
 import {IbanInputForm} from "./form/IbanInputForm";
 import {useLocale} from "../store/hook/useLocale";
 import DatePickerFormElement from "./form/DatePickerForm.element";
+import DatePickerCoreElement from "./core/elements/DatePickerCore.element";
+import SelectForm from "./form/SelectForm.component";
+import {DebitExtensionComponent} from "./core/DebitExtensionComponent";
 
 interface ParticipantRegisterCommonPaneComponentProps {
   participant: EegParticipant;
@@ -25,22 +28,6 @@ const ParticipantRegisterCommonPaneComponent: FC<ParticipantRegisterCommonPaneCo
   const {control, setValue, formState: {errors}} = useFormContext<EegParticipant>();
   const {t} = useLocale("common")
 
-  const ibanMask = useMaskito({
-    options: {
-      mask: [
-        'A', 'T',
-        ...Array(2).fill(/\d/),
-        ' ',
-        ...Array(4).fill(/\d/),
-        ' ',
-        ...Array(4).fill(/\d/),
-        ' ',
-        ...Array(4).fill(/\d/),
-        ' ',
-        ...Array(4).fill(/\d/),
-      ],
-    },
-  });
   const onChangeBusinessType = (s: number) => {
     setSelectedBusinessType(s)
     setValue("businessRole", s === 0 ? "EEG_PRIVATE" : "EEG_BUSINESS")
@@ -48,6 +35,10 @@ const ParticipantRegisterCommonPaneComponent: FC<ParticipantRegisterCommonPaneCo
 
   const editable = () => {
     return participant.status === "NEW"
+  }
+
+  const getDebitOptions = () => {
+    return [{key: "B2B", value: t("account.sepaDebitOption_b2b")}, {key: "CORE", value: t("account.sepaDebitOption_core")}]
   }
 
   return (
@@ -108,17 +99,32 @@ const ParticipantRegisterCommonPaneComponent: FC<ParticipantRegisterCommonPaneCo
 
         <div style={{flexGrow: "1", height: "100%", width: "50%"}}>
           <IonList>
-            <IonListHeader>{t("headers.bank-data")}</IonListHeader>
+            <IonListHeader>{t("account.header")}</IonListHeader>
             <IbanInputForm name={"accountInfo.iban"} control={control} error={errors.accountInfo?.iban}/>
-            <InputForm name={"accountInfo.owner"} label={t("account-owner")} control={control}
+            <InputForm name={"accountInfo.owner"} label={t("account.owner")} control={control}
                        rules={{required: t("warnings.account-owner_missing")}} type="text" error={errors.accountInfo?.owner}/>
+
+            <DebitExtensionComponent />
+
+            {/*<InputForm name={"accountInfo.bankName"} label={t("account.name")} control={control} type="text"*/}
+            {/*           rules={{required: t("warnings.account-name_missing")}} error={errors.accountInfo?.bankName}/>*/}
+            {/*<InputForm name={"accountInfo.mandateReference"} label={t("account.mandate-reference")} control={control} type="text"*/}
+            {/*           rules={{required: t("warnings.account-mandate_reference_missing")}} error={errors.accountInfo?.mandateReference}/>*/}
+            {/*<DatePickerFormElement name={"accountInfo.mandateDate"} label={t("account.mandate-date")}*/}
+            {/*                       control={control} error={errors.accountInfo?.mandateDate}/>*/}
+            {/*<SelectForm name={"accountInfo.sepaDirectDebit"} label={t("account.sepaDirectDebit")}*/}
+            {/*            control={control} options={getDebitOptions()}/>*/}
+
+
           </IonList>
           <IonList>
-            <IonListHeader style={{margin: "10px 0 5px 0"}}>Steuer Angaben</IonListHeader>
+            {/*<IonListHeader style={{margin: "5px 0 2px 0"}}>Steuer Angaben</IonListHeader>*/}
+            <div style={{padding: "6px 0 0 14px", fontSize: "14px"}}>Steuer Angaben</div>
             <InputForm name={"vatNumber"} label={t("uid")} control={control} type="text"/>
           </IonList>
           <IonList>
-            <IonListHeader style={{margin: "10px 0 5px 0"}}>Optional</IonListHeader>
+            {/*<IonListHeader style={{margin: "5px 0 5px 0"}}>Optional</IonListHeader>*/}
+            <div style={{padding: "6px 0 0 14px", fontSize: "14px"}}>Optional</div>
             <InputForm name={"optionals.website"} label={t("website")} control={control} type="text"/>
             <DatePickerFormElement control={control} name={"participantSince"} label={t("participant_active-for")}
                                    placeholder={"Datum"} error={errors?.participantSince}/>

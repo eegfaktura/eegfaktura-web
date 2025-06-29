@@ -33,6 +33,10 @@ const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect
     onSelect && onSelect(rate)
   }
 
+  const isAvailable = (value?: number): boolean => {
+    return !(!!value && value > 0);
+  }
+
   const RateCardType = (rate: EegTariff) => {
     switch (rate.type) {
       case "EEG":
@@ -42,11 +46,11 @@ const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect
               <p>{t("participantFee_card")}</p>
               <p>{(Number(rate.participantFee)) + " €"}</p>
             </div>
-            {rate.useVat && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
+            {rate.useVat && (<div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <p>{t('vatInPercent_card')}</p>
                 <p>{(rate.vatInPercent && rate.vatInPercent.length > 0 ? rate.vatInPercent : "0") + " %"}</p>
-            </div>}
-            {rate.discount && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
+            </div>)}
+            {!!rate.discount && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
               <p>{t('discount_card')}</p>
               <p>{rate.discount + " %"}</p>
             </div>}
@@ -57,7 +61,7 @@ const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect
           <div>
             <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
               <p>{t("centPerKWh_card")}</p>
-              <p>{rate.centPerKWh ? rate.centPerKWh.toString().replace(".", ",") + " Cent" : ''}</p>
+              <p>{rate.centPerKWh ? (rate.centPerKWh.toString().replace(".", ",") + " Cent") : ''}</p>
             </div>
             {rate.useVat && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <p>{t('vatInPercent_card')}</p>
@@ -67,11 +71,11 @@ const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect
                 <p>{t('meteringPointFee_card')}</p>
                 <p>{rate.meteringPointFee + " €"}</p>
             </div>}
-            {rate.freeKWh && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
+            {!!rate.freeKWh && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
               <p>{t('freeKWh_card')}</p>
               <p>{rate.freeKWh + " kWh"}</p>
             </div>}
-            {rate.discount && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
+            {!!rate.discount && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
               <p>{t('discount_card')}</p>
               <p>{rate.discount + " %"}</p>
             </div>}
@@ -82,7 +86,7 @@ const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect
           <div>
             <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
               <p>{t("centPerKWh_card")}</p>
-              <p>{rate.centPerKWh ? rate.centPerKWh.toString().replace(".", ",") + " Cent" : ''}</p>
+              <p>{rate.centPerKWh ? (rate.centPerKWh.toString().replace(".", ",") + " Cent") : ''}</p>
             </div>
             {rate.useVat && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <p>{t('vatInPercent_card')}</p>
@@ -91,10 +95,6 @@ const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect
             {rate.useMeteringPointFee && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <p>{t('meteringPointFee_card')}</p>
                 <p>{rate.meteringPointFee + " €"}</p>
-            </div>}
-            {rate.discount && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
-              <p>{t('discount_card')}</p>
-              <p>{rate.discount + " %"}</p>
             </div>}
           </div>
         )

@@ -1,4 +1,5 @@
 import {User, UserManager, UserManagerSettings, UserProfile, WebStorageStateStore, Log} from "oidc-client-ts";
+import {Mutex} from "async-mutex";
 
 // import {keycloakConfig} from "../keycloak";
 
@@ -32,7 +33,7 @@ export class AuthService extends UserManager {
   roles: string[]
   claims: Record<string, any>
   private _logoutActive: boolean
-
+  mutex = new Mutex();
 
   constructor(settings: UserManagerSettings) {
     super(settings);
@@ -87,11 +88,28 @@ export class AuthService extends UserManager {
     return token
   }
 
+  public async lookupToken(){
+    return this.mutex.runExclusive(async () => {
+      try {
+        const token = await this.getToken().catch(e => {
+          this.refresh()
+        })
+        if (token) {
+          return token
+        }
+      } catch {
+        console.log("Not Authenticated")
+      }
+      throw new Error()
+    })
+  }
+
   public async getToken() {
     const user = await this.getUser()
     if (user && user.expires_in) {
       const expiresIn = user.expires_in
-      if (expiresIn < 30) {
+      if (expiresIn < 5) {
+        console.log("ExpiresIn", expiresIn, "refresh")
         const u = await this.signinSilent()
         if (u) {
           return this.parseToken(u.access_token)
@@ -107,10 +125,9 @@ export class AuthService extends UserManager {
     return this.signinRedirect()
   }
 
-  public async refresh() {
+  public async refresh(): Promise<string | void> {
     try {
-      return this.signinSilent().then(user => {
-      // return this.signinCallback().then(user => {
+      return await this.signinSilent().then(user => {
         if (user) {
           return this.parseToken(user.access_token)
         }
@@ -120,7 +137,7 @@ export class AuthService extends UserManager {
           if(u) {
             return this.parseToken(u?.access_token)
           }
-          throw new Error("Trouble while authenticating you! Try again in few minutes")
+          return Promise.reject(Error("Trouble while authenticating you! Try again in few minutes"))
         })
       })
     } catch {

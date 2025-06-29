@@ -10,7 +10,7 @@ import {EegParticipant} from "../../models/members.model";
 import CorePageTemplate from "../core/CorePage.template";
 import ProcessHeaderComponent from "./ProcessHeader.component";
 import ProcessContentComponent from "./ProcessContent.component";
-import {BasicSelectComponent} from "../form/BasicSelect.component";
+import {BasicSelectComponent, SelectOptions} from "../form/BasicSelect.component";
 import {Api} from "../../service";
 import {meteringDisplayName} from "../../util/FilterHelper";
 import {useLocale} from "../../store/hook/useLocale";
@@ -121,10 +121,12 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
       <ProcessContentComponent>
         <CorePageTemplate>
           <>
-            <InputForm name="communityId" label={t("communityId")} control={control} protectedControl={true}/>
+            <InputForm name="communityId" label={t("common-info.community-id")} control={control} protectedControl={true}/>
             <BasicSelectComponent control={control} name={"participantId"}
-                                  options={participants.sort((a,b) => a.lastname.localeCompare(b.lastname)).map((p) => {
-              return {value: p.id, label: JoinStrings(" ", " - ", p.participantNumber, p.lastname, p.firstname)}
+                                  options={participants
+                                    .sort((a,b) => a.lastname && b.lastname ? a.lastname.localeCompare(b.lastname) : a.firstname.localeCompare(b.firstname))
+                                    .map((p) => {
+              return {value: p.id, label: JoinStrings(" ", " - ", p.participantNumber, (p.lastname ? p.lastname : ""), p.firstname)} as SelectOptions
             })} label={t("participant")} rules={{required: true}}/>
             <SelectForm control={control} name={"meteringPoints"} options={useableMeters.map((p) => {
               return {key: p.meteringPoint, value: meteringDisplayName(p)}

@@ -32,8 +32,6 @@ const EMPTY_LOAD_CURVE_DATA = {} as LoadSharingData
 
 const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, activePeriod, energyDate}) => {
 
-  // const chartData = transformData(report, calcXAxisNameV2)
-  // console.log("Render Load Curve Screen", chartData)
   const [data, setData] = useState<LoadSharingData[]>([EMPTY_LOAD_CURVE_DATA] as LoadSharingData[])
   const [selectedPeriod, setSelectedPeriod] = useState<SelectedPeriod>(activePeriod)
   const [loading, dismissLoading] = useState<boolean>(false);
@@ -119,7 +117,7 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
           <div style={{fontSize: "14px"}}>Zeitraum: {periodDisplayString(selectedPeriod)}</div>
         </div>
         <div style={{display: "flex", flexFlow: "column", height: "100%", margin: "16px"}}>
-          <div className={"eeg-card eeg-card-border"}
+          <div className={"eeg-card-chart eeg-card-border"}
                style={{flex: "1", width: "100%", height: "100%", minHeight: "100px"}}>
             <ResponsiveContainer width="100%" height={"100%"} minHeight={300} minWidth={100}>
               <ComposedChart width={600} height={400} data={data} margin={{top: 15, right: 15, bottom: 5, left: 0}}>

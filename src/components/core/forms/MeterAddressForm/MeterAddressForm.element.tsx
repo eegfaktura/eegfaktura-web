@@ -77,13 +77,13 @@ const MeterAddressFormElement: FC<MeterAddressFormElementProps> = ({
 
   return (
     <IonList>
-      <IonListHeader style={{minHeight: "60px"}}>Adresse</IonListHeader>
+      <IonListHeader style={{minHeight: "60px"}}>{t("address.header")}</IonListHeader>
       {isTakeOverAddressEnabled() &&
           <CheckboxComponent label="Adresse vom Besitzer übernehmen" setChecked={takeOverAddress}
                              checked={withOwner} style={{paddingTop: "0px"}}></CheckboxComponent>}
-      <InputForm name={"street"} label={t("street")} control={control} rules={{required: t("warnings.street_missing")}} type="text"
+      <InputForm name={"street"} label={t("address.street")} control={control} rules={{required: t("warnings.street_missing")}} type="text"
                  error={errors?.street} disabled={disableAddressFields} onChangePartial={_onChange}/>
-      <InputForm name={"streetNumber"} label={t("street_number")} control={control}
+      <InputForm name={"streetNumber"} label={t("address.street_number")} control={control}
                  rules={{
                    required: t("warnings.street-number_missing"),
                    pattern: {
@@ -92,9 +92,9 @@ const MeterAddressFormElement: FC<MeterAddressFormElementProps> = ({
                    }
                  }}
                  type="text" error={errors?.streetNumber} disabled={disableAddressFields} onChangePartial={_onChange}/>
-      <InputForm name={"zip"} label={t("zip")} control={control} rules={{required: t("warnings.zip_missing")}}
+      <InputForm name={"zip"} label={t("address.zip")} control={control} rules={{required: t("warnings.zip_missing")}}
                  type="text" error={errors?.zip} disabled={disableAddressFields} onChangePartial={_onChange}/>
-      <InputForm name={"city"} label={t("city")} control={control} rules={{required: t("warnings.city_missing")}} type="text"
+      <InputForm name={"city"} label={t("address.city")} control={control} rules={{required: t("warnings.city_missing")}} type="text"
                  error={errors?.city} disabled={disableAddressFields} onChangePartial={_onChange}/>
       {showActivationMode &&
       <CheckboxComponent label="Offline Registrierung" setChecked={onSetOffline}

@@ -53,8 +53,8 @@ class EegBaseService {
   }
 
   protected async getUser() {
-    return this.authService.getToken().catch(e => {
-      this.authService.refresh()
+    return await this.authService.getToken().catch(e => {
+      return this.authService.refresh().then(_ => this.authService.getToken())
     })
   }
 
@@ -81,7 +81,7 @@ class EegBaseService {
       } catch {
         console.log("Not Authenticated")
       }
-      throw new Error()
+      return Promise.reject("new Error()")
     })
   }
   protected getSecureHeaders(token: string, tenant: string) {
@@ -90,7 +90,6 @@ class EegBaseService {
   protected getSecureHeadersX(token: string, tenant: string) {
     return {'Authorization': `Bearer ${token}`, "X-Tenant": tenant}
   }
-
 
   protected async handleErrors(response: Response):Promise<Response> {
 

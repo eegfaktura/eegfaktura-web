@@ -3,9 +3,7 @@ import {createSelector} from "@reduxjs/toolkit";
 import {EegParticipant} from "../../../models/members.model";
 import {adapter, featureKey, ParticipantState} from "../states";
 import {Metering} from "../../../models/meteringpoint.model";
-import {SelectedPeriod} from "../../../models/energy.model";
 import {selectedPeriodSelector} from "../../energy";
-import participants from "../../../pages/Participants";
 import {filterActiveParticipantAndMeter} from "../../../util/FilterHelper.unit";
 import {getPeriodDates} from "../../../util/FilterHelper";
 

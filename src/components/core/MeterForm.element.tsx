@@ -150,7 +150,7 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
         <InputForm name={"meteringPoint"} label={t("metering")} control={control} type="text" readonly={meterReadOnly} protectedControl={meterReadOnly}
                    counter={true} maxlength={33}
                    rules={{
-                     required: t("metering_missing_msg"),
+                     required: t("warnings.metering_missing_msg"),
                      minLength: {value: 33, message: "MIN-Zählpunktnummer beginnt mit AT gefolgt von 31 Nummern"},
                      maxLength: {value: 33, message: "MAX-Zählpunktnummer beginnt mit AT gefolgt von 31 Nummern"},
                      pattern: {
@@ -163,22 +163,20 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
                    onChangePartial={_onChange}
         />
         <InputForm name={"partFact"} label={t("process.partFact.label")} control={control} isNumber={true}
-                   // rules={{required: true, validate: validatePartFaktor || 'error message'}}
-                   rules={{required:true, validate: validatePartFactor || "error message"}}
-                   type="number" inputmode="numeric" onChangePartial={onChangePartFact} protectedControl={!isChangeable()}/>
+                   rules={{required:t("warnings.partition-factor_missing"), validate: validatePartFactor || "error message"}}
+                   type="number" inputmode="numeric" onChangePartial={onChangePartFact} protectedControl={!isChangeable()} error={errors?.partFact}/>
         {allocationMode === 'STATIC' &&
         <InputForm name={"allocationFactor"} label={t("process.allocationFactor.label")} control={control} isNumber={true}
-          // rules={{required: true, validate: validatePartFaktor || 'error message'}}
-                   rules={{required:true, validate: validateAllocFactor || "error message"}}
-                   type="number" inputmode="numeric" onChangePartial={_onChange} protectedControl={!isChangeable()}/>
+                   rules={{required:t("warnings.allocation-factor_missing"), validate: validateAllocFactor || "error message"}}
+                   type="number" inputmode="numeric" onChangePartial={_onChange} protectedControl={!isChangeable()} error={errors?.allocationFactor}/>
         }
         {area && area === 'BEG' && <>
-            <InputForm name={"gridOperatorId"} label={t("gridOperator-id")} control={control} rules={{
+            <InputForm name={"gridOperatorId"} label={t("grid-operator.id")} control={control} rules={{
               required: t("warnings.gridOperator-id_missing"),
               minLength: {value: 8, message: t("gridoperator-id_length")},
               maxLength: {value: 8, message: t("gridoperator-id_length")},
             }} type="text" onChangePartial={_onChange} protectedControl={!(isChangeable() && processState !== 'INACTIVE')}/>
-            <InputForm name={"gridOperatorName"} label={t("gridOperator-name")} control={control} rules={{
+            <InputForm name={"gridOperatorName"} label={t("grid-operator.name")} control={control} rules={{
               required: t("warnings.gridOperator-name_missing")
             }} type="text" onChangePartial={_onChange} protectedControl={!(isChangeable() && processState !== 'INACTIVE')}/>
         </>}

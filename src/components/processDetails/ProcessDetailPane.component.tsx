@@ -4,18 +4,11 @@ import {EdaProcess, Eeg} from "../../models/eeg.model";
 import './ProcessDetailPane.component.scss'
 import {Metering} from "../../models/meteringpoint.model";
 import {EegParticipant} from "../../models/members.model";
-import {useAppSelector} from "../../store";
-import {selectedTenant} from "../../store/eeg";
 import ProcessRequestValuesComponent from "./ProcessRequestValues.component";
 import ProcessRegisterMeterComponent from "./ProcessRegisterMeter.component";
-import ProcessHistoryComponent from "./ProcessHistory.component";
-import DateComponent from "../dialogs/date.component";
-import {IonButton, IonButtons, IonIcon} from "@ionic/react";
-import {calendar} from "ionicons/icons";
-import DatepickerComponent from "../dialogs/datepicker.component";
+import ProcessHistoryComponent from "./ProcessHistory/ProcessHistory.component";
 import ProcessRevokeMeteringpointComponent from "./ProcessRevokeMeteringpoint.component";
 import ProcessChangeParticipantFactorComponent from "./ProcessChangeParticipantFactor.component";
-import {Api} from "../../service";
 import ProcessPodListComponent from "./ProcessPodList.component";
 
 

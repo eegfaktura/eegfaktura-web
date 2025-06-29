@@ -102,11 +102,15 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
   }
 
   useEffect(() => {
-    const[start, end] = getPeriodDates(activePeriod)
-    const _aps = filterActiveParticipantAndMeter(allParticipants, start, end)
-    setActiveParticipants(_aps)
-    fetchEnergyReport(_aps)
-  }, [/*allParticipants, */activePeriod]);
+    if (activePeriod && allParticipants) {
+      const [start, end] = getPeriodDates(activePeriod)
+      const _aps = filterActiveParticipantAndMeter(allParticipants, start, end)
+      setActiveParticipants(_aps)
+      fetchEnergyReport(_aps)
+    }
+  }, [allParticipants, activePeriod]);
+
+
 
   const value = {
     participants: activeParticipants,

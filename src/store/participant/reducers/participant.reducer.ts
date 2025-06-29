@@ -1,4 +1,4 @@
-import {createReducer} from "@reduxjs/toolkit";
+import {createReducer, isAnyOf} from "@reduxjs/toolkit";
 import {
   addMeteringPoint,
   archiveParticipant,
@@ -20,6 +20,7 @@ import {adapter, initialState} from "../states";
 import {EegParticipant} from "../../../models/members.model";
 import {v4} from 'uuid';
 import {Address} from "../../../models/eeg.model";
+import {participantApi} from "../api";
 
 export const reducer = createReducer(initialState, builder =>
   builder
@@ -130,7 +131,14 @@ export const reducer = createReducer(initialState, builder =>
     .addCase(archiveParticipant.fulfilled, (state, action) => {
       return adapter.removeOne({...state, selectedParticipant: undefined, selectedMeter: undefined}, action.payload)
     })
-    .addCase(updateParticipantPartial.fulfilled, (state, action) => {
-      return adapter.updateOne(state, {id: action.payload.id, changes: action.payload})
+    // .addCase(updateParticipantPartial.fulfilled, (state, action) => {
+    //   return adapter.updateOne(state, {id: action.payload.id, changes: action.payload})
+    // })
+    .addMatcher(isAnyOf(participantApi.endpoints.persistBusinessType.matchFulfilled, updateParticipantPartial.fulfilled), (state, action) => {
+      return adapter.updateOne({...state, selectedParticipant: action.payload}, {id: action.payload.id, changes: action.payload})
+    })
+    .addMatcher(participantApi.endpoints.deleteParticipant.matchFulfilled, (state, action) => {
+      state.selectedParticipant = undefined
+      return adapter.removeOne(state, action.payload.id)
     })
 );

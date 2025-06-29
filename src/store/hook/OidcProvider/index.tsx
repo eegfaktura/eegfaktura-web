@@ -5,7 +5,7 @@ import {rootUrl} from "./utils";
 import {User, UserManager, WebStorageStateStore} from "oidc-client-ts";
 import {AuthService} from "../../../service/auth.service";
 
-type AuthServiceType = Omit<AuthService, "_logoutActive"> & UserManager
+type AuthServiceType = Omit<AuthService, "_logoutActive" | "mutex" | "lookupToken"> & UserManager
 export const OidcProvider: FC<PropsWithChildren & {_userManager: AuthServiceType}> = ({ children, _userManager}) => {
 
   const oidcConfig : AuthProviderProps = {
