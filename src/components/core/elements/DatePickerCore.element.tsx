@@ -3,13 +3,14 @@ import DatePicker from "react-datepicker";
 import {Noop} from "react-hook-form";
 import {IonInput} from "@ionic/react";
 
-import "./DatePickerCore.element.scss"
 import {IonInputCustomEvent} from "@ionic/core/dist/types/components";
 import {InputInputEventDetail} from "@ionic/core/dist/types/components/input/input-interface";
 import moment from "moment/moment";
 
+import "./DatePickerCore.element.scss"
+
 interface DatePickerCoreProps {
-  initialValue: Date
+  initialValue: Date | null
   onChange: (name: string, value: any) => void
   name: string,
   label: string,

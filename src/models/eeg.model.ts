@@ -57,6 +57,7 @@ export interface Contact {
 
 export interface AccountInfo {
   iban: string;
+  bic?: string;
   owner: string;
   bankName: string;
   sepa: boolean;

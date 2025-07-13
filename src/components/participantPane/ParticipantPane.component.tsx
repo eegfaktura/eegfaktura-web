@@ -16,7 +16,7 @@ import {
   IonToolbar,
   SearchbarInputEventDetail,
   useIonAlert,
-  useIonLoading,
+  useIonLoading, useIonModal,
   useIonPopover,
   useIonToast,
 } from "@ionic/react";
@@ -90,6 +90,7 @@ import {VariableSizeList} from "react-window";
 import HeaderFavButtonComponent from "../core/HeaderFavButton.component";
 import {Virtuoso} from "react-virtuoso";
 import {types} from "sass";
+import {DownloadBillingDialog} from "./DownloadBilling.dialog";
 
 const ParticipantPaneComponent: FC = () => {
   const dispatcher = useAppDispatch();
@@ -143,6 +144,23 @@ const ParticipantPaneComponent: FC = () => {
   const [searchQuery, setSearchQuery] = useState<string | undefined>(undefined)
   const [searchActive, setSearchActive] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<string>('period');
+  const [downloadBillingId, setDownloadBillingId] = useState<string | undefined>();
+
+  const [billingDownload, billingDownloadDismiss] = useIonModal(DownloadBillingDialog, {
+    billingRunId: downloadBillingId,
+    period: activePeriod,
+    tenant: tenant,
+    eeg: eeg,
+    onDismiss: (data: string, role: string) => {
+      setDownloadBillingId(undefined);
+      billingDownloadDismiss(data, role)
+    },
+  });
+
+  const openBillingDownloadDialog = (billingRunId: string)=> {
+    setDownloadBillingId(billingRunId)
+    billingDownload()
+  }
 
   useEffect(() => {
     if (showAmount && billingRun && billingRun.id) {
@@ -496,10 +514,14 @@ const ParticipantPaneComponent: FC = () => {
   }
 
   async function exportBillingExcel(billingRunId: string) {
-    try {
-      await Api.eegService.exportBillingExcel(tenant, billingRunId);
-    } catch (e) {
-      console.log(e as string);
+    if (eeg?.accountInfo.sepa) {
+      openBillingDownloadDialog(billingRunId)
+    } else {
+      try {
+        await Api.eegService.exportBillingExcel(tenant, billingRunId);
+      } catch (e) {
+        console.log(e as string);
+      }
     }
   }
 
@@ -878,7 +900,7 @@ const ParticipantPaneComponent: FC = () => {
                             slot="end"
                             icon={documentTextOutline}
                           ></IonIcon>
-                          {"EXCEL"}
+                          {eeg?.accountInfo.sepa ? "SEPA" : "EXCEL"}
                         </IonButton>
                       </div>
                       <IonButton
@@ -960,7 +982,7 @@ const ParticipantPaneComponent: FC = () => {
                             slot="end"
                             icon={documentTextOutline}
                           ></IonIcon>
-                          {"EXCEL"}
+                          {eeg?.accountInfo.sepa ? "SEPA" : "EXCEL"}
                         </IonButton>
                       </div>
                     </>

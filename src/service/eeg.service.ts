@@ -251,6 +251,18 @@ export class EegService extends EegBaseService {
     }).then(this.handleErrors).then(res => this.handleDownload(res, billingRunId+".xlsx", tenant));
   }
 
+  async exportBillingExcelForSepa(tenant: string, billingRunId : string, token? : string): Promise<Response> {
+    if (!token) {
+      token = await this.lookupToken()
+    }
+    return await fetch(`${BILLING_API_SERVER}/api/billingRuns/${billingRunId}/billingDocuments/xlsx`, {
+      method: 'GET',
+      headers: {
+        ...this.getSecureHeaders(token, tenant),
+      },
+    }).then(this.handleErrors);
+  }
+
   async billingRunSendmail(tenant: string, billingRunId : string, token? : string): Promise<boolean> {
     if (!token) {
       token = await this.lookupToken()

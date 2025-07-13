@@ -76,6 +76,7 @@
     "mandate-reference": "Mandatreferenz",
     "mandate-date": "Mandatdatum",
     "creditor-id": "Creditor ID",
+    "bic": "BIC",
     "sepaDirectDebit": "Einzugsart",
     "sepaDebitOption_none": "Kein Sepa",
     "sepaDebitOption_b2b": "B2B",

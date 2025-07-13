@@ -16,12 +16,13 @@ import SelectForm from "../components/form/SelectForm.component";
 import "./Eeg.page.scss"
 import {useTenants} from "../store/hook/AuthProvider";
 import {IonSelectCustomEvent} from "@ionic/core/dist/types/components";
-import {EegContext, useAccessGroups, useTenant, useTenantSwitch} from "../store/hook/Eeg.provider";
+import {useAccessGroups, useTenant, useTenantSwitch} from "../store/hook/Eeg.provider";
 import EegBillingConfigCardComponent from "../components/EegBillingConfigCard.component";
 import {AccountInfo, Address, Contact, Eeg, Optionals} from "../models/eeg.model";
 import {IbanInputForm} from "../components/form/IbanInputForm";
 import {PhoneInputForm} from "../components/form/PhoneInputForm";
 import {useLocale} from "../store/hook/useLocale";
+
 
 const EMPTY_EEG_ENTITY = {
   communityId: "", rcNumber: "", name: "",
@@ -82,6 +83,10 @@ const EegPage: FC = () => {
     dispatcher(updateEegModel({tenant, eeg: {[property]: e.detail.value}}))
   }
 
+  if (!eeg) {
+    return <></>
+  }
+
   return (
     <IonPage>
       <IonContent fullscreen>
@@ -125,10 +130,10 @@ const EegPage: FC = () => {
                           style={{width: "100%"}}
                           slot="start"
                           labelPlacement="start"
-                          checked={false}
-                          disabled={true}
+                          checked={value}
+                          disabled={false}
                           onIonChange={(e) => {
-                            onChange(e.detail.checked);
+                            onChangeField("sepa")("sepa", e.detail.checked)
                           }}>SEPA aktiv</IonToggle>)
                       }
                       }
@@ -146,9 +151,6 @@ const EegPage: FC = () => {
                   <InputFormComponent name={"communityId"} label={t("common-info.community-id")} control={control} rules={{}}
                                       type="text"
                                       readonly={true}/>
-
-                  {/*<InputFormComponent name={"legal"} label="Rechtsform" control={control} rules={{}} type="text"*/}
-                  {/*                    readonly={true}/>*/}
                   <SelectForm name={"legal"} label={t("common-info.legal.label")} control={control} options={[
                     {key: "verein", value: t("common-info.legal.verein")},
                     {key: "genossenschaft", value: t("common-info.legal.genossenschaft")},
@@ -237,6 +239,10 @@ const EegPage: FC = () => {
                   <IbanInputForm name={"accountInfo.iban"} control={control}
                                  readonly={!isAdmin()}
                                  onChangePartial={onChangeField("iban")}/>
+                  <InputFormComponent name={"accountInfo.bic"} label={t("account.bic")} control={control}
+                                      rules={{regex: /[a-zA-Z\s\-_]*/}} type="text" readonly={!isAdmin()}
+                                      onChangePartial={onChangeField("bic")}
+                                      error={errors.accountInfo?.creditorId}/>
                   <InputFormComponent name={"accountInfo.owner"} label={t("account.owner")} control={control}
                                       rules={{regex: /[a-zA-Z\s]*/}} type="text" readonly={!isAdmin()}
                                       error={errors.accountInfo?.owner}

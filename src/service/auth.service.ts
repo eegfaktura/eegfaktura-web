@@ -110,10 +110,11 @@ export class AuthService extends UserManager {
       const expiresIn = user.expires_in
       if (expiresIn < 5) {
         console.log("ExpiresIn", expiresIn, "refresh")
-        const u = await this.signinSilent()
-        if (u) {
-          return this.parseToken(u.access_token)
-        }
+        return this.signinSilent().then(u => {
+          if (u == null) {
+            return Promise.reject(new Error("Not Authenticated"))
+          }
+          return this.parseToken(u?.access_token)})
       }
       return this.parseToken(user.access_token)
     }
