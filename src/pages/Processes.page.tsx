@@ -33,29 +33,35 @@ const ProcessesPage: FC = () => {
     {
       name: t("process.requestMeterData.title"),
       description: t("process.requestMeterData.desc"),
-      type: "CR_REQ_PT"
+      type: "CR_REQ_PT",
+      enabled: true
     },
     {
       name:  t("process.activateMeter.title"),
       description:  t("process.activateMeter.desc"),
-      type: "EC_REQ_ONL"
+      type: "EC_REQ_ONL",
+      enabled: true
     },
     {
+      enabled: true,
       name: t("process.revokeMeter.title"),
       description:t("process.revokeMeter.desc"),
       type: "CM_REV_CUS"
     },
     {
+      enabled: true,
       name: t("process.partFact.title"),
       description: t("process.partFact.desc"),
       type: "EC_PRTFACT_CHANGE"
     },
     {
+      enabled: true,
       name: t("process.podList.title"),
       description: t("process.podList.desc"),
       type: "EC_PODLIST"
     },
     {
+      enabled: true,
       name: t("process.history.title"),
       description: t("process.history.desc"),
       type: "HISTORY"

@@ -740,7 +740,6 @@ const ParticipantPaneComponent: FC = () => {
                           ? (hideMeter ? 0 : mp * 65) + (hideMember ? 0 : 55)
                           : el.offsetHeight
                       }
-                      console.log("ViewPortItems undefined", index, viewPortItems.length)
                       return 200
                     }}
             // data={viewPortItems}

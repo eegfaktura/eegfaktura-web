@@ -1,11 +1,13 @@
+import { LocalDate } from "local-date";
 import {AccountInfo, Address, Contact, Optionals} from "./eeg.model";
 import {Metering} from "./meteringpoint.model";
+import {Moment} from "moment";
 
 export interface EegParticipant {
   id: string;
   participantNumber:string,
   tariffId?: string
-  participantSince: Date
+  participantSince: LocalDate
   titleBefore?: string;
   titleAfter?: string;
   firstname: string;

@@ -7,6 +7,7 @@ import {Control, useFormContext} from "react-hook-form";
 import {useLocale} from "../../store/hook/useLocale";
 import DatePickerFormElement from "../form/DatePickerForm.element";
 import {EegParticipant} from "../../models/members.model";
+import DatePickerInput from "../form/NewDatePickerForm.component";
 
 
 export const DebitExtensionComponent: FC<{
@@ -37,9 +38,15 @@ export const DebitExtensionComponent: FC<{
               <InputForm name={"accountInfo.mandateReference"} label={t("account.mandate-reference")} control={control}
                          type="text" onChangePartial={onUpdateBaseData}
                          rules={{required: t("warnings.account-mandate_reference_missing")}} error={errors.accountInfo?.mandateReference}/>
-              <DatePickerFormElement name={"accountInfo.mandateDate"} label={t("account.mandate-date")}
-                                     control={control} onChangeDate={onUpdateBaseData}
-                                     rules={{required: true}} error={errors.accountInfo?.mandateDate} />
+              {/*<DatePickerFormElement name={"accountInfo.mandateDate"} label={t("account.mandate-date")}*/}
+              {/*                       control={control} onChangeDate={onUpdateBaseData}*/}
+              {/*                       rules={{required: true}} error={errors.accountInfo?.mandateDate} />*/}
+
+              <DatePickerInput name={"accountInfo.mandateDate"} label={t("account.mandate-date")}
+                               control={control}
+                               onChangePartial={onUpdateBaseData
+                                 ? (date: Date | null) => onUpdateBaseData("accountInfo.mandateDate", date)
+                                 : undefined}/>
           </>
       }
     </>

@@ -5,7 +5,7 @@ NPMBUILD=$(NPMCMD) run build
 
 BINARY_NAME=vfeeg-web
 DOCKER=docker
-VERSION=v0.2.29
+VERSION=v0.2.33
 ORGANISATION=vfeeg-development
 GLOBAL_ORG=eegfaktura
 

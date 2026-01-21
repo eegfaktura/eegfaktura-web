@@ -16,6 +16,9 @@ import {useAccessGroups} from "../../store/hook/Eeg.provider";
 import {usePersistBusinessTypeMutation} from "../../store/participant/api";
 import DatePickerFormElement from "../form/DatePickerForm.element";
 import {DebitExtensionComponent} from "./DebitExtensionComponent";
+import DatePickerInput from "../form/NewDatePickerForm.component";
+import {Moment} from "moment";
+import {LocalDate} from "local-date";
 
 interface MemberFormComponentProps {
   participant: EegParticipant
@@ -74,7 +77,6 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
   const sepaMode = watch ? watch("accountInfo.sepaDirectDebit") : "NONE"
 
   const onUpdateBaseData = (name: string, value: any) => {
-    const nameHirachy = name.split(".")
     onSubmitPartial(participant.id, {[name]: value})
   }
 
@@ -171,8 +173,13 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
 
         <IonList>
           <IonListHeader>Optionals</IonListHeader>
-          <DatePickerCoreElement initialValue={participant.participantSince} name={"participantSince"} label={t("participant-since")}
-                                 placeholder={t("date")} onChange={onUpdateBaseData}/>
+          {/*<DatePickerCoreElement initialValue={participant.participantSince} name={"participantSince"} label={t("participant-since")}*/}
+          {/*                       placeholder={t("date")} onChange={onUpdateBaseData}/>*/}
+          <DatePickerInput name={"participantSince"} label={t("participant-since")}
+                           control={control}
+                           onChangePartial={onUpdateBaseData
+                             ? (date: LocalDate | null) => onUpdateBaseData("participantSince", date)
+                             : undefined}/>
           {/*<InputForm name={"participantSince"} label="Mitglied seit" control={control} type="text"/>*/}
         </IonList>
     </FormProvider>

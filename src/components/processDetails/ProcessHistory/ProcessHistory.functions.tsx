@@ -31,7 +31,10 @@ const renderTableWithConversationId = (headers: string[], e: EdaHistory[]) => {
                 <span style={{gridColumnStart: "1"}}>
                   <div>
                     <div style={{fontSize: "0.9em"}}>{h.date.toDateString()}</div>
+{/*
                     <div style={{fontSize: "0.8em"}}>{h.date.toLocaleTimeString()}</div>
+*/}
+                    <div style={{fontSize: "0.8em"}}>{h.date.toTimeString()}</div>
                   </div>
                 </span>
               <span style={{gridColumnStart: "2", margin: "auto 0"}}>{h.processType}</span>

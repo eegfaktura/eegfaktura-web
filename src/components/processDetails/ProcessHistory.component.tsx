@@ -315,7 +315,6 @@ const ProcessHistoryComponent: FC<ProcessHistoryComponentProps> = ({eeg, edaProc
   };
 
   const renderMeterHeader = (meterId: string) => {
-    console.log("meter-Participants", meterParticipants)
     const p = meterParticipants[meterId]
     return <div>{meterId} <div style={{fontSize:"12px"}}>{p
       ? (p.participantNumber.length === 0

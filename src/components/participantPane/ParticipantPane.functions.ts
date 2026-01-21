@@ -5,8 +5,6 @@ import {store} from "../../store";
 
 export const buildAllocationMapFromSelected = (participants: EegParticipant[], checkedParticipant: Record<string, boolean>): MeteringEnergyGroupType[] => {
   const participantReport = meteringEnergyGroup1(store.getState())
-  console.log("participantReport", participantReport);
-
   const activeMeters = participants.flatMap(p => p.meters.filter(m=>m.status !== "INIT").map(m => m.meteringPoint))
 
   return participantReport

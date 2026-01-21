@@ -11,6 +11,7 @@ import {MeterReport, ParticipantReport, SelectedPeriod} from "../../models/energ
 import {isEEGFetching, useTenant} from "./Eeg.provider";
 import {filterActiveParticipantAndMeter} from "../../util/FilterHelper.unit";
 import {getPeriodDates} from "../../util/FilterHelper";
+import participants from "../../pages/Participants";
 
 
 export interface ParicipantState {
@@ -74,6 +75,89 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
   const [checkedParticipants, setCheckedParticipants] = useState<Record<string, boolean>>({})
   const [activeParticipants, setActiveParticipants] = useState<EegParticipant[]>([])
 
+// Helper function for deep equality check (especially for objects/arrays)
+// This is a common utility you might have or need to implement
+// A simple recursive check for JSON-like objects (primitives, arrays, plain objects)
+  function deepEqual(obj1: any, obj2: any): boolean {
+    if (obj1 === obj2) {
+      return true; // Handles primitives and same object reference
+    }
+
+    if (typeof obj1 !== 'object' || obj1 === null || typeof obj2 !== 'object' || obj2 === null) {
+      return false; // Not objects or one is null
+    }
+
+    const keys1 = Object.keys(obj1);
+    const keys2 = Object.keys(obj2);
+
+    if (keys1.length !== keys2.length) {
+      return false; // Different number of properties
+    }
+
+    for (const key of keys1) {
+      if (!keys2.includes(key) || !deepEqual(obj1[key], obj2[key])) {
+        return false; // Key not found or values are not deep equal
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Checks if two arrays are comprised of identical objects based on an ID,
+   * performing a deep comparison of objects with matching IDs.
+   *
+   * @param arr1 The first array of objects.
+   * @param arr2 The second array of objects.
+   * @param idKey The key in the objects that represents the unique ID. Defaults to 'id'.
+   * @param compareKeys The object keys have to be equal
+   * @returns True if the arrays are comprised of identical objects by ID and content,
+   * False otherwise.
+   */
+  function objectsSimilar<T extends Record<string, any>>(
+    arr1: T[],
+    arr2: T[],
+    idKey: keyof T = 'id' as keyof T, // Default to 'id', casting for flexibility
+    compareKeys: string[]
+  ): boolean {
+    if (arr1.length !== arr2.length) {
+      return false;
+    }
+
+    // Create Maps for faster lookup by ID
+    const map1 = new Map<any, T>();
+    for (const obj of arr1) {
+      map1.set(obj[idKey], obj);
+    }
+
+    const map2 = new Map<any, T>();
+    for (const obj of arr2) {
+      map2.set(obj[idKey], obj);
+    }
+
+    // Check if the sets of IDs are identical (same keys in maps)
+    if (map1.size !== map2.size) {
+      return false;
+    }
+
+    for (const id of map1.keys()) {
+      if (!map2.has(id)) {
+        return false; // ID from arr1 not found in arr2
+      }
+
+      const objA = map1.get(id);
+      const objB = map2.get(id);
+
+      for (const a of compareKeys) {
+        if (!objA || !objB || objA[a] !== objB[a]) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
   const newRateFn = () => {
     setState({
       ...state,
@@ -105,12 +189,26 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
     if (activePeriod && allParticipants) {
       const [start, end] = getPeriodDates(activePeriod)
       const _aps = filterActiveParticipantAndMeter(allParticipants, start, end)
-      setActiveParticipants(_aps)
-      fetchEnergyReport(_aps)
+      // const identical = objectsSimilar(activeParticipants, _aps, "id", ["participantSince"])
+
+      setActiveParticipants(prevState => _aps.map(s => {
+        // I have no glue why this code is included
+        // const e = prevState.find(n => n.id === s.id)
+        // if (e) {
+        //   return e
+        // }
+        return s
+      }))
+
+      // if (!identical) {
+        fetchEnergyReport(_aps)
+      // }
     }
   }, [allParticipants, activePeriod]);
 
-
+  // useEffect(() => {
+  //   fetchEnergyReport(activeParticipants)
+  // }, [activeParticipants]);
 
   const value = {
     participants: activeParticipants,
@@ -151,7 +249,7 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
         } as ParticipantReport
       })
       dispatch(fetchEnergyReportV2({tenant: tenant, year: activePeriod.year, segment: activePeriod.segment, type: activePeriod.type, participants: participantsReport.filter(p => p.meters.length > 0)}))
-    } else if (!activeParticipants || activeParticipants.length == 0) {
+    } else if (!aps || aps.length == 0) {
       dispatch(clearEnergyState())
     }
   }

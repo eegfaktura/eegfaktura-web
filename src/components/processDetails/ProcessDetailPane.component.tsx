@@ -12,6 +12,17 @@ import ProcessChangeParticipantFactorComponent from "./ProcessChangeParticipantF
 import ProcessPodListComponent from "./ProcessPodList.component";
 
 
+
+const ProcessNotAvailable = () => {
+  return (
+    <div style={{display: "flex", height: "100%", width: "100%"}}>
+      <span style={{fontSize: "24px", margin: "auto"}}>
+        Momentan nicht verfügbar!
+      </span>
+    </div>
+  )
+}
+
 interface ProcessDetailPaneComponentProps {
   selectedProcess: EdaProcess | undefined
   eeg: Eeg
@@ -32,7 +43,11 @@ const ProcessDetailPaneComponent: FC<ProcessDetailPaneComponentProps> = ({
         case 'EC_REQ_ONL':
           return <ProcessRegisterMeterComponent eeg={eeg} meters={meters} participants={participants} edaProcess={selectedProcess}/>
         case 'CR_REQ_PT':
-          return <ProcessRequestValuesComponent eeg={eeg} meters={meters} participants={participants} edaProcess={selectedProcess}/>
+          if (selectedProcess.enabled) {
+            return <ProcessRequestValuesComponent eeg={eeg} meters={meters} participants={participants} edaProcess={selectedProcess}/>
+          } else {
+            return <ProcessNotAvailable />
+          }
         case 'CM_REV_CUS':
           return <ProcessRevokeMeteringpointComponent eeg={eeg} meters={meters} participants={participants} edaProcess={selectedProcess}/>
         case 'EC_PRTFACT_CHANGE':

@@ -32,12 +32,12 @@ const DashbaordPage: FC = () => {
   const [allocatedSeries, consumedSeries, producedSeries] = useMemo(() => {
     const [allocated, consumed, produced, utilized] =
       intermediateSeriesV2.reduce(([a, b, c, d], s) =>
-          [
+        ([
             a + s.allocation.reduce((as, a) => as + a, 0),
             b + s.consumption.reduce((bs, b) => bs + b, 0),
             c + s.production.reduce((cs, c) => cs + c, 0),
             d + s.utilization.reduce((cs, d) => cs + d, 0)
-          ],
+          ]),
         [0, 0, 0, 0])
 
     return [

@@ -142,8 +142,8 @@ export interface EegTariff {
   id: string;
   name: string;
   type: "EEG" | "EZP" | "VZP" | "AKONTO";
-  billingPeriod?: string
-  useVat?: boolean
+  useVat: boolean
+  useMeteringPointFee: boolean
   vatSupplementaryText?: string
   vatInPercent?: string
   accountNetAmount?: string
@@ -154,9 +154,9 @@ export interface EegTariff {
   centPerKWh?: number
   freeKWh?: number
   discount?: number
-  useMeteringPointFee: boolean
   meteringPointFee?: number
   meteringPointVat?: number
+  billingPeriod?: string
 }
 
 export enum MONTHNAME {
@@ -193,6 +193,7 @@ export interface EdaProcess {
   name: string
   description: string
   type: 'CR_REQ_PT' | 'EC_REQ_ONL' | 'HISTORY' | 'CM_REV_CUS' | 'EC_PRTFACT_CHANGE' | 'EC_PODLIST'
+  enabled: boolean
 }
 
 
