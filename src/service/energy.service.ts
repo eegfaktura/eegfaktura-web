@@ -23,7 +23,7 @@ export class EnergyService extends BaseService {
     return await fetch(`${ENERGY_API_SERVER}/eeg/v2/${tenant.ecId}/report`, {
       method: 'POST',
       headers: {
-        ...this.getSecureHeadersX(token, tenant.tenant),
+        ...this.getSecureHeadersX(token, tenant.rcNr),
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
@@ -97,7 +97,7 @@ export class EnergyService extends BaseService {
     return await fetch(`${ENERGY_API_SERVER}/eeg/v2/${tenant.ecId}/load-curve-report`, {
       method: 'POST',
       headers: {
-        ...this.getSecureHeadersX(token, tenant.tenant),
+        ...this.getSecureHeadersX(token, tenant.rcNr),
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
@@ -110,7 +110,7 @@ export class EnergyService extends BaseService {
     return await fetch(`${ENERGY_API_SERVER}/eeg/v2/${tenant.ecId}/combined-report`, {
       method: 'POST',
       headers: {
-        ...this.getSecureHeadersX(token, tenant.tenant),
+        ...this.getSecureHeadersX(token, tenant.rcNr),
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
@@ -123,7 +123,7 @@ export class EnergyService extends BaseService {
     return await fetch(`${ENERGY_API_SERVER}/eeg/v2/${tenant.ecId}/summary`, {
       method: 'POST',
       headers: {
-        ...this.getSecureHeadersX(token, tenant.tenant),
+        ...this.getSecureHeadersX(token, tenant.rcNr),
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
@@ -136,7 +136,7 @@ export class EnergyService extends BaseService {
     return fetch(`${ENERGY_API_SERVER}/eeg/${tenant.ecId}/excel/report/download`, {
       method: 'POST',
       headers: {
-        ...this.getSecureHeadersX(token, tenant.tenant),
+        ...this.getSecureHeadersX(token, tenant.rcNr),
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(payload)
@@ -182,7 +182,7 @@ export class EnergyService extends BaseService {
     return await fetch(`${ENERGY_API_SERVER}/query`, {
       method: 'POST',
       headers: {
-        ...this.getSecureHeadersX(token, tenant.tenant),
+        ...this.getSecureHeadersX(token, tenant.rcNr),
         'Accept': 'application/json',
         // 'Content-Type': 'multipart/form-data'
       },
