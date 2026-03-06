@@ -1,7 +1,7 @@
 
 import {render, RenderOptions} from "@testing-library/react";
 import {configureStore} from "@reduxjs/toolkit";
-import {AppStore, reducer, State} from "../store";
+import {AppStore, reducer} from "../store";
 import React, {PropsWithChildren} from "react";
 import { Provider } from 'react-redux'
 import {FormProvider, useForm} from "react-hook-form";
@@ -15,12 +15,13 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
   ui: React.ReactElement,
+  extendedRenderOptions: ExtendedRenderOptions = {},
   {
     preloadedState = {},
     // Automatically create a store instance if no store was passed in
     store = configureStore({ reducer, preloadedState }),
     ...renderOptions
-  }: ExtendedRenderOptions = {}
+  }: ExtendedRenderOptions = extendedRenderOptions
 ) {
   function Wrapper({ children }: PropsWithChildren<{}>): JSX.Element {
     return <Provider store={store}>{children}</Provider>

@@ -1,10 +1,7 @@
 import React, {useCallback, useEffect} from "react";
 import {InputChangeEventDetail, IonInput} from "@ionic/react";
-import {TextFieldTypes} from "@ionic/core";
-import {ChangeHandler} from "react-hook-form/dist/types/form";
 import {ControllerRenderProps} from "react-hook-form/dist/types/controller";
 import {IonInputCustomEvent} from "@ionic/core/dist/types/components";
-import {ReducerType} from "@reduxjs/toolkit";
 import {RefCallBack} from "react-hook-form";
 
 // export interface InputProps {
@@ -54,6 +51,7 @@ interface InputProps<TValue, IsNumber extends boolean> {
   isEmail?:boolean
   mask?: React.RefCallback<HTMLElement>
   controlRef: RefCallBack
+  helperText?: string
   // onChange: (...event: any[]) => void
 }
 
@@ -72,14 +70,20 @@ function Input<TValue, IsNumber extends boolean = false>(props: Omit<ControllerR
 
   const evaluate = (value: string | number | null | undefined) => {
     if (isNumber) {
-      return !value || isNaN(parseInt(value as string, 10)) ? "" : parseInt(value as string, 10)
+      return !value || isNaN(parseInt(value as string, 10)) ? null : parseNumber(value as string);
     }
-    return value ? value.toString() : ""
+    return value ? value.toString() : null
+  }
+
+  const parseNumber = (value: string): number => {
+    if (Number.isInteger(value)) {
+      return parseInt(value, 10)
+    }
+    return parseFloat(value.replace(",", "."))
   }
 
   const handleChange = async (e: IonInputCustomEvent<InputChangeEventDetail>) => {
     const value = evaluate(e.target.value) // as TValue
-    console.log("Handle Change TypeOf Value", typeof e.target.value, props.name, "ValueType", typeof value, typeof defaultValue)
     const changeFunc = async (value: TValue) => {
       onValueChanged && onValueChanged(value, e)
     }

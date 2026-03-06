@@ -1,14 +1,13 @@
 import React, {FC, useEffect, useState} from 'react';
 
-import Select, {ControlProps, components, Options, InputProps, ContainerProps, OnChangeValue} from 'react-select';
+import Select, {OnChangeValue} from 'react-select';
 import {Control, Controller, FieldError, useWatch} from "react-hook-form";
 import {SelectInterface} from "@ionic/core/dist/types/components/select/select-interface";
 import {IonSelectCustomEvent} from "@ionic/core/dist/types/components";
-import {IonContent, IonInput, IonItem, IonLabel, SelectChangeEventDetail} from "@ionic/react";
+import {IonLabel, SelectChangeEventDetail} from "@ionic/react";
+import {ActionMeta} from "react-select/dist/declarations/src/types";
 
 import "./BasicSelect.component.scss"
-import {ActionMeta} from "react-select/dist/declarations/src/types";
-import {activeMeterEnergyArray} from "../../store";
 
 export interface SelectOptions {
   readonly label: string,
@@ -34,14 +33,24 @@ interface BasicSelectFormProps {
   multiple?: IsMulti,
   onChangePartial?: (name: string, value: any, event?: any) => void,
   interfaceOptions?: any,
+  defaultValue?: string,
 }
 
-export const BasicSelectComponent: FC<BasicSelectFormProps> = ({control, name, label, options, error, rules, multiple, ...rest}) => {
+const getDefaultOption = (options: SelectOptions[], defaultValue?: string) => {
+  if (defaultValue) {
+    const found = options.find(o => o.value === defaultValue)
+    return found === undefined ? null : found
+  }
+  return null
+}
+
+export const BasicSelectComponent: FC<BasicSelectFormProps> = ({control, name, label, options, error, rules, multiple, defaultValue, ...rest}) => {
   const [isClearable, setIsClearable] = useState(true);
   const [isSearchable, setIsSearchable] = useState(true);
   // const [selectedValue, setSelectedValue] = useState<IsMulti extends boolean ? SelectOptions[] | null : SelectOptions | null>(null)
-  const [selectedValue, setSelectedValue] = useState<OnChangeValue<SelectOptions, IsMulti>>(null)
+  const [selectedValue, setSelectedValue] = useState<OnChangeValue<SelectOptions, IsMulti>>(getDefaultOption(options, defaultValue))
   const controlValue = useWatch({control, name: name, defaultValue: undefined})
+
 
   useEffect(() => {
     if (!controlValue) {
@@ -98,6 +107,7 @@ export const BasicSelectComponent: FC<BasicSelectFormProps> = ({control, name, l
                   options={options}
                   onChange={onSelectionChanged(onChange)}
                   value={selectedValue}
+                  defaultValue={options.find(o => o.value === value)}
                   isDisabled={rest.disabled}
                 />
               </>

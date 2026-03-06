@@ -19,11 +19,12 @@ const ParticipantRegisterMeterPaneComponent: FC<ParticipantRegisterMeterPaneComp
   const {gridOperatorId, gridOperatorName} = useGridOperator()
 
   const defaultMeter =  {
-    status: isOnline ? "NEW" : "ACTIVE",
+    status: isOnline ? "INIT" : "ACTIVE",
+    processState: isOnline ? "NEW" : "ACTIVE",
     participantId: "",
     meteringPoint: "",
     direction: "CONSUMPTION",
-    registeredSince: isOnline ? new Date() : new Date(2023, 0, 1, 0, 0, 0, 0),
+    registeredSince: isOnline ? new Date() : new Date(2024, 0, 1, 0, 0, 0, 0),
     gridOperatorName: gridOperatorName,
     gridOperatorId: gridOperatorId,
     partFact: 100,

@@ -1,4 +1,5 @@
 import {User, UserManager, UserManagerSettings, UserProfile, WebStorageStateStore, Log} from "oidc-client-ts";
+import {Mutex} from "async-mutex";
 
 // import {keycloakConfig} from "../keycloak";
 
@@ -29,18 +30,21 @@ export class AuthService extends UserManager {
   token?: string
   tenants: string[]
   accessGroups: string[]
+  roles: string[]
   claims: Record<string, any>
   private _logoutActive: boolean
-
+  mutex = new Mutex();
 
   constructor(settings: UserManagerSettings) {
     super(settings);
     this.tenants = []
     this.accessGroups = []
+    this.roles = []
     this.claims = {}
 
     Log.setLogger(console);
-    Log.setLevel(Log.DEBUG);
+    // Log.setLevel(Log.DEBUG);
+    Log.setLevel(Log.ERROR);
 
     this._logoutActive = false;
   }
@@ -76,6 +80,7 @@ export class AuthService extends UserManager {
       // this.resourceAccess = this.tokenParsed.resource_access;
       this.tenants = tokenParsed.tenant;
       this.accessGroups = tokenParsed.access_groups;
+      this.roles = tokenParsed.realm_access ? tokenParsed.realm_access.roles : [];
       this.claims = {"name": tokenParsed.name, "nick": tokenParsed.preferred_username, "email": tokenParsed.email}
 
       // this.onTokenReceived && this.onTokenReceived({tenants: this.tenants, claims: this.claims, accessGroups: this.accessGroups})
@@ -83,15 +88,33 @@ export class AuthService extends UserManager {
     return token
   }
 
+  public async lookupToken(){
+    return this.mutex.runExclusive(async () => {
+      try {
+        const token = await this.getToken().catch(e => {
+          this.refresh()
+        })
+        if (token) {
+          return token
+        }
+      } catch {
+        console.log("Not Authenticated")
+      }
+      throw new Error()
+    })
+  }
+
   public async getToken() {
     const user = await this.getUser()
     if (user && user.expires_in) {
       const expiresIn = user.expires_in
-      if (expiresIn < 20) {
-        const u = await this.signinSilent()
-        if (u) {
-          return this.parseToken(u.access_token)
-        }
+      if (expiresIn < 5) {
+        console.log("ExpiresIn", expiresIn, "refresh")
+        return this.signinSilent().then(u => {
+          if (u == null) {
+            return Promise.reject(new Error("Not Authenticated"))
+          }
+          return this.parseToken(u?.access_token)})
       }
       return this.parseToken(user.access_token)
     }
@@ -103,10 +126,9 @@ export class AuthService extends UserManager {
     return this.signinRedirect()
   }
 
-  public async refresh() {
+  public async refresh(): Promise<string | void> {
     try {
-      return this.signinSilent().then(user => {
-      // return this.signinCallback().then(user => {
+      return await this.signinSilent().then(user => {
         if (user) {
           return this.parseToken(user.access_token)
         }
@@ -116,7 +138,7 @@ export class AuthService extends UserManager {
           if(u) {
             return this.parseToken(u?.access_token)
           }
-          throw new Error("Trouble while authenticating you! Try again in few minutes")
+          return Promise.reject(Error("Trouble while authenticating you! Try again in few minutes"))
         })
       })
     } catch {

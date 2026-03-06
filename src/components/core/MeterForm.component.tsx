@@ -2,7 +2,6 @@ import React, {FC, useEffect} from "react";
 import {FormProvider, useForm} from "react-hook-form";
 import {useAppDispatch, useAppSelector} from "../../store";
 import {ratesSelector} from "../../store/rate";
-import {selectedTenant} from "../../store/eeg";
 import {
   selectedMeterSelector,
   selectedParticipantSelector,
@@ -10,9 +9,9 @@ import {
   updateMeteringPointPartFact
 } from "../../store/participant";
 import {Metering} from "../../models/meteringpoint.model";
-import MeterFormElement from "../core/MeterForm.element";
-import EegPaneTemplate from "../core/EegPane.template";
-import MeterAddressFormElement from "../core/forms/MeterAddressForm/MeterAddressForm.element";
+import MeterFormElement from "./MeterForm.element";
+import EegPaneTemplate from "./EegPane.template";
+import MeterAddressFormElement from "./forms/MeterAddressForm/MeterAddressForm.element";
 import {useOnlineState, useTenant} from "../../store/hook/Eeg.provider";
 
 interface MeterFromComponentProps {
@@ -34,7 +33,7 @@ const MeterFormComponent: FC<MeterFromComponentProps> = ({meteringPoint}) => {
 
   // const {handleSubmit, control, watch, formState: {errors, isDirty, dirtyFields}, reset, clearErrors} = useForm<Metering>({mode: 'onBlur', defaultValues: {...meteringPoint}, values: metering});
 
-  const formMethods = useForm<Metering>({defaultValues: metering});
+  const formMethods = useForm<Metering>({defaultValues: metering, mode: "all"});
   const {handleSubmit, formState: { dirtyFields}, reset, setValue} = formMethods
 
   useEffect(() => {
@@ -61,16 +60,21 @@ const MeterFormComponent: FC<MeterFromComponentProps> = ({meteringPoint}) => {
     event.persist && event.persist();
 
     const {invalid, isDirty} = formMethods.getFieldState(name as keyof Metering, formMethods.formState)
-    console.log("1.OnChangePartFact", name, formMethods.getFieldState(name as keyof Metering, formMethods.formState))
     if (invalid || !isDirty) {
       return
     }
-    console.log("OnChangePartFact", name, value, typeof value, formMethods)
+
+    const _factValue = Number(value)
+    if (isNaN(_factValue) || _factValue > 100 || _factValue < 1) {
+      reset()
+      return
+    }
+
     // setValue(name as keyof Metering, value, {shouldDirty: true, shouldValidate: true})
     const participantId = participant?.id;
     if (participantId && metering) {
       const meter = metering.meteringPoint
-      await dispatcher(updateMeteringPointPartFact({tenant, participantId, meter, value}))
+      await dispatcher(updateMeteringPointPartFact({tenant, participantId, meter, value: _factValue}))
       reset({[name]: value})
     }
   }

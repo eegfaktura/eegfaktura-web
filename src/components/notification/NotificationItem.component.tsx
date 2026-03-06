@@ -4,31 +4,36 @@ import {alertCircle, syncCircle} from "ionicons/icons";
 import moment from "moment";
 import {buildNotificationText} from "../../util/Notificaton.util";
 import {EegNotification} from "../../models/eeg.model";
+import {eegAssignmentTurnIn, eegEuro} from "../../eegIcons";
 
 interface NotificationItemComponentProps {
   type: string
+  process: string
   date: Date
   notification: object
 }
 
-const NotificationItemComponent: FC<NotificationItemComponentProps> = ({type, date, notification}) => {
+const NotificationItemComponent: FC<NotificationItemComponentProps> = ({type, process, date, notification}) => {
 
   const getIcon = () => {
-    switch (type) {
+    switch (process) {
       case "EDA_PROCESS":
         const n = notification as EegNotification
-        return <IonIcon className={`notification-icon_${n.message.type}`} icon={syncCircle} size="large"></IonIcon>
+        return <IonIcon className={`notification-icon_${type}`} icon={syncCircle} size="large"></IonIcon>
+      case "EXCEL_IMPORT":
+        return <IonIcon className={`notification-icon_${type}`} icon={eegAssignmentTurnIn} size="medium"></IonIcon>
+      default:
+        return <IonIcon style={{color: "yellow"}} icon={alertCircle} size="large"></IonIcon>
     }
-    return <IonIcon style={{color: "yellow"}} icon={alertCircle} size="large"></IonIcon>
   }
 
   const getProcessId = () => {
-    switch (type) {
+    switch (process) {
       case "EDA_PROCESS":
         const n = notification as EegNotification
         return n.message.type
     }
-    return type
+    return process
   }
 
   return (
@@ -37,7 +42,7 @@ const NotificationItemComponent: FC<NotificationItemComponentProps> = ({type, da
         <IonCardContent>
           <div style={{display: "grid", gridTemplateColumns:"5% 95%"}}>
             {getIcon()}
-            <div>{buildNotificationText(type, notification)}</div>
+            <div>{buildNotificationText(type, process, notification)}</div>
 
           </div>
         </IonCardContent>

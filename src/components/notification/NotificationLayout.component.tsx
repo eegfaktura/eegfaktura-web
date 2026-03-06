@@ -4,7 +4,7 @@ import NotificationItemComponent from "./NotificationItem.component";
 import "./NotificationLayout.component.scss"
 
 interface NotificationLayoutComponentProps {
-  notifications: Array<{type: string, date: Date, notification: object}>
+  notifications: Array<{type: string, process: string, date: Date, notification: object}>
 }
 
 const NotificationLayoutComponent: FC<NotificationLayoutComponentProps> = ({notifications}) => {
@@ -12,7 +12,7 @@ const NotificationLayoutComponent: FC<NotificationLayoutComponentProps> = ({noti
   return (
     <div className={"notification-main"}>
       {notifications.map((n, idx) => (
-        <NotificationItemComponent key={idx} type={n.type} date={n.date} notification={n.notification}/>
+        <NotificationItemComponent key={idx} type={n.type} process={n.process} date={n.date} notification={n.notification}/>
       ))}
     </div>
   )

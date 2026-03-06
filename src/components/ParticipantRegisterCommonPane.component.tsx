@@ -8,6 +8,11 @@ import {EegParticipant} from "../models/members.model";
 import {useFormContext} from "react-hook-form";
 import {useMaskito} from "@maskito/react";
 import {IbanInputForm} from "./form/IbanInputForm";
+import {useLocale} from "../store/hook/useLocale";
+import DatePickerFormElement from "./form/DatePickerForm.element";
+import DatePickerCoreElement from "./core/elements/DatePickerCore.element";
+import SelectForm from "./form/SelectForm.component";
+import {DebitExtensionComponent} from "./core/DebitExtensionComponent";
 
 interface ParticipantRegisterCommonPaneComponentProps {
   participant: EegParticipant;
@@ -21,23 +26,8 @@ const ParticipantRegisterCommonPaneComponent: FC<ParticipantRegisterCommonPaneCo
 
   const [selectedBusinessType, setSelectedBusinessType] = useState(0)
   const {control, setValue, formState: {errors}} = useFormContext<EegParticipant>();
+  const {t} = useLocale("common")
 
-  const ibanMask = useMaskito({
-    options: {
-      mask: [
-        'A', 'T',
-        ...Array(2).fill(/\d/),
-        ' ',
-        ...Array(4).fill(/\d/),
-        ' ',
-        ...Array(4).fill(/\d/),
-        ' ',
-        ...Array(4).fill(/\d/),
-        ' ',
-        ...Array(4).fill(/\d/),
-      ],
-    },
-  });
   const onChangeBusinessType = (s: number) => {
     setSelectedBusinessType(s)
     setValue("businessRole", s === 0 ? "EEG_PRIVATE" : "EEG_BUSINESS")
@@ -45,6 +35,10 @@ const ParticipantRegisterCommonPaneComponent: FC<ParticipantRegisterCommonPaneCo
 
   const editable = () => {
     return participant.status === "NEW"
+  }
+
+  const getDebitOptions = () => {
+    return [{key: "B2B", value: t("account.sepaDebitOption_b2b")}, {key: "CORE", value: t("account.sepaDebitOption_core")}]
   }
 
   return (
@@ -73,46 +67,67 @@ const ParticipantRegisterCommonPaneComponent: FC<ParticipantRegisterCommonPaneCo
             {selectedBusinessType === 0 ? (
                 <>
                   <div style={{display: "grid", gridTemplateColumns: "50% 50%"}}>
-                    <InputForm name={"titleBefore"} label="Titel (Vor)" control={control} type="text"/>
-                    <InputForm name={"titleAfter"} label="Titel (Nach)" control={control} type="text"/>
+                    <InputForm name={"titleBefore"} label={t("participant-title_before")} control={control} type="text"/>
+                    <InputForm name={"titleAfter"} label={t("participant-title_after")} control={control} type="text"/>
                   </div>
-                  <InputForm name={"firstname"} label="Vorname" control={control}
-                             rules={{required: "Vorname fehlt"}} type="text" error={errors.firstname} />
-                  <InputForm name={"lastname"} label="Nachname" control={control} rules={{required: "Vorname fehlt"}}
+                  <InputForm name={"firstname"} label={t("firstname")} control={control}
+                             rules={{required: t("warnings.firstname_missing")}} type="text" error={errors.firstname} />
+                  <InputForm name={"lastname"} label={t("lastname")} control={control} rules={{required: t("warnings.lastname_missing")}}
                              type="text" error={errors.lastname} />
                 </>
               ) :
               (
-                <InputForm name={"firstname"} label="Firmenname" control={control}
-                           rules={{required: "Firmenname fehlt"}} type="text" error={errors.firstname}/>
+                <InputForm name={"firstname"} label={t("company-name")} control={control}
+                           rules={{required: t("warnings.company-name_missing")}} type="text" error={errors.firstname}/>
               )
             }
-            <InputForm name={"billingAddress.street"} label="Straße" control={control}
-                       rules={{required: "Straße fehlt"}} type="text" error={errors.billingAddress?.street}/>
-            <InputForm name={"billingAddress.streetNumber"} label="Hausnummer" control={control}
-                       rules={{required: "Hausnummer fehlt"}}
+            <InputForm name={"billingAddress.street"} label={t("street")} control={control}
+                       rules={{required: t("warnings.street_missing")}} type="text" error={errors.billingAddress?.street}/>
+            <InputForm name={"billingAddress.streetNumber"} label={t("street_number")} control={control}
+                       rules={{required: t("warnings.street-number_missing")}}
                        type="text" error={errors.billingAddress?.streetNumber}/>
-            <InputForm name={"billingAddress.zip"} label="Postleitzahl" control={control}
-                       rules={{required: "PLZ fehlt"}} type="text" error={errors.billingAddress?.zip}/>
-            <InputForm name={"billingAddress.city"} label="Ort" control={control} rules={{required: "Ort fehlt"}}
+            <InputForm name={"billingAddress.zip"} label={t("zip")} control={control}
+                       rules={{required: t("warnings.zip_missing")}} type="text" error={errors.billingAddress?.zip}/>
+            <InputForm name={"billingAddress.city"} label={t("city")} control={control} rules={{required: t("warnings.city_missing")}}
                        type="text" error={errors.billingAddress?.city}/>
-            <InputForm name={"contact.phone"} label="Telefon" control={control} type="text"/>
-            <InputForm name={"contact.email"} label="E-Mail" control={control} type="text"
-                       rules={{required: "Email Adresse fehlt"}} error={errors.contact?.email}/>
+            <InputForm name={"contact.phone"} label={t("phone")} control={control} type="text"/>
+            <InputForm name={"contact.email"} label={t("email")} control={control} type="text"
+                       rules={{required: t("warnings.email_missing")}} error={errors.contact?.email}/>
           </IonList>
 
         </div>
 
         <div style={{flexGrow: "1", height: "100%", width: "50%"}}>
           <IonList>
-            <IonListHeader>Bankdaten</IonListHeader>
+            <IonListHeader>{t("account.header")}</IonListHeader>
             <IbanInputForm name={"accountInfo.iban"} control={control} error={errors.accountInfo?.iban}/>
-            <InputForm name={"accountInfo.owner"} label="Kontoinhaber" control={control}
-                       rules={{required: "Kontoinhaber fehlt"}} type="text" error={errors.accountInfo?.owner}/>
+            <InputForm name={"accountInfo.owner"} label={t("account.owner")} control={control}
+                       rules={{required: t("warnings.account-owner_missing")}} type="text" error={errors.accountInfo?.owner}/>
+
+            <DebitExtensionComponent />
+
+            {/*<InputForm name={"accountInfo.bankName"} label={t("account.name")} control={control} type="text"*/}
+            {/*           rules={{required: t("warnings.account-name_missing")}} error={errors.accountInfo?.bankName}/>*/}
+            {/*<InputForm name={"accountInfo.mandateReference"} label={t("account.mandate-reference")} control={control} type="text"*/}
+            {/*           rules={{required: t("warnings.account-mandate_reference_missing")}} error={errors.accountInfo?.mandateReference}/>*/}
+            {/*<DatePickerFormElement name={"accountInfo.mandateDate"} label={t("account.mandate-date")}*/}
+            {/*                       control={control} error={errors.accountInfo?.mandateDate}/>*/}
+            {/*<SelectForm name={"accountInfo.sepaDirectDebit"} label={t("account.sepaDirectDebit")}*/}
+            {/*            control={control} options={getDebitOptions()}/>*/}
+
+
           </IonList>
           <IonList>
-            <IonListHeader>Optional</IonListHeader>
-            <InputForm name={"optionals.website"} label="Webseite" control={control} type="text"/>
+            {/*<IonListHeader style={{margin: "5px 0 2px 0"}}>Steuer Angaben</IonListHeader>*/}
+            <div style={{padding: "6px 0 0 14px", fontSize: "14px"}}>Steuer Angaben</div>
+            <InputForm name={"vatNumber"} label={t("uid")} control={control} type="text"/>
+          </IonList>
+          <IonList>
+            {/*<IonListHeader style={{margin: "5px 0 5px 0"}}>Optional</IonListHeader>*/}
+            <div style={{padding: "6px 0 0 14px", fontSize: "14px"}}>Optional</div>
+            <InputForm name={"optionals.website"} label={t("website")} control={control} type="text"/>
+            <DatePickerFormElement control={control} name={"participantSince"} label={t("participant_active-for")}
+                                   placeholder={"Datum"} error={errors?.participantSince}/>
           </IonList>
 
         </div>

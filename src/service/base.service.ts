@@ -53,8 +53,8 @@ class EegBaseService {
   }
 
   protected async getUser() {
-    return this.authService.getToken().catch(e => {
-      this.authService.refresh()
+    return await this.authService.getToken().catch(e => {
+      return this.authService.refresh().then(_ => this.authService.getToken())
     })
   }
 
@@ -81,7 +81,7 @@ class EegBaseService {
       } catch {
         console.log("Not Authenticated")
       }
-      throw new Error()
+      return Promise.reject("new Error()")
     })
   }
   protected getSecureHeaders(token: string, tenant: string) {
@@ -90,7 +90,6 @@ class EegBaseService {
   protected getSecureHeadersX(token: string, tenant: string) {
     return {'Authorization': `Bearer ${token}`, "X-Tenant": tenant}
   }
-
 
   protected async handleErrors(response: Response):Promise<Response> {
 
@@ -108,6 +107,9 @@ class EegBaseService {
           if (isErrorResponse(errorBody)) {
             throw new Error(determineErrTxt(new ErrorResponse(errorBody.error)));
           } else {
+            if (!response || !response.statusText) {
+              throw new Error("Error while fetching data!")
+            }
             throw new Error(response.statusText)
           }
       }
@@ -132,7 +134,7 @@ class EegBaseService {
     })
   }
 
-  protected async handleDownload (response : Response, defaultFilename : string) : Promise<boolean> {
+  protected async handleDownload (response : Response, defaultFilename : string, tenant?: string) : Promise<boolean> {
     return response.blob().then(file => {
       //Build a URL from the file
       const fileURL = URL.createObjectURL(file);
@@ -146,6 +148,10 @@ class EegBaseService {
       }
       if (!filename)
         filename = defaultFilename
+
+      if(tenant) {
+        filename = `${tenant}_${filename}`
+      }
 
       const link = document.createElement('a');
       link.href = fileURL

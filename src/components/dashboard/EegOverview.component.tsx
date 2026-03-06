@@ -1,7 +1,6 @@
-import React, {FC, useEffect, useState} from "react";
+import React, {FC,  useMemo} from "react";
 import {EegParticipant} from "../../models/members.model";
 import {EegTariff} from "../../models/eeg.model";
-import BarComponent from "../core/Bar.component";
 
 interface EegOverviewComponentProps {
   participants: EegParticipant[]
@@ -10,31 +9,57 @@ interface EegOverviewComponentProps {
 
 const EegOverviewComponent: FC<EegOverviewComponentProps> = ({participants, rateMap}) => {
 
-  const [participantCount, setParticipantCount] = useState<number>(0)
-  const [consumerCount, setConsumerCount] = useState<number>(0)
-  const [producerCount, setProducerCount] = useState<number>(0)
-  const [tariffUsage, setTariffUssage] = useState<Record<string, number>>({})
+  // const [participantCount, setParticipantCount] = useState<number>(0)
+  // const [consumerCount, setConsumerCount] = useState<number>(0)
+  // const [producerCount, setProducerCount] = useState<number>(0)
+  // const [tariffUsage, setTariffUssage] = useState<Record<string, number>>({})
 
-  useEffect(() => {
-    const defaultRateCount: Record<string, number> = Object.keys(rateMap).reduce((o, v) => {
-      return {...o, [v]: 0}
-    }, {} as Record<string, number>)
 
-    const s = participants.reduce((r, p) => {
-      r.p += 1
-      p.meters.forEach(m => {
-        m.direction === 'CONSUMPTION' ? r.c += 1 : r.pp += 1
-        if (m.tariff_id) {
-          r.t[m.tariff_id] = r.t[m.tariff_id] + 1
-        }
-      })
-      return r
-    }, {p: 0, c: 0, pp: 0, t: defaultRateCount})
-    setConsumerCount(s.c)
-    setProducerCount(s.pp)
-    setParticipantCount(s.p)
-    setTariffUssage(s.t)
+  const [participantCount, consumerCount, producerCount, tariffUsage] = useMemo(() => {
+      const defaultRateCount: Record<string, number> = Object.keys(rateMap).reduce((o, v) => {
+        return {...o, [v]: 0}
+      }, {} as Record<string, number>)
+
+      const s = participants.reduce((r, p) => {
+        r.p += 1
+        p.meters.forEach(m => {
+          m.direction === 'CONSUMPTION' ? r.c += 1 : r.pp += 1
+          if (m.tariff_id) {
+            r.t[m.tariff_id] = r.t[m.tariff_id] + 1
+          }
+        })
+        return r
+      }, {p: 0, c: 0, pp: 0, t: defaultRateCount})
+
+    return [s.p, s.c, s.pp, s.t]
+      // setConsumerCount(s.c)
+      // setProducerCount(s.pp)
+      // setParticipantCount(s.p)
+      // setTariffUssage(s.t)
+
   }, [participants])
+
+
+  // useEffect(() => {
+  //   const defaultRateCount: Record<string, number> = Object.keys(rateMap).reduce((o, v) => {
+  //     return {...o, [v]: 0}
+  //   }, {} as Record<string, number>)
+  //
+  //   const s = participants.reduce((r, p) => {
+  //     r.p += 1
+  //     p.meters.forEach(m => {
+  //       m.direction === 'CONSUMPTION' ? r.c += 1 : r.pp += 1
+  //       if (m.tariff_id) {
+  //         r.t[m.tariff_id] = r.t[m.tariff_id] + 1
+  //       }
+  //     })
+  //     return r
+  //   }, {p: 0, c: 0, pp: 0, t: defaultRateCount})
+  //   setConsumerCount(s.c)
+  //   setProducerCount(s.pp)
+  //   setParticipantCount(s.p)
+  //   setTariffUssage(s.t)
+  // }, [participants])
 
   const renderTariffUsage = (tariff: Record<string, number>) => {
     // let consumerCount = 0

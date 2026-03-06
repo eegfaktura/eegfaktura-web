@@ -2,6 +2,7 @@
   "E_2055_participant_update" : "Die gewünschte Eigenschaft konnte nicht erneuert werden.",
   "E_1000_eeg_load": "Fehler beim laden der EEG Basisdaten!",
   "E_1001_eeg_load": "Die EEG wurde noch nicht angelegt!",
+  "E_1002_Process_eeg_load": "Bad process",
   "E_1000_no_entries": "Keine Energiedaten für diese Peroide gefunden!",
   "E_1021_tariff_create": "Tarif konnte nicht generiert werden.",
   "intern": {
@@ -10,6 +11,7 @@
 
   "process": {
     "podList_ok": "Zählpunktliste konnte erfolgreich angefordert werden.",
-    "podList_error": "Zählpunktliste konnte nicht erfolgreich angefordert werden."
+    "podList_error": "Zählpunktliste konnte nicht erfolgreich angefordert werden.",
+    "revoke_consentIdEmpty": "Für diesen Zählpunkt fehlt noch die Consent-ID. Ohne dieser Information kann der Abmeldeprozess nicht ausgeführt werden. Versuchen Sie die Teilnehmerliste anzufordern, damit die Consent-ID mit den Zählpunkten abgeglichen werden kann."
   }
 }

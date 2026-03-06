@@ -4,11 +4,15 @@ import '../../../theme/main.scss'
 import {AuthService} from "../../../service/auth.service";
 import {useUser} from "../AuthProvider";
 import {IonSpinner} from "@ionic/react";
+import {useAppDispatch} from "../../index";
+import {signIn} from "../../user";
+import {UserData} from "../../../models/user.model";
 
 export const OidcHandler: FC<PropsWithChildren & {hasTried: () => boolean}> = ({ children, hasTried}) => {
   const auth = useAuth();
   const user = useUser()
   const [hasTriedSignin, setHasTriedSignin] = useState(false);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     (async () => {
@@ -46,5 +50,6 @@ export const OidcHandler: FC<PropsWithChildren & {hasTried: () => boolean}> = ({
     );
   }
 
+  dispatch(signIn({tenant: user?.tenant, token: user?.token, userName: "", tenants: [], name: "", id: auth.user?.access_token, email: "", emailIsVerified: true, verified: true, imageUri: ""} as UserData))
   return <>{children}</>;
 };

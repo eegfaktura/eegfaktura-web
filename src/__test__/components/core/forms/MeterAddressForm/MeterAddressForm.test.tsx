@@ -17,8 +17,9 @@ const defaultParticipant: EegParticipant = {
   firstname: "Max",
   id: "1234567890",
   lastname: "Mustermann",
-  meters: [{meteringPoint: "AT0000000000000000000000000000001", direction: 'CONSUMPTION', status: 'ACTIVE'} as Metering],
+  meters: [{meteringPoint: "AT0000000000000000000000000000001", direction: 'CONSUMPTION', processState: 'ACTIVE'} as Metering],
   optionals: {} as Optionals,
+  vatNumber: "",
   participantNumber: "001",
   participantSince: new Date(2023, 0, 1),
   role: 'EEG_USER',
@@ -32,6 +33,8 @@ const defaultParticipant: EegParticipant = {
 
 const ctxValue = (admin: boolean, owner: boolean, user: boolean) => { return {
   eeg: undefined,
+  isFetching: false,
+  getTenants: () => {return [{tenant: "TE100100", name: "TEST EEG"}]},
   isAdmin: () => {return admin},
   isOwner: () => owner,
   isUser: () => user,
@@ -50,7 +53,7 @@ const renderElement = (online: boolean, admin: boolean, owner: boolean, status: 
     <EegContext.Provider value={ctxValue(admin, owner, false)} >
       <MeterAddressFormElement participant={defaultParticipant} isOnline={online} isEditable={isEditable} showActivationMode={false}/>
     </EegContext.Provider>, { defaultValues: {
-        status: status,
+        processState: status,
         participantId: "",
         meteringPoint: "",
         direction: "CONSUMPTION",

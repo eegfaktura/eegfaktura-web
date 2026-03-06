@@ -1,7 +1,7 @@
 import React, {FC, FormEvent, forwardRef, HTMLProps, useEffect, useState} from "react";
 import DatePicker from "react-datepicker";
 import {Control, Controller, FieldError, UseFormClearErrors, useWatch} from "react-hook-form";
-import {InputChangeEventDetail, IonInput} from "@ionic/react";
+import {IonInput} from "@ionic/react";
 
 import "./DatePickerForm.element.scss"
 import {IonInputCustomEvent} from "@ionic/core/dist/types/components";
@@ -20,13 +20,14 @@ interface DatePickerFormProps {
   onChangeDate?: (name: string, value: any, event?: any) => void
 }
 
-const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, label, placeholder, error, onChangeDate}) => {
+const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, label, placeholder, error, disabled, onChangeDate}) => {
 
   const value = useWatch({control, name: name, defaultValue: undefined})
-  const [showDate, setShowDate] = useState<Date>()
+  const [showDate, setShowDate] = useState<Date | undefined>()
 
   useEffect(() => {
-    const dateValue = typeof value === 'string' ? new Date(value) : value instanceof Date ? value : new Date(Date.now())
+    // const dateValue = typeof value === 'string' ? new Date(value) : value instanceof Date ? value : new Date(Date.now())
+    const dateValue = typeof value === 'string' ? new Date(value) : value instanceof Date ? value : undefined
     setShowDate(dateValue)
   }, [value]);
 
@@ -59,6 +60,7 @@ const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, l
           fill="outline"
           labelPlacement={"floating"}
           ref={ref}
+          disabled={disabled}
         />
     );
   });
@@ -71,7 +73,7 @@ const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, l
         rules={rules}
         render={({field, fieldState, formState}) => {
           const {onChange, onBlur, value, name, ref} = field;
-          const dateValue = typeof value === 'string' ? new Date(value) : value instanceof Date ? value : new Date(Date.now())
+          // const dateValue = typeof value === 'string' ? new Date(value) : value instanceof Date ? value : new Date(Date.now())
           return (
             <DatePicker
               // selectsRange={false}

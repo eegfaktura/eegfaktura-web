@@ -92,6 +92,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
       </div>
     )
   }
+
   const getParticipantLine = (fee: number) => {
     if (fee > 0) {
       return (
@@ -172,7 +173,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
               }}>
                 <div style={{paddingRight: "10px", marginBottom: "10px", marginTop: "10px"}}>
                   {memberBill ? <>
-                    <IonItem lines="none" fill={"outline"} style={{"--min-height": "32px", fontSize: "14px"}}>
+                    <IonItem lines="none" mode="md" style={{"--min-height": "32px", fontSize: "14px"}}>
                       <IonIcon style={{marginTop: "5px", marginBottom: "5px"}} icon={eegSumSign} slot="start"></IonIcon>
                       <span>{memberBill.meteringPoints.reduce((s, m) => s + m.amount, memberBill.participantFee).toFixed(2)}</span> €
                     </IonItem></> : <></>}

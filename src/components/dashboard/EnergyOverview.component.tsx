@@ -2,13 +2,12 @@ import React, {FC, useEffect, useState} from "react";
 import BarComponent from "../core/Bar.component";
 import {activeMeterEnergyArray, useAppSelector} from "../../store";
 import {Metering} from "../../models/meteringpoint.model";
-import {PieSeriesType, ReportSeriesType} from "../../pages/Dashbaord.page";
+import {PieSeriesType} from "../../pages/Dashbaord.page";
 import {EegTariff} from "../../models/eeg.model";
 import {selectedPeriodSelector} from "../../store/energy";
 import {getPreviousPeriod} from "../../util/Helper.util";
-import {activeTenant, selectedTenant} from "../../store/eeg";
 import {IonContent, IonIcon, IonPopover} from "@ionic/react";
-import {helpCircle, helpCircleOutline} from "ionicons/icons";
+import {helpCircleOutline} from "ionicons/icons";
 import {Api} from "../../service";
 import {useTenant} from "../../store/hook/Eeg.provider";
 
@@ -26,20 +25,22 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
   // const tenant = useAppSelector(activeTenant)
   const tenant = useTenant()
 
-  const [producedEnergy, setProducedEnergy] = useState<number>(0)
-  const [consumedEnergy, setConsumedEnergy] = useState<number>(0)
-  const [distributedEnergy, setDistributedEnergy] = useState<number>(0)
+  // const [producedEnergy, setProducedEnergy] = useState<number>(0)
+  // const [consumedEnergy, setConsumedEnergy] = useState<number>(0)
+  // const [distributedEnergy, setDistributedEnergy] = useState<number>(0)
   const [preProducedEnergy, setPreProducedEnergy] = useState<number>(0)
   const [preConsumedEnergy, setPreConsumedEnergy] = useState<number>(0)
   const [preDistributedEnergy, setPreDistributedEnergy] = useState<number>(0)
   const [cash, setCash] = useState<{taken: { energy: number, money: number }, spent: { energy: number, money: number }}>({taken: {energy: 0 , money: 0}, spent: {energy: 0, money: 0}})
 
-  useEffect(() => {
-    setProducedEnergy(produced.value)
-    setConsumedEnergy(consumed.value)
-    setDistributedEnergy(allocated.value)
-  }, [consumed, produced, allocated]);
+  const [producedEnergy, consumedEnergy, distributedEnergy] = [produced.value, consumed.value, allocated.value]
 
+  // useEffect(() => {
+  //   setProducedEnergy(produced.value)
+  //   setConsumedEnergy(consumed.value)
+  //   setDistributedEnergy(allocated.value)
+  // }, [consumed, produced, allocated]);
+  //
   useEffect(() => {
     meterGroup && rates && calculateSummary()
   }, [meterGroup, rates]);
@@ -58,20 +59,25 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
       })
     }
   }, [activePeriod]);
+
   const calculateSummary = () => {
     let consumerSum = 0
     let producerSum = 0
     let producerCash =0
     let consumerCash = 0
 
-    meterGroup.forEach(m => {
+    meterGroup.forEach((m,i) => {
       if (rates[m.meter.tariff_id]) {
-        if (m.meter.direction === "CONSUMPTION") {
-          consumerSum += m.utilization
-          consumerCash += meterCash(m.meter, m.utilization)
+        if (isNaN(m.utilization)) {
+          console.error("Meter has invalid energy values!", i, m)
         } else {
-          producerSum += m.utilization
-          producerCash += meterCash(m.meter, m.utilization)
+          if (m.meter.direction === "CONSUMPTION") {
+            consumerSum += m.utilization
+            consumerCash += meterCash(m.meter, m.utilization)
+          } else {
+            producerSum += m.utilization
+            producerCash += meterCash(m.meter, m.utilization)
+          }
         }
       }
     })
@@ -79,8 +85,8 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
   }
 
   const meterCash = (m: Metering, utilization: number) => {
-    const getDiscountFactor = (discount:string | undefined) => {
-      const d = discount ? Number(discount) : 0
+    const getDiscountFactor = (discount:number | undefined) => {
+      const d = discount ? discount : 0
       return d > 0 ? d / 100 : 1
     }
     if (m.tariff_id) {
@@ -161,11 +167,11 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
               <div style={{display: "flex", flex: "1", padding: "0px 16px", gap: "10px", alignItems: "center"}}>
                 <BarComponent color="rgba(44, 245, 218, 0.3)"
                               percentage={getWidth(preConsumedEnergy, preDistributedEnergy)}/>
-                <div style={{flexBasis: "40%", fontSize: "10px"}}>{renderKWH(preDistributedEnergy)} *)</div>
+                <div style={{flexBasis: "40%", fontSize: "10px"}}>{renderKWH(preConsumedEnergy)} *)</div>
               </div>
               <div style={{display: "flex", flex: "1", padding: "0px 16px", gap: "10px", alignItems: "center"}}>
                 <BarComponent color="#0AF2D3" percentage={getWidth(consumedEnergy, distributedEnergy)}/>
-                <div style={{flexBasis: "40%", fontSize: "14px"}}>{renderKWH(distributedEnergy)}</div>
+                <div style={{flexBasis: "40%", fontSize: "14px"}}>{renderKWH(consumedEnergy)}</div>
               </div>
             </div>
           </div>

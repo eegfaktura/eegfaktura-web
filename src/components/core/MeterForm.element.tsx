@@ -9,9 +9,10 @@ import {useFormContext} from "react-hook-form";
 import ToggleButtonComponent from "../ToggleButton.component";
 import {eegPlug, eegSolar} from "../../eegIcons";
 import {EegParticipant} from "../../models/members.model";
-import {useAccessGroups, useEegArea} from "../../store/hook/Eeg.provider";
+import {useAccessGroups, useEegAllocation, useEegArea} from "../../store/hook/Eeg.provider";
 import {useLocale} from "../../store/hook/useLocale";
 import {swapHorizontalSharp} from "ionicons/icons";
+import NumberInputForm from "../form/NumberInput.component";
 
 interface MeterFormElementProps {
   rates: EegTariff[]
@@ -31,16 +32,18 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
   const {isAdmin} = useAccessGroups()
   const [presentAlert] = useIonAlert();
 
+  const allocationMode = useEegAllocation()
+
   const [selectedDirection, setSelectedDirection] = useState(0);
   const [withWechselrichter, setWithWechselrichter] = useState(false);
 
-  const [direction, status] = watch(['direction', 'status'])
+  const [direction, processState] = watch(['direction', 'processState'])
 
   const isChangeable = () => {
     if (meterReadOnly === undefined) {
       return true
     }
-    return !meterReadOnly || status === 'NEW' || status === 'INVALID' || status === 'INACTIVE' || status === 'REJECTED' || status === 'REVOKED'
+    return !meterReadOnly || processState === 'NEW' || processState === 'INVALID' || processState === 'INACTIVE' || processState === 'REJECTED' || processState === 'REVOKED'
   }
 
   useEffect(() => {
@@ -99,6 +102,22 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
       t("producer_tariff")
   }
 
+  const validatePartFactor = (value: string) => {
+    const n = Number(value)
+    if (isNaN(n)) {
+      return false
+    }
+    return n <= 100 && n > 0
+  }
+
+  const validateAllocFactor = (value: string) => {
+    const n = Number(value)
+    if (isNaN(n)) {
+      return false
+    }
+    return n <= 100.0 && n > 0
+  }
+
   return (
     <>
       <IonGrid>
@@ -131,7 +150,7 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
         <InputForm name={"meteringPoint"} label={t("metering")} control={control} type="text" readonly={meterReadOnly} protectedControl={meterReadOnly}
                    counter={true} maxlength={33}
                    rules={{
-                     required: t("metering_missing_msg"),
+                     required: t("warnings.metering_missing_msg"),
                      minLength: {value: 33, message: "MIN-Zählpunktnummer beginnt mit AT gefolgt von 31 Nummern"},
                      maxLength: {value: 33, message: "MAX-Zählpunktnummer beginnt mit AT gefolgt von 31 Nummern"},
                      pattern: {
@@ -143,13 +162,23 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
                    onPaste={handleMeterPaste}
                    onChangePartial={_onChange}
         />
-        <InputForm name={"partFact"} label={t("process.partFact.label")} control={control} isNumber={true} rules={{required: true}}
-                   type="number" inputmode="numeric" onChangePartial={onChangePartFact} protectedControl={!isChangeable()}/>
+        <InputForm name={"partFact"} label={t("process.partFact.label")} control={control} isNumber={true}
+                   rules={{required:t("warnings.partition-factor_missing"), validate: validatePartFactor || "error message"}}
+                   type="number" inputmode="numeric" onChangePartial={onChangePartFact} protectedControl={!isChangeable()} error={errors?.partFact}/>
+        {allocationMode === 'STATIC' &&
+        <InputForm name={"allocationFactor"} label={t("process.allocationFactor.label")} control={control} isNumber={true}
+                   rules={{required:t("warnings.allocation-factor_missing"), validate: validateAllocFactor || "error message"}}
+                   type="number" inputmode="numeric" onChangePartial={_onChange} protectedControl={!isChangeable()} error={errors?.allocationFactor}/>
+        }
         {area && area === 'BEG' && <>
-            <InputForm name={"gridOperatorId"} label={t("gridOperator_id")} control={control} rules={{required: true}}
-                       type="text" onChangePartial={_onChange} protectedControl={!(isChangeable() && status !== 'INACTIVE')}/>
-            <InputForm name={"gridOperatorName"} label={t("gridOperator_name")} control={control} rules={{required: true}}
-                       type="text" onChangePartial={_onChange} protectedControl={!(isChangeable() && status !== 'INACTIVE')}/>
+            <InputForm name={"gridOperatorId"} label={t("grid-operator.id")} control={control} rules={{
+              required: t("warnings.gridOperator-id_missing"),
+              minLength: {value: 8, message: t("gridoperator-id_length")},
+              maxLength: {value: 8, message: t("gridoperator-id_length")},
+            }} type="text" onChangePartial={_onChange} protectedControl={!(isChangeable() && processState !== 'INACTIVE')}/>
+            <InputForm name={"gridOperatorName"} label={t("grid-operator.name")} control={control} rules={{
+              required: t("warnings.gridOperator-name_missing")
+            }} type="text" onChangePartial={_onChange} protectedControl={!(isChangeable() && processState !== 'INACTIVE')}/>
         </>}
         <CheckboxComponent label={t("inverterCheckbox_label")} setChecked={setWithWechselrichter}
                            checked={withWechselrichter} style={{paddingTop: "0px"}}></CheckboxComponent>

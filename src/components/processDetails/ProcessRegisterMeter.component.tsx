@@ -1,7 +1,6 @@
 import React, {FC, forwardRef, useEffect, useState} from "react";
 import {IonButton, IonInput, IonItem} from "@ionic/react";
 import InputForm from "../form/InputForm.component";
-import SelectForm from "../form/SelectForm.component";
 import {useForm} from "react-hook-form";
 import {Metering} from "../../models/meteringpoint.model";
 import {EdaProcess, Eeg} from "../../models/eeg.model";
@@ -15,7 +14,6 @@ import {JoinStrings} from "../../util/Helper.util";
 import {meteringDisplayName} from "../../util/FilterHelper";
 import {useLocale} from "../../store/hook/useLocale";
 import CheckboxComponent from "../form/Checkbox.component";
-import InputComponent from "../form/Input.component";
 
 interface ProcessValues {
   communityId: string | undefined
@@ -77,7 +75,6 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
   }, [participantId])
 
   const onRequest = (data: ProcessValues) => {
-    console.log("data", data, "participants", participants)
     if (data.meteringPoint) {
       const p = participants.find(p => p.meters.find(m => m.meteringPoint === data.meteringPoint))
       const meter = p?.meters.find(m => m.meteringPoint === data.meteringPoint)
@@ -86,11 +83,7 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
           .finally(() => {
             reset()
           })
-      } else {
-        console.log("p", p, "meter", meter, "data", data, "participants", participants)
       }
-    } else {
-      console.log("DATA:", data)
     }
   }
 
@@ -114,7 +107,7 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
       <ProcessContentComponent>
         <CorePageTemplate>
           <>
-            <InputForm name="communityId" label={t("communityId")} control={control} protectedControl={true}/>
+            <InputForm name="communityId" label={t("common-info.community-id")} control={control} protectedControl={true}/>
             {/*<SelectForm control={control} name={"participantId"} options={participants.map((p) => {*/}
             {/*  return {key: p.id, value: p.firstname + " " + p.lastname}*/}
             {/*})} label={"Mitglied"} selectInterface={"popover"} rules={{required: true}}/>*/}
@@ -123,23 +116,25 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
             {/*})} label={"Zählpunkt"} selectInterface={"popover"}  rules={{required: true}}/>*/}
 
             <BasicSelectComponent control={control} name={"participantId"}
-                                  options={participants.sort((a, b) => a.lastname.localeCompare(b.lastname)).map((p) => {
+                                  options={participants
+                                    .sort((a, b) => a.lastname && b.lastname ? a.lastname.localeCompare(b.lastname) : a.firstname.localeCompare(b.firstname))
+                                    .map((p) => {
                                     return {
                                       value: p.id,
-                                      label: JoinStrings(" ", "-", p.participantNumber, p.lastname, p.firstname)
+                                      label: JoinStrings(" ", "-", p.participantNumber, (p.lastname ? p.lastname : ""), p.firstname)
                                     }
                                   })} label={t("participant")}/>
             <BasicSelectComponent control={control} name={"meteringPoint"}
-                                  options={useableMeters.filter(p => p.status !== 'ACTIVE' /*&& p.status !== 'APPROVED' && p.status !== 'PENDING'*/).map((p) => {
+                                  options={useableMeters.filter(p => p.processState !== 'ACTIVE' /*&& p.status !== 'APPROVED' && p.status !== 'PENDING'*/).map((p) => {
                                     return {
                                       value: p.meteringPoint,
-                                      label: JoinStrings(" ", "", meteringDisplayName(p), p.status)
+                                      label: JoinStrings(" ", "", meteringDisplayName(p), p.processState)
                                     }
                                   })} label={t("metering")} rules={{required: true}}/>
 
             <CheckboxComponent label={"Offline Registrierung"} checked={offline} setChecked={setOffline}></CheckboxComponent>
             { offline && 
-              <InputForm name="activationCode" control={control} label={"Aktivierungs-Code"} counter={true} maxlength={33}/>
+              <InputForm name="activationCode" control={control} label={"Aktivierungs-Code"} counter={true} maxlength={35}/>
             }
             <IonItem lines="none" style={{zIndex: "0"}}>
               <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={!formState.isValid}>

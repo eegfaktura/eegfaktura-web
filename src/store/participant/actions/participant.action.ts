@@ -10,7 +10,7 @@ export const fetchParticipantModel = createAsyncThunk(
   `${featureKey}/fetchParticipants`,
   async (arg: { token?: string, tenant: string, period?: SelectedPeriod }) => {
     const { token, tenant, period } = arg;
-    const result = await Api.eegService.fetchParicipants(tenant, token, period);
+    const result = await Api.participantService.fetchParicipants(tenant, token, period);
     return { participants: result };
   }
 )
@@ -54,7 +54,7 @@ export const createParticipant = createAsyncThunk(
   `${featureKey}/create`,
   async (arg: { tenant: string, participant: EegParticipant }) => {
     const {participant, tenant} = arg
-    return await Api.eegService.createParticipant(tenant, participant);
+    return await Api.participantService.createParticipant(tenant, participant);
   }
 )
 
@@ -62,7 +62,7 @@ export const updateParticipant = createAsyncThunk(
   `${featureKey}/update`,
   async (arg: { tenant: string, participant: EegParticipant }) => {
     const {participant, tenant} = arg
-    return await Api.eegService.updateParticipant(tenant, participant);
+    return await Api.participantService.updateParticipant(tenant, participant);
   }
 )
 
@@ -127,7 +127,7 @@ export const confirmParticipant = createAsyncThunk(
   `${featureKey}/participant/confirm`,
   async (args: {tenant: string, participantId: string, meters: Metering[]}) => {
     const {tenant, participantId, meters} = args
-    return await Api.eegService.confirmParticipant(tenant, participantId, meters);
+    return await Api.participantService.confirmParticipant(tenant, participantId, meters);
   }
 )
 

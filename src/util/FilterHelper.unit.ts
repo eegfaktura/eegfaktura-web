@@ -14,11 +14,12 @@ import moment from "moment";
  */
 export const filterActiveParticipantAndMeter = (participants: EegParticipant[], start: Date, end: Date) => {
   return participants.map(p => {
+    const endDate = end.getTime() + (24*60*60*1000);
     return {
       ...p, meters: p.meters.filter(m =>
         (m.participantState
-          ? (new Date(m.participantState.inactiveSince).getTime() >= end.getTime() && new Date(m.participantState.activeSince).getTime() <= end.getTime()) ||
-          (new Date(m.participantState.inactiveSince).getTime() >= start.getTime() && new Date(m.participantState.inactiveSince).getTime() <= end.getTime())
+          ? (new Date(m.participantState.inactiveSince).getTime() >= endDate && new Date(m.participantState.activeSince).getTime() <= endDate) ||
+          (new Date(m.participantState.inactiveSince).getTime() >= start.getTime() && new Date(m.participantState.inactiveSince).getTime() <= endDate)
           : true) || (m.status !== 'ACTIVE' && m.status !== 'INACTIVE')
       )
     } as EegParticipant
@@ -29,8 +30,10 @@ export const filterActiveMeter = <T extends Record<string, EnergyMeta>>(meta: T,
   const metaInfo = meta[m.meteringPoint]
   if (metaInfo) {
     try {
-      const startDate = moment(metaInfo.period_start, "DD.MM.YYYY HH:mm:ss")
-      const endDate = moment(metaInfo.period_end, "DD.MM.YYYY HH:mm:ss")
+      const pattern = "DD.MM.YYYY HH:mm:ss"
+      const patternLen = pattern.length;
+      const startDate = moment(metaInfo.period_start.substring(0,patternLen), pattern)
+      const endDate = moment(metaInfo.period_end.substring(0,19), "DD.MM.YYYY HH:mm:ss")
 
       if (startDate.isBefore(end) && endDate.isAfter(start)) {
         return true

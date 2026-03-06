@@ -1,0 +1,57 @@
+ion-select {
+  --placeholder-color: #971e49;
+  --placeholder-opacity: 1;
+  width: 100%;
+  justify-content: center;
+
+  //& .select-wrapper-inner {
+  //  width: 100%;
+  //  justify-content: space-between;
+  //}
+}
+
+.select-wrapper-inner {
+  width: 100% !important;
+  justify-content: space-between !important;
+}
+
+ion-select::part(placeholder),
+ion-select::part(text) {
+  flex: 0 0 auto;
+}
+
+ion-select::part(placeholder)::first-letter {
+  font-size: 24px;
+  font-weight: 500;
+}
+
+//ion-select::part(text) {
+//  color: #545ca7;
+//}
+//
+//ion-select::part(icon) {
+//  color: #971e49;
+//  opacity: 1;
+//}
+
+ion-checkbox {
+  --size: 16px;
+  //--checkbox-background-checked: #6815ec;
+}
+
+ion-checkbox::part(container) {
+  //border-radius: 6px;
+  //border: 2px solid #6815ec;
+}
+
+ion-row.md ion-row.selected {
+  --background: rgba(var(--ion-color-primary-rgb), 0.14);
+}
+
+ion-row.selected {
+  background: rgba(var(--ion-color-primary-rgb), 0.14);
+}
+
+ion-col {
+  margin: auto;
+}

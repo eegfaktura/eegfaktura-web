@@ -2,9 +2,7 @@ import React, {FC, useCallback, useEffect, useState} from "react";
 import {IonButton, IonButtons} from "@ionic/react";
 import {createNewPeriod} from "../../util/Helper.util";
 import {
-  EegEnergyReport,
   EnergySeries,
-  ReportType,
   SelectedPeriod
 } from "../../models/energy.model";
 import PeriodSelectorElement from "../core/PeriodSelector.element";
@@ -47,7 +45,7 @@ const MeterChartNavbarComponent: FC<MeterChartNavbarComponentProps> = ({selected
     onSelectionChanged(selectedPeriod)
   }
 
-  const onChangePeriod = useCallback((selectedPeriod: SelectedPeriod | undefined)  =>{
+  const onChangePeriod = useCallback((selectedPeriod: SelectedPeriod | undefined) => {
     if (selectedPeriod) {
       setSelectedPeriod(selectedPeriod)
       updateSeries(selectedMeterId, selectedPeriod)

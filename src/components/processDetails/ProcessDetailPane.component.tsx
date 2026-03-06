@@ -4,20 +4,24 @@ import {EdaProcess, Eeg} from "../../models/eeg.model";
 import './ProcessDetailPane.component.scss'
 import {Metering} from "../../models/meteringpoint.model";
 import {EegParticipant} from "../../models/members.model";
-import {useAppSelector} from "../../store";
-import {selectedTenant} from "../../store/eeg";
 import ProcessRequestValuesComponent from "./ProcessRequestValues.component";
 import ProcessRegisterMeterComponent from "./ProcessRegisterMeter.component";
-import ProcessHistoryComponent from "./ProcessHistory.component";
-import DateComponent from "../dialogs/date.component";
-import {IonButton, IonButtons, IonIcon} from "@ionic/react";
-import {calendar} from "ionicons/icons";
-import DatepickerComponent from "../dialogs/datepicker.component";
+import ProcessHistoryComponent from "./ProcessHistory/ProcessHistory.component";
 import ProcessRevokeMeteringpointComponent from "./ProcessRevokeMeteringpoint.component";
 import ProcessChangeParticipantFactorComponent from "./ProcessChangeParticipantFactor.component";
-import {Api} from "../../service";
 import ProcessPodListComponent from "./ProcessPodList.component";
 
+
+
+const ProcessNotAvailable = () => {
+  return (
+    <div style={{display: "flex", height: "100%", width: "100%"}}>
+      <span style={{fontSize: "24px", margin: "auto"}}>
+        Momentan nicht verfügbar!
+      </span>
+    </div>
+  )
+}
 
 interface ProcessDetailPaneComponentProps {
   selectedProcess: EdaProcess | undefined
@@ -39,7 +43,11 @@ const ProcessDetailPaneComponent: FC<ProcessDetailPaneComponentProps> = ({
         case 'EC_REQ_ONL':
           return <ProcessRegisterMeterComponent eeg={eeg} meters={meters} participants={participants} edaProcess={selectedProcess}/>
         case 'CR_REQ_PT':
-          return <ProcessRequestValuesComponent eeg={eeg} meters={meters} participants={participants} edaProcess={selectedProcess}/>
+          if (selectedProcess.enabled) {
+            return <ProcessRequestValuesComponent eeg={eeg} meters={meters} participants={participants} edaProcess={selectedProcess}/>
+          } else {
+            return <ProcessNotAvailable />
+          }
         case 'CM_REV_CUS':
           return <ProcessRevokeMeteringpointComponent eeg={eeg} meters={meters} participants={participants} edaProcess={selectedProcess}/>
         case 'EC_PRTFACT_CHANGE':

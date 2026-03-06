@@ -14,12 +14,9 @@ import {
 import {trashBin} from "ionicons/icons";
 import RateComponent from "./Rate.component";
 import {useAppDispatch, useAppSelector} from "../store";
-import {archiveRate, selectedRateSelector, selectRate, selectRateById} from "../store/rate";
-import {selectedTenant} from "../store/eeg";
-import {HttpError} from "../service/base.service";
-import {participantsSelector1} from "../store/participant";
+import {archiveRate, selectedRateSelector, selectRate} from "../store/rate";
+import {allParticipantsSelector} from "../store/participant";
 import {FormProvider, useForm} from "react-hook-form";
-import {EegParticipant} from "../models/members.model";
 import {useTenant} from "../store/hook/Eeg.provider";
 
 interface RateDetailPaneComponentProps {
@@ -42,7 +39,7 @@ const RateDetailPaneComponent: FC<RateDetailPaneComponentProps> = ({onSubmit, su
     return (selectedTariff && selectedTariff.id.length === 0) ? 'NEW' : undefined
   }
 
-  const participants = useAppSelector(participantsSelector1)
+  const participants = useAppSelector(allParticipantsSelector)
 
   const archiveTariff = () => {
     if (participants.filter(p => p.tariffId === selectedTariff!.id).length > 0) {
@@ -78,9 +75,13 @@ const RateDetailPaneComponent: FC<RateDetailPaneComponentProps> = ({onSubmit, su
     }
   }
 
+  const canSubmitted = (): boolean => {
+    return !(formMethods.formState.isDirty && formMethods.formState.isValid)
+  }
+
   if (selectedTariff) {
     return (
-      <div className={"details-body"} style={{height: "100%"}}>
+      <div className={"details-body"} style={{height: "100%", display: "flex", flexDirection: "column"}}>
         <div className={"details-header"}>
           <div><h4>{selectedTariff.name}</h4></div>
           <div style={{minWidth: "200px"}}>
@@ -92,20 +93,20 @@ const RateDetailPaneComponent: FC<RateDetailPaneComponentProps> = ({onSubmit, su
           </div>
         </div>
         <FormProvider {...formMethods}>
-          <div style={{display: "flex", flexDirection: "column"}}>
+          <div style={{display: "flex", flexDirection: "column", flexGrow: "1", overflow: "auto"}}>
             <div className={"rate-component"} style={{maxWidth: "600px",}}>
               <RateComponent rate={selectedTariff} onSubmit={onSubmit} submitId={submitId} mode={getMode()}/>
             </div>
           </div>
-        </FormProvider>
-        <div className={"details-footer"}>
+        <div>
           <IonFooter>
             <IonToolbar className={"ion-padding-horizontal"}>
               <IonButton fill="clear" slot="start" onClick={() => dispatcher(selectRate(undefined))}>Zurück</IonButton>
-              <IonButton form={submitId} type="submit" slot="end" disabled={!formMethods.formState.isDirty && formMethods.formState.isValid}>Änderungen speichern</IonButton>
+              <IonButton form={submitId} type="submit" slot="end" disabled={canSubmitted()}>Änderungen speichern</IonButton>
             </IonToolbar>
           </IonFooter>
         </div>
+        </FormProvider>
       </div>
     )
   }

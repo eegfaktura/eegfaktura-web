@@ -1,4 +1,4 @@
-import {Control, FieldError, FieldValues, set, UseFormSetValue} from "react-hook-form";
+import {Control, FieldError, UseFormSetValue} from "react-hook-form";
 import InputForm, {PartialChangeFunction} from "./InputForm.component";
 import {useMaskito} from "@maskito/react";
 import React, {ClipboardEvent} from "react";
@@ -27,7 +27,7 @@ export function PhoneInputForm<T extends object>({setValue, ...props} : PhoneInp
     e.clipboardData.items[0].getAsString(text=>{
       setValue(props.name, test)
       // setValue(props.name, text.replace(/\+/gi, "00").replace(/\s/gi,""))
-      console.log("Clipboard-Text: ", text, text.replace(/\+/gi, "00").replace(/\s/gi,""))
+      // console.log("Clipboard-Text: ", text, text.replace(/\+/gi, "00").replace(/\s/gi,""))
     })
     e.stopPropagation()
   }

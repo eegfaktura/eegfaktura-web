@@ -26,6 +26,7 @@ import {FormProvider, useForm} from "react-hook-form";
 import {Metering} from "../models/meteringpoint.model";
 import {RouteComponentProps} from "react-router";
 import {useTenant} from "../store/hook/Eeg.provider";
+import moment from "moment/moment";
 
 const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
 
@@ -53,7 +54,7 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
     residentAddress: {street: '', type: 'RESIDENCE', city: '', streetNumber: '', zip: ''},
     billingAddress:  {street: '', type: 'BILLING', city: '', streetNumber: '', zip: ''},
     contact: {email: "", phone: ""},
-    accountInfo: {iban: '', owner: '', sepa: false, bankName: ''},
+    accountInfo: {iban: '', owner: '', sepa: false, bankName: '', mandateReference: '', sepaDirectDebit: 'NONE'},
     businessRole: 'EEG_PRIVATE',
     role: 'EEG_USER',
     optionals: {website: ''},
@@ -81,6 +82,7 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
     data.residentAddress.zip = data.billingAddress.zip
     data.residentAddress.street = data.billingAddress.street
     data.residentAddress.streetNumber = data.billingAddress.streetNumber
+    data.meters = data.meters.map(m => {return {...m, registeredSince: data.participantSince} as Metering})
     onRegisterParticipant(data)
     reset()
   }

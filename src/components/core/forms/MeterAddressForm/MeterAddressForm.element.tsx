@@ -1,5 +1,5 @@
 import React, {FC, useEffect, useState} from "react";
-import {set, useFormContext} from "react-hook-form";
+import {useFormContext} from "react-hook-form";
 import {Metering} from "../../../../models/meteringpoint.model";
 import {EegParticipant} from "../../../../models/members.model";
 import {IonList, IonListHeader} from "@ionic/react";
@@ -9,6 +9,7 @@ import SelectForm from "../../../form/SelectForm.component";
 import {useAccessGroups} from "../../../../store/hook/Eeg.provider";
 
 import DatePickerFormElement from "../../../form/DatePickerForm.element";
+import {useLocale} from "../../../../store/hook/useLocale";
 
 interface MeterAddressFormElementProps {
   participant?: EegParticipant
@@ -26,13 +27,14 @@ const MeterAddressFormElement: FC<MeterAddressFormElementProps> = ({
                                                                      onChange,
                                                                      showActivationMode,
                                                                    }) => {
+  const {t} = useLocale("common")
   const {control, watch, setValue, formState: {errors}} = useFormContext<Metering>()
   const [withOwner, setWithOwner] = useState(false);
   // const [offline, setOffline] = useState(false);
   const {isAdmin} = useAccessGroups()
 
   // const isEditable = setValue !== undefined
-  const currentMeterState = watch ? watch("status") : "NEW"
+  const currentMeterProcessState = watch ? watch("processState") : "NEW"
   const offline = watch ? watch("activationMode") : 'ONLINE'
 
   const isTakeOverAddressEnabled = () => participant !== undefined && isEditable
@@ -75,24 +77,24 @@ const MeterAddressFormElement: FC<MeterAddressFormElementProps> = ({
 
   return (
     <IonList>
-      <IonListHeader style={{minHeight: "60px"}}>Adresse</IonListHeader>
+      <IonListHeader style={{minHeight: "60px"}}>{t("address.header")}</IonListHeader>
       {isTakeOverAddressEnabled() &&
           <CheckboxComponent label="Adresse vom Besitzer übernehmen" setChecked={takeOverAddress}
                              checked={withOwner} style={{paddingTop: "0px"}}></CheckboxComponent>}
-      <InputForm name={"street"} label="Straße" control={control} rules={{required: "Straße fehlt"}} type="text"
+      <InputForm name={"street"} label={t("address.street")} control={control} rules={{required: t("warnings.street_missing")}} type="text"
                  error={errors?.street} disabled={disableAddressFields} onChangePartial={_onChange}/>
-      <InputForm name={"streetNumber"} label="Hausnummer" control={control}
+      <InputForm name={"streetNumber"} label={t("address.street_number")} control={control}
                  rules={{
-                   required: "Hausnummer fehlt",
+                   required: t("warnings.street-number_missing"),
                    pattern: {
                      value: /^[0-9A-Za-z\/\-\\\s]*$/,
                      message: "Ungültige Zeichen. Erlaubt sind 0-9, A-Z, a-z, \,/,-, ]"
                    }
                  }}
                  type="text" error={errors?.streetNumber} disabled={disableAddressFields} onChangePartial={_onChange}/>
-      <InputForm name={"zip"} label="Postleitzahl" control={control} rules={{required: "Postleitzahl fehlt"}}
+      <InputForm name={"zip"} label={t("address.zip")} control={control} rules={{required: t("warnings.zip_missing")}}
                  type="text" error={errors?.zip} disabled={disableAddressFields} onChangePartial={_onChange}/>
-      <InputForm name={"city"} label="Ort" control={control} rules={{required: "Ortsangabe fehlt"}} type="text"
+      <InputForm name={"city"} label={t("address.city")} control={control} rules={{required: t("warnings.city_missing")}} type="text"
                  error={errors?.city} disabled={disableAddressFields} onChangePartial={_onChange}/>
       {showActivationMode &&
       <CheckboxComponent label="Offline Registrierung" setChecked={onSetOffline}
@@ -100,28 +102,26 @@ const MeterAddressFormElement: FC<MeterAddressFormElementProps> = ({
       }
       { showActivationMode && offline === 'OFFLINE' &&
           <InputForm name={"activationCode"} label="Activierungs-Code" control={control} rules={{required: "ActivierungsCode erforderlich"}} type="text"
-                     counter={true} maxlength={33} error={errors?.city} onChangePartial={_onChange}/>
+                     counter={true} maxlength={35} error={errors?.activationCode} onChangePartial={_onChange}/>
       }
       {isAdmin() && !isOnline &&
           <>
               <SelectForm control={control}
-                          name={"status"}
+                          name="status"
                           options={
                             [
                               {key: 'NEW', value: "Noch nicht registriert"},
                               {key: 'ACTIVE', value: "Bereits registriert"}
                             ]}
-                          label={"Status"}
+                          label={t("state")}
                           onChangePartial={_onChange}
               />
-            {currentMeterState === "ACTIVE" &&
-                <DatePickerFormElement control={control} name={"participantState.activeSince"} label="Aktiv seit"
-                                       placeholder={"Datum"} error={errors?.registeredSince} onChangeDate={_onChange}/>
-
-              // <DatePickerCoreElement initialValue={watch("participantState.activeSince")} onChange={_onChange} name={"participantState.activeSince"} label={"Aktiv seit"}/>
-            }
           </>
       }
+      {/*{currentMeterProcessState === "ACTIVE" &&*/}
+          <DatePickerFormElement control={control} name={"participantState.activeSince"} label={t("meteringPoint-active-since")}
+                                 placeholder={t("date")} error={errors?.registeredSince} onChangeDate={_onChange}/>
+      {/*}*/}
     </IonList>
   )
 }

@@ -16,7 +16,7 @@ import {EdaProcess} from "../models/eeg.model";
 import * as process from "process";
 import {useAppSelector} from "../store";
 import {EegContext} from "../store/hook/Eeg.provider";
-import {activeParticipantsSelector1, meterSelector, participantsSelector1} from "../store/participant";
+import {activeParticipantsSelector1, meterSelector, allParticipantsSelector} from "../store/participant";
 import {selectedPeriodSelector} from "../store/energy";
 import {useLocale} from "../store/hook/useLocale";
 
@@ -24,7 +24,7 @@ const ProcessesPage: FC = () => {
 
   const activePeriod = useAppSelector(selectedPeriodSelector);
   // const participants = useAppSelector(activeParticipantsSelector1)
-  const participants = useAppSelector(participantsSelector1)
+  const participants = useAppSelector(allParticipantsSelector)
   const meters = useAppSelector(meterSelector)
   const {eeg} = useContext(EegContext)
   const {t} = useLocale("common")
@@ -33,29 +33,35 @@ const ProcessesPage: FC = () => {
     {
       name: t("process.requestMeterData.title"),
       description: t("process.requestMeterData.desc"),
-      type: "CR_REQ_PT"
+      type: "CR_REQ_PT",
+      enabled: true
     },
     {
       name:  t("process.activateMeter.title"),
       description:  t("process.activateMeter.desc"),
-      type: "EC_REQ_ONL"
+      type: "EC_REQ_ONL",
+      enabled: true
     },
     {
+      enabled: true,
       name: t("process.revokeMeter.title"),
       description:t("process.revokeMeter.desc"),
       type: "CM_REV_CUS"
     },
     {
+      enabled: true,
       name: t("process.partFact.title"),
       description: t("process.partFact.desc"),
       type: "EC_PRTFACT_CHANGE"
     },
     {
+      enabled: true,
       name: t("process.podList.title"),
       description: t("process.podList.desc"),
       type: "EC_PODLIST"
     },
     {
+      enabled: true,
       name: t("process.history.title"),
       description: t("process.history.desc"),
       type: "HISTORY"

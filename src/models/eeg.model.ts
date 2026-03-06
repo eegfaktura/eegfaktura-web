@@ -11,6 +11,7 @@ export interface Eeg {
   description: string;
   gridOperator: string;
   operatorName: string;
+  contactPerson: string;
   settlementInterval: 'MONTHLY' | "ANNUAL" | "BIANNUAL" | "QUARTER";
   allocationMode: "DYNAMIC" | "STATIC"
   area: "LOCAL" | "REGIONAL" | "BEG" | "GEA"
@@ -56,9 +57,14 @@ export interface Contact {
 
 export interface AccountInfo {
   iban: string;
+  bic?: string;
   owner: string;
   bankName: string;
   sepa: boolean;
+  creditorId?: string;
+  mandateReference: string;
+  mandateDate?: Date;
+  sepaDirectDebit: SepaDirectDebitType;
 }
 
 export interface Optionals {
@@ -104,6 +110,8 @@ export interface EegRate {
   items: EegRateItem[];
 }
 
+export type SepaDirectDebitType = 'B2B' | 'CORE' | 'NONE';
+
 export enum RateTypeEnum {
   AHEAD = "Vorauszahlung",
   DISCOUNT = "Rabatt",
@@ -134,8 +142,8 @@ export interface EegTariff {
   id: string;
   name: string;
   type: "EEG" | "EZP" | "VZP" | "AKONTO";
-  billingPeriod?: string
-  useVat?: boolean
+  useVat: boolean
+  useMeteringPointFee: boolean
   vatSupplementaryText?: string
   vatInPercent?: string
   accountNetAmount?: string
@@ -144,10 +152,11 @@ export interface EegTariff {
   baseFee?: string
   businessNr?: string
   centPerKWh?: number
-  freeKWh?: string
-  discount?: string
-  useMeteringPointFee: boolean
+  freeKWh?: number
+  discount?: number
   meteringPointFee?: number
+  meteringPointVat?: number
+  billingPeriod?: string
 }
 
 export enum MONTHNAME {
@@ -184,6 +193,7 @@ export interface EdaProcess {
   name: string
   description: string
   type: 'CR_REQ_PT' | 'EC_REQ_ONL' | 'HISTORY' | 'CM_REV_CUS' | 'EC_PRTFACT_CHANGE' | 'EC_PODLIST'
+  enabled: boolean
 }
 
 
@@ -218,6 +228,7 @@ export interface EegNotification {
   id: number;
   date: Date;
   type: 'ERROR' | 'MESSAGE' | 'NOTIFICATION';
+  process: string;
   message: Message;
 }
 

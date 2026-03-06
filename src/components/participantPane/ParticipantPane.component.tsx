@@ -1,6 +1,6 @@
-import React, { FC, useContext, useEffect, useRef, useState } from "react";
+import React, {FC, useContext, useEffect, useRef, useState} from "react";
 
-import { EegParticipant } from "../../models/members.model";
+import {EegParticipant} from "../../models/members.model";
 import {
   CheckboxCustomEvent,
   IonAlert,
@@ -14,31 +14,25 @@ import {
   IonSearchbar,
   IonSpinner,
   IonToolbar,
+  SearchbarInputEventDetail,
   useIonAlert,
-  useIonLoading,
+  useIonLoading, useIonModal,
   useIonPopover,
   useIonToast,
 } from "@ionic/react";
-import { CheckboxChangeEventDetail } from "@ionic/core";
-import { IonCheckboxCustomEvent } from "@ionic/core/dist/types/components";
-import {
-  createPeriodIdentifier,
-  SelectedPeriod,
-} from "../../models/energy.model";
+import {CheckboxChangeEventDetail} from "@ionic/core";
+import {IonCheckboxCustomEvent} from "@ionic/core/dist/types/components";
+import {createPeriodIdentifier, SelectedPeriod,} from "../../models/energy.model";
 import ParticipantPeriodHeaderComponent from "./ParticipantPeriodHeader.component";
 import MemberComponent from "./Member.component";
-import {
-  ClearingPreviewRequest,
-  Metering,
-  MeteringEnergyGroupType,
-} from "../../models/meteringpoint.model";
+import {ClearingPreviewRequest, Metering,} from "../../models/meteringpoint.model";
 import MeterCardComponent from "./MeterCard.component";
-import { ParticipantContext } from "../../store/hook/ParticipantProvider";
-import { MemberViewContext } from "../../store/hook/MemberViewProvider";
+import {ParticipantContext} from "../../store/hook/ParticipantProvider";
+import {MemberViewContext} from "../../store/hook/MemberViewProvider";
 
 import "./ParticipantPane.component.scss";
 import SlideButtonComponent from "../SlideButton.component";
-import { State, store, useAppDispatch, useAppSelector } from "../../store";
+import {store, useAppDispatch, useAppSelector} from "../../store";
 import {
   billingSelector,
   fetchEnergyBills,
@@ -46,11 +40,7 @@ import {
   resetParticipantAmounts,
   selectBillFetchingSelector,
 } from "../../store/billing";
-import {
-  meteringEnergyGroup11,
-  selectMetaRecord,
-  setSelectedPeriod,
-} from "../../store/energy";
+import {selectMetaRecord, setSelectedPeriod,} from "../../store/energy";
 import ButtonGroup from "../ButtonGroup.component";
 import {
   add,
@@ -64,21 +54,18 @@ import {
   reloadCircleOutline,
   search,
 } from "ionicons/icons";
-import { eegPlug, eegSolar } from "../../eegIcons";
+import {eegPlug, eegSolar} from "../../eegIcons";
 import {
-  participantsSelector1,
+  allParticipantsSelector,
   selectedMeterIdSelector,
   selectedParticipantSelector,
   selectMetering,
   selectParticipant,
 } from "../../store/participant";
 import cn from "classnames";
-import {
-  isParticipantActivated,
-  reformatDateTimeStamp,
-} from "../../util/Helper.util";
+import {isParticipantActivated, reformatDateTimeStamp,} from "../../util/Helper.util";
 import DatepickerPopover from "../dialogs/datepicker.popover";
-import { ExcelReportRequest, InvestigatorCP } from "../../models/reports.model";
+import {ExcelReportRequest, ParticipantCp} from "../../models/reports.model";
 import UploadPopup from "../dialogs/upload.popup";
 import {EegContext, useRefresh, useTenant} from "../../store/hook/Eeg.provider";
 import {
@@ -92,32 +79,23 @@ import {
 } from "../../store/billingRun";
 import DatePickerCoreElement from "../core/elements/DatePickerCore.element";
 
-import {
-  filterActiveMeter,
-  filterActiveParticipantAndMeter,
-} from "../../util/FilterHelper.unit";
+import {filterActiveMeter, filterActiveParticipantAndMeter,} from "../../util/FilterHelper.unit";
 import moment from "moment";
 import {Api} from "../../service";
+import {buildAllocationMapFromSelected, filterSearchQuery} from "./ParticipantPane.functions";
+import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
+import FilterSegmentComponent from "./FilterSegment.component";
+import {VariableSizeList} from "react-window";
 
-interface ParticipantPaneProps {
-  // participants: EegParticipant[];
-  // periods: { begin: string, end: string };
-  // activePeriod: SelectedPeriod | undefined;
-  // onUpdatePeriod: (e: SelectCustomEvent<number>) => void;
-}
+import HeaderFavButtonComponent from "../core/HeaderFavButton.component";
+import {Virtuoso} from "react-virtuoso";
+import {types} from "sass";
+import {DownloadBillingDialog} from "./DownloadBilling.dialog";
 
-const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
-  {
-    // participants,
-    // periods,
-    // activePeriod,
-    // onUpdatePeriod
-  }
-) => {
+const ParticipantPaneComponent: FC = () => {
   const dispatcher = useAppDispatch();
   const {tenant, ecId, rcNr} = useTenant()
-  // const ato = useAppSelector(activeTenant);
-  const energyMeterGroup = useAppSelector(meteringEnergyGroup11);
+
   const selectedParticipant = useAppSelector(selectedParticipantSelector);
   const selectedMeterId = useAppSelector(selectedMeterIdSelector);
   const billingInfo = useAppSelector(billingSelector);
@@ -128,24 +106,20 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
   const selectBillIsFetching = useAppSelector(selectBillFetchingSelector);
   const billingRunErrorMessage = useAppSelector(billingRunErrorSelector);
 
-  const {
-    eeg,
-  } = useContext(EegContext)
+  const {eeg} = useContext(EegContext)
 
   let documentDatePreview: Date = new Date();
   let documentDateBilling: Date = new Date();
 
-  const [searchActive, setSearchActive] = useState(false);
-  const [result, setResult] = useState<EegParticipant[]>([]);
-
   const [loading, dismissLoading] = useIonLoading();
 
-  const { refresh } = useRefresh();
+  const {refresh} = useRefresh();
 
   const [toaster] = useIonToast();
 
   const {
     participants,
+    allParticipants,
     activePeriod,
     billingEnabled,
     setBillingEnabled,
@@ -166,12 +140,32 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
   } = useContext(MemberViewContext);
 
   const [presentAlert] = useIonAlert();
-  const [sortedParticipants, setSortedParticipants] = useState(participants);
+
+  const [searchQuery, setSearchQuery] = useState<string | undefined>(undefined)
+  const [searchActive, setSearchActive] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<string>('period');
+  const [downloadBillingId, setDownloadBillingId] = useState<string | undefined>();
+
+  const [billingDownload, billingDownloadDismiss] = useIonModal(DownloadBillingDialog, {
+    billingRunId: downloadBillingId,
+    period: activePeriod,
+    tenant: tenant,
+    eeg: eeg,
+    onDismiss: (data: string, role: string) => {
+      setDownloadBillingId(undefined);
+      billingDownloadDismiss(data, role)
+    },
+  });
+
+  const openBillingDownloadDialog = (billingRunId: string)=> {
+    setDownloadBillingId(billingRunId)
+    billingDownload()
+  }
 
   useEffect(() => {
     if (showAmount && billingRun && billingRun.id) {
       dispatcher(
-        fetchParticipantAmounts({ tenant: tenant, billingRunId: billingRun.id })
+        fetchParticipantAmounts({tenant: tenant, billingRunId: billingRun.id})
       );
     }
     if (showAmount && !billingRun) {
@@ -185,8 +179,6 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
         (r, e) => (isParticipantActivated(participants, e[0]) && e[1]) || r,
         false
       );
-      // console.log("Show Billing: ", nextBillingEnabled);
-
       setBillingEnabled(nextBillingEnabled);
       if (!nextBillingEnabled) toggleShowAmount(false);
     }
@@ -194,78 +186,28 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
 
   useEffect(() => {
     if (billingRunErrorMessage) {
-      errorToast(billingRunErrorMessage);
+      errorToast(billingRunErrorMessage)
     }
-  }, [billingRunErrorMessage]);
+  }, [billingRunErrorMessage])
 
-  useEffect(() => {
-    const sorted = participants.sort((a, b) => {
-      const meterAOK = a.meters.reduce(
-        (i, m) => m.status === "ACTIVE" && i,
-        true
-      );
-      const meterBOK = b.meters.reduce(
-        (i, m) => m.status === "ACTIVE" && i,
-        true
-      );
+  const sortedParticipants1 = sortParticipants({participants, hideProducers, hideConsumers})
 
-      if (a.status !== "ACTIVE" && b.status === "ACTIVE") {
-        return -1;
-      }
-
-      if (b.status !== "ACTIVE" && a.status === "ACTIVE") {
-        return 1;
-      }
-
-      if (b.status !== "ACTIVE" || a.status !== "ACTIVE") {
-        if (meterAOK === meterBOK) {
-          return 0;
-        } else if (!meterAOK && meterBOK) {
-          return -1;
-        }
-        return 1;
-      }
-
-      if (meterAOK && !meterBOK) {
-        return 1;
-      } else if (!meterAOK && meterBOK) {
-        return -1;
-      }
-      return 0;
-    });
-    // setCheckedParticipant(sorted.map(() => false))
-    const filteredAndSorted = filterMeters(sorted);
-    setSortedParticipants(sorted);
-    setResult(filteredAndSorted);
-  }, [participants]);
-
-  useEffect(() => {
-    const filteredAndSorted = filterMeters(sortedParticipants, false);
-    setResult(filteredAndSorted);
-  }, [hideConsumers, hideProducers]);
-
-  const filterMeters = (p: EegParticipant[], showEmptyMembers: boolean = true) => {
-    return p
-      .map((ip) => {
-        return {
-          ...ip,
-          meters: ip.meters.filter((m) => {
-            if (m.direction === "GENERATION" && hideProducers) return false;
-            if (m.direction === "CONSUMPTION" && hideConsumers) return false;
-            return true;
-          }),
-        } as EegParticipant;
-      })
-      .filter((m) => (m.meters.length > 0 || showEmptyMembers) || !(hideProducers || hideConsumers));
-  };
+  const viewEntities = filterParticipant({
+    selectedFilter,
+    sortedParticipants: sortedParticipants1,
+    participants: allParticipants,
+    hideConsumers,
+    hideProducers,
+    hideMeter
+  })
 
   const infoToast = (message: string) => {
     toaster({
       message: message,
       duration: 3500,
       position: "bottom",
-    });
-  };
+    })
+  }
 
   const errorToast = (message: string) => {
     toaster({
@@ -276,36 +218,12 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
     });
   };
 
-  const buildAllocationMapFromSelected = (): MeteringEnergyGroupType[] => {
-    const participantMap = participants.reduce(
-      (r, p) => ({ ...r, [p.id]: p }),
-      {} as Record<string, EegParticipant>
-    );
-
-    // Object.entries(checkedParticipant).forEach(c => {if (!!participantMap[c[0]]) console.log("Checked Participant not in Map", c)} )
-
-    return Object.entries(checkedParticipant)
-      .filter((c) => participantMap[c[0]])
-      .flatMap((r) => [
-        ...participantMap[r[0]].meters.filter((m) => m.tariff_id !== null),
-      ])
-      .map((m) => {
-        return {
-          meteringPoint: m.meteringPoint,
-          allocationKWh: energyMeterGroup[m.meteringPoint],
-        } as MeteringEnergyGroupType;
-      });
-  };
-
-  const selectAll = (
-    event: IonCheckboxCustomEvent<CheckboxChangeEventDetail>
-  ) => {
+  const selectAll = (event: IonCheckboxCustomEvent<CheckboxChangeEventDetail>) => {
     participants.forEach((p) => {
       if (p.status === "ACTIVE") {
-        const tariffConfigured = p.meters.reduce(
-          (c, e) => c || (e.tariff_id !== undefined && e.tariff_id !== null),
-          p.tariffId !== undefined && p.tariffId != null
-        );
+        const tariffConfigured =
+          p.meters.reduce((c, e) => c || (e.tariff_id !== undefined && e.tariff_id !== null && e.status !== 'INIT'),
+            p.tariffId !== undefined && p.tariffId != null);
         if (tariffConfigured) {
           setCheckedParticipant(p.id, event.detail.checked);
         }
@@ -313,12 +231,12 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
     });
   };
 
-  const onCheckParticipant =
-    (p: EegParticipant) => (e: CheckboxCustomEvent) => {
-      if (p.status === "ACTIVE") {
-        setCheckedParticipant(p.id, e.detail.checked);
-      }
-    };
+  const onCheckParticipant = (p: EegParticipant) => (e: CheckboxCustomEvent) => {
+    if (p.status === "ACTIVE") {
+      setCheckedParticipant(p.id, e.detail.checked);
+    }
+  };
+
   const activateBilling = (c: boolean) => {
     if (c) {
       presentAlert({
@@ -363,26 +281,7 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
   };
 
   const onUpdatePeriodSelection = (selectedPeriod: SelectedPeriod) => {
-    // dispatcher(fetchEnergyReport({
-    //   tenant: tenant!,
-    //   year: selectedPeriod.year,
-    //   segment: selectedPeriod.segment,
-    //   type: selectedPeriod.type,
-    // }))
-
     dispatcher(setSelectedPeriod(selectedPeriod));
-    // dispatcher(fetchEnergyReportV2({tenant: tenant,
-    //   year: selectedPeriod.year,
-    //   segment: selectedPeriod.segment,
-    //   type: selectedPeriod.type,
-    //   participants: participants.map(p => {
-    //     return {
-    //       participantId: p.id,
-    //       meters: p.meters.map(m => {
-    //         return {meterId: m.meteringPoint, meterDir: m.direction, from: new Date(m.registeredSince).getTime(), until: new Date().getTime()} as MeterReport})
-    //     } as ParticipantReport
-    //   })}))
-
     dispatcher(
       fetchBillingRun({
         tenant: tenant,
@@ -394,8 +293,6 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
         ),
       })
     );
-
-    // setUsedPeriod(idx)
   };
 
   const onSelectParticipant =
@@ -408,14 +305,14 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
     };
 
   const onShowAddMeterPage = (p: EegParticipant) => (e: React.MouseEvent<HTMLIonButtonElement, MouseEvent>) => {
-      dispatcher(selectParticipant(p.id));
-      if (p.meters.length > 0) {
-        dispatcher(selectMetering(p.meters[0].meteringPoint));
-      }
-      setShowAddMeterPane(true);
-      e?.preventDefault();
-      e?.stopPropagation();
-    };
+    dispatcher(selectParticipant(p.id));
+    if (p.meters.length > 0) {
+      dispatcher(selectMetering(p.meters[0].meteringPoint));
+    }
+    setShowAddMeterPane(true);
+    e.preventDefault();
+    e.stopPropagation();
+  };
 
   const onSelectMeter = (
     e: React.MouseEvent<HTMLIonCardElement, MouseEvent>,
@@ -453,31 +350,32 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
   const [reportPopover, dismissReport] = useIonPopover(DatepickerPopover, {
     tenant: tenant,
     onDismiss: (type: number, startDate: Date, endDate: Date) => {
-      loading({ message: "Daten exportieren ..." });
+      loading({message: "Daten exportieren ..."});
       onExport(type, [startDate, endDate])
-        .then((b) => {
+        .then(_ => {
           dismissReport([startDate, endDate], "");
-          dismissLoading();
+          return dismissLoading();
         })
-        .catch((e) => {
+        .catch(e => {
           dismissReport(undefined);
-          dismissLoading();
-          errorToast("Export konnte nicht generiert werden." + e.toString());
+          dismissLoading().then(_ => errorToast("Export konnte nicht generiert werden." + e.toString()));
         });
     },
   });
 
   const [uploadPopover, dismissUpload] = useIonPopover(UploadPopup, {
-    tenant,
+    tenant: tenant,
+    online: (eeg ? eeg.online : false),
     onDismiss: (data: any, role: string) => dismissUpload(data, role),
   });
 
   const onExport = async (type: number, data: any) => {
     if (data && eeg) {
       if (type === 0) {
-        const ap = participantsSelector1(store.getState())
+        const ap = allParticipantsSelector(store.getState())
         const meta = selectMetaRecord(store.getState())
-        const [start, end] = data
+        const [start, end] = data as [Date, Date]
+        const _end = moment(end).add(1, 'day');
         const exportdata = {
           start: start.getTime(),
           end: end.getTime(),
@@ -489,17 +387,19 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
                   .filter(
                     (m) =>
                       (m.status === "ACTIVE" || m.status === 'INACTIVE') &&
-                      filterActiveMeter(meta, m, moment(start), moment(end))
+                      filterActiveMeter(meta, m, moment(start), moment(_end))
                   )
                   .map((m) => {
                     return {
                       meteringPoint: m.meteringPoint,
                       direction: m.direction,
                       name: p.firstname + " " + p.lastname,
-                    } as InvestigatorCP;
+                      activeSince: moment(m.participantState.activeSince).valueOf(),
+                      inactiveSince: moment(m.participantState.inactiveSince).valueOf(),
+                    } as ParticipantCp;
                   })
               ),
-            [] as InvestigatorCP[]
+            [] as ParticipantCp[]
           ),
         } as ExcelReportRequest
         return Api.energyService.createReport({tenant, ecId, rcNr}, exportdata);
@@ -514,8 +414,8 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
       const [file, sheetName, type] = data;
       if (file && file.length === 1 && sheetName) {
         switch (type) {
-          case 0:
-            loading({ message: "Energiedaten importieren ..." });
+          case 1:
+            loading({message: "Energiedaten importieren ..."});
             Api.energyService
               .uploadEnergyFile({tenant, ecId, rcNr}, sheetName, file[0])
               .then(() => refresh())
@@ -528,8 +428,8 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
                 dismissLoading();
               });
             break;
-          case 1:
-            loading({ message: "Stammdaten importieren ..." });
+          case 0:
+            loading({message: "Stammdaten importieren ..."});
             Api.eegService
               .uploadMasterDataFile(tenant, sheetName, file[0])
               .then(() => refresh())
@@ -545,12 +445,12 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
     }
   };
 
-  const [previewValid,setPreviewValid] = useState(true);
+  const [previewValid, setPreviewValid] = useState(true);
   const onDoBilling = (preview: boolean, documentDate: Date) => {
     if (activePeriod) {
       documentDate?.setHours(12);
       const invoiceRequest = {
-        allocations: buildAllocationMapFromSelected(),
+        allocations: buildAllocationMapFromSelected(participants, checkedParticipant),
         tenantId: tenant,
         preview: preview,
         clearingPeriodIdentifier: createPeriodIdentifier(
@@ -563,40 +463,39 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
           ? documentDate.toISOString().substring(0, 10)
           : documentDate,
       } as ClearingPreviewRequest;
-      dispatcher(fetchEnergyBills({ tenant, invoiceRequest })).then((returnValue: any) => {
-            console.log("Billing Preview: ", activePeriod);
-            if (
-              returnValue.payload.billing.abstractText
-                .toString()
-                .includes("Abrechnung fehlgeschlagen")
-              //"erfolgreich abgeschlossen."
-              //Abrechnung fehlgeschlagen
-            ) {
-              setPreviewValid(false);
-              presentAlert({
-                subHeader: "Fehler bei der Vorschauerstellung",
-                message:
-                  "Bei der Erstellung der Vorschau ist ein Fehler aufgetreten. Bitte prüfen Sie die Stammdaten und achten Sie vor allem darauf, bei allen Nutzern & Zählpunkten einen Tarif zu setzen. Wiederholen Sie den Vorgang, wenn allen Daten korrigiert wurden.",
-                buttons: ["OK"],
-              });
-            } else {
-              setPreviewValid(true);
-              dispatcher(
-                fetchBillingRun({
-                  tenant: tenant,
-                  clearingPeriodType: activePeriod.type,
-                  clearingPeriodIdentifier: createPeriodIdentifier(
-                    activePeriod.type,
-                    activePeriod.year,
-                    activePeriod.segment
-                  ),
-                })
-              );
-            }
-            console.log("Valid 2 : ", previewValid);
-            var temp = activePeriod === undefined || !previewValid;
-
-            console.log("res : ",temp);
+      dispatcher(fetchEnergyBills({tenant, invoiceRequest})).then((returnValue: any) => {
+        if (
+          returnValue.payload.billing.abstractText
+            .toString()
+            .includes("Abrechnung fehlgeschlagen")
+          //"erfolgreich abgeschlossen."
+          //Abrechnung fehlgeschlagen
+        ) {
+          setPreviewValid(false);
+          presentAlert({
+            subHeader: "Fehler bei der Vorschauerstellung",
+            message:
+              "Bei der Erstellung der Vorschau ist ein Fehler aufgetreten. Bitte prüfen Sie die Stammdaten und achten Sie vor allem darauf, bei allen Nutzern & Zählpunkten einen Tarif zu setzen. Wiederholen Sie den Vorgang, wenn allen Daten korrigiert wurden.",
+            buttons: ["OK"],
+          });
+        } else {
+          setPreviewValid(true);
+          dispatcher(
+            fetchBillingRun({
+              tenant: tenant,
+              clearingPeriodType: activePeriod.type,
+              clearingPeriodIdentifier: createPeriodIdentifier(
+                activePeriod.type,
+                activePeriod.year,
+                activePeriod.segment
+              ),
+            })
+          );
+        }
+        // console.log("Valid 2 : ", previewValid);
+        // var temp = activePeriod === undefined || !previewValid;
+        //
+        // console.log("res : ", temp);
       });
     }
   };
@@ -608,17 +507,21 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
 
   async function sendBilling(billingRunId: string) {
     if (billingRunId) {
-      dispatcher(billingRunSendmail({ tenant, billingRunId })).then(() => {
-        dispatcher(fetchBillingRunById({ tenant, billingRunId }));
+      dispatcher(billingRunSendmail({tenant, billingRunId})).then(() => {
+        dispatcher(fetchBillingRunById({tenant, billingRunId}));
       });
     }
   }
 
   async function exportBillingExcel(billingRunId: string) {
-    try {
-      await Api.eegService.exportBillingExcel(tenant, billingRunId);
-    } catch (e) {
-      console.log(e as string);
+    if (eeg?.accountInfo.sepa) {
+      openBillingDownloadDialog(billingRunId)
+    } else {
+      try {
+        await Api.eegService.exportBillingExcel(tenant, billingRunId);
+      } catch (e) {
+        console.log(e as string);
+      }
     }
   }
 
@@ -630,61 +533,114 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
     }
   }
 
-  const handleSearchInput = (ev: Event) => {
-    let query = "";
-    const target = ev.target as HTMLIonSearchbarElement;
-    if (target) query = target.value!.toLowerCase();
+  // const viewPortRef = useRef<HTMLDivElement | null>(null);
+  const viewPortRef = useRef(null);
+  // const listRef = useRef<ViewportListRef | null>(null);
+  const listRef = useRef<VariableSizeList>(null);
+  const rowHeights = useRef<Record<number, number>>({});
+  const popoverRef = useRef<HTMLIonToolbarElement>(null);
 
-    if (query && query.length > 0) {
-      const filterEntries = (d: EegParticipant) => {
-        return [
-          d.lastname.toLowerCase().indexOf(query) > -1 ||
-          d.firstname.toLowerCase().indexOf(query) > -1 ||
-          d.participantNumber.toLowerCase().indexOf(query) > -1 ||
-          (d.contact && d.contact.email.toLowerCase().indexOf(query) > -1),
-          filterMetering(d),
-        ];
-      };
-      const filterMetering = (d: EegParticipant) => {
-        return (
-          d.meters.find((m) => {
-            const eq =
-              m.equipmentName && m.equipmentName.length > 0
-                ? m.equipmentName.toLowerCase().indexOf(query) > -1
-                : false
-            return m.meteringPoint.toLowerCase().indexOf(query) > -1 || eq
-          }) !== undefined
-        );
-      };
-
-      const origin = JSON.parse(
-        JSON.stringify(sortedParticipants)
-      ) as EegParticipant[]
-
-      const sp = origin.filter((d: EegParticipant) => {
-        const [matchParticipant, matchMeter] = filterEntries(d);
-        if (matchParticipant || matchMeter) {
-          if (matchMeter) {
-            d.meters = d.meters.filter((m) => {
-              const eq =
-                m.equipmentName && m.equipmentName.length > 0
-                  ? m.equipmentName.toLowerCase().indexOf(query) > -1
-                  : false;
-              return m.meteringPoint.toLowerCase().indexOf(query) > -1 || eq;
-            });
-          }
-          return true;
-        }
-        return false;
-      });
-      setResult(sp);
-    } else {
-      setResult(sortedParticipants);
-    }
-    // setResult(sortedParticipants.filter((d) => filterEntries(d)));
+  const handleSearchInput = (e: CustomEvent<SearchbarInputEventDetail>) => {
+    setSearchQuery(e.detail.value?.toLowerCase())
   };
 
-  const popoverRef = useRef<HTMLIonToolbarElement>(null);
+  // // const handleSearchClear = (e:  IonSearchbarCustomEvent<void>) => {
+  // //   if (selectedParticipant) {
+  // //     const p_idx = findIndexInParticipantList(viewEntities, selectedParticipant.id)
+  // //     console.log("Handle Search Clear", selectedParticipant, p_idx, viewEntities)
+  // //     if (p_idx < 0) {
+  // //       listRef.current?.scrollToIndex({index: 0, offset: p_idx})
+  // //     }
+  // //   }
+  // // }
+  //
+  // const findIndexInParticipantList = (viewEntities: EegParticipant[], participantId: string) => {
+  //   return viewEntities.findIndex(v => v.id === participantId)
+  // }
+
+  const viewPortItems = filterSearchQuery(viewEntities, searchQuery)
+
+  const setRowHeight = (index: number, size: number) => {
+    // listRef.current?.resetAfterIndex(0);
+    console.log("setRowHeight", index, size)
+    rowHeights.current = {...rowHeights.current, [index]: size};
+  }
+
+  const getRowHeight = (index: number) => {
+    if (rowHeights.current) {
+      console.log("getRowHeight", index, rowHeights.current[index] + 8 || 82)
+      return rowHeights.current[index] + 8 || 82;
+    }
+    console.log("getRowHeight", index, "Default 200")
+    return 200
+  }
+
+
+  const RowElement: FC<{ participant: EegParticipant }> = ({participant}) => {
+    const command = participant
+    if (command.meters.length > 0) {
+      return (
+        <div
+          key={command.id}
+          onClick={onSelectParticipant(command)}
+          className={cn("participant", {
+            selected: command.id === selectedParticipant?.id,
+          })}
+        >
+          <MemberComponent
+            participant={command}
+            onCheck={onCheckParticipant(command)}
+            isChecked={
+              checkedParticipant && (checkedParticipant[command.id] || false)
+            }
+            hideMeter={hideMeter}
+            hideMember={hideMember}
+            showAmount={showAmount}
+            showDetailsPage={showDetailsPage}
+            onShowAddMeterPage={onShowAddMeterPage}
+          >
+            {hideMeter ||
+              command.meters.map((m, i) => (
+                <MeterCardComponent
+                  key={"meter" + i}
+                  participant={command}
+                  meter={m}
+                  hideMeter={false}
+                  showCash={showAmount}
+                  onSelect={onSelectMeter}
+                  isSelected={m.meteringPoint === selectedMeterId}
+                />
+              ))}
+          </MemberComponent>
+        </div>
+      );
+    } else {
+      return (
+        <div
+          key={command.id}
+          onClick={onSelectParticipant(command)}
+          className={cn("participant", {
+            selected: command.id === selectedParticipant?.id,
+          })}
+        >
+          <MemberComponent
+            participant={command}
+            onCheck={onCheckParticipant(command)}
+            isChecked={
+              checkedParticipant && (checkedParticipant[command.id] || false)
+            }
+            hideMeter={hideMeter}
+            hideMember={hideMember}
+            showAmount={showAmount}
+            showDetailsPage={showDetailsPage}
+            onShowAddMeterPage={onShowAddMeterPage}
+          />
+        </div>
+      );
+    }
+  }
+
+  const [isScrolling, setIsScrolling] = useState<boolean>(false)
   return (
     <div className={"participant-pane"}>
       <div className={"pane-body"}>
@@ -692,169 +648,179 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
         <div className={"pane-content"}>
           <IonToolbar
             color="eeglight"
-            style={{ "--min-height": "56px" }}
+            style={{"--min-height": "56px"}}
             ref={popoverRef}
           >
             <IonButtons slot="end">
-              <IonButton
-                // id="open-datepicker-dialog"
-                color="primary"
-                shape="round"
-                fill={"solid"}
-                style={{
-                  "--border-radius": "50%",
-                  width: "36px",
-                  height: "36px",
-                  marginRight: "16px",
-                }}
-                onClick={() => setSearchActive(!searchActive)}
-              >
-                <IonIcon slot="icon-only" icon={search}></IonIcon>
-              </IonButton>
-              {eeg && !eeg.online && (
-                <IonButton
-                  color="primary"
-                  shape="round"
-                  fill={"solid"}
-                  aria-label="Favorite"
-                  style={{
-                    "--border-radius": "50%",
-                    width: "36px",
-                    height: "36px",
-                    marginRight: "16px",
-                  }}
-                  onClick={(e: any) =>
-                    uploadPopover({
-                      event: e,
-                      size: "auto",
-                      side: "bottom",
-                      alignment: "start",
-                      cssClass: "upload-popover",
-                      onDidDismiss: (e: CustomEvent) => onImport(e.detail.data),
-                    })
-                  }
-                >
-                  <IonIcon slot="icon-only" icon={cloudUploadOutline}></IonIcon>
-                </IonButton>
-              )}
-              <IonButton
-                // id="open-datepicker-dialog"
-                color="primary"
-                shape="round"
-                fill={"solid"}
-                style={{
-                  "--border-radius": "50%",
-                  width: "36px",
-                  height: "36px",
-                  marginRight: "16px",
-                }}
-                onClick={(e: any) =>
-                  reportPopover({
-                    event: e,
-                    size: "auto",
-                    side: "bottom",
-                    alignment: "start",
-                    cssClass: "upload-popover",
-                    // onDidDismiss: (e: CustomEvent) => onExport(e.detail.data),
-                  })
-                }
-              >
-                <IonIcon slot="icon-only" icon={downloadOutline}></IonIcon>
-              </IonButton>
-              <IonButton
-                color="primary"
-                shape="round"
-                fill={"solid"}
-                style={{
-                  "--border-radius": "50%",
-                  width: "36px",
-                  height: "36px",
-                  marginRight: "16px",
-                }}
-                routerLink="/page/addParticipant"
-                routerDirection="root"
-              >
-                <IonIcon slot="icon-only" icon={add}></IonIcon>
-              </IonButton>
+              <HeaderFavButtonComponent icon={search} onClick={() => setSearchActive(!searchActive)}/>
+              {/*{eeg && !eeg.online && (*/}
+              <HeaderFavButtonComponent icon={cloudUploadOutline} onClick={(e: any) =>
+                uploadPopover({
+                  event: e,
+                  size: "auto",
+                  side: "bottom",
+                  alignment: "start",
+                  cssClass: "upload-popover",
+                  onDidDismiss: (e: CustomEvent) => onImport(e.detail.data),
+                })
+              }/>
+              {/*)}*/}
+              <HeaderFavButtonComponent icon={downloadOutline} onClick={(e: any) =>
+                reportPopover({
+                  event: e,
+                  size: "auto",
+                  side: "bottom",
+                  alignment: "start",
+                  cssClass: "upload-popover",
+                  // onDidDismiss: (e: CustomEvent) => onExport(e.detail.data),
+                })}/>
+              <HeaderFavButtonComponent icon={add} routerLink="/page/addParticipant" routerDirection="root"/>
             </IonButtons>
           </IonToolbar>
           {searchActive && (
             <IonToolbar>
               <IonSearchbar
-                style={{ "--box-shadow": "undefined" }}
+                style={{"--box-shadow": "undefined"}}
                 debounce={500}
-                onIonInput={(ev) => handleSearchInput(ev)}
+                onIonInput={handleSearchInput}
+                // onIonClear={handleSearchClear}
               ></IonSearchbar>
             </IonToolbar>
           )}
+          <FilterSegmentComponent selectedOption={selectedFilter} setSelectedOption={setSelectedFilter}/>
           <ParticipantPeriodHeaderComponent
             activePeriod={activePeriod}
             selectAll={selectAll}
             onUpdatePeriod={onUpdatePeriodSelection}
           />
+          {/*<div className={"scroll-container"} ref={viewPortRef}>*/}
+          {/*<AutoSizer className={"scroll-container"} disableWidth={false}>*/}
+          {/*  {({ height, width }) => (*/}
+          {/*    <VariableSizeList*/}
+          {/*      className="List"*/}
+          {/*      height={height - 74}*/}
+          {/*      itemCount={viewPortItems.length}*/}
+          {/*      itemSize={getRowHeight}*/}
+          {/*      ref={listRef}*/}
+          {/*      width={width}*/}
+          {/*    >*/}
+          {/*      {ListRow}*/}
+          {/*    </VariableSizeList>*/}
+          {/*  )}*/}
+          {/*</AutoSizer>*/}
+          {/*  <AutoSizer disableWidth={true}>*/}
+          {/*    {({ height }) => {*/}
+          {/*      console.log("Autosizer: ", height)*/}
+          {/*      return(*/}
+          {/*  <ViewportList*/}
 
-          {result.map((p, idx) => {
-            if (p.meters.length > 0) {
-              return (
-                <div
-                  key={idx}
-                  onClick={onSelectParticipant(p)}
-                  className={cn("participant", {
-                    selected: p.id === selectedParticipant?.id,
-                  })}
-                >
-                  <MemberComponent
-                    participant={p}
-                    onCheck={onCheckParticipant(p)}
-                    isChecked={
-                      checkedParticipant && (checkedParticipant[p.id] || false)
-                    }
-                    hideMeter={hideMeter}
-                    hideMember={hideMember}
-                    showAmount={showAmount}
-                    showDetailsPage={showDetailsPage}
-                    onShowAddMeterPage={onShowAddMeterPage}
-                  >
-                    {hideMeter ||
-                      p.meters.map((m, i) => (
-                        <MeterCardComponent
-                          key={"meter" + i}
-                          participant={p}
-                          meter={m}
-                          hideMeter={false}
-                          showCash={showAmount}
-                          onSelect={onSelectMeter}
-                          isSelected={m.meteringPoint === selectedMeterId}
-                        />
-                      ))}
-                  </MemberComponent>
-                </div>
-              );
-            } else {
-              return (
-                <div
-                  key={idx}
-                  onClick={onSelectParticipant(p)}
-                  className={cn("participant", {
-                    selected: p.id === selectedParticipant?.id,
-                  })}
-                >
-                  <MemberComponent
-                    participant={p}
-                    onCheck={onCheckParticipant(p)}
-                    isChecked={
-                      checkedParticipant && (checkedParticipant[p.id] || false)
-                    }
-                    hideMeter={hideMeter}
-                    hideMember={hideMember}
-                    showAmount={showAmount}
-                    showDetailsPage={showDetailsPage}
-                    onShowAddMeterPage={onShowAddMeterPage}
-                  />
-                </div>
-              );
-            }
-          })}
+          {/*    viewportRef={viewPortRef}*/}
+          {/*    items={viewPortItems}*/}
+          {/*    itemSize={Math.max(1, height / viewPortItems.length)}>*/}
+          {/*    {(item) => (*/}
+          {/*      <RowElement key={item.id} participant={item}/>*/}
+          {/*    )}*/}
+          {/*  </ViewportList>*/}
+          {/*      )}}*/}
+          {/*      </AutoSizer>*/}
+          {/*</div>*/}
+          {viewPortItems.length > 0 &&
+          <Virtuoso style={{overflowX: "hidden"}}
+            // ref={listRef}
+            // viewportRef={viewPortRef}
+                    context={{isScrolling}}
+                    isScrolling={setIsScrolling}
+                    totalCount={viewPortItems.length}
+                    itemSize={(el, field) => {
+                      const index = parseInt(el.getAttribute("data-index") ?? "0");
+                      if (viewPortItems[index]) {
+                        const mp = /*hideMeter || hideMember ? 0 : */viewPortItems[index].meters.length
+                        // console.log("ItemSize", el.scrollHeight, el.offsetHeight, h, el.getBoundingClientRect().height, el, field, hideMeter, hideMember, hideConsumers, hideProducers)
+                        return el.offsetHeight === 0
+                          ? (hideMeter ? 0 : mp * 65) + (hideMember ? 0 : 55)
+                          : el.offsetHeight
+                      }
+                      return 200
+                    }}
+            // data={viewPortItems}
+            // initialPrerender={10}
+            // initialIndex={9}
+            // initialOffset={100}
+            // itemSize={viewPortItems.length}
+            // initialAlignToTop={false}
+            // overscan={10}
+            // withCache={false}
+            // itemMargin={8}
+                    itemContent={(index, _, {isScrolling}) => {
+                      const command = viewPortItems[index];
+                      // if (isScrolling) {
+                      //   return (
+                      //     <div style={{height: "200px", width: "100%"}}></div>
+                      //   )
+                      // }
+                      if (command.meters.length > 0) {
+                        return (
+                          <div
+                            key={command.id}
+                            onClick={onSelectParticipant(command)}
+                            className={cn("participant", {
+                              selected: command.id === selectedParticipant?.id,
+                            })}
+                          >
+                            <MemberComponent
+                              participant={command}
+                              onCheck={onCheckParticipant(command)}
+                              isChecked={
+                                checkedParticipant && (checkedParticipant[command.id] || false)
+                              }
+                              hideMeter={hideMeter}
+                              hideMember={hideMember}
+                              showAmount={showAmount}
+                              showDetailsPage={showDetailsPage}
+                              onShowAddMeterPage={onShowAddMeterPage}
+                            >
+                              {hideMeter ||
+                                command.meters.map((m, i) => (
+                                  <MeterCardComponent
+                                    key={"meter" + i}
+                                    participant={command}
+                                    meter={m}
+                                    hideMeter={false}
+                                    showCash={showAmount}
+                                    onSelect={onSelectMeter}
+                                    isSelected={m.meteringPoint === selectedMeterId}
+                                  />
+                                ))}
+                            </MemberComponent>
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <div
+                            key={command.id}
+                            onClick={onSelectParticipant(command)}
+                            className={cn("participant", {
+                              selected: command.id === selectedParticipant?.id,
+                            })}
+                          >
+                            <MemberComponent
+                              participant={command}
+                              onCheck={onCheckParticipant(command)}
+                              isChecked={
+                                checkedParticipant && (checkedParticipant[command.id] || false)
+                              }
+                              hideMeter={hideMeter}
+                              hideMember={hideMember}
+                              showAmount={showAmount}
+                              showDetailsPage={showDetailsPage}
+                              onShowAddMeterPage={onShowAddMeterPage}
+                            />
+                          </div>
+                        );
+                      }
+                    }}>
+          </Virtuoso>
+          }
         </div>
         <div className={"pane-footer"}>
           {showAmount && (
@@ -933,7 +899,7 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
                             slot="end"
                             icon={documentTextOutline}
                           ></IonIcon>
-                          {"EXCEL"}
+                          {eeg?.accountInfo.sepa ? "SEPA" : "EXCEL"}
                         </IonButton>
                       </div>
                       <IonButton
@@ -969,15 +935,15 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
                       <div>
                         {billingRun.mailStatus === "SENT"
                           ? "Versendet (" +
-                            reformatDateTimeStamp(
-                              billingRun.mailStatusDateTime
-                            ) +
-                            ")"
+                          reformatDateTimeStamp(
+                            billingRun.mailStatusDateTime
+                          ) +
+                          ")"
                           : "Abgerechnet (" +
-                            reformatDateTimeStamp(
-                              billingRun.runStatusDateTime
-                            ) +
-                            ")"}
+                          reformatDateTimeStamp(
+                            billingRun.runStatusDateTime
+                          ) +
+                          ")"}
                       </div>
                       <div>
                         <IonButton id="confirm-send">
@@ -1015,7 +981,7 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
                             slot="end"
                             icon={documentTextOutline}
                           ></IonIcon>
-                          {"EXCEL"}
+                          {eeg?.accountInfo.sepa ? "SEPA" : "EXCEL"}
                         </IonButton>
                       </div>
                     </>
@@ -1025,7 +991,7 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
             </div>
           )}
           <div className={"button-bar"}>
-            <div style={{ marginLeft: "20px" }}>
+            <div style={{marginLeft: "20px"}}>
               <SlideButtonComponent
                 checked={showAmount}
                 disabled={!billingEnabled}
@@ -1039,13 +1005,13 @@ const ParticipantPaneComponent: FC<ParticipantPaneProps> = (
                 flexDirection: "row",
               }}
             >
-              <div style={{ marginRight: "10px" }}>
+              <div style={{marginRight: "10px"}}>
                 <ButtonGroup
                   buttons={[
                     {
                       icon: <IonIcon slot="icon-only" icon={person}></IonIcon>,
                     },
-                    { icon: <IonIcon slot="icon-only" icon={flash}></IonIcon> },
+                    {icon: <IonIcon slot="icon-only" icon={flash}></IonIcon>},
                   ]}
                   onChange={toggleMembersMeter}
                 />

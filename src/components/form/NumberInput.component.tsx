@@ -30,6 +30,7 @@ interface NumberInput {
   onKeyUp?: (e: KeyboardEvent<HTMLIonInputElement>) => void
   maxlength?: number
   maxValue?: number
+  helperText?: string
 }
 
 const NumberInput: FC<NumberInput> = ({
@@ -41,15 +42,17 @@ const NumberInput: FC<NumberInput> = ({
                                         maxValue,
                                         decimalScale,
                                         onKeyDown = noop,
-                                        onKeyUp = noop
+                                        onKeyUp = noop,
+                                        helperText,
                                       }) => {
 
-  const [value, setValue] = useState<string>(initialValue ? initialValue.toString().replace('.', ',') : "");
+  const [value, setValue] = useState<string>("");
   const [cursor, setCursor] = useState<number | null>(null);
   const inputRef = useRef<HTMLIonInputElement>()
 
+
   useEffect(() => {
-    initialValue && setValue(formatValue(initialValue.toString()))
+    setValue(initialValue ? formatValue(initialValue.toString()) : "")
   }, [initialValue]);
 
   // useEffect(() => {
@@ -184,6 +187,7 @@ const NumberInput: FC<NumberInput> = ({
       // ref={inputRef}
               onIonChange={onChangeValue}
               onIonInput={(e) => handleValueChange(e as IonInputCustomEvent<HTMLInputElement>)}
+              helperText={helperText}
       // onKeyDown={_onKeyDown}
       // onKeyUp={_onKeyUp}
     >
@@ -202,11 +206,10 @@ const NumberInputForm = <T extends FieldValues>(props: NumberInputFormProps<T>) 
         render={({field, fieldState, formState}) => {
           const {onChange, value, name, ref} = field;
           return (
-            <NumberInput onChange={onChange} name={name} label={label} placeholder={placeholder} initialValue={value}
-                         decimalScale={2}/>)
+            <NumberInput onChange={onChange} name={name} label={label} placeholder={placeholder} initialValue={value || undefined}
+                         decimalScale={2} helperText={fieldState.error?.message}/>)
         }}
       />
-      {/*</IonItem>*/}
       {error && <div className={"error-line"}>{error.message}</div>}
     </div>
   )

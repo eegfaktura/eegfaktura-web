@@ -49,9 +49,7 @@ const RatesPage: FC = () => {
   }
 
   const onNew = () => {
-    const newRate = {id: '', name: '', type: 'EEG', useVat: false, baseFee: "0",
-        accountGrossAmount: "0", participantFee: 0, accountNetAmount: "0", billingPeriod: 'monthly', businessNr:"0",
-        centPerKWh: 0, discount: "0", freeKWH:"0", vatInPercent: "0", useMeteringPointFee: false} as EegTariff
+    const newRate = {id: '', version: 0, name: '', type: 'EEG', useVat: false, useMeteringPointFee: false} as EegTariff
     onSelect(newRate)
   }
 

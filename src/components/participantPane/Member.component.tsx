@@ -69,10 +69,10 @@ const MemberComponent: FC<MemberProps> = ( {participant,
       { showAmount && !isPending() && !hideMeter &&
       <IonRow style={{flexDirection: "row-reverse"}}>
         <div style={{paddingRight: "10px", marginBottom:"10px"}}>
-          <IonItem lines="none" fill="outline" style={{"--min-height": "32px", fontSize: "14px"}} onClick={(e) => {
+          <IonItem lines="none" style={{"--min-height": "32px", fontSize: "14px", border: "2px solid rgb(0 0 0 / 12%)", borderRadius: "4px", color: "#368060"}} onClick={(e) => {
             showDetailsPage(participant);
             e.preventDefault();
-          }}><IonIcon style={{marginTop: "5px", marginBottom: "5px"}} icon={eegSumSign} slot="start"></IonIcon>
+          }}><IonIcon style={{marginTop: "5px", marginBottom: "5px",  color: "#368060"}} icon={eegSumSign} slot="start"></IonIcon>
             {memberSum()} €
           </IonItem>
         </div>

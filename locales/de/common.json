@@ -2,39 +2,50 @@
   "firstname": "Vorname",
   "lastname": "Nachname",
   "company-name": "Firmenname",
-  "communityId": "Gemeinschafts ID",
-  "gridOperator_id": "Netzbetreiber ID",
-  "gridOperator_name": "Netzbetreiber Name",
+  "grid-operator": {
+    "header": "Netzbetreiber",
+    "id": "Netzbetreiber ID",
+    "name": "Netzbetreiber Name"
+  },
   "participant": "Mitglied",
   "participant-nr": "Mitglieds-Nr",
+  "participant_active-since": "Aktiv seit ...",
+  "participant_active-for": "Aktiv am ...",
+  "participant-since": "Mitglied seit ...",
   "participant-title_before": "Titel (Vor)",
   "participant-title_after": "Titel (Nach)",
   "participant-title_company": "Firma",
   "participant-title_privat": "Privat",
+  "participant_tariff": "Mitglieds-Tarif",
+  "participantFee": "Mitgliedbeitrag in € (je Abrechnungsintervall, netto)",
+  "participantFee_card": "Mitgliedbeitrag",
   "metering": "Zählpunkt",
-  "metering_missing_msg": "Zählpunktnummer fehlt",
   "tariff": "Tarif",
   "tariffLabel": "Tarifbezeichnung",
   "tariffParts": "Bestandteile",
   "consumer_tariff": "Verbrauchertarife",
   "producer_tariff": "Erzeugertarife",
-  "participant_tariff": "Mitglieds-Tarif",
   "inverterCheckbox_label": "Wechselrichter anlegen",
   "inverternr_label": "Wechselrichternummer",
   "transformer_label": "Transformator",
   "equipmentNumber_label": "Anlagen-Nr.",
   "equipmentName_label": "Anlagename",
-  "participantFee": "Mitgliedbeitrag in € (je Abrechnungsintervall, netto)",
   "vatSupplementaryText": "Zusatztext für Umsatzsteuer",
   "discount": "Rabatt in %",
+  "discount_card": "Rabatt",
   "baseFee": "Pauschalbetrag in € (je Abrechnungsintervall, netto)",
   "centPerKWh": "Arbeitspreis in ct/kWh (netto)",
+  "centPerKWh_card": "Cent pro kWh",
   "freeKWh": "Kostenlose Energie in kWh (je Abrechnungsintervall)",
+  "freeKWh_card": "Inklusive kWh",
   "useMeteringPointFee": "Zählpunkt Gebühr einheben?",
   "meteringPointFee": "Zählpunktgebühr in €",
+  "meteringPointVat": "Ust. für Zählpunktgebühr in %",
   "meteringPointFee_card": "Zählpunktgebühr",
+  "meteringPoint-active-since": "Aktiv seit ...",
   "useVat": "Umsatzsteuer anführen",
   "vatInPercent": "Umsatzsteuer in %",
+  "vatInPercent_card": "Umsatzsteuer",
   "consumer": "Verbraucher",
   "producer": "Erzeuger",
   "city": "Ort",
@@ -43,19 +54,80 @@
   "zip": "Postleitzahl",
   "email": "E-Mail",
   "uid": "UID",
-  "account-owner": "Kontoinhaber",
-  "participant-since": "Mitglied seit ...",
   "date": "Datum",
+  "state": "Status",
+  "phone": "Telefon",
+  "website": "Webseite",
+  "address": {
+    "header": "Adresse",
+    "city": "Ort",
+    "street": "Straße",
+    "street_number": "Hausnummer",
+    "zip": "Postleitzahl"
+  },
+  "contact": {
+    "header": "Kontakt",
+    "person": "Kontakt Person"
+  },
+  "account": {
+    "header": "Bankdaten",
+    "owner": "Kontoinhaber",
+    "name": "Bankverbindung",
+    "mandate-reference": "Mandatreferenz",
+    "mandate-date": "Mandatdatum",
+    "creditor-id": "Creditor ID",
+    "bic": "BIC",
+    "sepaDirectDebit": "Einzugsart",
+    "sepaDebitOption_none": "Kein Sepa",
+    "sepaDebitOption_b2b": "B2B",
+    "sepaDebitOption_core": "CORE"
+  },
+  "common-info": {
+    "header": "Allgemeines",
+    "ec-number": "EC-Nummer",
+    "community-id": "Gemeinschafts ID",
+    "legal": {
+      "label": "Rechtsform",
+      "verein": "Verein",
+      "genossenschaft": "Genossenschaft",
+      "gesellschaft": "Gesellschaft",
+      "placeholder": "Rechtsform"
+    },
+    "description": "EEG Bezeichnung",
+    "business-nr": "Firmennummer",
+    "vat-number": "Umsatzsteuer ID",
+    "tax-number": "Steuernummer",
+    "allocation-mode": "Verteilung"
+  },
   "warnings": {
     "email_missing": "Email Adresse fehlt!",
     "email_wrong": "Email Adresse ist nicht valide!",
     "firstname_missing": "Vorname fehlt!",
     "lastname_missing": "Nachname fehlt!",
-    "company-name_missing": "Firmenname fehlt!"
+    "company-name_missing": "Firmenname fehlt!",
+    "city_missing": "Ort fehlt!",
+    "zip_missing": "PLZ fehlt!",
+    "street_missing": "Straße fehlt!",
+    "street-number_missing": "Hausnummer fehlt!",
+    "account-owner_missing": "Kontoinhaber fehlt!",
+    "account-name_missing": "Bankverbindung fehlt!",
+    "account-mandate_reference_missing": "Mandatreferenz fehlt!",
+    "gridoperator-id_missing": "Netzbetreiber-Id fehlt!",
+    "gridoperator-id_length": "Netzbetreiber-Id besteht aus 8 Zeichen",
+    "gridoperator-name_missing": "Netzbetreiber-Name fehlt!",
+    "partition-factor_missing": "Teilnehmerfaktor fehlt!",
+    "allocation-factor_missing": "Verteilungsfaktor fehlt!",
+    "metering_missing_msg": "Zählpunktnummer fehlt!",
+    "fee_missing": "Gebühr fehlt!",
+    "vat_missing": "Ust. fehlt!",
+    "vat_zero": "0% nicht erlaubt!",
+    "vat_to_big": "Nur 100% erlaubt!"
   },
   "alerts": {
-    "changeDirection_0": "Energierichtung zu einen $t(producer) ändern? Es gilt zu beachten, dass diese Änderung nicht mit dem Netzbetreiber kommuniziert wird. Die Änderung wird nur in EEGFaktura vollzogen und keine Auswirkung beim Netzbetreiber!",
-    "changeDirection_1": "Energierichtung zu einen $t(consumer) ändern? Es gilt zu beachten, dass diese Änderung nicht mit dem Netzbetreiber kommuniziert wird. Die Änderung wird nur in EEGFaktura vollzogen und keine Auswirkung beim Netzbetreiber!"
+    "changeDirection_0": "Energierichtung zu einen $t(producer) ändern? Es gilt zu beachten, dass diese Änderung nicht mit dem Netzbetreiber kommuniziert wird. Die Änderung wird nur in EEGFaktura vollzogen und hat keine Auswirkung beim Netzbetreiber!",
+    "changeDirection_1": "Energierichtung zu einen $t(consumer) ändern? Es gilt zu beachten, dass diese Änderung nicht mit dem Netzbetreiber kommuniziert wird. Die Änderung wird nur in EEGFaktura vollzogen und hat keine Auswirkung beim Netzbetreiber!",
+    "changeBusinessType_0": "Den Business-Typ ändern? Nach der Änderung wird der Vorname des Mitglieds als Firmenname übernommen. Bitte den Firmennamen im entsprechenden Feld anpassen!",
+    "changeBusinessType_1": "Den Business-Typ ändern? Nach der Änderung bleibt das Nachnamen-Feld des Mitglieds leer. Bitte anschließend den Nachnamen in das entsprechende Feld eintragen!"
   },
   "button_labels": {
     "calendar": "Zeitraum",
@@ -72,6 +144,11 @@
       "label": "Teilnehmer Faktor in %",
       "title": "Teilnehmer Faktor ändern",
       "desc": "Mit diesem Prozess kann der Teilnahmefaktor von aktiven Zählpunkten geändert werden. Zulässig ist eine Änderung pro Tag und je Energiegemeinschaft und Zählpunkt. Diese Änderung liegt in der Verantwortung der Energiegemeinschaft."
+    },
+    "allocationFactor": {
+      "label": "Verteilungs Faktor in %",
+      "title": "Verteilungs Faktor ändern",
+      "desc": "Mit diesem Prozess kann der Verteilungsfaktor von aktiven Zählpunkten geändert werden."
     },
     "podList": {
       "title": "Teilnehmerliste anfordern",
@@ -102,6 +179,9 @@
     "CR_MSG": "Versenden der Energiedaten",
     "CM_REV_IMP": "Datenfreigabe-Aufhebung"
   },
+  "headers": {
+    "bank-data": "Bankdaten"
+  },
   "menu": {
     "changePassword": "Passwort ändern",
     "logout": "Abmelden",
@@ -115,6 +195,7 @@
     "status_code_56": "Zählpunkt nicht gefunden",
     "status_code_57": "Zählpunkt nicht versorgt",
     "status_code_76": "Ungültige Anforderungsdaten",
+    "status_code_82": "Prozessdatum falsch",
     "status_code_104": "Falsche Energierichtung",
     "status_code_156": "ZP bereits zugeordnet",
     "status_code_157": "ZP bereits einem Betreiber zugeordnet",
@@ -123,9 +204,12 @@
     "status_code_172": "Kunde hat Datenfreigabe abgelehnt",
     "status_code_173": "Kunde hat auf Datenfreigabe nicht reagiert (Timeout)",
     "status_code_177": "Keine Datenfreigabe vorhanden",
+    "status_code_180": "ConsentID abgelaufen",
     "status_code_181": "Gemeinschafts-ID nicht vorhanden",
     "status_code_184": "Kunde hat optiert",
     "status_code_185": "Zählpunkt befindet sich nicht im Bereich der Energiegemeinschaft",
+    "status_code_187": "ConsentID und Zählpunkt passen nicht zusammen",
+    "status_code_189": "Zählpunkt ist der Gemeinschafts-ID nicht zugeordnet",
     "status_code_196": "Teilnahme-Limit wird überschritten",
     "status_text_NEW": "Antwort des Netzbetreibers noch ausstehend.",
     "status_text_INIT": "Antwort des Netzbetreibers noch ausstehend.",
@@ -133,6 +217,13 @@
     "status_text_APPROVED": "Abschluss Meldung von Netzbetreiber noch ausstehend.",
     "status_text_REJECTED": "Zählpunkt wurde vom Netzbetreiber abgewiesen.",
     "status_text_REVOKED": "Zählpunkt wurde vom Netzbetreiber aufgehoben.",
-    "status_text_INVALID": "Zählpunkt wurde vom Netzbetreiber nicht angenommen."
+    "status_text_INVALID": "Zählpunkt wurde vom Netzbetreiber nicht angenommen.",
+    "status_text_INACTIVE": "Zählpunkt INAKTIV."
+  },
+  "meterlist": {
+    "filter_header": "Filter Optionen:",
+    "filter_text_rejected": "Abgewiesene",
+    "filter_text_init": "Ausstehende",
+    "filter_text_inactive": "Inaktive"
   }
 }

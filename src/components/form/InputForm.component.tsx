@@ -33,6 +33,7 @@ interface InputFormProps {
   isNumber?: boolean
   isEmail?: boolean
   multiple?:boolean
+  helperText?: string
 }
 
 const InputForm: (React.FC<InputFormProps>) =
@@ -45,7 +46,9 @@ const InputForm: (React.FC<InputFormProps>) =
 
   const handleOnChange1 = <TValue extends string|number>(onChange: PartialChangeFunction | undefined, fieldState: ControllerFieldState) => (value: TValue, e:IonInputCustomEvent<InputChangeEventDetail>) => {
     if (onChange === undefined) return undefined
-    if (!fieldState.invalid && fieldState.isDirty) onChange(name, value, e)
+    if (!fieldState.invalid && fieldState.isDirty) {
+      onChange(name, value, e)
+    } else control._reset()
   }
 
   const renderControl = (field: ControllerRenderProps<any, string>, fieldState: ControllerFieldState) => {
@@ -96,6 +99,7 @@ const InputForm: (React.FC<InputFormProps>) =
       name={name}
       // ref={inputRef(ref)}
       controlRef={ref}
+      helperText={fieldState.error?.message}
       {...rest}></Input>)
 
   }

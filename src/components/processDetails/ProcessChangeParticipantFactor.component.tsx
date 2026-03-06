@@ -3,15 +3,12 @@ import ProcessHeaderComponent from "./ProcessHeader.component";
 import ProcessContentComponent from "./ProcessContent.component";
 import CorePageTemplate from "../core/CorePage.template";
 import InputForm from "../form/InputForm.component";
-import {BasicSelectComponent, SelectOptions} from "../form/BasicSelect.component";
-import SelectForm from "../form/SelectForm.component";
-import DatePicker from "react-datepicker";
+import {BasicSelectComponent} from "../form/BasicSelect.component";
 import {IonButton, IonItem} from "@ionic/react";
 import {EdaProcess, Eeg} from "../../models/eeg.model";
-import {Metering, MeteringStatusType} from "../../models/meteringpoint.model";
+import {Metering, MeteringProcessStateType} from "../../models/meteringpoint.model";
 import {EegParticipant} from "../../models/members.model";
 import {useForm} from "react-hook-form";
-import {filterActiveMeter} from "../../util/FilterHelper.unit";
 import {FilterByMeterState, meteringDisplayName} from "../../util/FilterHelper";
 import {Api} from "../../service";
 import {useLocale} from "../../store/hook/useLocale";
@@ -50,7 +47,7 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
   const [participantId] = watch(['participantId'])
 
   useEffect(() => {
-    const statusPattern:MeteringStatusType[] = ['ACTIVE']
+    const statusPattern:MeteringProcessStateType[] = ['ACTIVE']
     if (participantId) {
       const p = participants.find(p=> p.id === participantId)
       if (p) {
@@ -70,7 +67,7 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
       if (meter) {
         Api.eegService.changeMeterPartitionFactor(
           eeg.id.toUpperCase(),
-          meter.map(m => {return {meter: m.meteringPoint, direction: m.direction, activation: m.participantState.activeSince, partFact: data.partFact || 100}}))
+          meter.map(m => {return {meter: m.meteringPoint, direction: m.direction, gridOperatorId: m.gridOperatorId, activation: m.participantState.activeSince, partFact: data.partFact || 100}}))
           .finally(() => {
             reset()
           })
@@ -84,10 +81,12 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
       <ProcessContentComponent>
         <CorePageTemplate>
           <>
-            <InputForm name="communityId" label={t("communityId")} control={control} protectedControl={true}/>
+            <InputForm name="communityId" label={t("common-info.community-id")} control={control} protectedControl={true}/>
             <BasicSelectComponent control={control} name={"participantId"}
-                                  options={participants.sort((a,b) => a.lastname.localeCompare(b.lastname)).map((p) => {
-                                    return {value: p.id, label: JoinStrings(" ", "-", p.participantNumber, p.lastname, p.firstname)}
+                                  options={participants
+                                    .sort((a,b) => a.lastname && b.lastname ? a.lastname.localeCompare(b.lastname) : a.firstname.localeCompare(b.firstname))
+                                    .map((p) => {
+                                    return {value: p.id, label: JoinStrings(" ", "-", p.participantNumber, (p.lastname ? p.lastname : ""), p.firstname)}
                                   })} label={t("participant")}/>
             <BasicSelectComponent control={control} name={"meteringPoints"}
                                   options={useableMeters.map((p) => {

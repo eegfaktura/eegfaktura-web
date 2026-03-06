@@ -1,7 +1,7 @@
-import React, {FC, useEffect} from "react";
+import React, {FC} from "react";
 import {IonCard, IonCardContent, IonCol, IonGrid, IonList, IonListHeader, IonRow} from "@ionic/react";
 import InputFormComponent from "./form/InputForm.component";
-import {FieldValues, useForm, useFormContext} from "react-hook-form";
+import {useFormContext} from "react-hook-form";
 import {EegTariff} from "../models/eeg.model";
 import CheckboxComponent from "./form/Checkbox.component";
 import ToggleButtonComponent from "./ToggleButton.component";
@@ -22,18 +22,18 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
       watch,
       reset,
       formState: {errors}
-    } = useFormContext<EegTariff>() //useForm({defaultValues: rate, values: rate, mode: 'all'});
+    } = useFormContext<EegTariff>()
 
     const setShowVat = (s: boolean) => {
-      if (!s) {
-        setValue("vatInPercent", "0")
-      }
-      setValue("useVat", s)
+      // if (!s) {
+      //   setValue("vatInPercent", "0")
+      // }
+      setValue("useVat", s, {shouldValidate: true, shouldDirty: true})
     }
 
     const setMeteringPointFeeEnabled = (s: boolean) => {
-      setValue("useMeteringPointFee", s)
-      if (!s) setValue("meteringPointFee", undefined)
+      setValue("useMeteringPointFee", s, {shouldValidate: true, shouldDirty: true})
+      // if (!s) setValue("meteringPointFee", undefined, {shouldValidate: true, shouldDirty: true})
     }
 
     const useVat = watch("useVat");
@@ -82,22 +82,47 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
               <CheckboxComponent label={t("useMeteringPointFee")} setChecked={(c) => setMeteringPointFeeEnabled(c)}
                                  checked={useMeteringPointFee!}/>
               {useMeteringPointFee &&
-                <NumberInputForm label={t("meteringPointFee")} control={control} name="meteringPointFee"/>}
+                  <NumberInputForm label={t("meteringPointFee")} control={control} name="meteringPointFee"
+                                   rules={{required: t("warnings.fee_missing")}}/>}
+              {useMeteringPointFee && currentRateType === 'EZP' &&
+                  <NumberInputForm label={t("meteringPointVat")} control={control} name="meteringPointVat"
+                                   rules={{required: false}}/>}
+
             </>
-        )
+          )
       }
       return (<></>)
     }
-    
+
+    const renderUseVat = () => {
+      return (
+        <>
+          <CheckboxComponent label={t("useVat")} setChecked={(c) => setShowVat(c)}
+                             checked={useVat!}/>
+          {useVat &&
+              <>
+                  <InputFormComponent label={t("vatInPercent")} control={control} name="vatInPercent"
+                                      rules={{required: t("warnings.vat_missing"),
+                                        max: {value: 100, message: t("warnings.vat_zero")},
+                                        min: {value: 0, message: t("warnings.vat_to_big")}}}/>
+                  <InputFormComponent label={t("vatSupplementaryText")} control={control} name="vatSupplementaryText" rules={{required: false}}/>
+              </>
+          }
+        </>
+      )
+    }
+
     const RateFormType = (rate: EegTariff) => {
       switch (currentRateType) {
         case "EEG":
           return (
             <div>
               <NumberInputForm label={t("participantFee")} control={control} name={"participantFee"}
-                                  rules={{pattern: {value: /^[0-9]*$/, message: "Nur Zahlen erlaubt"}}} error={errors.participantFee}/>
+                               rules={{pattern: {value: /^[0-9]*$/, message: "Nur Zahlen erlaubt"}}}
+                               error={errors.participantFee}/>
               <InputFormComponent label={t("discount")} control={control} name={"discount"}
-                                  rules={{pattern: {value: /^[0-9]*$/, message: "Nur Zahlen erlaubt"}}} type="text" error={errors.discount}/>
+                                  rules={{pattern: {value: /^[0-9]*$/, message: "Nur Zahlen erlaubt"}}} isNumber={true}
+                                  error={errors.discount}/>
             </div>
           )
         case "EZP":
@@ -119,9 +144,9 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
                 control={control}
                 name={"freeKWh"}
                 rules={{
-                  pattern: { value: /^[0-9]*$/, message: "Nur Zahlen erlaubt" },
+                  pattern: {value: /^[0-9]*$/, message: "Nur Zahlen erlaubt"},
                 }}
-                type="text"
+                isNumber={true}
                 error={errors.freeKWh}
               />
               <InputFormComponent
@@ -129,9 +154,9 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
                 control={control}
                 name={"discount"}
                 rules={{
-                  pattern: { value: /^[0-9]*$/, message: "Nur Zahlen erlaubt" },
+                  pattern: {value: /^[0-9]*$/, message: "Nur Zahlen erlaubt"},
                 }}
-                type="text"
+                isNumber={true}
                 error={errors.discount}
               />
             </div>
@@ -157,16 +182,13 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
           <IonCardContent color="eeglight">
             <IonList color="eeglight">
               <InputFormComponent label={t("tariffLabel")} control={control} name="name"
-                                  rules={{pattern: {value: /^[A-Za-z0-9\s-_]*$/, message: "Bitte nur Buchstaben, Ziffern und '-_ ' eingeben"}}} type="text" error={errors.name}/>
-              {/*<Input label={"Tarifbezeichnung"} labelPlacement={"floating"} {...register('name')} />*/}
-              <CheckboxComponent label={t("useVat")} setChecked={(c) => setShowVat(c)}
-                                 checked={useVat!}/>
-              {useVat &&
-                <>
-                  <InputFormComponent label={t("vatInPercent")} control={control} name="vatInPercent"/>
-                  <InputFormComponent label={t("vatSupplementaryText")} control={control} name="vatSupplementaryText"/>
-                </>
-              }
+                                  rules={{
+                                    pattern: {
+                                      value: /^[A-Za-z0-9\s-_]*$/,
+                                      message: "Bitte nur Buchstaben, Ziffern und '-_ ' eingeben"
+                                    }
+                                  }} type="text" error={errors.name}/>
+              {renderUseVat()}
               {renderMeteringPointFee()}
             </IonList>
             <IonList color="eeglight">
