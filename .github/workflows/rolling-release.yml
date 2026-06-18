@@ -7,17 +7,18 @@
 #   3. pnpm run build (tsc && vite build -> dist/)
 #   4. Dummy keycloak-config.json (Cluster mountet ConfigMap zur Laufzeit drueber,
 #      Dockerfile erwartet die Datei aber zur Build-Zeit via ADD)
-#   5. docker/build-push-action -> ghcr.io/eegfaktura/eegfaktura-web
+#   5. docker/build-push-action -> ghcr.io/vfeeg-development/vfeeg-web
 #   6. Build-Provenance-Attestation
+#   7. dispatch-deploy -> repository_dispatch deploy-web ans Platform-Repo
 #
-# ⚠️ STUFE 1: KEIN repository_dispatch-Job. Erstmal nur sicherstellen, dass
-# der Source-Code auf einer CI-Maschine durchbaut. Wenn 1-2 push-builds gruen
-# sind und das Image im Cluster manuell getestet wurde, wird der
-# dispatch-deploy-Job in einer zweiten Iteration ergaenzt (Stufe 3).
+# STUFE 3 (2026-06-18): Development-Tier (ADR-0005). Image pusht nach
+# `ghcr.io/vfeeg-development/vfeeg-web` (Login via VFEEG_DEV_PUSH_PAT), und der
+# dispatch-deploy-Job triggert den Cluster-Rollout (Platform deploy-on-dispatch.yml,
+# event_type deploy-web). Prod-Release-Tier eegfaktura/* bleibt unberuehrt.
 #
-# Vorbedingung Stufe 1: keine (GITHUB_TOKEN reicht aus, kein PLATFORM_DEPLOY_PAT).
-# Vorbedingung Stufe 3: `PLATFORM_DEPLOY_PAT`-Secret im Repo + dispatch-deploy
-# job in dieser Datei.
+# Vorbedingung Stufe 3 (beide im eegfaktura-web-Repo gesetzt):
+#   - VFEEG_DEV_PUSH_PAT  (Classic-PAT mit write:packages auf vfeeg-development)
+#   - PLATFORM_DEPLOY_PAT (fine-grained, repository_dispatch aufs Platform-Repo)
 
 name: Docker Image CI
 
@@ -35,7 +36,8 @@ on:
 
 env:
   REGISTRY: "ghcr.io"
-  IMAGE_NAME: "eegfaktura/eegfaktura-web"
+  # Development-Tier (ADR-0005): Dev-Cluster zieht aus vfeeg-development/vfeeg-web.
+  IMAGE_NAME: "vfeeg-development/vfeeg-web"
 
 jobs:
   build-and-push-image:
@@ -120,8 +122,10 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
+          # GITHUB_TOKEN darf nicht ins fremde vfeeg-development-Package pushen
+          # (GHCR package-repo-binding -> denied). Classic-PAT mit write:packages.
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.VFEEG_DEV_PUSH_PAT }}
 
       - name: Build (PR) / Build and push (push)
         id: build
@@ -141,10 +145,29 @@ jobs:
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: true
 
-  # NOTE — Stufe 3: hier kommt ein zweiter Job `dispatch-deploy` rein,
-  # analog zu eegfaktura-filestore-rolling-release.yml.
-  # Erst aktivieren, wenn:
-  #   - Build oben mindestens 1x erfolgreich auf push-to-default-branch
-  #   - K8s-Manifest k8s/40-web.yaml im Platform-Repo umgestellt + getestet
-  #   - Platform-Workflow deploy-on-dispatch.yml akzeptiert `deploy-web`
-  #   - `PLATFORM_DEPLOY_PAT`-Secret im Source-Repo gesetzt
+  # Stufe 3: Cluster-Rollout im Platform-Repo triggern, nachdem :latest gepusht
+  # wurde. Platform deploy-on-dispatch.yml macht rollout restart (PullPolicy=Always
+  # zieht :latest frisch). Nur auf push-to-default-branch, nicht bei PRs.
+  dispatch-deploy:
+    needs: build-and-push-image
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger deploy in platform repo
+        env:
+          GH_TOKEN: ${{ secrets.PLATFORM_DEPLOY_PAT }}
+        run: |
+          PAYLOAD=$(cat <<EOF
+          {
+            "event_type": "deploy-web",
+            "client_payload": {
+              "image_tag": "latest",
+              "source_sha": "${GITHUB_SHA}",
+              "source_repo": "${GITHUB_REPOSITORY}",
+              "source_ref": "${GITHUB_REF}"
+            }
+          }
+          EOF
+          )
+          echo "$PAYLOAD" | gh api repos/vfeeg-development/eegfaktura-platform/dispatches --input -
+          echo "Dispatched deploy-web for sha=${GITHUB_SHA:0:8}"
