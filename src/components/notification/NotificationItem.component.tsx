@@ -48,7 +48,7 @@ const NotificationItemComponent: FC<NotificationItemComponentProps> = ({type, pr
         </IonCardContent>
         <IonFooter>
           <div style={{display: "flex", flexFlow: "row", columnGap: "24px", alignItems: "center"}}>
-            <div className="notification-date">{moment(date).format("dd, MMM Do YYYY, h:mm:ss")}</div>
+            <div className="notification-date">{moment(date).format("dd, MMM Do YYYY, HH:mm:ss")}</div>
             <div>{getProcessId()}</div>
           </div>
         </IonFooter>
