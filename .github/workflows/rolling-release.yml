@@ -5,11 +5,12 @@
 #   2. pnpm install --no-frozen-lockfile (pnpm-lock.yaml ist out-of-sync,
 #      GH Actions setzt CI=true -> pnpm install defaultet zu --frozen-lockfile)
 #   3. pnpm run build (tsc && vite build -> dist/)
-#   4. Dummy keycloak-config.json (Cluster mountet ConfigMap zur Laufzeit drueber,
-#      Dockerfile erwartet die Datei aber zur Build-Zeit via ADD)
-#   5. docker/build-push-action -> ghcr.io/vfeeg-development/vfeeg-web
-#   6. Build-Provenance-Attestation
-#   7. dispatch-deploy -> repository_dispatch deploy-web ans Platform-Repo
+#   4. docker/build-push-action -> ghcr.io/vfeeg-development/vfeeg-web
+#      (keycloak-config.json ist als Caddy-Env-Template eingecheckt und wird
+#      via `ADD keycloak-config.json /srv` gebacken; Caddy rendert es zur
+#      Laufzeit aus KEYCLOAK_URL/_REALM/_CLIENT_ID — kein Runtime-Mount noetig)
+#   5. Build-Provenance-Attestation
+#   6. dispatch-deploy -> repository_dispatch deploy-web ans Platform-Repo
 #
 # STUFE 3 (2026-06-18): Development-Tier (ADR-0005). Image pusht nach
 # `ghcr.io/vfeeg-development/vfeeg-web` (Login via VFEEG_DEV_PUSH_PAT), und der
@@ -79,13 +80,6 @@ jobs:
         # vite build direkt aufrufen - vite kompiliert TS, ohne strict type-check.
         # So sehen wir, ob's neben tsc noch weitere Build-Blocker gibt.
         run: pnpm exec vite build
-
-      - name: Stub keycloak-config.json for Docker build context
-        run: |
-          # Dockerfile macht `ADD keycloak-config.json /srv`. Im Cluster wird
-          # die Datei per ConfigMap-Mount (eegfaktura-web-keycloak) ueber-
-          # schrieben, deshalb reicht eine leere JSON.
-          echo '{}' > keycloak-config.json
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
