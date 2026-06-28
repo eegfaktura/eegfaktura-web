@@ -145,7 +145,7 @@ export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
   // }, [eeg]);
 
   const getCurrentPeriod = async (eeg: Eeg | undefined) => {
-    const currentDate = new Date(2026, 1, 1) //new Date(Date.now())
+    const currentDate = new Date(Date.now())
     let period = "Y"
     let segment = 0
     if (eeg) {
