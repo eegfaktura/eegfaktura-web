@@ -8,6 +8,13 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.0.3] – 2026-06-29
+
+### Fixed
+- Dashboard finances: "Verkauft" and "Marge EEG" no longer show `NaN €` when an
+  active tariff leaves the optional fields `freeKWh` (VZP) or `baseFee` (EZP)
+  empty — they are now treated as `0`, matching `TariffHelper`. (#59)
+
 ## [1.0.2] – 2026-06-28
 
 ### Fixed

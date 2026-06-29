@@ -93,9 +93,9 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
       const tariff = rates[m.tariff_id]
       if (tariff && tariff.type) {
         if (tariff.type === "EZP") {
-          return (Math.max(utilization * (tariff.centPerKWh || 0), 0) / 100) + Number(tariff.baseFee)
+          return (Math.max(utilization * (tariff.centPerKWh || 0), 0) / 100) + Number(tariff.baseFee || 0)
         } else if (tariff.type === 'VZP') {
-          return Math.max(utilization - Number(tariff.freeKWh), 0) * (tariff.centPerKWh || 0) / 100 * getDiscountFactor(tariff.discount)
+          return Math.max(utilization - Number(tariff.freeKWh || 0), 0) * (tariff.centPerKWh || 0) / 100 * getDiscountFactor(tariff.discount)
         }
       }
     }
