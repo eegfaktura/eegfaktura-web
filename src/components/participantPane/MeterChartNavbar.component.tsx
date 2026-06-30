@@ -1,6 +1,6 @@
 import React, {FC, useCallback, useEffect, useState} from "react";
 import {IonButton, IonButtons} from "@ionic/react";
-import {createNewPeriod, dateToDayOfYear, dayOfYearToDate} from "../../util/Helper.util";
+import {createNewPeriod, dateToDayOfYear, dayOfYearToDate, toLocalISODate} from "../../util/Helper.util";
 import {
   EnergySeries,
   SelectedPeriod
@@ -60,7 +60,7 @@ const MeterChartNavbarComponent: FC<MeterChartNavbarComponentProps> = ({selected
   }
 
   const currentDateValue = (selectedPeriod && selectedPeriod.type === 'D')
-    ? dayOfYearToDate(selectedPeriod.year, selectedPeriod.segment).toISOString().substring(0, 10)
+    ? toLocalISODate(dayOfYearToDate(selectedPeriod.year, selectedPeriod.segment))
     : ''
 
   return (

@@ -83,7 +83,7 @@ export const periodDisplayString = (period: SelectedPeriod) => {
     case 'Y' : return `${MONTHNAME[1].substring(0, 3)}-${MONTHNAME[12].substring(0, 3)} ${period.year}`
     case 'D' : {
       const d = dayOfYearToDate(period.year, period.segment)
-      return d.toISOString().substring(0, 10)
+      return toLocalISODate(d)
     }
   }
 }
@@ -99,6 +99,14 @@ export const dateToDayOfYear = (d: Date) => {
   const start = new Date(d.getFullYear(), 0, 1, 0, 0, 0, 0)
   const diff = d.getTime() - start.getTime()
   return Math.floor(diff / (24 * 60 * 60 * 1000)) + 1
+}
+
+// Format a Date as YYYY-MM-DD from its LOCAL components. Avoids the UTC shift of
+// toISOString(), which renders the previous day in positive-UTC zones (e.g. a
+// local 30.06 00:00 in Europe/Vienna becomes "2026-06-29").
+export const toLocalISODate = (d: Date) => {
+  const pad = (n: number) => n.toString().padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
 export const calcXAxisName = (i: number, period: SelectedPeriod) => {
