@@ -53,7 +53,7 @@
     "react-virtuoso": "^4.10.4",
     "react-window": "^1.8.10",
     "recharts": "^2.10.3",
-    "uuid": "^9.0.1",
+    "uuid": "^14.0.0",
     "xlsx": "^0.18.5",
     "xmlbuilder2": "^3.1.1"
   },
