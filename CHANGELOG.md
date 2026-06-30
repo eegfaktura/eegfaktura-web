@@ -8,6 +8,13 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Security
+- Cleared the critical Dependabot dev-dependency alerts: bumped `vitest`
+  to `^3.2.6` (UI-server arbitrary file read/execute) and forced
+  `form-data` `^4.0.4` via a `pnpm.overrides` entry. Both are development
+  dependencies (never shipped in the production bundle); the production
+  `vite build` is unchanged.
+
 ### Added
 - Metering point energy chart: a day view (`D`) showing the day's 15-minute
   values as a line chart (EEG vs EVU), with day-by-day navigation. Pulls raw
