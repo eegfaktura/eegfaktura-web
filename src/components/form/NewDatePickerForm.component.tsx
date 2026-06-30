@@ -116,7 +116,7 @@ interface DatePickerInputProps<TFieldValues extends FieldValues> {
   name: Path<TFieldValues>; // Use Path<TFieldValues> here
   control: Control<TFieldValues>;
   label?: string;
-  rules?: RegisterOptions;
+  rules?: Omit<RegisterOptions<TFieldValues, Path<TFieldValues>>, 'valueAsNumber' | 'valueAsDate' | 'setValueAs' | 'disabled'>;
   // You can extend this with specific react-datepicker props if needed
   // For now, using React.ComponentProps<typeof DatePicker> would be too broad
   // but you can add specific ones like:

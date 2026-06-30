@@ -15,6 +15,16 @@ this changelog highlights the changes relevant for overview and operations.
   dependencies (never shipped in the production bundle); the production
   `vite build` is unchanged.
 
+### Fixed
+- Type-check: `tsc` now passes (0 errors). The `vitest` bump restored the
+  test-global types and a type-only fix to `NewDatePickerForm` (`rules` prop
+  now uses the parameterized `RegisterOptions` type) cleared the last error.
+  No runtime/UI change — types are erased at compile time. The CI build step
+  may drop its `tsc`-skip workaround.
+- Test tooling: bumped `@testing-library/jest-dom` to `^6` so the unit suite
+  runs again under vitest (`src/setupTests.ts` already imported the v6-only
+  `/vitest` entry point while the package was pinned to v5).
+
 ### Added
 - Metering point energy chart: a day view (`D`) showing the day's 15-minute
   values as a line chart (EEG vs EVU), with day-by-day navigation. Pulls raw
