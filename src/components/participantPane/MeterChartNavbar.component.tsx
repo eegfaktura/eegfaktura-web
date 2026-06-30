@@ -1,6 +1,6 @@
 import React, {FC, useCallback, useEffect, useState} from "react";
 import {IonButton, IonButtons} from "@ionic/react";
-import {createNewPeriod} from "../../util/Helper.util";
+import {createNewPeriod, dateToDayOfYear, dayOfYearToDate, toLocalISODate} from "../../util/Helper.util";
 import {
   EnergySeries,
   SelectedPeriod
@@ -52,11 +52,22 @@ const MeterChartNavbarComponent: FC<MeterChartNavbarComponentProps> = ({selected
     }
   }, [selectedPeriod])
 
+  const onDateChange = (isoDate: string) => {
+    if (!isoDate || !selectedPeriod) return
+    const d = new Date(isoDate)
+    if (isNaN(d.getTime())) return
+    onChangePeriod({type: 'D', year: d.getFullYear(), segment: dateToDayOfYear(d)})
+  }
+
+  const currentDateValue = (selectedPeriod && selectedPeriod.type === 'D')
+    ? toLocalISODate(dayOfYearToDate(selectedPeriod.year, selectedPeriod.segment))
+    : ''
+
   return (
     <div style={{display: "flex", alignItems: "center", justifyContent: "space-around"}}>
       <div>
         <IonButtons>
-          {(["Y", "YH", "YQ", "YM"] as ('YH' | "YQ" | 'YM' | 'Y')[]).map((p, i) => (
+          {(["Y", "YH", "YQ", "YM", "D"] as ('YH' | "YQ" | 'YM' | 'Y' | 'D')[]).map((p, i) => (
             <IonButton
               key={i}
               onClick={() => onChangePeriod(createNewPeriod(selectedPeriod, p, lastSegmentIdx, periods))}
@@ -72,7 +83,26 @@ const MeterChartNavbarComponent: FC<MeterChartNavbarComponentProps> = ({selected
         </IonButtons>
       </div>
       <div style={{width: "30%"}}>
-        <PeriodSelectorElement periods={periods} activePeriod={selectedPeriod} onUpdatePeriod={onChangePeriod} />
+        {selectedPeriod?.type === 'D' ? (
+          <input
+            type="date"
+            value={currentDateValue}
+            onChange={(e) => onDateChange(e.target.value)}
+            style={{
+              width: "140px",
+              fontSize: "inherit",
+              border: "none",
+              background: "transparent",
+              color: "inherit",
+              fontFamily: "var(--ion-font-family, inherit)",
+              padding: "4px 0",
+              textAlign: "left",
+              outline: "none"
+            }}
+          />
+        ) : (
+          <PeriodSelectorElement periods={periods} activePeriod={selectedPeriod} onUpdatePeriod={onChangePeriod} />
+        )}
       </div>
     </div>
   )

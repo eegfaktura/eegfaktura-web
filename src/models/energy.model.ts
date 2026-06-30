@@ -88,7 +88,22 @@ export interface ProducerReport extends BaseReport {
   produced: number
 }
 
-export type ReportType = 'YH' | "YQ" | 'YM' | 'Y'
+export type ReportType = 'YH' | "YQ" | 'YM' | 'Y' | 'D'
+
+export interface RawData {
+  ts: number
+  value: number[]
+  qov?: number[]
+}
+
+export interface RawDataResult {
+  data: RawData[]
+  direction: "GENERATION" | "CONSUMPTION"
+}
+
+export interface RawDataResponse {
+  [meterId: string]: RawDataResult
+}
 
 export type EnergyPeriodType = {
   begin: string;

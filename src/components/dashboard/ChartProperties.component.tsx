@@ -49,7 +49,10 @@ const ChartProperties:FC<ChartPropertiesProps> = ({selectedPeriod, periods, onDi
   }
 
   const getSelectedPeriod = (periodType: ReportType) => {
-    return getPeriodValue(transformPeriodFromSegment(periodType, selectedPeriod, moment(periods.end.substring(0,19), "DD.MM.YYYY HH:mm:ss")/*moment()*/))
+    // Default segment when switching period: current date, NOT the EEG period
+    // end. periods.end is typically the year end → the switch would land in a
+    // segment that has no data yet. (Matches prod behaviour.)
+    return getPeriodValue(transformPeriodFromSegment(periodType, selectedPeriod, moment()))
   }
 
   const getPeroidFromString = (periodString: string): SelectedPeriod => {
@@ -78,6 +81,7 @@ const ChartProperties:FC<ChartPropertiesProps> = ({selectedPeriod, periods, onDi
       case 'YH': return selectedPeriod.type === 'YH';
       case 'YQ': return selectedPeriod.type === 'YQ';
       case 'YM': return selectedPeriod.type === 'YM';
+      case 'D': return selectedPeriod.type === 'D';
     }
   }
 

@@ -8,6 +8,16 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- Metering point energy chart: a day view (`D`) showing the day's 15-minute
+  values as a line chart (EEG vs EVU), with day-by-day navigation. Pulls raw
+  interval data from the energystore `/eeg/v2/{ec}/raw` endpoint. Ported from an
+  AGPL-3.0 sibling deployment.
+
+### Changed
+- Chart period switch now defaults to the current date's segment instead of the
+  EEG period end (which often has no data yet).
+
 ## [1.0.3] – 2026-06-29
 
 ### Fixed
