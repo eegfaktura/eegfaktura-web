@@ -54,6 +54,7 @@ const renderElement = (online: boolean, admin: boolean, owner: boolean, status: 
     <EegContext.Provider value={ctxValue(admin, owner, false)} >
       <MeterAddressFormElement participant={defaultParticipant} isOnline={online} isEditable={isEditable} showActivationMode={false}/>
     </EegContext.Provider>, { defaultValues: {
+        status: status,
         processState: status,
         participantId: "",
         meteringPoint: "",
