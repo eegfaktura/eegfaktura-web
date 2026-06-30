@@ -1,6 +1,6 @@
 import React, {FC, useCallback, useEffect, useState} from "react";
 import {IonButton, IonButtons, IonDatetime, IonDatetimeButton, IonModal} from "@ionic/react";
-import {createNewPeriod, dateToDayOfYear, dayOfYearToDate, toLocalISODate} from "../../util/Helper.util";
+import {createNewPeriod, dateToDayOfYear, dayOfYearToDate, splitDate, toLocalISODate} from "../../util/Helper.util";
 import {
   EnergySeries,
   SelectedPeriod
@@ -63,6 +63,17 @@ const MeterChartNavbarComponent: FC<MeterChartNavbarComponentProps> = ({selected
     ? toLocalISODate(dayOfYearToDate(selectedPeriod.year, selectedPeriod.segment))
     : ''
 
+  // Restrict the day picker to the range that actually has billing-period data
+  // (begin..end from the meta periods) — mirrors the YM period selector, which
+  // only lists months within that range. No range available -> leave unconstrained.
+  const periodToISODate = (date: string): string | undefined => {
+    const [day, month, year] = splitDate(date)
+    return (year && month && day) ? toLocalISODate(new Date(year, month - 1, day)) : undefined
+  }
+  const minDate = periodToISODate(periods.begin)
+  const maxDate = periodToISODate(periods.end)
+  const hasDayRange = !!minDate && !!maxDate
+
   return (
     <div style={{display: "flex", alignItems: "center", justifyContent: "space-around"}}>
       <div>
@@ -92,6 +103,8 @@ const MeterChartNavbarComponent: FC<MeterChartNavbarComponentProps> = ({selected
                 presentation="date"
                 locale="de-DE"
                 value={currentDateValue}
+                min={hasDayRange ? minDate : undefined}
+                max={hasDayRange ? maxDate : undefined}
                 onIonChange={(e) => { if (typeof e.detail.value === 'string') onDateChange(e.detail.value) }}
               />
             </IonModal>
