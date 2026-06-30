@@ -1,5 +1,5 @@
 import React, {FC, useCallback, useEffect, useState} from "react";
-import {IonButton, IonButtons} from "@ionic/react";
+import {IonButton, IonButtons, IonDatetime, IonDatetimeButton, IonModal} from "@ionic/react";
 import {createNewPeriod, dateToDayOfYear, dayOfYearToDate, toLocalISODate} from "../../util/Helper.util";
 import {
   EnergySeries,
@@ -84,22 +84,18 @@ const MeterChartNavbarComponent: FC<MeterChartNavbarComponentProps> = ({selected
       </div>
       <div style={{width: "30%"}}>
         {selectedPeriod?.type === 'D' ? (
-          <input
-            type="date"
-            value={currentDateValue}
-            onChange={(e) => onDateChange(e.target.value)}
-            style={{
-              width: "140px",
-              fontSize: "inherit",
-              border: "none",
-              background: "transparent",
-              color: "inherit",
-              fontFamily: "var(--ion-font-family, inherit)",
-              padding: "4px 0",
-              textAlign: "left",
-              outline: "none"
-            }}
-          />
+          <>
+            <IonDatetimeButton datetime="meter-day-datetime"/>
+            <IonModal keepContentsMounted={true}>
+              <IonDatetime
+                id="meter-day-datetime"
+                presentation="date"
+                locale="de-DE"
+                value={currentDateValue}
+                onIonChange={(e) => { if (typeof e.detail.value === 'string') onDateChange(e.detail.value) }}
+              />
+            </IonModal>
+          </>
         ) : (
           <PeriodSelectorElement periods={periods} activePeriod={selectedPeriod} onUpdatePeriod={onChangePeriod} />
         )}

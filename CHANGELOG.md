@@ -17,6 +17,8 @@ this changelog highlights the changes relevant for overview and operations.
 ### Changed
 - Chart period switch now defaults to the current date's segment instead of the
   EEG period end (which often has no data yet).
+- Day view date navigation uses Ionic's localized `IonDatetime` picker
+  (`de-DE`, `DD.MM.YYYY`) instead of a raw native `<input type="date">`.
 
 ## [1.0.3] – 2026-06-29
 
