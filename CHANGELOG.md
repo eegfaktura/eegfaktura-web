@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.0.4] – 2026-06-30
+
 ### Security
 - Cleared the critical Dependabot dev-dependency alerts: bumped `vitest`
   to `^3.2.6` (UI-server arbitrary file read/execute) and forced
@@ -32,6 +34,7 @@ this changelog highlights the changes relevant for overview and operations.
   AGPL-3.0 sibling deployment.
 
 ### Changed
+- Day view: restrict the date picker to the billing-period range so only days with data are selectable (mirrors the month selector). (#72)
 - Chart period switch now defaults to the current date's segment instead of the
   EEG period end (which often has no data yet).
 - Day view date navigation uses Ionic's localized `IonDatetime` picker
