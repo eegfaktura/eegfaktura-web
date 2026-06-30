@@ -4,6 +4,7 @@ import {
   EegEnergyReport,
   EnergyReportResponse,
   ParticipantReport,
+  RawDataResponse,
   RecordV2, ReportNamedData,
   SelectedPeriod,
   SummaryReportData
@@ -129,6 +130,21 @@ export class EnergyService extends BaseService {
       },
       body: JSON.stringify({type: type, year: year, segment: segment})
     }).then(this.handleErrors).then(res => res.json()).then(res => res[0]);
+  }
+
+  // Raw 15-min interval data for the day view. Note: our energystore expects the
+  // metering points in the request body ("meters"), not as ?cp= query params.
+  async fetchRawV2(tenant: ActiveTenant, start: number, end: number, meterIds: string[]): Promise<RawDataResponse> {
+    const token = await this.lookupToken()
+    return await fetch(`${ENERGY_API_SERVER}/eeg/v2/${tenant.ecId}/raw`, {
+      method: 'POST',
+      headers: {
+        ...this.getSecureHeadersX(token, tenant.rcNr),
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({meters: meterIds, start, end})
+    }).then(this.handleErrors).then(res => res.json());
   }
 
   async createReport(tenant: ActiveTenant, payload: ExcelReportRequest) {

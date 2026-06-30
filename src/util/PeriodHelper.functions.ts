@@ -2,8 +2,9 @@ import {ReportType, SelectedPeriod} from "../models/energy.model";
 import {getPeriodSegment} from "./Helper.util";
 import moment from "moment";
 
-export const generatePeriodOptions = (period: 'YH' | "YQ" | 'YM' | 'Y', endMonth: number, endYear: number, beginMonth: number, beginYear: number) => {
+export const generatePeriodOptions = (period: ReportType, endMonth: number, endYear: number, beginMonth: number, beginYear: number) => {
   const options: SelectedPeriod[] = [];
+  if (period === 'D') return options
   for (let y = beginYear; y <= endYear; y++) {
     const em = y === endYear ? endMonth : 12
     const bm = y === beginYear ? beginMonth : 1
@@ -21,7 +22,7 @@ export const generatePeriodOptions = (period: 'YH' | "YQ" | 'YM' | 'Y', endMonth
   return options.sort((a, b) => (a.year+(a.segment*0.01)) > (b.segment*0.01+b.year) ? -1 : 1);
 }
 
-export const getSegmentFromDate = (periodType: ReportType, year: number, date: moment.Moment) => {
+export const getSegmentFromDate = (periodType: ReportType, year: number, date: moment.Moment): number => {
   if (date.year() === year) {
     switch (periodType) {
       case 'Y':
@@ -32,6 +33,8 @@ export const getSegmentFromDate = (periodType: ReportType, year: number, date: m
         return date.quarter()
       case 'YM':
         return date.month() + 1
+      case 'D':
+        return date.dayOfYear()
     }
   } else {
     switch (periodType) {
@@ -43,12 +46,15 @@ export const getSegmentFromDate = (periodType: ReportType, year: number, date: m
         return 4
       case 'YM':
         return 12
+      case 'D':
+        return 1
     }
   }
 }
 
 export const transformPeriodFromSegment = (targetType: ReportType, period: SelectedPeriod, date: moment.Moment): SelectedPeriod => {
   switch (targetType) {
+    case 'D': return {type: 'D', segment: date.dayOfYear(), year: period.year} as SelectedPeriod
     case 'Y': return {type: targetType, segment: 0, year: period.year} as SelectedPeriod
     case 'YH':
       switch (period.type) {
@@ -60,6 +66,8 @@ export const transformPeriodFromSegment = (targetType: ReportType, period: Selec
           return {type: targetType, segment: Math.min(getSegmentFromDate(targetType, period.year, date), period.segment > 2 ? 2 : 1), year: period.year} as SelectedPeriod
         case 'YM':
           return {type: targetType, segment: Math.min(getSegmentFromDate(targetType, period.year, date), period.segment > 6 ? 2 : 1), year: period.year} as SelectedPeriod
+        case 'D':
+          return {type: targetType, segment: getSegmentFromDate(targetType, period.year, date), year: period.year} as SelectedPeriod
       }
     case 'YQ':
       switch (period.type) {
@@ -71,6 +79,8 @@ export const transformPeriodFromSegment = (targetType: ReportType, period: Selec
           return period
         case 'YM':
           return {type: targetType, segment: Math.min(getSegmentFromDate(targetType, period.year, date), period.segment > 9 ? 4 : period.segment > 6 ? 3 : period.segment > 3 ? 2 : 1), year: period.year} as SelectedPeriod
+        case 'D':
+          return {type: targetType, segment: getSegmentFromDate(targetType, period.year, date), year: period.year} as SelectedPeriod
       }
     case 'YM':
       switch (period.type) {
@@ -82,6 +92,8 @@ export const transformPeriodFromSegment = (targetType: ReportType, period: Selec
           return {type: targetType, segment: Math.min(getSegmentFromDate(targetType, period.year, date), period.segment * 3), year: period.year} as SelectedPeriod
         case 'YM':
           return period
+        case 'D':
+          return {type: targetType, segment: getSegmentFromDate(targetType, period.year, date), year: period.year} as SelectedPeriod
       }
   }
 }

@@ -81,7 +81,24 @@ export const periodDisplayString = (period: SelectedPeriod) => {
     case 'YQ': return `${MONTHNAME[(period.segment*3)-2].substring(0, 3)}-${MONTHNAME[period.segment*3].substring(0, 3)} ${period.year}`
     case 'YM': return `${MONTHNAME[period.segment]} ${period.year}`
     case 'Y' : return `${MONTHNAME[1].substring(0, 3)}-${MONTHNAME[12].substring(0, 3)} ${period.year}`
+    case 'D' : {
+      const d = dayOfYearToDate(period.year, period.segment)
+      return d.toISOString().substring(0, 10)
+    }
   }
+}
+
+// Day-of-year (1..366) → Date at 00:00 local time
+export const dayOfYearToDate = (year: number, dayOfYear: number) => {
+  const d = new Date(year, 0, 1, 0, 0, 0, 0)
+  d.setDate(d.getDate() + (dayOfYear - 1))
+  return d
+}
+
+export const dateToDayOfYear = (d: Date) => {
+  const start = new Date(d.getFullYear(), 0, 1, 0, 0, 0, 0)
+  const diff = d.getTime() - start.getTime()
+  return Math.floor(diff / (24 * 60 * 60 * 1000)) + 1
 }
 
 export const calcXAxisName = (i: number, period: SelectedPeriod) => {
@@ -108,6 +125,12 @@ export const calcXAxisName = (i: number, period: SelectedPeriod) => {
       return `${i+1}.${period.segment}`
     case 'Y' :
       return i >= 0 && i < 12 ? `${MONTHNAME[i+1].substring(0, 3)}` : `${i}`
+    case 'D' : {
+      // 96 × 15-min slots: i is 0..95 → "HH:MM"; recharts XAxis interval controls density
+      const hour = Math.floor(i / 4)
+      const minute = (i % 4) * 15
+      return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
+    }
   }
 }
 
@@ -128,6 +151,11 @@ export const getPreviousPeriod = (period: SelectedPeriod) => {
 export const createNewPeriod = (period: SelectedPeriod | undefined, target: ReportType, currentSegmentIdx: number, cpPeriod?: CpPeriodType) => {
   if (period !== undefined) {
     switch (target) {
+      case 'D': {
+        const today = new Date()
+        const sameYear = today.getFullYear() === period.year
+        return {type: target, year: period.year, segment: sameYear ? dateToDayOfYear(today) : 1}
+      }
       case 'Y':
         return {type: target, segment: 0, year: period.year}
       case 'YM':
@@ -139,6 +167,8 @@ export const createNewPeriod = (period: SelectedPeriod | undefined, target: Repo
             return {type: target, segment: splitedPeriod ? splitedPeriod[3] : period.segment === 2 ? 6 : 1, year: splitedPeriod ? splitedPeriod[2] : period.year}
           case 'YQ':
             return {type: target, segment: splitedPeriod ? splitedPeriod[3] : period.segment === 2 ? 3 : period.segment === 3 ? 6 : period.segment === 4 ? 9 : 1, year: splitedPeriod ? splitedPeriod[2] : period.year}
+          case 'D':
+            return {type: target, segment: dayOfYearToDate(period.year, period.segment).getMonth() + 1, year: period.year}
           default:
             return period
         }
@@ -150,6 +180,8 @@ export const createNewPeriod = (period: SelectedPeriod | undefined, target: Repo
             return {type: target, segment: period.segment === 2 ? 3 : 1, year: period.year}
           case 'YM':
             return {type: target, segment: Math.ceil(period.segment / 3), year: period.year}
+          case 'D':
+            return {type: target, segment: Math.ceil((dayOfYearToDate(period.year, period.segment).getMonth() + 1) / 3), year: period.year}
           default:
             return period
         }
@@ -161,6 +193,8 @@ export const createNewPeriod = (period: SelectedPeriod | undefined, target: Repo
             return {type: target, segment: Math.max(1, Math.ceil(period.segment / 2)), year: period.year}
           case 'YM':
             return {type: target, segment: Math.max(1, Math.ceil(period.segment / 6)), year: period.year}
+          case 'D':
+            return {type: target, segment: Math.max(1, Math.ceil((dayOfYearToDate(period.year, period.segment).getMonth() + 1) / 6)), year: period.year}
           default:
             return period
         }
