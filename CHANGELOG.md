@@ -32,8 +32,9 @@ this changelog highlights the changes relevant for overview and operations.
 - Day view X-axis labels overlapped on narrow screens (e.g. Safari on mobile):
   the fixed `interval={6}` rendered ~14 time labels regardless of width, which
   fit on a wide desktop chart but ran together on a phone. Use responsive tick
-  thinning (`interval="preserveStartEnd"` + `minTickGap`) so recharts drops
-  labels to fit the available width.
+  thinning (`interval="preserveStart"` + `minTickGap`) so recharts drops labels
+  to fit the available width, with even spacing (`preserveStartEnd` forced the
+  last label and left an uneven gap before it).
 - Day view date button wrapped onto three lines ("1." / "Jan." / "2023") next to
   the new prev/next arrows: as a flex item it collapsed to min-content. Keep it on
   a single line (`flexShrink: 0`) and let the day control size to its content
