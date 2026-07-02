@@ -106,32 +106,34 @@ const MeterChartNavbarComponent: FC<MeterChartNavbarComponentProps> = ({selected
           ))}
         </IonButtons>
       </div>
-      <div style={{width: "30%"}}>
-        {selectedPeriod?.type === 'D' ? (
-          <div style={{display: "flex", alignItems: "center", justifyContent: "center", gap: "4px"}}>
-            <IonButton fill="clear" size="small" onClick={() => stepDay(-1)} disabled={prevDisabled} aria-label="Vorheriger Tag">
-              <IonIcon slot="icon-only" icon={chevronBack}/>
-            </IonButton>
-            <IonDatetimeButton datetime="meter-day-datetime"/>
-            <IonButton fill="clear" size="small" onClick={() => stepDay(1)} disabled={nextDisabled} aria-label="Nächster Tag">
-              <IonIcon slot="icon-only" icon={chevronForward}/>
-            </IonButton>
-            <IonModal keepContentsMounted={true}>
-              <IonDatetime
-                id="meter-day-datetime"
-                presentation="date"
-                locale="de-DE"
-                value={currentDateValue}
-                min={hasDayRange ? minDate : undefined}
-                max={hasDayRange ? maxDate : undefined}
-                onIonChange={(e) => { if (typeof e.detail.value === 'string') onDateChange(e.detail.value) }}
-              />
-            </IonModal>
-          </div>
-        ) : (
+      {selectedPeriod?.type === 'D' ? (
+        <div style={{display: "flex", alignItems: "center", justifyContent: "center", gap: "4px"}}>
+          <IonButton fill="clear" size="small" onClick={() => stepDay(-1)} disabled={prevDisabled} aria-label="Vorheriger Tag">
+            <IonIcon slot="icon-only" icon={chevronBack}/>
+          </IonButton>
+          {/* flexShrink:0 keeps the date on a single line — as a flex item next to
+              the arrows it would otherwise collapse to min-content and wrap. */}
+          <IonDatetimeButton datetime="meter-day-datetime" style={{flexShrink: 0}}/>
+          <IonButton fill="clear" size="small" onClick={() => stepDay(1)} disabled={nextDisabled} aria-label="Nächster Tag">
+            <IonIcon slot="icon-only" icon={chevronForward}/>
+          </IonButton>
+          <IonModal keepContentsMounted={true}>
+            <IonDatetime
+              id="meter-day-datetime"
+              presentation="date"
+              locale="de-DE"
+              value={currentDateValue}
+              min={hasDayRange ? minDate : undefined}
+              max={hasDayRange ? maxDate : undefined}
+              onIonChange={(e) => { if (typeof e.detail.value === 'string') onDateChange(e.detail.value) }}
+            />
+          </IonModal>
+        </div>
+      ) : (
+        <div style={{width: "30%"}}>
           <PeriodSelectorElement periods={periods} activePeriod={selectedPeriod} onUpdatePeriod={onChangePeriod} />
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
