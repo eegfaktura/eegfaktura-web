@@ -16,7 +16,9 @@ this changelog highlights the changes relevant for overview and operations.
 
 ### Changed
 - Metering point day view now defaults to **yesterday** instead of today, because
-  today's 15-minute data is still incomplete when the view opens.
+  today's 15-minute data is still incomplete when the view opens. When a
+  **non-current billing period** is selected, it opens on that period's **first
+  day** (period start) instead of 1 January.
 
 ### Fixed
 - Member registration: the suggested next member number was derived from the

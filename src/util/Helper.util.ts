@@ -160,12 +160,22 @@ export const createNewPeriod = (period: SelectedPeriod | undefined, target: Repo
   if (period !== undefined) {
     switch (target) {
       case 'D': {
-        // Default to yesterday, not today: today's 15-minute data is still
-        // incomplete, so the day view opens on the last fully-recorded day.
+        // Current period: default to yesterday, not today — today's 15-minute
+        // data is still incomplete, so open on the last fully-recorded day.
         const yesterday = new Date()
         yesterday.setDate(yesterday.getDate() - 1)
-        const sameYear = yesterday.getFullYear() === period.year
-        return {type: target, year: period.year, segment: sameYear ? dateToDayOfYear(yesterday) : 1}
+        if (yesterday.getFullYear() === period.year) {
+          return {type: target, year: period.year, segment: dateToDayOfYear(yesterday)}
+        }
+        // A non-current billing period: open on its first day (period start),
+        // not 1 January.
+        if (cpPeriod && cpPeriod.begin) {
+          const [day, month, year] = splitDate(cpPeriod.begin)
+          if (day && month && year) {
+            return {type: target, year, segment: dateToDayOfYear(new Date(year, month - 1, day))}
+          }
+        }
+        return {type: target, year: period.year, segment: 1}
       }
       case 'Y':
         return {type: target, segment: 0, year: period.year}
