@@ -131,7 +131,11 @@ const MeterChartComponent: FC<MeterChartComponentProps> = ({tenant, report, acti
               margin={{top: 5, right: 30, left: 20, bottom: 5}}
             >
               <CartesianGrid strokeDasharray="3 3"/>
-              <XAxis dataKey="name" interval={6} fontSize={10}/>
+              {/* Responsive tick density: a fixed interval crowds the labels on
+                  narrow screens (overlap on mobile) while fitting on wide ones.
+                  preserveStartEnd + minTickGap lets recharts drop labels to the
+                  available width, so it stays readable on phone and desktop. */}
+              <XAxis dataKey="name" interval="preserveStartEnd" minTickGap={20} fontSize={10}/>
               <YAxis fontSize={10} unit={" kWh"}/>
               <Tooltip formatter={(value) => Number(value).toFixed(3) + " kWh"}/>
               <Legend/>
