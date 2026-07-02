@@ -1,4 +1,4 @@
-import React, {FC, useState} from "react";
+import React, {FC, useEffect, useMemo} from "react";
 import {
   IonButton,
   IonButtons,
@@ -15,7 +15,7 @@ import {
 import "./ParticipantRegister.page.scss"
 import ParticipantRegisterCommonPaneComponent from "../components/ParticipantRegisterCommonPane.component";
 import {
-  activeParticipantsSelector1,
+  allParticipantsSelector,
   createParticipant,
 } from "../store/participant";
 import {EegParticipant} from "../models/members.model";
@@ -34,17 +34,35 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
   const dispatch = useAppDispatch();
 
   const {tenant} = useTenant()
-  const participants = useAppSelector(activeParticipantsSelector1);
-  const [defaultParticipantNumber, setDefaultParticipantNumber] = useState(participants.length.toString().padStart(3, '0'))
+  // Vorschlag der nächsten Mitglieds-Nr über ALLE Mitglieder (inkl. archivierte),
+  // nicht über die Anzahl der aktiven. `activeParticipantsSelector1.length + 1`
+  // recycelte Nummern archivierter Mitglieder und kollidierte mit dem
+  // Unique-Index auf base.participant (Kundenfeedback 2026-07-02: Nummern-
+  // vorschlag oft falsch).
+  const allParticipants = useAppSelector(allParticipantsSelector);
 
-  // useEffect(() => {
-  //   setDefaultParticipantNumber(participants.length.toString().padStart(3, '0'))
-  // }, [participants])
-
+  // Höchsten numerischen Endteil einer bestehenden Nummer nehmen, dessen Präfix
+  // und Zero-Padding-Breite erhalten, und Präfix + (max + 1) vorschlagen.
+  // Beispiele: ["001","002","004"] → "005"; ["MG-001"] → "MG-002";
+  // ["ABC123"] → "ABC124"; leer/nichts parsebar → "001".
+  const nextParticipantNumber = useMemo(() => {
+    let best: {prefix: string, num: number, padding: number} | null = null
+    for (const p of allParticipants) {
+      const match = (p.participantNumber || "").match(/^(.*?)(\d+)$/)
+      if (!match) continue
+      const num = parseInt(match[2], 10)
+      if (isNaN(num)) continue
+      if (!best || num > best.num) {
+        best = {prefix: match[1], num, padding: match[2].length}
+      }
+    }
+    if (!best) return "001"
+    return best.prefix + (best.num + 1).toString().padStart(best.padding, '0')
+  }, [allParticipants])
 
   const selectedParticipant: EegParticipant = {
     id: '',
-    participantNumber: (participants.length + 1).toString().padStart(3, '0'),
+    participantNumber: nextParticipantNumber,
     participantSince: new Date(),
     firstname: '',
     lastname: '',
@@ -64,8 +82,17 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
     meters: []} as EegParticipant
 
   const formMethods = useForm<EegParticipant>({defaultValues: selectedParticipant, mode: "onBlur", reValidateMode: 'onChange'})
-  const {reset, handleSubmit} = formMethods
+  const {reset, handleSubmit, setValue, formState: {dirtyFields}} = formMethods
   // const {append} = useFieldArray<EegParticipant>({control, name: 'meters'})
+
+  // Async-Race: useForm({defaultValues}) erfasst die Nummer beim ersten Render,
+  // bevor die Mitgliederliste geladen ist. Sobald nextParticipantNumber steht,
+  // das Feld nachziehen — außer der Nutzer hat es bereits selbst editiert.
+  useEffect(() => {
+    if (!dirtyFields.participantNumber) {
+      setValue("participantNumber", nextParticipantNumber)
+    }
+  }, [nextParticipantNumber, dirtyFields.participantNumber, setValue])
 
   const onRegisterParticipant = (participant: EegParticipant) => {
     dispatch(createParticipant({tenant, participant}))
