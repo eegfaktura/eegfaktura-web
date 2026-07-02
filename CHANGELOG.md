@@ -32,6 +32,10 @@ this changelog highlights the changes relevant for overview and operations.
   fit on a wide desktop chart but ran together on a phone. Use responsive tick
   thinning (`interval="preserveStartEnd"` + `minTickGap`) so recharts drops
   labels to fit the available width.
+- Day view date button wrapped onto three lines ("1." / "Jan." / "2023") next to
+  the new prev/next arrows: as a flex item it collapsed to min-content. Keep it on
+  a single line (`flexShrink: 0`) and let the day control size to its content
+  instead of the fixed 30% width used by the other period selectors.
 
 ## [1.0.4] – 2026-06-30
 
