@@ -18,6 +18,16 @@ this changelog highlights the changes relevant for overview and operations.
 - Metering point day view now defaults to **yesterday** instead of today, because
   today's 15-minute data is still incomplete when the view opens.
 
+### Fixed
+- Member registration: the suggested next member number was derived from the
+  count of *active* members (`activeParticipants.length + 1`), which recycled the
+  numbers of archived members and collided with the per-tenant unique index on
+  `base.participant` (customer report: the suggestion is often wrong). Derive it
+  instead from the highest numeric tail across *all* members (incl. archived),
+  preserving any prefix and zero-padding (`001→002`, `MG-001→MG-002`), and
+  re-sync the form field once the member list resolves unless the user already
+  edited it. Ported from an AGPL-3.0 sibling deployment.
+
 ## [1.0.4] – 2026-06-30
 
 ### Security
