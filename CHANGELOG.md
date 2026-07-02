@@ -8,6 +8,16 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- Metering point day view: previous/next-day arrows around the date, so you can
+  step through days without opening the calendar and see the chart update in
+  place. The arrows are clamped to (and disabled at the edges of) the same
+  billing-period range as the date picker; the calendar stays for larger jumps.
+
+### Changed
+- Metering point day view now defaults to **yesterday** instead of today, because
+  today's 15-minute data is still incomplete when the view opens.
+
 ## [1.0.4] – 2026-06-30
 
 ### Security

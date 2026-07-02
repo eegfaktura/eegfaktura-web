@@ -160,9 +160,12 @@ export const createNewPeriod = (period: SelectedPeriod | undefined, target: Repo
   if (period !== undefined) {
     switch (target) {
       case 'D': {
-        const today = new Date()
-        const sameYear = today.getFullYear() === period.year
-        return {type: target, year: period.year, segment: sameYear ? dateToDayOfYear(today) : 1}
+        // Default to yesterday, not today: today's 15-minute data is still
+        // incomplete, so the day view opens on the last fully-recorded day.
+        const yesterday = new Date()
+        yesterday.setDate(yesterday.getDate() - 1)
+        const sameYear = yesterday.getFullYear() === period.year
+        return {type: target, year: period.year, segment: sameYear ? dateToDayOfYear(yesterday) : 1}
       }
       case 'Y':
         return {type: target, segment: 0, year: period.year}

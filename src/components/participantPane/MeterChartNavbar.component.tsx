@@ -1,5 +1,6 @@
 import React, {FC, useCallback, useEffect, useState} from "react";
-import {IonButton, IonButtons, IonDatetime, IonDatetimeButton, IonModal} from "@ionic/react";
+import {IonButton, IonButtons, IonDatetime, IonDatetimeButton, IonIcon, IonModal} from "@ionic/react";
+import {chevronBack, chevronForward} from "ionicons/icons";
 import {createNewPeriod, dateToDayOfYear, dayOfYearToDate, splitDate, toLocalISODate} from "../../util/Helper.util";
 import {
   EnergySeries,
@@ -74,6 +75,18 @@ const MeterChartNavbarComponent: FC<MeterChartNavbarComponentProps> = ({selected
   const maxDate = periodToISODate(periods.end)
   const hasDayRange = !!minDate && !!maxDate
 
+  // Step one day back/forward without opening the calendar. Clamp to the same
+  // range the picker is restricted to (ISO date strings compare lexicographically).
+  const stepDay = (delta: number) => {
+    if (!selectedPeriod || selectedPeriod.type !== 'D') return
+    const d = dayOfYearToDate(selectedPeriod.year, selectedPeriod.segment)
+    d.setDate(d.getDate() + delta)
+    if (hasDayRange && (toLocalISODate(d) < minDate! || toLocalISODate(d) > maxDate!)) return
+    onChangePeriod({type: 'D', year: d.getFullYear(), segment: dateToDayOfYear(d)})
+  }
+  const prevDisabled = hasDayRange && currentDateValue <= minDate!
+  const nextDisabled = hasDayRange && currentDateValue >= maxDate!
+
   return (
     <div style={{display: "flex", alignItems: "center", justifyContent: "space-around"}}>
       <div>
@@ -95,8 +108,14 @@ const MeterChartNavbarComponent: FC<MeterChartNavbarComponentProps> = ({selected
       </div>
       <div style={{width: "30%"}}>
         {selectedPeriod?.type === 'D' ? (
-          <>
+          <div style={{display: "flex", alignItems: "center", justifyContent: "center", gap: "4px"}}>
+            <IonButton fill="clear" size="small" onClick={() => stepDay(-1)} disabled={prevDisabled} aria-label="Vorheriger Tag">
+              <IonIcon slot="icon-only" icon={chevronBack}/>
+            </IonButton>
             <IonDatetimeButton datetime="meter-day-datetime"/>
+            <IonButton fill="clear" size="small" onClick={() => stepDay(1)} disabled={nextDisabled} aria-label="Nächster Tag">
+              <IonIcon slot="icon-only" icon={chevronForward}/>
+            </IonButton>
             <IonModal keepContentsMounted={true}>
               <IonDatetime
                 id="meter-day-datetime"
@@ -108,7 +127,7 @@ const MeterChartNavbarComponent: FC<MeterChartNavbarComponentProps> = ({selected
                 onIonChange={(e) => { if (typeof e.detail.value === 'string') onDateChange(e.detail.value) }}
               />
             </IonModal>
-          </>
+          </div>
         ) : (
           <PeriodSelectorElement periods={periods} activePeriod={selectedPeriod} onUpdatePeriod={onChangePeriod} />
         )}
