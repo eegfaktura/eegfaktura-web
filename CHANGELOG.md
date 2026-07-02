@@ -27,6 +27,11 @@ this changelog highlights the changes relevant for overview and operations.
   preserving any prefix and zero-padding (`001→002`, `MG-001→MG-002`), and
   re-sync the form field once the member list resolves unless the user already
   edited it. Ported from an AGPL-3.0 sibling deployment.
+- Day view X-axis labels overlapped on narrow screens (e.g. Safari on mobile):
+  the fixed `interval={6}` rendered ~14 time labels regardless of width, which
+  fit on a wide desktop chart but ran together on a phone. Use responsive tick
+  thinning (`interval="preserveStartEnd"` + `minTickGap`) so recharts drops
+  labels to fit the available width.
 
 ## [1.0.4] – 2026-06-30
 
