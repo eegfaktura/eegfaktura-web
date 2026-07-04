@@ -11,6 +11,16 @@ this changelog highlights the changes relevant for overview and operations.
 ### Changed
 - CI: Preview-Deployments (ADR-0007) — Push auf `preview/**` baut+deployt on-demand in die Dev-Zone (sha-pinned, kein `:latest`), Auto-Reset bei Branch-Delete.
 
+### Fixed
+- Day view previous/next-day arrows stepped wrong in **summer** (any date after
+  the spring-forward DST change, e.g. reported in prod on June dates): forward got
+  stuck on the same day and backward jumped two days. `dateToDayOfYear` counted
+  days by dividing wall-clock milliseconds by 24h, which loses a day once a 23h
+  DST day sits between 1 January and the date. Count calendar days via `Date.UTC`
+  instead (DST-immune). Winter was unaffected, which is why it only showed on
+  current-period (summer) data. Added a regression test that runs under
+  `Europe/Vienna` and round-trips every day of the year across the DST boundary. (#67)
+
 ## [1.0.5] – 2026-07-04
 
 ### Added
