@@ -96,9 +96,13 @@ export const dayOfYearToDate = (year: number, dayOfYear: number) => {
 }
 
 export const dateToDayOfYear = (d: Date) => {
-  const start = new Date(d.getFullYear(), 0, 1, 0, 0, 0, 0)
-  const diff = d.getTime() - start.getTime()
-  return Math.floor(diff / (24 * 60 * 60 * 1000)) + 1
+  // Count whole calendar days via UTC to stay DST-safe: subtracting wall-clock
+  // timestamps and dividing by 24h loses a day once a DST change (e.g. Europe/
+  // Vienna CET→CEST) puts a 23h day between Jan 1 and the date, which shifted
+  // the day-view navigation by a day in summer.
+  const start = Date.UTC(d.getFullYear(), 0, 1)
+  const cur = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())
+  return Math.round((cur - start) / (24 * 60 * 60 * 1000)) + 1
 }
 
 // Format a Date as YYYY-MM-DD from its LOCAL components. Avoids the UTC shift of
