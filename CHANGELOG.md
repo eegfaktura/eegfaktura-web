@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.0.5] – 2026-07-04
+
 ### Added
 - Metering point day view: previous/next-day arrows around the date, so you can
   step through days without opening the calendar and see the chart update in
