@@ -53,11 +53,25 @@ export function buildNotificationText(type: string, process: string, notificatio
           return <p>Für die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurden <strong><u>die Änderungen des
             Teilnahmefaktors
             angenommen.</u></strong></p>
+        case 'Mail':
+          // Fehlgeschlagener Mailversand (z. B. ungültige Empfänger-Adresse) —
+          // ohne diesen Zweig erschien die Notification als leere Zeile.
+          return <p><strong><u>Mailversand fehlgeschlagen:</u></strong> {
+            (n.message.logMessages ?? []).map(m => `${m.metering_point} — ${m.message}`).join("; ")
+          }</p>
       }
       break
     }
-    case "EXCEL_IMPORT":
+    case "EXCEL_IMPORT": {
+      const n = notification as EegNotification
+      const hints = n.message?.logMessages ?? []
+      if (hints.length > 0) {
+        return (<p>Excel Stammdaten importiert — <strong>Hinweise:</strong> {
+          hints.map(m => `${m.metering_point}: ${m.message}`).join("; ")
+        }</p>)
+      }
       return (<p>Excel Stammdaten importiert </p>)
+    }
   }
   return ""
 }

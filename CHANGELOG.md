@@ -8,6 +8,27 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- Member e-mail hardening (web side of the suite-wide mail-address hardening; prod log
+  review found 73 failed sends across 11 tenants in one week):
+  - The **registration** form now validates the e-mail format — it only had a
+    required-check, so `'x'` or a bare space were accepted; the edit form already
+    validated. Both forms now use one shared rule (`src/util/EmailAddress.util.ts`:
+    ASCII local part, TLD >= 2 letters, `;`-separated lists without spaces).
+  - The participant service normalizes the address on **create, update and partial
+    update** (trim per `;`-part, canonical `;`-join) before sending — the backend
+    enforces the same rule server-side.
+  - Member detail pane shows an **"E-Mail ungültig"** chip when the stored address
+    does not match the rule (legacy data), so admins can spot and fix it.
+  - Notifications: failed mail sends (`Mail` log notifications from the backend) now
+    render with a readable text — previously the error row appeared with an icon but
+    an **empty** message line; Excel-import notifications now list their hint messages
+    (e.g. rows whose e-mail was not imported).
+
+### Fixed
+- EEG master data: the e-mail field's validation rule used `regex:` — not a
+  react-hook-form rule key — so it never ran; now a working `pattern` with the shared rule.
+
 ### Changed
 - CI: Preview-Deployments (ADR-0007) — Push auf `preview/**` baut+deployt on-demand in die Dev-Zone (sha-pinned, kein `:latest`), Auto-Reset bei Branch-Delete.
 - Billing config: removed the "Erzeuge Gutschriften für UST-pflichtige Erzeuger" toggle.
