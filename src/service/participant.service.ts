@@ -4,6 +4,14 @@ import {EegParticipant} from "../models/members.model";
 import {AuthService} from "./auth.service";
 import {SelectedPeriod} from "../models/energy.model";
 import {Metering} from "../models/meteringpoint.model";
+import {normalizeEmailList} from "../util/EmailAddress.util";
+
+// Canonical e-mail format on every write: trim each ';'-part, no
+// spaces. The backend enforces the same rule server-side.
+const withNormalizedEmail = (participant: EegParticipant): EegParticipant =>
+  participant.contact?.email !== undefined
+    ? {...participant, contact: {...participant.contact, email: normalizeEmailList(participant.contact.email)}}
+    : participant
 
 export class ParticipantService extends BaseService {
   public constructor(authService: AuthService) {
@@ -23,6 +31,9 @@ export class ParticipantService extends BaseService {
 
   async updateParticipantPartial(tenant: string, id: string, value: { path: string, value: any }): Promise<EegParticipant> {
     const token = await this.lookupToken()
+    if (value.path === "contact.email" && typeof value.value === "string") {
+      value = {...value, value: normalizeEmailList(value.value)}
+    }
     return fetch(`${API_API_SERVER}/participant/v2/${id}`, {
       method: 'PUT',
       headers: {
@@ -60,7 +71,7 @@ export class ParticipantService extends BaseService {
         ...this.getSecureHeaders(token, tenant),
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(participant)
+      body: JSON.stringify(withNormalizedEmail(participant))
     }).then(this.handleErrors).then(res => res.json());
   }
 
@@ -72,7 +83,7 @@ export class ParticipantService extends BaseService {
         ...this.getSecureHeaders(token, tenant),
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(participant)
+      body: JSON.stringify(withNormalizedEmail(participant))
     }).then(this.handleErrors).then(res => res.json());
   }
 

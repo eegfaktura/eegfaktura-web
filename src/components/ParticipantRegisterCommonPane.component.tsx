@@ -13,6 +13,7 @@ import DatePickerFormElement from "./form/DatePickerForm.element";
 import DatePickerCoreElement from "./core/elements/DatePickerCore.element";
 import SelectForm from "./form/SelectForm.component";
 import {DebitExtensionComponent} from "./core/DebitExtensionComponent";
+import {isValidEmailList} from "../util/EmailAddress.util";
 
 interface ParticipantRegisterCommonPaneComponentProps {
   participant: EegParticipant;
@@ -92,7 +93,13 @@ const ParticipantRegisterCommonPaneComponent: FC<ParticipantRegisterCommonPaneCo
                        type="text" error={errors.billingAddress?.city}/>
             <InputForm name={"contact.phone"} label={t("phone")} control={control} type="text"/>
             <InputForm name={"contact.email"} label={t("email")} control={control} type="text"
-                       rules={{required: t("warnings.email_missing")}} error={errors.contact?.email}/>
+                       rules={{
+                         required: t("warnings.email_missing"),
+                         // validate on the normalized form (not a raw pattern):
+                         // healable input like a leading space stays valid — the
+                         // service normalizes it on save
+                         validate: (v: string | undefined) => isValidEmailList(v) || t("warnings.email", {context: "wrong"})
+                       }} isEmail={true} multiple={true} error={errors.contact?.email}/>
           </IonList>
 
         </div>

@@ -4,7 +4,7 @@ import cn from "classnames";
 
 import "./ParticipantDetailsPane.compoenent.css"
 import {
-  IonButton, IonButtons, IonCard,
+  IonButton, IonButtons, IonCard, IonChip,
   IonIcon,
   IonItem,
   IonLabel,
@@ -31,6 +31,7 @@ import {
   updateParticipant, updateParticipantPartial
 } from "../../store/participant";
 import {formatMeteringPointString} from "../../util/Helper.util";
+import {isValidEmailList} from "../../util/EmailAddress.util";
 import AllowParticipantDialog from "../dialogs/AllowParticipant.dialog";
 import {OverlayEventDetail} from "@ionic/react/dist/types/components/react-component-lib/interfaces";
 import InvoiceDocumentComponent from "./InvoiceDocument.component";
@@ -302,6 +303,9 @@ const ParticipantDetailsPaneComponent: FC = () => {
       <div className={"details-body"} style={{display: "flex", flexDirection: "column", height: "100%"}}>
         <div className={"details-header"}>
           <div><h4>{selectedParticipant.firstname} {selectedParticipant.lastname}</h4></div>
+          {!isValidEmailList(selectedParticipant.contact?.email) &&
+            <IonChip color="danger">E-Mail ungültig</IonChip>
+          }
           {/*<div style={{minWidth: "240px"}}>*/}
           {/*  <IonItem button lines="none" style={{fontSize: "12px", marginRight: "60px"}}*/}
           {/*           className={"participant-header"}*/}

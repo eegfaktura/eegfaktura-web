@@ -222,6 +222,16 @@ export class Message {
 
     return value as string
   }
+
+  /**
+   * Log-style notifications (mail errors, Excel import) carry a
+   * `messages` array built from the backend's LogMessage
+   * (`{kind, metering_point, message_code, message}`).
+   */
+  public get logMessages(): { kind: string; metering_point: string; message_code: string; message: string }[] {
+    const value = this.properties ? this.properties["messages"] : undefined
+    return Array.isArray(value) ? value : []
+  }
 }
 
 export interface EegNotification {

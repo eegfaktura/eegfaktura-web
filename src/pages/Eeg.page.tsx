@@ -22,6 +22,7 @@ import {AccountInfo, Address, Contact, Eeg, Optionals} from "../models/eeg.model
 import {IbanInputForm} from "../components/form/IbanInputForm";
 import {PhoneInputForm} from "../components/form/PhoneInputForm";
 import {useLocale} from "../store/hook/useLocale";
+import {isValidEmailList} from "../util/EmailAddress.util";
 
 
 const EMPTY_EEG_ENTITY = {
@@ -228,7 +229,13 @@ const EegPage: FC = () => {
                   <PhoneInputForm name={"contact.phone"} control={control} readonly={!isAdmin()} setValue={setValue}
                                   onChangePartial={onChangeField("phone")}/>
                   <InputFormComponent name={"contact.email"} label={t("email")} control={control}
-                                      rules={{regex: /[a-z\.]@[a-z]\.\w{3}/}} type="text" readonly={!isAdmin()}
+                                      rules={{
+                                        // was `regex:` — not a react-hook-form rule key, the
+                                        // old check never ran. validate on the normalized
+                                        // form so healable input (outer whitespace) is not
+                                        // rejected — backend normalizes on save.
+                                        validate: (v: string | undefined) => isValidEmailList(v) || t("warnings.email", {context: "wrong"})
+                                      }} type="text" readonly={!isAdmin()}
                                       error={errors.contact?.email}
                                       onChangePartial={onChangeField("email")}/>
                 </IonCard>
