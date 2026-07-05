@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.0.7] – 2026-07-05
+
 ### Added
 - Member e-mail hardening (web side of the suite-wide mail-address hardening; prod log
   review found 73 failed sends across 11 tenants in one week):
@@ -67,6 +69,7 @@ this changelog highlights the changes relevant for overview and operations.
   Kontaktperson, Kontoinhaber, Filteroptionen, Netzbetreiber-ID, Gemeinschafts-ID,
   Online-/Offline-Registrierung, E-Mail-Adresse, USt., SEPA). Billing config card additionally:
   "führenden Nullen", "z. B.", "Rechnungsnummern". Text-only — no logic change. (Fable spell-audit)
+
 
 ## [1.0.5] – 2026-07-04
 
