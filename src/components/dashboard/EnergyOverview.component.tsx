@@ -137,7 +137,7 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
                 <div>Produziert</div>
                 <IonIcon id="hover-help-producer" icon={helpCircleOutline} />
                 <IonPopover trigger="hover-help-producer" triggerAction="hover">
-                  <IonContent class="ion-padding">Production in der selektierten Periode. Der Balken visualisiert das Verhältnis von "Verteilung in der EEG / Gesamtproduktion"</IonContent>
+                  <IonContent class="ion-padding">Produktion in der selektierten Periode. Der Balken visualisiert das Verhältnis von "Verteilung in der EEG / Gesamtproduktion"</IonContent>
                 </IonPopover>
               </div>
             </div>

@@ -234,7 +234,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
   const archive = (sp: EegParticipant) => {
     participantAlert({
       subHeader: "Mitglied archivieren",
-      message: "Das Mitglied ist nach dem ARCHIVIERUNG'S Prozess in deiner Übersicht nicht mehr verhanden.",
+      message: "Das Mitglied ist nach dem Archivierungsprozess in deiner Übersicht nicht mehr vorhanden.",
       buttons: [
         {
           text: 'Cancel',
@@ -251,7 +251,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
             .unwrap()
             .catch(() => {
               toaster({
-                message: 'Mitglied konnte nicht gelöscht werden. Bitte kontaktieren Sie ihren Administrator.',
+                message: 'Mitglied konnte nicht gelöscht werden. Bitte kontaktieren Sie Ihren Administrator.',
                 duration: 4500,
                 color: "danger"
               })

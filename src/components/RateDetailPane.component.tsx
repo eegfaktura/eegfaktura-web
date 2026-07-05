@@ -65,7 +65,7 @@ const RateDetailPaneComponent: FC<RateDetailPaneComponentProps> = ({onSubmit, su
               })
             } else {
               showToast({
-                message: 'Tarif konnte nicht gelöscht werden. Bitte kontaktieren Sie ihren Administrator. Grund: ' + e.message,
+                message: 'Tarif konnte nicht gelöscht werden. Bitte kontaktieren Sie Ihren Administrator. Grund: ' + e.message,
                 duration: 4500,
                 color: "danger"
               })

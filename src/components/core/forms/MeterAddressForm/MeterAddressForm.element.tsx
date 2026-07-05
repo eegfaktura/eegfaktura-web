@@ -97,11 +97,11 @@ const MeterAddressFormElement: FC<MeterAddressFormElementProps> = ({
       <InputForm name={"city"} label={t("address.city")} control={control} rules={{required: t("warnings.city_missing")}} type="text"
                  error={errors?.city} disabled={disableAddressFields} onChangePartial={_onChange}/>
       {showActivationMode &&
-      <CheckboxComponent label="Offline Registrierung" setChecked={onSetOffline}
+      <CheckboxComponent label="Offline-Registrierung" setChecked={onSetOffline}
                          checked={offline === 'OFFLINE'} style={{paddingTop: "0px"}}></CheckboxComponent>
       }
       { showActivationMode && offline === 'OFFLINE' &&
-          <InputForm name={"activationCode"} label="Activierungs-Code" control={control} rules={{required: "ActivierungsCode erforderlich"}} type="text"
+          <InputForm name={"activationCode"} label="Aktivierungs-Code" control={control} rules={{required: "Aktivierungs-Code erforderlich"}} type="text"
                      counter={true} maxlength={35} error={errors?.activationCode} onChangePartial={_onChange}/>
       }
       {isAdmin() && !isOnline &&
