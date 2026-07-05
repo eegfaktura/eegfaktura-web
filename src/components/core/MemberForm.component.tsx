@@ -19,7 +19,7 @@ import {DebitExtensionComponent} from "./DebitExtensionComponent";
 import DatePickerInput from "../form/NewDatePickerForm.component";
 import {Moment} from "moment";
 import {LocalDate} from "local-date";
-import {EMAIL_LIST_PATTERN} from "../../util/EmailAddress.util";
+import {isValidEmailList} from "../../util/EmailAddress.util";
 
 interface MemberFormComponentProps {
   participant: EegParticipant
@@ -147,9 +147,10 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
           <PhoneInputForm name={"contact.phone"} control={control} setValue={setValue} onChangePartial={onUpdateBaseData} error={errors.contact?.phone}/>
           <InputForm name={"contact.email"} label={t("email")} control={control} rules={{
             required: t("warnings.email", {context: "missing"}),
-            pattern: {
-              value: EMAIL_LIST_PATTERN,
-              message: t("warnings.email", {context: "wrong"})}
+            // validate on the normalized form — healable input (outer
+            // whitespace, "; " between parts) stays valid and is
+            // normalized by the service on save
+            validate: (v: string | undefined) => isValidEmailList(v) || t("warnings.email", {context: "wrong"})
           }} isEmail={true} multiple={true} error={errors.contact?.email} onChangePartial={onUpdateBaseData}/>
           <InputForm name={"vatNumber"} label={t("uid")}control={control} type="text" onChangePartial={onUpdateBaseData}/>
         </IonList>
