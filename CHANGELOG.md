@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.0.9] – 2026-07-05
+
 ### Fixed
 - Billing period selector, follow-up to v1.0.8: the selectable range is no longer capped by
   where energy data ends. Billing is time-driven, but the range came straight from the energy
