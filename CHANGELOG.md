@@ -8,6 +8,15 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- Billing period selector, follow-up to v1.0.8: the selectable range is no longer capped by
+  where energy data ends. Billing is time-driven, but the range came straight from the energy
+  metadata, so an EEG whose data is frozen in the past (e.g. the platform-fee EEG `RC000000`
+  with a single stale 2022 record) only offered that old period plus the current one — every
+  quarter in between (incl. the one being billed) was missing. The upper bound is now always
+  the current period; the lower bound stays the energy start, or the EEG creation date
+  (`createdAt`) when there is no energy data. EEGs with up-to-date energy data are unaffected.
+
 ## [1.0.8] – 2026-07-05
 
 ### Fixed
