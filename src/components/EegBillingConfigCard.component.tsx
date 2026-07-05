@@ -1,5 +1,5 @@
 import React, {FC, useEffect, useState} from "react";
-import {Controller, useForm} from "react-hook-form";
+import {useForm} from "react-hook-form";
 import {BillingConfig} from "../models/eeg.model";
 import {
     IonButton,
@@ -7,8 +7,7 @@ import {
     IonChip,
     IonIcon,
     IonImg,
-    IonItem,
-    IonLabel, IonToggle,
+    IonLabel,
     useIonPopover,
     useIonToast
 } from "@ionic/react";
@@ -186,15 +185,15 @@ const EegBillingConfigCardComponent: FC = () => {
                                                 type="number" readonly={!isAdmin()}/>
 
                             <InputForm name={"beforeItemsTextInfo"}
-                                                label="Abrechnungsinfos: Text vor Positionen"
+                                                label="Gutschriften für Firmen: Text vor Positionen"
                                                 control={control}
                                                 type="text" readonly={!isAdmin()}/>
                             <InputForm name={"afterItemsTextInfo"}
-                                                label="Abrechnungsinfos: Text nach Positionen"
+                                                label="Gutschriften für Firmen: Text nach Positionen"
                                                 control={control}
                                                 type="text" readonly={!isAdmin()}/>
                             <InputForm name={"termsTextInfo"}
-                                                label="Abrechnungsinfos: Abschlusstext"
+                                                label="Gutschriften für Firmen: Abschlusstext"
                                                 control={control}
                                                 type="text" readonly={!isAdmin()}/>
 
@@ -208,24 +207,6 @@ const EegBillingConfigCardComponent: FC = () => {
                                                 rules={{min: 1, max: 6}}
                                                 control={control}
                                                 type="number" readonly={!isAdmin()}/>
-                            <IonItem lines="none">
-                                <Controller
-                                    name={"createCreditNotesForAllProducers"}
-                                    control={control}
-                                    render={({field}) => {
-                                        const {onChange, value} = field;
-                                        return (<IonToggle
-                                            style={{width: "100%"}}
-                                            slot="start"
-                                            labelPlacement="start"
-                                            checked={value}
-                                            onIonChange={(e) => {
-                                                onChange(e.detail.checked);
-                                            }}>Erzeuge Gutschriften für UST-pflichtige Erzeuger</IonToggle>)
-                                        }
-                                    }
-                                />
-                            </IonItem>
                         </form>
                     }
 

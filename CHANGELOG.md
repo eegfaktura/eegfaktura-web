@@ -10,6 +10,15 @@ this changelog highlights the changes relevant for overview and operations.
 
 ### Changed
 - CI: Preview-Deployments (ADR-0007) — Push auf `preview/**` baut+deployt on-demand in die Dev-Zone (sha-pinned, kein `:latest`), Auto-Reset bei Branch-Delete.
+- Billing config: removed the "Erzeuge Gutschriften für UST-pflichtige Erzeuger" toggle.
+  UST-registered producers (companies) now always receive the reverse-charge credit note; the
+  "Abrechnungsinfo" variant is no longer offered. `createCreditNotesForAllProducers` is now sent
+  as `true` on both create and update of the billing config (the primitive-boolean field would
+  otherwise fall back to `false` on save and re-enable the info document). The three
+  "Abrechnungsinfos: …" text fields are relabeled "Gutschriften für Firmen: …" — same fields,
+  they feed the reverse-charge credit note. (Existing EEGs still on the old setting are switched
+  over by a one-off DB update; billing service, document type and schema are unchanged, so
+  historical info documents stay intact.)
 
 ### Fixed
 - Day view previous/next-day arrows stepped wrong in **summer** (any date after
