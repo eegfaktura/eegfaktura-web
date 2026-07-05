@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.0.8] – 2026-07-05
+
 ### Fixed
 - Billing period selector: for an EEG **without energy data** (e.g. the platform-fee EEG
   `RC000000`) the selectable periods no longer collapse to the current period. The period
