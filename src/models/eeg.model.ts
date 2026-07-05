@@ -21,6 +21,7 @@ export interface Eeg {
   accountInfo: AccountInfo;
   optionals: Optionals;
   online: boolean;
+  createdAt?: string;
 }
 
 export interface EegOwner {

@@ -8,6 +8,14 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- Billing period selector: for an EEG **without energy data** (e.g. the platform-fee EEG
+  `RC000000`) the selectable periods no longer collapse to the current period. The period
+  range was derived solely from energy metadata, which degenerates to "today" without data,
+  so once a quarter ended its period could no longer be selected for billing. It now falls
+  back to the EEG creation date (`createdAt`, newly provided by the backend) as the lower
+  bound. EEGs **with** energy data are unaffected (range still comes from their metadata).
+
 ## [1.0.7] – 2026-07-05
 
 ### Added
