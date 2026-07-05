@@ -4,8 +4,8 @@
   "company-name": "Firmenname",
   "grid-operator": {
     "header": "Netzbetreiber",
-    "id": "Netzbetreiber ID",
-    "name": "Netzbetreiber Name"
+    "id": "Netzbetreiber-ID",
+    "name": "Netzbetreiber-Name"
   },
   "participant": "Mitglied",
   "participant-nr": "Mitglieds-Nr",
@@ -17,8 +17,8 @@
   "participant-title_company": "Firma",
   "participant-title_privat": "Privat",
   "participant_tariff": "Mitglieds-Tarif",
-  "participantFee": "Mitgliedbeitrag in € (je Abrechnungsintervall, netto)",
-  "participantFee_card": "Mitgliedbeitrag",
+  "participantFee": "Mitgliedsbeitrag in € (je Abrechnungsintervall, netto)",
+  "participantFee_card": "Mitgliedsbeitrag",
   "metering": "Zählpunkt",
   "tariff": "Tarif",
   "tariffLabel": "Tarifbezeichnung",
@@ -29,7 +29,7 @@
   "inverternr_label": "Wechselrichternummer",
   "transformer_label": "Transformator",
   "equipmentNumber_label": "Anlagen-Nr.",
-  "equipmentName_label": "Anlagename",
+  "equipmentName_label": "Anlagenname",
   "vatSupplementaryText": "Zusatztext für Umsatzsteuer",
   "discount": "Rabatt in %",
   "discount_card": "Rabatt",
@@ -38,9 +38,9 @@
   "centPerKWh_card": "Cent pro kWh",
   "freeKWh": "Kostenlose Energie in kWh (je Abrechnungsintervall)",
   "freeKWh_card": "Inklusive kWh",
-  "useMeteringPointFee": "Zählpunkt Gebühr einheben?",
+  "useMeteringPointFee": "Zählpunktgebühr einheben?",
   "meteringPointFee": "Zählpunktgebühr in €",
-  "meteringPointVat": "Ust. für Zählpunktgebühr in %",
+  "meteringPointVat": "USt. für Zählpunktgebühr in %",
   "meteringPointFee_card": "Zählpunktgebühr",
   "meteringPoint-active-since": "Aktiv seit ...",
   "useVat": "Umsatzsteuer anführen",
@@ -67,25 +67,25 @@
   },
   "contact": {
     "header": "Kontakt",
-    "person": "Kontakt Person"
+    "person": "Kontaktperson"
   },
   "account": {
     "header": "Bankdaten",
     "owner": "Kontoinhaber",
     "name": "Bankverbindung",
-    "mandate-reference": "Mandatreferenz",
-    "mandate-date": "Mandatdatum",
-    "creditor-id": "Creditor ID",
+    "mandate-reference": "Mandatsreferenz",
+    "mandate-date": "Mandatsdatum",
+    "creditor-id": "Creditor-ID",
     "bic": "BIC",
     "sepaDirectDebit": "Einzugsart",
-    "sepaDebitOption_none": "Kein Sepa",
+    "sepaDebitOption_none": "Kein SEPA",
     "sepaDebitOption_b2b": "B2B",
     "sepaDebitOption_core": "CORE"
   },
   "common-info": {
     "header": "Allgemeines",
     "ec-number": "EC-Nummer",
-    "community-id": "Gemeinschafts ID",
+    "community-id": "Gemeinschafts-ID",
     "legal": {
       "label": "Rechtsform",
       "verein": "Verein",
@@ -100,8 +100,8 @@
     "allocation-mode": "Verteilung"
   },
   "warnings": {
-    "email_missing": "Email Adresse fehlt!",
-    "email_wrong": "Email Adresse ist nicht valide!",
+    "email_missing": "E-Mail-Adresse fehlt!",
+    "email_wrong": "E-Mail-Adresse ist nicht valide!",
     "firstname_missing": "Vorname fehlt!",
     "lastname_missing": "Nachname fehlt!",
     "company-name_missing": "Firmenname fehlt!",
@@ -111,21 +111,21 @@
     "street-number_missing": "Hausnummer fehlt!",
     "account-owner_missing": "Kontoinhaber fehlt!",
     "account-name_missing": "Bankverbindung fehlt!",
-    "account-mandate_reference_missing": "Mandatreferenz fehlt!",
-    "gridoperator-id_missing": "Netzbetreiber-Id fehlt!",
-    "gridoperator-id_length": "Netzbetreiber-Id besteht aus 8 Zeichen",
+    "account-mandate_reference_missing": "Mandatsreferenz fehlt!",
+    "gridoperator-id_missing": "Netzbetreiber-ID fehlt!",
+    "gridoperator-id_length": "Netzbetreiber-ID besteht aus 8 Zeichen",
     "gridoperator-name_missing": "Netzbetreiber-Name fehlt!",
     "partition-factor_missing": "Teilnehmerfaktor fehlt!",
     "allocation-factor_missing": "Verteilungsfaktor fehlt!",
     "metering_missing_msg": "Zählpunktnummer fehlt!",
     "fee_missing": "Gebühr fehlt!",
-    "vat_missing": "Ust. fehlt!",
+    "vat_missing": "USt. fehlt!",
     "vat_zero": "0% nicht erlaubt!",
     "vat_to_big": "Nur 100% erlaubt!"
   },
   "alerts": {
-    "changeDirection_0": "Energierichtung zu einen $t(producer) ändern? Es gilt zu beachten, dass diese Änderung nicht mit dem Netzbetreiber kommuniziert wird. Die Änderung wird nur in EEGFaktura vollzogen und hat keine Auswirkung beim Netzbetreiber!",
-    "changeDirection_1": "Energierichtung zu einen $t(consumer) ändern? Es gilt zu beachten, dass diese Änderung nicht mit dem Netzbetreiber kommuniziert wird. Die Änderung wird nur in EEGFaktura vollzogen und hat keine Auswirkung beim Netzbetreiber!",
+    "changeDirection_0": "Energierichtung zu einem $t(producer) ändern? Es gilt zu beachten, dass diese Änderung nicht mit dem Netzbetreiber kommuniziert wird. Die Änderung wird nur in EEGFaktura vollzogen und hat keine Auswirkung beim Netzbetreiber!",
+    "changeDirection_1": "Energierichtung zu einem $t(consumer) ändern? Es gilt zu beachten, dass diese Änderung nicht mit dem Netzbetreiber kommuniziert wird. Die Änderung wird nur in EEGFaktura vollzogen und hat keine Auswirkung beim Netzbetreiber!",
     "changeBusinessType_0": "Den Business-Typ ändern? Nach der Änderung wird der Vorname des Mitglieds als Firmenname übernommen. Bitte den Firmennamen im entsprechenden Feld anpassen!",
     "changeBusinessType_1": "Den Business-Typ ändern? Nach der Änderung bleibt das Nachnamen-Feld des Mitglieds leer. Bitte anschließend den Nachnamen in das entsprechende Feld eintragen!"
   },
@@ -138,16 +138,16 @@
   "process": {
     "submit": "Anfordern",
     "requestValue": {
-      "selectEntire": "Zählpunkte für Gesamte EEG nachfordern"
+      "selectEntire": "Zählpunkte für die gesamte EEG nachfordern"
     },
     "partFact": {
-      "label": "Teilnehmer Faktor in %",
-      "title": "Teilnehmer Faktor ändern",
+      "label": "Teilnehmerfaktor in %",
+      "title": "Teilnehmerfaktor ändern",
       "desc": "Mit diesem Prozess kann der Teilnahmefaktor von aktiven Zählpunkten geändert werden. Zulässig ist eine Änderung pro Tag und je Energiegemeinschaft und Zählpunkt. Diese Änderung liegt in der Verantwortung der Energiegemeinschaft."
     },
     "allocationFactor": {
-      "label": "Verteilungs Faktor in %",
-      "title": "Verteilungs Faktor ändern",
+      "label": "Verteilungsfaktor in %",
+      "title": "Verteilungsfaktor ändern",
       "desc": "Mit diesem Prozess kann der Verteilungsfaktor von aktiven Zählpunkten geändert werden."
     },
     "podList": {
@@ -166,14 +166,14 @@
     },
     "history": {
       "title": "Prozess History",
-      "desc": "Übersicht der Prozesskommunikation mit den Marktpartner."
+      "desc": "Übersicht der Prozesskommunikation mit den Marktpartnern."
     },
     "revokeMeter": {
       "title": "Zählpunkt abmelden",
       "desc": "Der Marktteilnehmer wird über die Aufhebung einer erteilten Datenfreigabe in Kenntnis gesetzt.",
       "reason": "Begründung (optional)"
     },
-    "EC_PRTFACT_CHANGE": "Änderung des Teilnahmefaktor",
+    "EC_PRTFACT_CHANGE": "Änderung des Teilnahmefaktors",
     "EC_REQ_ONL": "Anmeldung Teilnahme Online",
     "CR_REQ_PT": "Anfordern von Energiedaten",
     "CR_MSG": "Versenden der Energiedaten",
@@ -214,14 +214,14 @@
     "status_text_NEW": "Antwort des Netzbetreibers noch ausstehend.",
     "status_text_INIT": "Antwort des Netzbetreibers noch ausstehend.",
     "status_text_PENDING": "Zustimmung des Mitglieds noch ausstehend.",
-    "status_text_APPROVED": "Abschluss Meldung von Netzbetreiber noch ausstehend.",
+    "status_text_APPROVED": "Abschlussmeldung vom Netzbetreiber noch ausstehend.",
     "status_text_REJECTED": "Zählpunkt wurde vom Netzbetreiber abgewiesen.",
     "status_text_REVOKED": "Zählpunkt wurde vom Netzbetreiber aufgehoben.",
     "status_text_INVALID": "Zählpunkt wurde vom Netzbetreiber nicht angenommen.",
     "status_text_INACTIVE": "Zählpunkt INAKTIV."
   },
   "meterlist": {
-    "filter_header": "Filter Optionen:",
+    "filter_header": "Filteroptionen:",
     "filter_text_rejected": "Abgewiesene",
     "filter_text_init": "Ausstehende",
     "filter_text_inactive": "Inaktive"

@@ -19,6 +19,10 @@ this changelog highlights the changes relevant for overview and operations.
   they feed the reverse-charge credit note. (Existing EEGs still on the old setting are switched
   over by a one-off DB update; billing service, document type and schema are unchanged, so
   historical info documents stay intact.)
+- Billing config: the credit-note text fields are now labeled by member type —
+  "Gutschriften für Mitgliedstyp Privat: …" (producers without a VAT ID) and
+  "Gutschriften für Mitgliedstyp Firma: …" (VAT-registered, reverse-charge) — so it is clear
+  which member type drives the assignment (the tariff models will follow the same Firma/Privat split).
 
 ### Fixed
 - Day view previous/next-day arrows stepped wrong in **summer** (any date after
@@ -34,6 +38,14 @@ this changelog highlights the changes relevant for overview and operations.
   the call-site `.filter(p => p.meters.length > 0)`; `buildAllocationMapFromSelected` reads the
   energy report from the store, so the test mocks the store and asserts current behaviour
   (zero-kWh meters included, `participantId` present). Test-only — no production change.
+- German UI text: spelling/grammar corrections across the German locale resources
+  (`locales/de/common.json`, `error.json`) and several components — real typos
+  (Steuernummer, Periode, vorhanden, Aktivierungs-Code, Produktion), missing inflection
+  (Mitgliedsbeitrag, Mandatsreferenz, "des Teilnahmefaktors", "mit den Marktpartnern",
+  "wenn alle Daten", polite "Ihren"), and compound spacing/hyphenation (Zählpunktgebühr,
+  Kontaktperson, Kontoinhaber, Filteroptionen, Netzbetreiber-ID, Gemeinschafts-ID,
+  Online-/Offline-Registrierung, E-Mail-Adresse, USt., SEPA). Billing config card additionally:
+  "führenden Nullen", "z. B.", "Rechnungsnummern". Text-only — no logic change. (Fable spell-audit)
 
 ## [1.0.5] – 2026-07-04
 

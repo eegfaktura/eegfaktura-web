@@ -475,7 +475,7 @@ const ParticipantPaneComponent: FC = () => {
           presentAlert({
             subHeader: "Fehler bei der Vorschauerstellung",
             message:
-              "Bei der Erstellung der Vorschau ist ein Fehler aufgetreten. Bitte prüfen Sie die Stammdaten und achten Sie vor allem darauf, bei allen Nutzern & Zählpunkten einen Tarif zu setzen. Wiederholen Sie den Vorgang, wenn allen Daten korrigiert wurden.",
+              "Bei der Erstellung der Vorschau ist ein Fehler aufgetreten. Bitte prüfen Sie die Stammdaten und achten Sie vor allem darauf, bei allen Nutzern & Zählpunkten einen Tarif zu setzen. Wiederholen Sie den Vorgang, wenn alle Daten korrigiert wurden.",
             buttons: ["OK"],
           });
         } else {

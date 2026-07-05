@@ -132,7 +132,7 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
                                     }
                                   })} label={t("metering")} rules={{required: true}}/>
 
-            <CheckboxComponent label={"Offline Registrierung"} checked={offline} setChecked={setOffline}></CheckboxComponent>
+            <CheckboxComponent label={"Offline-Registrierung"} checked={offline} setChecked={setOffline}></CheckboxComponent>
             { offline && 
               <InputForm name="activationCode" control={control} label={"Aktivierungs-Code"} counter={true} maxlength={35}/>
             }

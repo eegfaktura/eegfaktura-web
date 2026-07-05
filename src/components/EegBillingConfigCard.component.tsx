@@ -149,7 +149,7 @@ const EegBillingConfigCardComponent: FC = () => {
                                                 control={control}
                                                 type="text" readonly={!isAdmin()}/>
                             <InputForm name={"termsTextInvoice"}
-                                                label="Rechnungen: Abschlusstext (zB für Bedingungen)"
+                                                label="Rechnungen: Abschlusstext (z. B. für Bedingungen)"
                                                 control={control}
                                                 type="text" readonly={!isAdmin()}/>
                             <InputForm name={"invoiceNumberPrefix"}
@@ -157,21 +157,21 @@ const EegBillingConfigCardComponent: FC = () => {
                                                 control={control}
                                                 type="text" readonly={!isAdmin()}/>
                             <InputForm name={"invoiceNumberStart"}
-                                                label="Startwert für Rechnungsnummer"
+                                                label="Startwert für Rechnungsnummern"
                                                 control={control}
                                                 rules={{min: 0}}
                                                 type="number" readonly={!isAdmin()}/>
 
                             <InputForm name={"beforeItemsTextCreditNote"}
-                                                label="Gutschriften: Text vor Positionen"
+                                                label="Gutschriften für Mitgliedstyp Privat: Text vor Positionen"
                                                 control={control}
                                                 type="text" readonly={!isAdmin()}/>
                             <InputForm name={"afterItemsTextCreditNote"}
-                                                label="Gutschriften: Text nach Positionen"
+                                                label="Gutschriften für Mitgliedstyp Privat: Text nach Positionen"
                                                 control={control}
                                                 type="text" readonly={!isAdmin()}/>
                             <InputForm name={"termsTextCreditNote"}
-                                                label="Gutschriften: Abschlusstext"
+                                                label="Gutschriften für Mitgliedstyp Privat: Abschlusstext"
                                                 control={control}
                                                 type="text" readonly={!isAdmin()}/>
                             <InputForm name={"creditNoteNumberPrefix"}
@@ -185,15 +185,15 @@ const EegBillingConfigCardComponent: FC = () => {
                                                 type="number" readonly={!isAdmin()}/>
 
                             <InputForm name={"beforeItemsTextInfo"}
-                                                label="Gutschriften für Firmen: Text vor Positionen"
+                                                label="Gutschriften für Mitgliedstyp Firma: Text vor Positionen"
                                                 control={control}
                                                 type="text" readonly={!isAdmin()}/>
                             <InputForm name={"afterItemsTextInfo"}
-                                                label="Gutschriften für Firmen: Text nach Positionen"
+                                                label="Gutschriften für Mitgliedstyp Firma: Text nach Positionen"
                                                 control={control}
                                                 type="text" readonly={!isAdmin()}/>
                             <InputForm name={"termsTextInfo"}
-                                                label="Gutschriften für Firmen: Abschlusstext"
+                                                label="Gutschriften für Mitgliedstyp Firma: Abschlusstext"
                                                 control={control}
                                                 type="text" readonly={!isAdmin()}/>
 
@@ -203,7 +203,7 @@ const EegBillingConfigCardComponent: FC = () => {
                                                 type="text" readonly={!isAdmin()}/>
 
                             <InputForm name={"documentNumberSequenceLength"}
-                                                label="Dokumentennummer: Anzahl Stellen (wird mit führenden Nulle aufgefüllt)"
+                                                label="Dokumentennummer: Anzahl Stellen (wird mit führenden Nullen aufgefüllt)"
                                                 rules={{min: 1, max: 6}}
                                                 control={control}
                                                 type="number" readonly={!isAdmin()}/>

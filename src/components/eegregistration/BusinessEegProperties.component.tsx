@@ -21,7 +21,7 @@ const BusinessEegPropertiesComponent: FC<BusinessEegPropertiesComponentProps> = 
     {/*<CorePageTemplate>*/}
       <h2>Geschäftliches</h2>
       <InputForm name={"businessNr"} label="Geschäftsnummer" control={control} type="text" placeholder="Geschäftsnummer deiner EEG"/>
-      <InputForm name={"taxNumber"} label="Streuernummer" control={control} type="text"/>
+      <InputForm name={"taxNumber"} label="Steuernummer" control={control} type="text"/>
       <InputForm name={"vatNumber"} label="Mehrwertsteuer-ID" control={control} type="text"/>
 
       <h6>Verrechnung</h6>
@@ -33,7 +33,7 @@ const BusinessEegPropertiesComponent: FC<BusinessEegPropertiesComponentProps> = 
         {key: "ANNUAL", value: "Jährlich"},
       ]}></SelectForm>
       <IbanInputForm name={"accountInfo.iban"} control={control} />
-      <InputForm name={"accountInfo.owner"} label="Konto Inhaber" control={control} type="text"/>
+      <InputForm name={"accountInfo.owner"} label="Kontoinhaber" control={control} type="text"/>
       <IonItem lines="none">
         <Controller
           name={"accountInfo.sepa"}
