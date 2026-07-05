@@ -20,6 +20,11 @@ this changelog highlights the changes relevant for overview and operations.
   instead (DST-immune). Winter was unaffected, which is why it only showed on
   current-period (summer) data. Added a regression test that runs under
   `Europe/Vienna` and round-trips every day of the year across the DST boundary. (#67)
+- Repaired two stale unit tests (`FilterHelper.util`, `ParticipantPane.functions`) that had drifted
+  from the code they cover: `filterActiveParticipantAndMeter` now gets realistic meter `status` and
+  the call-site `.filter(p => p.meters.length > 0)`; `buildAllocationMapFromSelected` reads the
+  energy report from the store, so the test mocks the store and asserts current behaviour
+  (zero-kWh meters included, `participantId` present). Test-only — no production change.
 
 ## [1.0.5] – 2026-07-04
 
