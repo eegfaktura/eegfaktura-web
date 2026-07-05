@@ -307,7 +307,8 @@ export class EegService extends EegBaseService {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({tenantId : tenant, invoiceNumberStart : 0,
-        creditNoteNumberStart: 0, documentNumberSequenceLength: 5} as BillingConfig)
+        creditNoteNumberStart: 0, documentNumberSequenceLength: 5,
+        createCreditNotesForAllProducers: true} as BillingConfig)
     }).then(this.handleErrors).then(res => res.json())
 
     return await result.then(
@@ -329,7 +330,10 @@ export class EegService extends EegBaseService {
         'Accept': 'application/json',
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(billingConfig)
+      // Abrechnungsinfo-Option entfällt: UST-pflichtige Erzeuger bekommen immer die
+      // RC-Gutschrift. Das Flag hat kein UI mehr; hier fix true senden, sonst würde das
+      // primitive boolean serverseitig auf false zurückfallen (BillingConfig full overwrite).
+      body: JSON.stringify({...billingConfig, createCreditNotesForAllProducers: true})
     }).then(this.handleErrors).then(res => {});
 
     return this.fetchBillingConfigById(billingConfig.id, tenant, token);
