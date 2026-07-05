@@ -265,7 +265,16 @@ export function findPartial<O extends object, OT extends keyof object>(obj: O, k
 // Kuerzt lange Timestampangaben. Z.B.: 2023-07-31T19:55:04.234769 -> 2023-07-31, 19:55
 export function reformatDateTimeStamp(dateTimeStampString : string) : string {
   if (dateTimeStampString && /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d*$/.test(dateTimeStampString)) {
-    return dateTimeStampString.substring(0,10)+", "+dateTimeStampString.substring(11,16)
+    // billing serialises these status timestamps from LocalDateTime.now() in a UTC container,
+    // i.e. a naive UTC wall-clock without offset. Interpret it as UTC and render in the
+    // viewer's local time instead of slicing the raw (UTC) string (which showed 2h early in
+    // summer). Output format unchanged: "YYYY-MM-DD, HH:mm".
+    const d = new Date(dateTimeStampString + "Z");
+    if (isNaN(d.getTime())) {
+      return dateTimeStampString.substring(0,10)+", "+dateTimeStampString.substring(11,16)
+    }
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}, ${pad(d.getHours())}:${pad(d.getMinutes())}`
   } else {
     return "";
   }

@@ -8,6 +8,13 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- Billing run "Versendet" / "Abgerechnet" timestamps showed the raw UTC time (2h early in
+  summer). `reformatDateTimeStamp` sliced the naive timestamp string with no timezone
+  conversion; billing sends these from `LocalDateTime.now()` in a UTC container. It now
+  interprets the value as UTC and renders it in the viewer's local time (DST-aware). Output
+  format unchanged.
+
 ## [1.0.9] – 2026-07-05
 
 ### Fixed
