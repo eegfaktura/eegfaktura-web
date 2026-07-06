@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.0.10] – 2026-07-06
+
 ### Changed
 - Billing run status label "Versendet" renamed to "Versand gestartet". The mails are handed to
   the mail relay (rate-limited, so they trickle out over time) — "Versendet" wrongly implied
