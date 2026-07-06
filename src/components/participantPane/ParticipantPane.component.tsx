@@ -934,7 +934,7 @@ const ParticipantPaneComponent: FC = () => {
                     <>
                       <div>
                         {billingRun.mailStatus === "SENT"
-                          ? "Versendet (" +
+                          ? "Versand gestartet (" +
                           reformatDateTimeStamp(
                             billingRun.mailStatusDateTime
                           ) +

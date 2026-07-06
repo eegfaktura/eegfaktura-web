@@ -1,5 +1,27 @@
 import { describe, it, expect } from "vitest";
-import {calc, determinePeriodEnd, getPeriodSegment, splitDate} from "../../util/Helper.util";
+import {calc, determinePeriodEnd, getPeriodSegment, reformatDateTimeStamp, splitDate} from "../../util/Helper.util";
+
+describe("reformatDateTimeStamp", () => {
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  const localOfUtc = (naive: string) => {
+    const d = new Date(naive + "Z");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  it("renders a naive billing (UTC) timestamp in local time, format 'YYYY-MM-DD, HH:mm'", () => {
+    // billing sends LocalDateTime.now() from a UTC container (no offset).
+    const input = "2026-07-05T17:26:00.000";
+    expect(reformatDateTimeStamp(input)).toMatch(/^\d{4}-\d{2}-\d{2}, \d{2}:\d{2}$/);
+    // interpreted as UTC, not sliced raw:
+    expect(reformatDateTimeStamp(input)).toBe(localOfUtc(input));
+  });
+
+  it("returns empty string for malformed / non-datetime input", () => {
+    expect(reformatDateTimeStamp("")).toBe("");
+    expect(reformatDateTimeStamp("2026-07-05")).toBe("");
+    expect(reformatDateTimeStamp("not-a-date")).toBe("");
+  });
+});
 
 describe("Helpers", () => {
   it("split date (dd.mm.yyyy HH:MM:SS", async () => {

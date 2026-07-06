@@ -8,6 +8,21 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.0.10] – 2026-07-06
+
+### Changed
+- Billing run status label "Versendet" renamed to "Versand gestartet". The mails are handed to
+  the mail relay (rate-limited, so they trickle out over time) — "Versendet" wrongly implied
+  they were already delivered. The reworded label reflects that the send was started, not that
+  delivery is confirmed.
+
+### Fixed
+- Billing run "Versendet" / "Abgerechnet" timestamps showed the raw UTC time (2h early in
+  summer). `reformatDateTimeStamp` sliced the naive timestamp string with no timezone
+  conversion; billing sends these from `LocalDateTime.now()` in a UTC container. It now
+  interprets the value as UTC and renders it in the viewer's local time (DST-aware). Output
+  format unchanged.
+
 ## [1.0.9] – 2026-07-05
 
 ### Fixed
