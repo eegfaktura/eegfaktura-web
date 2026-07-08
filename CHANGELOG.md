@@ -8,6 +8,15 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- Member view bottom filter buttons (person/consumption, producer/consumer) no longer showed the
+  active-filter highlight, so the selected filter was only inferrable from the result list. The
+  `.isActive` state set `--background` on an `IonButton` that defaults to `fill="clear"` inside
+  `IonButtons`, where the current Ionic (7.8.6) no longer paints it. The highlight now targets the
+  button's `::part(native)` with a real `background` (the pattern already used elsewhere, e.g.
+  `FilterSegment.component.scss`), so it renders regardless of the clear-button `--background`
+  handling. Visual/CSS-only — the filter logic is unchanged.
+
 ## [1.0.10] – 2026-07-06
 
 ### Changed
