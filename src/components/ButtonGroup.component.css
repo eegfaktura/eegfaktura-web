@@ -18,7 +18,7 @@
 
 }
 
-.button-group-item.isActive {
-    --ion-text-color-rgb: 103, 103, 103;
-    --background: #C0E5E1;
+.button-group-item.isActive::part(native) {
+    background: #C0E5E1;
+    color: rgb(103, 103, 103);
 }
