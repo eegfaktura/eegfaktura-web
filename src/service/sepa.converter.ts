@@ -67,7 +67,7 @@ const summerizeSepaModel = async (rows: Record<string, Array<any>>) => {
         if (item['Dokumenttyp'] === 'Rechnung') {
           result.Amount += Number(item['Rechnungsbetrag Brutto'])
         } else {
-          result.Amount -= Number(item['Rechnungsbetrag Netto'])
+          result.Amount -= Number(item['Rechnungsbetrag Brutto'])
         }
         result.InvoiceIds.push(item['Nummer'])
 

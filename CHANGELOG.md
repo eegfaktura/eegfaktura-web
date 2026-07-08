@@ -9,6 +9,12 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Fixed
+- SEPA export with "Mitglieder zusammenfassen" enabled booked the **net** amount for credit
+  notes (Gutschriften) instead of the **gross** amount, so payouts to VAT-liable producers were
+  short by the VAT. The summarize path (`summerizeSepaModel`) subtracted
+  `Rechnungsbetrag Netto` for non-invoice documents, while the non-summarize path and invoices
+  use `Rechnungsbetrag Brutto`. The checkbox is a pure per-IBAN aggregation and must not change
+  the amount basis; it now uses gross for credit notes too, matching the other path.
 - Member view bottom filter buttons (person/consumption, producer/consumer) no longer showed the
   active-filter highlight, so the selected filter was only inferrable from the result list. The
   `.isActive` state set `--background` on an `IonButton` that defaults to `fill="clear"` inside
