@@ -7,7 +7,16 @@ import CheckboxComponent from "./form/Checkbox.component";
 import ToggleButtonComponent from "./ToggleButton.component";
 import {useRateType} from "../store/hook/Rate.provider";
 import NumberInputForm from "./form/NumberInput.component";
+import SelectForm from "./form/SelectForm.component";
 import {useLocale} from "../store/hook/useLocale";
+
+// ZVT: Von/Bis sind reine Auswahlfelder - genau die 96 Viertelstunden-Werte
+// des Tages (00:00 ... 23:45), passend zum 15-min-Raster der Energiedaten.
+const QUARTER_HOUR_OPTIONS = Array.from({length: 96}, (_, i) => {
+  const hh = String(Math.floor(i / 4)).padStart(2, "0")
+  const mm = String((i % 4) * 15).padStart(2, "0")
+  return {key: `${hh}:${mm}`, value: `${hh}:${mm}`}
+})
 
 const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, submitId: string, mode?: 'NEW' }> =
   ({rate, onSubmit, submitId, mode}) => {
@@ -186,10 +195,10 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
               <>
                   <InputFormComponent label={t("zvt.windowName")} control={control} name={nameField}
                                       rules={{required: false}} type="text"/>
-                  <InputFormComponent label={t("zvt.windowFrom")} control={control} name={fromField}
-                                      rules={timeRules(toField as any)} type="time"/>
-                  <InputFormComponent label={t("zvt.windowTo")} control={control} name={toField}
-                                      rules={timeRules(fromField as any)} type="time"/>
+                  <SelectForm label={t("zvt.windowFrom")} control={control} name={fromField}
+                              options={QUARTER_HOUR_OPTIONS} rules={timeRules(toField as any)}/>
+                  <SelectForm label={t("zvt.windowTo")} control={control} name={toField}
+                              options={QUARTER_HOUR_OPTIONS} rules={timeRules(fromField as any)}/>
                   <NumberInputForm label={t("zvt.windowPrice")} control={control} name={priceField}
                                    rules={{required: t("zvt.warn_price_missing")}}/>
               </>
