@@ -42,6 +42,7 @@
     "simple": "Einfach",
     "timeBased": "Zeitbasiert",
     "basePrice": "Basispreis in ct/kWh (netto)",
+    "basePrice_card": "Basispreis",
     "window_legend": "Zeitraum {{n}}",
     "window1_active": "Zeitraum 1 aktiv",
     "window2_active": "Zeitraum 2 aktiv",
