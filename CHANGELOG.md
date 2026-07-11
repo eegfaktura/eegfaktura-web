@@ -39,6 +39,11 @@ this changelog highlights the changes relevant for overview and operations.
   button's `::part(native)` with a real `background` (the pattern already used elsewhere, e.g.
   `FilterSegment.component.scss`), so it renders regardless of the clear-button `--background`
   handling. Visual/CSS-only — the filter logic is unchanged.
+- Tariff card showed `Umsatzsteuer 0 %` for tariffs that actually carry a VAT rate. The backend
+  serializes `vatInPercent` as `IntOrString`, so it can arrive as a JSON number; the card guarded
+  it with `vatInPercent.length > 0`, which is `undefined` for a number and fell back to `0`. The
+  card now coerces via `String(...)`, rendering the real rate for both number and string. Display
+  only — the stored value was always correct.
 
 ## [1.0.10] – 2026-07-06
 

@@ -81,7 +81,7 @@ const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect
             </div>
             {rate.useVat && (<div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <p>{t('vatInPercent_card')}</p>
-                <p>{(rate.vatInPercent && rate.vatInPercent.length > 0 ? rate.vatInPercent : "0") + " %"}</p>
+                <p>{(rate.vatInPercent != null && String(rate.vatInPercent).length > 0 ? rate.vatInPercent : "0") + " %"}</p>
             </div>)}
             {!!rate.discount && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
               <p>{t('discount_card')}</p>
@@ -100,7 +100,7 @@ const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect
                 </div>}
             {rate.useVat && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <p>{t('vatInPercent_card')}</p>
-                <p>{(rate.vatInPercent && rate.vatInPercent.length > 0 ? rate.vatInPercent : "0") + " %"}</p>
+                <p>{(rate.vatInPercent != null && String(rate.vatInPercent).length > 0 ? rate.vatInPercent : "0") + " %"}</p>
             </div>}
             {rate.useMeteringPointFee && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <p>{t('meteringPointFee_card')}</p>
@@ -127,7 +127,7 @@ const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect
                 </div>}
             {rate.useVat && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <p>{t('vatInPercent_card')}</p>
-                <p>{(rate.vatInPercent && rate.vatInPercent.length > 0 ? rate.vatInPercent : "0") + " %"}</p>
+                <p>{(rate.vatInPercent != null && String(rate.vatInPercent).length > 0 ? rate.vatInPercent : "0") + " %"}</p>
             </div>}
             {rate.useMeteringPointFee && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <p>{t('meteringPointFee_card')}</p>
