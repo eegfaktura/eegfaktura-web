@@ -8,6 +8,17 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- Billing runs are started asynchronously (requires billing service with async billing run):
+  `POST /api/billing` now answers `202`/`409` with the run id and the UI polls
+  `GET /api/billingRuns/{id}` every 2s until the run is `DONE`/`NEW` (preview) or `FAILED`.
+  While a run is `RUNNING` the start buttons disappear and a progress note is shown — an
+  impatient second click can no longer queue a duplicate full run, and proxy timeouts on
+  long runs are gone. Opening the billing panel while a colleague's run is in progress
+  attaches to that run instead of starting a new one. Failures now surface the persisted
+  `errorSummary` from the billing run (the old `abstractText` string-matching is removed)
+  with a retry path via a fresh preview.
+
 ### Fixed
 - Member view bottom filter buttons (person/consumption, producer/consumer) no longer showed the
   active-filter highlight, so the selected filter was only inferrable from the result list. The

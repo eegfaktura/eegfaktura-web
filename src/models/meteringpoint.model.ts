@@ -71,14 +71,24 @@ export interface ClearingPreviewResponse {
   participantAmounts: ParticipantBillType[];
 }
 
+// Antwort des asynchronen Abrechnungsstarts (POST /api/billing):
+// 202 = gestartet, 409 = läuft bereits (billingRunId des laufenden Laufs),
+// 400/503 = abgelehnt (abstractText = Meldung). Siehe konzept-async-billing-run.md.
+export interface ClearingStartResponse {
+  status: number;
+  billingRunId?: string;
+  abstractText?: string;
+}
+
 //@TODO: Refactor diesen Type --> billing.model.ts (o.ä.)
 export interface BillingRun {
   id: string;
   clearingPeriodType: string;
   clearingPeriodIdentifier: string;
   tenantId: string;
-  runStatus: "NEW" | "DONE" | "CANCELLED";
+  runStatus: "NEW" | "DONE" | "CANCELLED" | "RUNNING" | "FAILED";
   runStatusDateTime: string;
+  errorSummary?: string;
   mailStatus: string;
   mailStatusDateTime: string;
   sepaStatus: string;

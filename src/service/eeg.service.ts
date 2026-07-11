@@ -3,7 +3,7 @@ import {EegParticipant} from "../models/members.model";
 import {
   BillingRun,
   ClearingPreviewRequest,
-  ClearingPreviewResponse,
+  ClearingStartResponse,
   InvoiceDocumentResponse, MeterDirectionType,
   Metering,
   ParticipantBillType
@@ -173,9 +173,12 @@ export class EegService extends EegBaseService {
     }).then(this.handleErrors).then(res => res.json());
   }
 
-  async fetchBilling(tenant: string, invoiceRequest: ClearingPreviewRequest): Promise<ClearingPreviewResponse> {
+  // Startet den asynchronen Abrechnungslauf. Bewusst OHNE handleErrors:
+  // 409 (läuft bereits) trägt die billingRunId im Body, 400/503 die Meldung
+  // in abstractText — beides würde handleErrors verwerfen.
+  async startBilling(tenant: string, invoiceRequest: ClearingPreviewRequest): Promise<ClearingStartResponse> {
     const token = await this.lookupToken()
-    return await fetch(`${BILLING_API_SERVER}/api/billing`, {
+    const response = await fetch(`${BILLING_API_SERVER}/api/billing`, {
       method: 'POST',
       headers: {
         ...this.getSecureHeaders(token, tenant),
@@ -183,7 +186,9 @@ export class EegService extends EegBaseService {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(invoiceRequest)
-    }).then(this.handleErrors).then(res => res.json());
+    });
+    const body = await response.json().catch(() => ({}));
+    return {status: response.status, billingRunId: body.billingRunId, abstractText: body.abstractText};
   }
 
   async fetchParticipantAmounts(tenant : string, billingRunId : string) : Promise<ParticipantBillType[]> {
