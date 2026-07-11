@@ -40,6 +40,64 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
     const useVat = watch("useVat");
     const useMeteringPointFee = watch("useMeteringPointFee")
 
+    // ZVT (zeitvariabler Tarif)
+    const useTimeTariff = watch("useTimeTariff")
+    const tt1Active = watch("timeTariff1Active")
+    const tt2Active = watch("timeTariff2Active")
+    const tt1From = watch("timeTariff1From")
+    const tt1To = watch("timeTariff1To")
+    const tt2From = watch("timeTariff2From")
+    const tt2To = watch("timeTariff2To")
+
+    const parseHHMM = (s?: string): number | undefined => {
+      if (!s) return undefined
+      const parts = s.split(":")
+      if (parts.length < 2) return undefined
+      const hh = Number(parts[0]), mm = Number(parts[1])
+      if (isNaN(hh) || isNaN(mm) || hh < 0 || hh > 23 || mm < 0 || mm > 59) return undefined
+      return hh * 60 + mm
+    }
+    const windowContains = (from: number, to: number, x: number) =>
+      from < to ? (x >= from && x < to) : (x >= from || x < to)
+
+    // Zyklische Ueberlappung der beiden aktiven Zeitfenster (Mitternachts-
+    // ueberlauf erlaubt) - gespiegelt zur serverseitigen Validierung.
+    const windowsOverlap = (): boolean => {
+      if (!tt1Active || !tt2Active) return false
+      const f1 = parseHHMM(tt1From), t1 = parseHHMM(tt1To)
+      const f2 = parseHHMM(tt2From), t2 = parseHHMM(tt2To)
+      if (f1 === undefined || t1 === undefined || f2 === undefined || t2 === undefined) return false
+      return windowContains(f1, t1, f2) || windowContains(f2, t2, f1)
+    }
+
+    const timeRules = (otherField: "timeTariff1From" | "timeTariff1To" | "timeTariff2From" | "timeTariff2To") => ({
+      required: t("zvt.warn_time_missing"),
+      validate: {
+        raster: (v: string) => {
+          const m = parseHHMM(v)
+          return (m !== undefined && m % 15 === 0) || t("zvt.warn_raster")
+        },
+        notEqual: (v: string) => {
+          const other = parseHHMM(watch(otherField))
+          return other === undefined || parseHHMM(v) !== other || t("zvt.warn_equal")
+        },
+        overlap: () => !windowsOverlap() || t("zvt.warn_overlap")
+      }
+    })
+
+    const setTimeTariffMode = (timeBased: boolean) => {
+      setValue("useTimeTariff", timeBased, {shouldValidate: true, shouldDirty: true})
+      if (timeBased) {
+        // freie kWh gelten nur im Einfach-Modus
+        setValue("freeKWh", undefined, {shouldValidate: true, shouldDirty: true})
+      }
+    }
+
+    const setTimeWindowActive = (n: 1 | 2, active: boolean) => {
+      setValue(n === 1 ? "timeTariff1Active" : "timeTariff2Active", active,
+        {shouldValidate: true, shouldDirty: true})
+    }
+
     const handleRateType = (type: number) => {
       switch (type) {
         case 0:
@@ -113,6 +171,42 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
       )
     }
 
+    const renderZvtWindow = (n: 1 | 2) => {
+      const active = n === 1 ? tt1Active : tt2Active
+      const nameField = n === 1 ? "timeTariff1Name" : "timeTariff2Name"
+      const fromField = n === 1 ? "timeTariff1From" : "timeTariff2From"
+      const toField = n === 1 ? "timeTariff1To" : "timeTariff2To"
+      const priceField = n === 1 ? "timeTariff1CentPerKWh" : "timeTariff2CentPerKWh"
+      return (
+        <div>
+          <CheckboxComponent label={t(`zvt.window${n}_active`)}
+                             setChecked={(c) => setTimeWindowActive(n, c)}
+                             checked={!!active}/>
+          {active &&
+              <>
+                  <InputFormComponent label={t("zvt.windowName")} control={control} name={nameField}
+                                      rules={{required: false}} type="text"/>
+                  <InputFormComponent label={t("zvt.windowFrom")} control={control} name={fromField}
+                                      rules={timeRules(toField as any)} type="time"/>
+                  <InputFormComponent label={t("zvt.windowTo")} control={control} name={toField}
+                                      rules={timeRules(fromField as any)} type="time"/>
+                  <NumberInputForm label={t("zvt.windowPrice")} control={control} name={priceField}
+                                   rules={{required: t("zvt.warn_price_missing")}}/>
+              </>
+          }
+        </div>
+      )
+    }
+
+    const renderZvtMode = () => (
+      <ToggleButtonComponent
+        buttons={[{label: t("zvt.simple")}, {label: t("zvt.timeBased")}]}
+        onChange={(idx) => setTimeTariffMode(idx === 1)}
+        value={useTimeTariff ? 1 : 0}
+        changeable={true}
+      />
+    )
+
     const RateFormType = (rate: EegTariff) => {
       switch (currentRateType) {
         case "EEG":
@@ -129,27 +223,47 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
         case "EZP":
           return (
             <div>
-              <NumberInputForm label={t("centPerKWh")} control={control} name={"centPerKWh"}/>
+              {renderZvtMode()}
+              {useTimeTariff ? (
+                <>
+                  <NumberInputForm label={t("zvt.basePrice")} control={control} name={"centPerKWh"}/>
+                  {renderZvtWindow(1)}
+                  {renderZvtWindow(2)}
+                </>
+              ) : (
+                <NumberInputForm label={t("centPerKWh")} control={control} name={"centPerKWh"}/>
+              )}
             </div>
           )
         case "VZP":
           return (
             <div>
-              <NumberInputForm
-                label={t("centPerKWh")}
-                control={control}
-                name={"centPerKWh"}
-              />
-              <InputFormComponent
-                label={t("freeKWh")}
-                control={control}
-                name={"freeKWh"}
-                rules={{
-                  pattern: {value: /^[0-9]*$/, message: "Nur Zahlen erlaubt"},
-                }}
-                isNumber={true}
-                error={errors.freeKWh}
-              />
+              {renderZvtMode()}
+              {useTimeTariff ? (
+                <>
+                  <NumberInputForm label={t("zvt.basePrice")} control={control} name={"centPerKWh"}/>
+                  {renderZvtWindow(1)}
+                  {renderZvtWindow(2)}
+                </>
+              ) : (
+                <>
+                  <NumberInputForm
+                    label={t("centPerKWh")}
+                    control={control}
+                    name={"centPerKWh"}
+                  />
+                  <InputFormComponent
+                    label={t("freeKWh")}
+                    control={control}
+                    name={"freeKWh"}
+                    rules={{
+                      pattern: {value: /^[0-9]*$/, message: "Nur Zahlen erlaubt"},
+                    }}
+                    isNumber={true}
+                    error={errors.freeKWh}
+                  />
+                </>
+              )}
               <InputFormComponent
                 label={t("discount")}
                 control={control}

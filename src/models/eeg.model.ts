@@ -158,6 +158,19 @@ export interface EegTariff {
   meteringPointFee?: number
   meteringPointVat?: number
   billingPeriod?: string
+  // ZVT (zeitvariabler Tarif): centPerKWh ist der Basispreis; bis zu zwei
+  // Zeitfenster mit eigenem Preis (HH:MM, 15-min-Raster, Von>Bis = Mitternacht)
+  useTimeTariff?: boolean
+  timeTariff1Active?: boolean
+  timeTariff1Name?: string
+  timeTariff1From?: string
+  timeTariff1To?: string
+  timeTariff1CentPerKWh?: number
+  timeTariff2Active?: boolean
+  timeTariff2Name?: string
+  timeTariff2From?: string
+  timeTariff2To?: string
+  timeTariff2CentPerKWh?: number
 }
 
 export enum MONTHNAME {
