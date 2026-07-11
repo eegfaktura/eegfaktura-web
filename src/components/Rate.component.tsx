@@ -228,12 +228,14 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
     }
 
     const renderZvtMode = () => (
-      <ToggleButtonComponent
-        buttons={[{label: t("zvt.simple")}, {label: t("zvt.timeBased")}]}
-        onChange={(idx) => setTimeTariffMode(idx === 1)}
-        value={useTimeTariff ? 1 : 0}
-        changeable={true}
-      />
+      <div style={{marginBottom: "16px"}}>
+        <ToggleButtonComponent
+          buttons={[{label: t("zvt.simple")}, {label: t("zvt.timeBased")}]}
+          onChange={(idx) => setTimeTariffMode(idx === 1)}
+          value={useTimeTariff ? 1 : 0}
+          changeable={true}
+        />
+      </div>
     )
 
     const RateFormType = (rate: EegTariff) => {
