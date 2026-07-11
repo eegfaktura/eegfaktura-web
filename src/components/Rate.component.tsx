@@ -180,6 +180,10 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
       )
     }
 
+    // Je Zeitraum ein umrandeter Block (fieldset/legend wie in der Vorlage);
+    // die Felder bleiben bei inaktivem Zeitraum sichtbar, sind aber
+    // ausgegraut und nicht bedienbar - nur die Aktiv-Checkbox bleibt frei.
+    // Validierungsregeln gelten nur fuer aktive Zeitraeume.
     const renderZvtWindow = (n: 1 | 2) => {
       const active = n === 1 ? tt1Active : tt2Active
       const nameField = n === 1 ? "timeTariff1Name" : "timeTariff2Name"
@@ -187,23 +191,39 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
       const toField = n === 1 ? "timeTariff1To" : "timeTariff2To"
       const priceField = n === 1 ? "timeTariff1CentPerKWh" : "timeTariff2CentPerKWh"
       return (
-        <div>
+        <fieldset style={{
+          border: "1px solid var(--ion-color-medium-tint, #a2a4ab)",
+          borderRadius: "8px",
+          padding: "4px 8px 8px",
+          margin: "12px 2px 4px"
+        }}>
+          <legend style={{padding: "0 6px", fontSize: "0.85em", color: "var(--ion-color-primary)"}}>
+            {t("zvt.window_legend", {n: n})}
+          </legend>
           <CheckboxComponent label={t(`zvt.window${n}_active`)}
                              setChecked={(c) => setTimeWindowActive(n, c)}
                              checked={!!active}/>
-          {active &&
-              <>
-                  <InputFormComponent label={t("zvt.windowName")} control={control} name={nameField}
-                                      rules={{required: false}} type="text"/>
-                  <SelectForm label={t("zvt.windowFrom")} control={control} name={fromField}
-                              options={QUARTER_HOUR_OPTIONS} rules={timeRules(toField as any)}/>
-                  <SelectForm label={t("zvt.windowTo")} control={control} name={toField}
-                              options={QUARTER_HOUR_OPTIONS} rules={timeRules(fromField as any)}/>
-                  <NumberInputForm label={t("zvt.windowPrice")} control={control} name={priceField}
-                                   rules={{required: t("zvt.warn_price_missing")}}/>
-              </>
-          }
-        </div>
+          <div style={active ? {} : {opacity: 0.5, pointerEvents: "none"}}>
+            <InputFormComponent label={t("zvt.windowName", {n: n})} control={control} name={nameField}
+                                rules={{required: false}} type="text" readonly={!active}/>
+            <div style={{display: "flex", gap: "8px"}}>
+              <div style={{flex: 1}}>
+                <SelectForm label={t("zvt.windowFrom")} control={control} name={fromField}
+                            options={QUARTER_HOUR_OPTIONS}
+                            rules={active ? timeRules(toField as any) : {}}
+                            disableEntire={!active}/>
+              </div>
+              <div style={{flex: 1}}>
+                <SelectForm label={t("zvt.windowTo")} control={control} name={toField}
+                            options={QUARTER_HOUR_OPTIONS}
+                            rules={active ? timeRules(fromField as any) : {}}
+                            disableEntire={!active}/>
+              </div>
+            </div>
+            <NumberInputForm label={t("zvt.windowPrice", {n: n})} control={control} name={priceField}
+                             rules={active ? {required: t("zvt.warn_price_missing")} : {}}/>
+          </div>
+        </fieldset>
       )
     }
 
