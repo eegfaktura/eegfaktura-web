@@ -1,3 +1,5 @@
+import {EnergyBucket, TariffTimeWindow} from "./energy.model";
+
 export interface ParticipantState {
   activeSince: Date
   inactiveSince: Date
@@ -111,6 +113,11 @@ export interface MeteringEnergyGroupType {
   participantId: string;
   meteringPoint: string;
   allocationKWh: number;
+  // ZVT: Fenster-Teilsummen aus dem energystore-Report + verwendete
+  // Fenster-Definitionen (Konsistenz-Guard in billing). Nur bei
+  // zeitbasierten Tarifen gesetzt.
+  buckets?: EnergyBucket[];
+  timeWindows?: TariffTimeWindow[];
 }
 
 export interface MeteringBillType {

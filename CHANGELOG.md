@@ -8,6 +8,18 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **Time-of-use tariffs (ZVT)**: consumer and producer tariffs gain a
+  "Einfach | Zeitbasiert" mode in the tariff dialog. Time-based tariffs
+  configure a base price plus up to two named time windows (Von/Bis on the
+  15-min raster, midnight crossing allowed, one shared discount, no free
+  kWh). Client-side plausibility checks (raster, Von ≠ Bis, cyclic overlap)
+  mirror the backend validation. During billing the app sends the tariff's
+  generic time windows with the energystore report request, receives the
+  per-window sums (`buckets`) per metering point and forwards them together
+  with the window definitions to the billing service (consistency guard;
+  simple tariffs are completely unchanged and never carry buckets).
+
 ### Changed
 - Billing runs are started asynchronously (requires billing service with async billing run):
   `POST /api/billing` now answers `202`/`409` with the run id and the UI polls

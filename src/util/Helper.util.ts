@@ -1,7 +1,7 @@
 import {EegParticipant} from "../models/members.model";
-import {ReportType, SelectedPeriod} from "../models/energy.model";
+import {ReportType, SelectedPeriod, TariffTimeWindow} from "../models/energy.model";
 import {CpPeriodType} from "../models/reports.model";
-import {MONTHNAME} from "../models/eeg.model";
+import {EegTariff, MONTHNAME} from "../models/eeg.model";
 
 
 export const formatedName = (participant: EegParticipant) => {
@@ -302,4 +302,18 @@ export function JoinStrings(sep: string, missing?: string, ...items: string[]): 
     return items.map(i => i && i.length > 0 ? i : missing).join(sep)
   }
   return items.filter(i => i.length > 0).join(sep)
+}
+// ZVT (zeitvariabler Tarif): liefert die generischen Zeitfenster eines
+// zeitbasierten Tarifs fuer den energystore-Report-Request und den
+// billing-Konsistenz-Guard. undefined fuer Einfach-Tarife.
+export const zvtTimeWindows = (tariff?: EegTariff): TariffTimeWindow[] | undefined => {
+  if (!tariff || !tariff.useTimeTariff) return undefined
+  const windows: TariffTimeWindow[] = []
+  if (tariff.timeTariff1Active && tariff.timeTariff1From && tariff.timeTariff1To) {
+    windows.push({key: "T1", from: tariff.timeTariff1From, to: tariff.timeTariff1To})
+  }
+  if (tariff.timeTariff2Active && tariff.timeTariff2From && tariff.timeTariff2To) {
+    windows.push({key: "T2", from: tariff.timeTariff2From, to: tariff.timeTariff2To})
+  }
+  return windows.length > 0 ? windows : undefined
 }

@@ -1,22 +1,33 @@
 import {Metering, MeteringEnergyGroupType} from "../../models/meteringpoint.model";
 import {EegParticipant} from "../../models/members.model";
 import {meteringEnergyGroup1} from "../../store/energy";
+import {ratesMapSelector} from "../../store/rate";
 import {store} from "../../store";
+import {zvtTimeWindows} from "../../util/Helper.util";
 
 export const buildAllocationMapFromSelected = (participants: EegParticipant[], checkedParticipant: Record<string, boolean>): MeteringEnergyGroupType[] => {
   const participantReport = meteringEnergyGroup1(store.getState())
+  const tariffById = ratesMapSelector(store.getState())
   const activeMeters = participants.flatMap(p => p.meters.filter(m=>m.status !== "INIT").map(m => m.meteringPoint))
+  const tariffIdByMeter = participants.flatMap(p => p.meters).reduce(
+    (acc, m) => ({...acc, [m.meteringPoint]: m.tariff_id}), {} as Record<string, string>)
 
   return participantReport
     .filter(p => checkedParticipant[p.participantId] !== undefined && checkedParticipant[p.participantId])
     .flatMap(p => {
       return p.meters.filter(m => activeMeters.includes(m.meterId)).map(m => {
+        // ZVT: bei zeitbasiertem Tarif die Fenster-Teilsummen (buckets) aus dem
+        // energystore-Report plus die verwendeten Fenster-Definitionen als
+        // Konsistenz-Guard mitgeben. billing bricht fail-loud ab, wenn sie
+        // fehlen oder nicht (mehr) zum Tarif passen.
+        const timeWindows = zvtTimeWindows(tariffById[tariffIdByMeter[m.meterId]])
         return {
           participantId: p.participantId,
           meteringPoint: m.meterId,
           allocationKWh: m.meterDir === "GENERATION"
             ? m.report.summary.production - m.report.summary.allocation
-            : m.report.summary.utilization
+            : m.report.summary.utilization,
+          ...(timeWindows ? {timeWindows: timeWindows, buckets: m.report.buckets} : {})
         } as MeteringEnergyGroupType
       })//.filter(e => e.allocationKWh > 0)
     })

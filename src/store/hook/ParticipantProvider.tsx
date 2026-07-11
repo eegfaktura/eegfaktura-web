@@ -12,6 +12,8 @@ import {isEEGFetching, useTenant} from "./Eeg.provider";
 import {filterActiveParticipantAndMeter} from "../../util/FilterHelper.unit";
 import {getPeriodDates} from "../../util/FilterHelper";
 import participants from "../../pages/Participants";
+import {ratesMapSelector} from "../rate";
+import {zvtTimeWindows} from "../../util/Helper.util";
 
 
 export interface ParicipantState {
@@ -65,6 +67,7 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
   const activePeriod = useAppSelector(selectedPeriodSelector)
   // const participants = useAppSelector(activeParticipantsSelector1)
   const allParticipants = useAppSelector(allParticipantsSelector)
+  const tariffById = useAppSelector(ratesMapSelector)
 
   const isFechting = isEEGFetching()
 
@@ -239,13 +242,17 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
 
   const fetchEnergyReport = (aps: EegParticipant[]) => {
     if (tenant && activePeriod && aps && aps.length > 0) {
+      // ZVT: je Zaehlpunkt mit zeitbasiertem Tarif die generischen
+      // Zeitfenster mitschicken - energystore liefert dann buckets zurueck.
       const participantsReport = aps.map(p => {
         return {
           participantId: p.id,
           meters: p.meters.filter(m => !!m.participantState).map(m => {
+            const timeWindows = zvtTimeWindows(tariffById[m.tariff_id])
             return {meterId: m.meteringPoint, meterDir: m.direction,
               from: new Date(m.participantState.activeSince).getTime(),
-              until: new Date(m.participantState.inactiveSince).getTime()} as MeterReport})
+              until: new Date(m.participantState.inactiveSince).getTime(),
+              ...(timeWindows ? {timeWindows} : {})} as MeterReport})
         } as ParticipantReport
       })
       dispatch(fetchEnergyReportV2({tenant: tenant, year: activePeriod.year, segment: activePeriod.segment, type: activePeriod.type, participants: participantsReport.filter(p => p.meters.length > 0)}))
