@@ -67,7 +67,7 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
       if (meter) {
         Api.eegService.changeMeterPartitionFactor(
           eeg.id.toUpperCase(),
-          meter.map(m => {return {meter: m.meteringPoint, direction: m.direction, gridOperatorId: m.gridOperatorId, activation: m.participantState.activeSince, partFact: data.partFact || 100}}))
+          meter.map(m => {return {meter: m.meteringPoint, direction: m.direction, gridOperatorId: m.gridOperatorId, activation: m.participantState.activeSince ? new Date(m.participantState.activeSince).toISOString() : new Date().toISOString(), partFact: data.partFact || 100}}))
           .finally(() => {
             reset()
           })
