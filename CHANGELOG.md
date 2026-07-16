@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.0.11] – 2026-07-16
+
 ### Fixed
 - SEPA export with "Mitglieder zusammenfassen" enabled booked the **net** amount for credit
   notes (Gutschriften) instead of the **gross** amount, so payouts to VAT-liable producers were
