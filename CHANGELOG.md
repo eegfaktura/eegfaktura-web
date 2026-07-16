@@ -9,6 +9,11 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Fixed
+- Metering-point detail pane could show the previous meter's active/inactive state after
+  switching between meters (stale render of the disabled `ion-toggle`, observed on
+  Safari/WebKit; text and toggle even contradicted each other). The meter detail block now
+  remounts per metering point via a React `key`, so every switch renders the selected
+  meter's real state (#101).
 - Member view bottom filter buttons (person/consumption, producer/consumer) no longer showed the
   active-filter highlight, so the selected filter was only inferrable from the result list. The
   `.isActive` state set `--background` on an `IonButton` that defaults to `fill="clear"` inside

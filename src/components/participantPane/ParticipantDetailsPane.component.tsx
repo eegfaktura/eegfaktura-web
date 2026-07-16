@@ -384,7 +384,9 @@ const ParticipantDetailsPaneComponent: FC = () => {
             </div>
             <div className={"details-box"}>
               {selectedMeter ? (
-                  <div className="ion-padding" slot="content">
+                  // key erzwingt Remount beim ZP-Wechsel — sonst behält die disabled
+                  // ion-toggle den Zustand des vorher gewählten ZP (Issue #101, Safari)
+                  <div className="ion-padding" slot="content" key={selectedMeter.meteringPoint}>
                     <IonToolbar color="primary">
                       <IonTitle>{formatMeteringPointString(selectedMeter.meteringPoint)}</IonTitle>
                       {isAdmin() && <IonButtons slot="end">
