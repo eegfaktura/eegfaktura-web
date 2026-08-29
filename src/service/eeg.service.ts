@@ -422,7 +422,7 @@ export class EegService extends EegBaseService {
     }).then(this.handleErrors).then(res => res.json());
   }
 
-  async changeMeterPartitionFactor(tenant: string, meters: {meter: string, direction: MeterDirectionType, gridOperatorId: string, activation: Date, partFact: number}[]): Promise<any> {
+  async changeMeterPartitionFactor(tenant: string, meters: {meter: string, direction: MeterDirectionType, gridOperatorId: string, activation: string, partFact: number}[]): Promise<any> {
     const token = await this.lookupToken()
 
     const body = {meteringPoints: meters}
