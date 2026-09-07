@@ -8,6 +8,13 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.0.12] – 2026-09-07
+
+### Changed
+- Deployment-only release: rebuilt against a refreshed base image, with Dependabot now
+  watching the `docker` ecosystem. No changes to the application itself — the version
+  exists so the production pin matches a named release.
+
 ## [1.0.11] – 2026-07-16
 
 ### Fixed
