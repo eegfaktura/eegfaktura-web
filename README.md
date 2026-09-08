@@ -13,10 +13,10 @@ for Austrian renewable energy communities (*Erneuerbare-Energiegemeinschaften*, 
 ## Tech stack
 
 - **TypeScript**, **React 18** + **Ionic 7** (React Router 5)
-- **Vite 5** build; **pnpm** package manager
+- **Vite 6** build; **pnpm** package manager
 - **Redux Toolkit** + react-redux
 - **OIDC** auth (`oidc-client-ts`, `react-oidc-context`); **i18next**; **Recharts**
-- Vitest + Cypress (tests); served in production by **Caddy**
+- **Vitest** (unit tests); served in production by **Caddy**
 
 ## Structure
 

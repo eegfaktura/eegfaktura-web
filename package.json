@@ -7,16 +7,10 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test.e2e": "cypress run",
     "test.unit": "vitest",
     "lint": "eslint"
   },
   "dependencies": {
-    "@capacitor/app": "5.0.6",
-    "@capacitor/core": "5.6.0",
-    "@capacitor/haptics": "5.0.6",
-    "@capacitor/keyboard": "5.0.7",
-    "@capacitor/status-bar": "5.0.6",
     "@ionic/core": "^7.0.0",
     "@ionic/react": "^7.0.0",
     "@ionic/react-router": "^7.0.0",
@@ -58,7 +52,6 @@
     "xmlbuilder2": "^3.1.1"
   },
   "devDependencies": {
-    "@capacitor/cli": "8.5.1",
     "@testing-library/dom": ">=7.21.4",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^14.0.0",
@@ -69,7 +62,6 @@
     "@types/uuid": "^9.0.7",
     "@vitejs/plugin-legacy": "^5.0.0",
     "@vitejs/plugin-react": "^4.0.1",
-    "cypress": "^16.0.0",
     "eslint": "^8.35.0",
     "eslint-plugin-react": "^7.32.2",
     "jsdom": "^22.1.0",
