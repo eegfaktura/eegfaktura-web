@@ -8,6 +8,16 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Security
+- `vite` 5.4.9 -> 6.4.3, which also pulls `rollup` 4.63.1, `esbuild` 0.25.12, `postcss` 8.5.28
+  and `nanoid` 3.3.18 through the build tree. This closes **22 of the 75 open Dependabot
+  alerts** (6 HIGH, 14 MEDIUM, 2 LOW) — among them CVE-2026-53571 (vite) and CVE-2026-27606
+  (rollup). All of it is build tooling that never reaches the browser bundle, so this is about
+  the integrity of the build, not about the shipped application.
+- The `pnpm.overrides` pin on `form-data` survived the update (resolved: 4.0.6). That is worth
+  checking on every dependency change here: pnpm 10 and newer no longer read that field and
+  drop the pin silently, with only a warning. Build with pnpm 9.12.1, as CI does.
+
 ## [1.0.12] – 2026-09-07
 
 ### Changed
