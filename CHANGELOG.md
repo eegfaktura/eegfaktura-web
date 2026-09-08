@@ -20,6 +20,11 @@ this changelog highlights the changes relevant for overview and operations.
   tree entirely and lifts `tmp` to 0.2.7. Notably `extract-zip` carried a HIGH advisory with
   **no fix published**, so an upgrade was the only way to be rid of it. Together with the vite
   bump this closes 37 of the 75 open alerts (13 HIGH, 18 MEDIUM, 6 LOW).
+- `@capacitor/cli` 5.6.0 -> 8.5.1, lifting `tar` 6.2.1 -> 7.5.22. `tar` alone accounted for six
+  HIGH advisories and reached the tree solely through this package. Only the CLI moved: the
+  Capacitor plugins declare a peer range on `@capacitor/core`, not on the CLI, so the family
+  stays consistent. Cumulative across the three bumps: **45 of the 75 alerts closed**
+  (19 HIGH, 20 MEDIUM, 6 LOW).
 - The `pnpm.overrides` pin on `form-data` survived the update (resolved: 4.0.6). That is worth
   checking on every dependency change here: pnpm 10 and newer no longer read that field and
   drop the pin silently, with only a warning. Build with pnpm 9.12.1, as CI does.
