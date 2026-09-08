@@ -8,6 +8,23 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Removed
+- Cypress and Capacitor, neither of which was ever used here. Cypress had a config file but not
+  a single spec, so `test.e2e` ran nothing; Capacitor had no imports anywhere in `src/`, no
+  `android/` or `ios/` project, and a `capacitor.config.ts` that was still the untouched Ionic
+  starter — `appId: 'io.ionic.starter'`, `webDir: 'build'` rather than Vite's `dist`, and a
+  missing comma that made the file syntactically invalid. It cannot ever have run.
+
+  Removed: the five `@capacitor/*` runtime packages, `@capacitor/cli`, `cypress`, both config
+  files, the `test.e2e` script and the Capacitor entry in `ionic.config.json`. The dependency
+  tree drops from 601 to 472 packages.
+
+  To be clear about the motive: this closes **no** additional security alerts — the vite,
+  cypress and capacitor upgrades already did that work. This is about not carrying scaffolding
+  that produces alerts, install time and maintenance questions without ever being used. Should
+  end-to-end tests or a mobile build become real goals, they are better set up deliberately
+  than inherited from a starter template three majors out of date.
+
 ### Security
 - `vite` 5.4.9 -> 6.4.3, which also pulls `rollup` 4.63.1, `esbuild` 0.25.12, `postcss` 8.5.28
   and `nanoid` 3.3.18 through the build tree. This closes **22 of the 75 open Dependabot
