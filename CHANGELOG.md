@@ -14,6 +14,12 @@ this changelog highlights the changes relevant for overview and operations.
   alerts** (6 HIGH, 14 MEDIUM, 2 LOW) — among them CVE-2026-53571 (vite) and CVE-2026-27606
   (rollup). All of it is build tooling that never reaches the browser bundle, so this is about
   the integrity of the build, not about the shipped application.
+- `cypress` 13.15.0 -> 16.0.0. Cypress dragged in most of the remaining vulnerable build
+  packages; the upgrade drops `extract-zip`, `@xmldom/xmldom`, `@babel/core`,
+  `@babel/plugin-transform-modules-systemjs`, `@babel/runtime` and `@tootallnate/once` from the
+  tree entirely and lifts `tmp` to 0.2.7. Notably `extract-zip` carried a HIGH advisory with
+  **no fix published**, so an upgrade was the only way to be rid of it. Together with the vite
+  bump this closes 37 of the 75 open alerts (13 HIGH, 18 MEDIUM, 6 LOW).
 - The `pnpm.overrides` pin on `form-data` survived the update (resolved: 4.0.6). That is worth
   checking on every dependency change here: pnpm 10 and newer no longer read that field and
   drop the pin silently, with only a warning. Build with pnpm 9.12.1, as CI does.
