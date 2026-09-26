@@ -8,6 +8,12 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- CI builds `env/**` branches and deploys the resulting image into the matching feature
+  environment (ADR-0008): a push to `env/<name>` pins this service in namespace `env-<name>`
+  to that branch's `sha-…` image. Previously only the default branch, tags and `preview/**`
+  produced an image at all. The environment itself is still provisioned manually.
+
 ### Removed
 - Cypress and Capacitor, neither of which was ever used here. Cypress had a config file but not
   a single spec, so `test.e2e` ran nothing; Capacitor had no imports anywhere in `src/`, no
