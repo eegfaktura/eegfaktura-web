@@ -4,11 +4,17 @@
 import legacy from '@vitejs/plugin-legacy'
 import react from '@vitejs/plugin-react'
 
+import { readFileSync } from 'node:fs'
 import { defineConfig } from 'vite'
 import i18nextLoader from 'vite-plugin-i18next-loader';
 
+const appVersion = JSON.parse(readFileSync('./package.json', 'utf-8')).version.trim()
+
 // https://vitejs.dev/config/
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion),
+  },
   plugins: [
     react(),
     legacy(),

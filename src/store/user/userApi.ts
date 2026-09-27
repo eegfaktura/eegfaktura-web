@@ -2,6 +2,8 @@ import {createApi, fetchBaseQuery} from "@reduxjs/toolkit/query/react";
 import {RootState} from "../store";
 import {UserData} from "../../models/user.model";
 
+import {X_CLIENT_HEADER, X_CLIENT_VALUE} from "../../service/client.header";
+
 const API_API_SERVER = import.meta.env.VITE_API_SERVER_URL;
 
 export const userApi = createApi({
@@ -18,6 +20,7 @@ export const userApi = createApi({
       if (tenant) {
         headers.set("tenant", tenant);
       }
+      headers.set(X_CLIENT_HEADER, X_CLIENT_VALUE);
       return headers;
     },
   }),

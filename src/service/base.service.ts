@@ -1,6 +1,7 @@
 import {AuthService} from "./auth.service";
 import {determineErrTxt, ErrorResponse, IErrorResponse} from "./error.text";
 import {Mutex} from "async-mutex";
+import {X_CLIENT_HEADER, X_CLIENT_VALUE} from "./client.header";
 
 export const API_API_SERVER = import.meta.env.VITE_API_SERVER_URL;
 export const FILESTORE_API_SERVER = import.meta.env.VITE_FILESTORE_SERVER_URL;
@@ -85,10 +86,10 @@ class EegBaseService {
     })
   }
   protected getSecureHeaders(token: string, tenant: string) {
-    return {'Authorization': `Bearer ${token}`, "tenant": tenant}
+    return {'Authorization': `Bearer ${token}`, "tenant": tenant, [X_CLIENT_HEADER]: X_CLIENT_VALUE}
   }
   protected getSecureHeadersX(token: string, tenant: string) {
-    return {'Authorization': `Bearer ${token}`, "X-Tenant": tenant}
+    return {'Authorization': `Bearer ${token}`, "X-Tenant": tenant, [X_CLIENT_HEADER]: X_CLIENT_VALUE}
   }
 
   protected async handleErrors(response: Response):Promise<Response> {
