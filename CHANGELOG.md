@@ -8,6 +8,13 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Security
+- The image no longer runs as root. Caddy listens on `:8080` per `caddy.conf`, well above
+  1024, so it never needed the privileges in the first place. A dedicated `app` user
+  (UID/GID 1000) now owns Caddy's XDG directories `/data` and `/config` — without that it
+  fails on startup while writing its own state. The served files under `/var/www` stay
+  root-owned; Caddy only reads them.
+
 ### Added
 - CI builds `env/**` branches and deploys the resulting image into the matching feature
   environment (ADR-0008): a push to `env/<name>` pins this service in namespace `env-<name>`
