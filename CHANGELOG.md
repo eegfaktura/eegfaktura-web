@@ -8,6 +8,16 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **SEPA mandate date saved one day early when creating a member.** The date picker showed the
+  correct day, but after saving the record held the day before. react-hook-form clones the
+  form values in `handleSubmit` and turns every `Date` — including the `LocalDate` the picker
+  stored — into a plain `Date`, which serialises as UTC: local midnight on 4 June became
+  `2026-06-03T22:00:00.000Z`, and the backend kept that date. Editing an existing member was
+  not affected, because that path sends the `LocalDate` directly without the clone. The picker
+  now writes the date into the form as a `YYYY-MM-DD` string, which survives the clone.
+  Mandate dates entered at creation before this fix are still one day early in the data.
+
 ### Security
 - The image no longer runs as root. Caddy listens on `:8080` per `caddy.conf`, well above
   1024, so it never needed the privileges in the first place. A dedicated `app` user
