@@ -111,6 +111,10 @@ const customHeader = ({
   </div>
 )}
 
+// Kalenderdatum als "YYYY-MM-DD" im lokalen Kalender - so, wie der Benutzer es im
+// DatePicker ausgewaehlt hat, ohne Uhrzeit und ohne Zeitzonen-Umrechnung.
+export const toFormDateValue = (date: Date): string => moment(date).format("YYYY-MM-DD")
+
 // Define the props for the DatePickerInput component
 interface DatePickerInputProps<TFieldValues extends FieldValues> {
   name: Path<TFieldValues>; // Use Path<TFieldValues> here
@@ -141,7 +145,12 @@ const DatePickerInput = <TFieldValues extends FieldValues>({
   const onDateChange = (change: (...event: any[]) => void) => (date: Date | null) => {
     if (date) {
       const localDate = new LocalDate(moment(date).format("YYYY-MM-DD"))
-      onChangePartial ? onChangePartial(localDate) : change(localDate)
+      // Ins Formular als String "YYYY-MM-DD", nicht als LocalDate: react-hook-form klont
+      // die Werte in handleSubmit und macht dabei aus jedem Date (auch LocalDate) ein
+      // gewoehnliches Date. Das serialisiert als UTC - lokale Mitternacht wird so zum
+      // Vortag ("2026-06-03T22:00:00.000Z"), und das Backend speichert diesen Tag.
+      // Ein String uebersteht das Klonen unveraendert.
+      onChangePartial ? onChangePartial(localDate) : change(toFormDateValue(date))
     }
   }
 
