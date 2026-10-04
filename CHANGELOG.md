@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.0.13] – 2026-10-04
+
 ### Fixed
 - **SEPA mandate date saved one day early when creating a member.** The date picker showed the
   correct day, but after saving the record held the day before. react-hook-form clones the
