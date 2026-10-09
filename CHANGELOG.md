@@ -21,7 +21,8 @@ this changelog highlights the changes relevant for overview and operations.
 - **SEPA export no longer fails for members without an IBAN.** An empty IBAN cell aborted the whole
   export (`E_SEPA_DOWNLOAD`), and a credit note could end up with an empty `<IBAN/>`. Rows without
   an IBAN are now left out of both files and listed in the dialog ("Ohne IBAN, bitte manuell
-  abwickeln"). Names cut at the length limit no longer end with a blank.
+  abwickeln") by account owner, like the "Kein SEPA" list. Names cut at the length limit no longer
+  end with a blank.
 
 ## [1.0.13] – 2026-10-04
 

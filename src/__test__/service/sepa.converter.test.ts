@@ -43,4 +43,12 @@ describe("splitRowsByIban", () => {
     expect(withIban.map(r => r["Empfänger Name"])).toEqual(["A"]);
     expect(withoutIban).toEqual(["B", "C"]);
   });
+
+  it("lists the account owner like the \"Kein SEPA\" list, else the recipient name", () => {
+    const {withoutIban} = splitRowsByIban([
+      {"Empfänger Name": "Gerhard Schuster", "Empfänger Kontoeigner": "Schuster, Gerhard", "Empfänger Konto IBAN": ""},
+      {"Empfänger Name": "Julia Auer", "Empfänger Kontoeigner": "", "Empfänger Konto IBAN": ""},
+    ]);
+    expect(withoutIban).toEqual(["Schuster, Gerhard", "Julia Auer"]);
+  });
 });

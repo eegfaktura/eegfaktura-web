@@ -73,10 +73,11 @@ export const splitDebitByMandate = (debit: SepaModelItem[]) => ({
 
 // Zeilen ohne IBAN (z.B. Mitglieder ohne Bankkonto, die auf Rechnung zahlen) koennen weder in die
 // Lastschrift noch in die Ueberweisung: Sie werden aus beiden Dateien genommen und im Dialog zur
-// manuellen Abwicklung aufgelistet.
+// manuellen Abwicklung aufgelistet. Angezeigt wird wie bei "Kein SEPA" der Kontoeigner, ohne Bankkonto
+// ersatzweise der Empfänger-Name.
 export const splitRowsByIban = (records: any[]) => {
   const hasIban = (item: any) => String(item['Empfänger Konto IBAN'] ?? '').replace(/\s/g, '').length > 0
-  const name = (item: any) => item['Empfänger Name'] || item['Empfänger Kontoeigner'] || item['Nummer']
+  const name = (item: any) => item['Empfänger Kontoeigner'] || item['Empfänger Name'] || item['Nummer']
   return {
     withIban: records.filter(hasIban),
     withoutIban: Array.from(new Set(records.filter(item => !hasIban(item)).map(name))) as string[],
