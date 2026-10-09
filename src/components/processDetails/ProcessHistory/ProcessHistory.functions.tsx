@@ -54,6 +54,13 @@ const renderTableWithConversationId = (headers: string[], e: EdaHistory[]) => {
   )
 }
 
+// "Aufhebung der Datenfreigabe" comes in three protocols: by the grid operator (CM_REV_IMP), by the
+// community itself (CM_REV_SP) and by the member, e.g. in the grid operator's portal (CM_REV_CUS).
+export const REVOKE_PROTOCOLS = ["CM_REV_IMP", "CM_REV_SP", "CM_REV_CUS"]
+
+export const mergeProtocolEntries = <T,>(protocols: string[], entries: Record<string, Record<string, T>> | undefined): Record<string, T> =>
+  protocols.reduce((result, p) => ({...result, ...((entries && entries[p]) || {})}), {} as Record<string, T>)
+
 export const renderAccordionBody = (p: string, v: EdaHistory[]) => {
   switch (p) {
     case "CM_REV_IMP":
