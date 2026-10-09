@@ -8,6 +8,22 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **SEPA direct debit no longer contains members with direct debit type "Kein SEPA".** Members who
+  pay by invoice (e.g. municipalities) had to be deleted from `…SEPA_Direct_Debit.xml` by hand
+  before every import. They are now left out; `NbOfTxs` and `CtrlSum` are computed from the
+  remaining transactions, so the totals match. The dialog lists who was left out. The credit
+  transfer file (`…SEPA_Credit_Transfer.xml`) is unchanged.
+- **Names and remittance text are reduced to the SEPA character set.** Accents outside it were
+  exported unchanged and rejected by the bank (e.g. "René" → "Rene"); umlauts and ß stay, `&`
+  becomes `+`, other characters become a space; names are cut at 70, the remittance text at 140
+  characters. Mandate references are left as entered.
+- **SEPA export no longer fails for members without an IBAN.** An empty IBAN cell aborted the whole
+  export (`E_SEPA_DOWNLOAD`), and a credit note could end up with an empty `<IBAN/>`. Rows without
+  an IBAN are now left out of both files and listed in the dialog ("Ohne IBAN, bitte manuell
+  abwickeln") by account owner, like the "Kein SEPA" list. Names cut at the length limit no longer
+  end with a blank.
+
 ## [1.0.13] – 2026-10-04
 
 ### Fixed
