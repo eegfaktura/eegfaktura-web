@@ -27,6 +27,7 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
   const [collectionDate, setCollectionDate] = useState<Date | null>(moment().toDate())
   const [error, setError] = useState<string | null>(null)
   const [skippedDebit, setSkippedDebit] = useState<string[]>([])
+  const [withoutIban, setWithoutIban] = useState<string[]>([])
   const [batch, setBatch] = useState<boolean>(true)
   const [summarize, setSummarize] = useState<boolean>(true)
 
@@ -40,6 +41,7 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
     const files = await ConvertExcelToXML(tenant, billingRunId, eeg, collectionDate!, period, batch, summarize)
     if (files) {
       setSkippedDebit(files.skippedDebit)
+      setWithoutIban(files.withoutIban)
       return [
         { blob: new Blob([files.debit.content], { type: 'application/xml' }), name: files.debit.name },
         { blob: new Blob([files.transfer.content], { type: 'application/xml' }), name: files.transfer.name },
@@ -113,6 +115,11 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
         {skippedDebit.length > 0 && (
           <IonLabel>
             <p>Nicht in der Lastschrift (Einzugsart „Kein SEPA“): {skippedDebit.join(", ")}</p>
+          </IonLabel>
+        )}
+        {withoutIban.length > 0 && (
+          <IonLabel>
+            <p>Ohne IBAN, bitte manuell abwickeln: {withoutIban.join(", ")}</p>
           </IonLabel>
         )}
 

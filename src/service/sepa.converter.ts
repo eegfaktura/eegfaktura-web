@@ -62,6 +62,7 @@ export const toSepaText = (str: string | undefined | null, maxLength = 70): stri
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, maxLength)
+    .trim()
 
 // Mitglieder mit Einzugsart "Kein SEPA" (NONE) zahlen auf Rechnung: nicht in die Lastschrift-Datei.
 // Gutschriften (Ueberweisung) sind davon nicht betroffen.
@@ -69,6 +70,18 @@ export const splitDebitByMandate = (debit: SepaModelItem[]) => ({
   debit: debit.filter(item => item.DebitType !== 'NONE'),
   skipped: debit.filter(item => item.DebitType === 'NONE'),
 })
+
+// Zeilen ohne IBAN (z.B. Mitglieder ohne Bankkonto, die auf Rechnung zahlen) koennen weder in die
+// Lastschrift noch in die Ueberweisung: Sie werden aus beiden Dateien genommen und im Dialog zur
+// manuellen Abwicklung aufgelistet.
+export const splitRowsByIban = (records: any[]) => {
+  const hasIban = (item: any) => String(item['Empfänger Konto IBAN'] ?? '').replace(/\s/g, '').length > 0
+  const name = (item: any) => item['Empfänger Name'] || item['Empfänger Kontoeigner'] || item['Nummer']
+  return {
+    withIban: records.filter(hasIban),
+    withoutIban: Array.from(new Set(records.filter(item => !hasIban(item)).map(name))) as string[],
+  }
+}
 
 const buildFileName = (fileName: string, tenant: string, activePeriod: SelectedPeriod) => {
   return `${activePeriod.year}-${tenant}_${activePeriod.type}_${activePeriod.segment}-${fileName}`;
@@ -158,11 +171,17 @@ export const ConvertExcelToXML = async (tenant: string, billingRunId: string,
   }
 
   try {
+    let withoutIban: string[] = []
     const invoiceFile = await Api.eegService.exportBillingExcelForSepa(tenant, billingRunId)
       .then((response) => response.arrayBuffer())
       .then(buffer => XLSX.read(buffer, {type: 'binary', cellText: false, cellDates: true}))
       .then(workbook => workbook.Sheets[workbook.SheetNames[0]])
       .then(sheet => XLSX.utils.sheet_to_json(sheet, {raw: false, dateNF: 'yyyy-mm-dd'}) as any[])
+      .then(records => {
+        const split = splitRowsByIban(records)
+        withoutIban = split.withoutIban
+        return split.withIban
+      })
       .then(records => records.reduce((result, item) => {
         (result[item['Empfänger Konto IBAN']] = result[item['Empfänger Konto IBAN']] || []).push(item);
         return result;
@@ -210,6 +229,7 @@ export const ConvertExcelToXML = async (tenant: string, billingRunId: string,
       debit: {content: await createSepaDirectDebit(debit, eeg, activePeriod, collectionDate, batch), name: buildFileName("SEPA_Direct_Debit", tenant, activePeriod)},
       transfer: {content: await createSepaCreditTransfer(invoiceFile.Transfer, eeg, activePeriod, collectionDate, batch), name: buildFileName("SEPA_Credit_Transfer", tenant, activePeriod)},
       skippedDebit: skipped.map(item => item.Name),
+      withoutIban,
     }
   } catch (error) {
     console.log(error);
