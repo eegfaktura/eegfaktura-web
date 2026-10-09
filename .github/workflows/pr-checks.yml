@@ -3,7 +3,9 @@
 # their own, so the test jobs keep a clean signal: "Lockfile in sync" (known-errors #5) and
 # "Type check" (tsc, #6). Both stay red until those are fixed.
 #
-# Until #5 is fixed the test jobs install with --no-frozen-lockfile, as rolling-release.yml does.
+# Until #5 is fixed the test jobs install with --no-frozen-lockfile, as rolling-release.yml does:
+# whatever the lockfile does not cover resolves at run time (no 7-day rule for those packages —
+# the deviation ends with #5). --ignore-scripts keeps their install scripts from running.
 # Versions fixed, each release older than 7 days (checked 2026-10-09): Node 20.18.0 (.nvmrc),
 # pnpm 9.12.1. Actions pinned by commit SHA.
 
@@ -42,7 +44,7 @@ jobs:
       - name: Install dependencies
         run: |
           npm install -g "pnpm@${PNPM_VERSION}"
-          pnpm install --no-frozen-lockfile
+          pnpm install --no-frozen-lockfile --ignore-scripts
 
       - name: Unit tests
         run: pnpm exec vitest run
@@ -65,7 +67,7 @@ jobs:
       - name: Install dependencies
         run: |
           npm install -g "pnpm@${PNPM_VERSION}"
-          pnpm install --no-frozen-lockfile
+          pnpm install --no-frozen-lockfile --ignore-scripts
 
       - name: Tests
         run: pnpm exec vitest run
@@ -111,7 +113,7 @@ jobs:
       - name: Install dependencies
         run: |
           npm install -g "pnpm@${PNPM_VERSION}"
-          pnpm install --no-frozen-lockfile
+          pnpm install --no-frozen-lockfile --ignore-scripts
 
       - name: tsc
         run: pnpm exec tsc --noEmit
