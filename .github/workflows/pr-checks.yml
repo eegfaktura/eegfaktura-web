@@ -1,7 +1,7 @@
 # Tests on every pull request: the unit tests (Vitest) and the full suite (Vitest, then the
-# production build as rolling-release.yml makes it). Two checks report the known build defects on
-# their own, so the test jobs keep a clean signal: "Lockfile in sync" (known-errors #5) and
-# "Type check" (tsc, #6). Both stay red until those are fixed.
+# production build as rolling-release.yml makes it). Two checks report build defects on their own,
+# so the test jobs keep a clean signal: "Lockfile in sync" (known-errors #5, red until it is fixed)
+# and "Type check" (tsc; #6 recorded it red, green again since 2026-10-09).
 #
 # Until #5 is fixed the test jobs install with --no-frozen-lockfile, as rolling-release.yml does:
 # whatever the lockfile does not cover resolves at run time (no 7-day rule for those packages —
