@@ -1,5 +1,5 @@
 import React, {ClipboardEvent, FC, useEffect, useState} from "react";
-import {IonButton, IonCol, IonGrid, IonIcon, IonList, IonRow, useIonAlert} from "@ionic/react";
+import {IonButton, IonCol, IonGrid, IonIcon, IonList, IonRow, IonText, useIonAlert} from "@ionic/react";
 import SelectForm from "../form/SelectForm.component";
 import InputForm, {PartialChangeFunction} from "../form/InputForm.component";
 import CheckboxComponent from "../form/Checkbox.component";
@@ -37,7 +37,7 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
   const [selectedDirection, setSelectedDirection] = useState(0);
   const [withWechselrichter, setWithWechselrichter] = useState(false);
 
-  const [direction, processState] = watch(['direction', 'processState'])
+  const [direction, processState, gridOperatorId] = watch(['direction', 'processState', 'gridOperatorId'])
 
   const isChangeable = () => {
     if (meterReadOnly === undefined) {
@@ -171,14 +171,10 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
                    type="number" inputmode="numeric" onChangePartial={_onChange} protectedControl={!isChangeable()} error={errors?.allocationFactor}/>
         }
         {area && area === 'BEG' && <>
-            <InputForm name={"gridOperatorId"} label={t("grid-operator.id")} control={control} rules={{
-              required: t("warnings.gridOperator-id_missing"),
-              minLength: {value: 8, message: t("gridoperator-id_length")},
-              maxLength: {value: 8, message: t("gridoperator-id_length")},
-            }} type="text" onChangePartial={_onChange} protectedControl={!(isChangeable() && processState !== 'INACTIVE')}/>
-            <InputForm name={"gridOperatorName"} label={t("grid-operator.name")} control={control} rules={{
-              required: t("warnings.gridOperator-name_missing")
-            }} type="text" onChangePartial={_onChange} protectedControl={!(isChangeable() && processState !== 'INACTIVE')}/>
+            {/* Der Netzbetreiber wird im backend aus der Zählpunktnummer ermittelt (platform#107) */}
+            <InputForm name={"gridOperatorId"} label={t("grid-operator.id")} control={control} type="text" protectedControl={true}/>
+            <InputForm name={"gridOperatorName"} label={t("grid-operator.name")} control={control} type="text" protectedControl={true}/>
+            {!gridOperatorId && <IonText color="medium"><small>{t("grid-operator.derived_hint")}</small></IonText>}
         </>}
         <CheckboxComponent label={t("inverterCheckbox_label")} setChecked={setWithWechselrichter}
                            checked={withWechselrichter} style={{paddingTop: "0px"}}></CheckboxComponent>

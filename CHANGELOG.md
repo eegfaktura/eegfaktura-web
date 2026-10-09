@@ -8,6 +8,13 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **Grid operator of a metering point is no longer entered by hand** (platform#107). The backend
+  derives it from the metering point number. For BEGs the fields "Netzbetreiber-ID" and
+  "Netzbetreiber-Name" in the metering point dialog are display only; before the first save a hint
+  says that the value is determined from the metering point number. New metering points are no
+  longer prefilled with the EEG's grid operator. Needs the backend with platform#107.
+
 ## [1.0.13] – 2026-10-04
 
 ### Fixed

@@ -5,7 +5,8 @@
   "grid-operator": {
     "header": "Netzbetreiber",
     "id": "Netzbetreiber-ID",
-    "name": "Netzbetreiber-Name"
+    "name": "Netzbetreiber-Name",
+    "derived_hint": "Wird beim Speichern aus der Zählpunktnummer ermittelt."
   },
   "participant": "Mitglied",
   "participant-nr": "Mitglieds-Nr",
