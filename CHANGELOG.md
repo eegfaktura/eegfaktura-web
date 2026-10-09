@@ -11,6 +11,7 @@ this changelog highlights the changes relevant for overview and operations.
 ### CI
 - `pr-checks.yml`: unit tests and the full test suite on every pull request (unit = Vitest; full = Vitest and `vite build`; separate checks for the lockfile (#5) and `tsc` (#6)).
 - `security-scan.yml`: leaked secrets in the new commits (Gitleaks, Trivy), vulnerable dependencies (Trivy, OSV-Scanner) and misconfigurations (Trivy). A pull request fails on what it adds; pushes to the default branch and a weekly run fail on every CRITICAL finding (HIGH is reported; `SCAN_FAIL_ON`). Scanners are fixed versions checked by SHA-256, each release at least 7 days old; actions pinned by commit SHA.
+- `security-scan.yml`: for now the vulnerable-dependency and misconfiguration findings are only reported (`SCAN_FAIL_ON: none` — the gate prints a warning in every run that it is off); leaked secrets still fail. To be tightened again once the known findings are paid down.
 
 ## [1.0.13] – 2026-10-04
 
