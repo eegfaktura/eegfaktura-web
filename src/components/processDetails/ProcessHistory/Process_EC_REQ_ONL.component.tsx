@@ -5,7 +5,7 @@ import {EdaHistories, Eeg} from "../../../models/eeg.model";
 import PaginationComponent from "../../core/Pagination.component";
 import {EdaHistory, EdaHistoryGroup, EdaResponseCode} from "../../../models/process.model";
 import {EegParticipant} from "../../../models/members.model";
-import {renderAccordionBody} from "./ProcessHistory.functions";
+import {mergeProtocolEntries, renderAccordionBody, REVOKE_PROTOCOLS} from "./ProcessHistory.functions";
 
 
 export const Process_EC_REQ_ONL_MY_REQ_ONL:FC<{eeg: Eeg, protocols: string[], participants: EegParticipant[], historyDate:[Date | null, Date | null]}> = ({eeg, protocols, participants, historyDate}) => {
@@ -34,7 +34,7 @@ export const Process_EC_REQ_ONL_MY_REQ_ONL:FC<{eeg: Eeg, protocols: string[], pa
   const getEntriesForProcessId = (process: string, entries: EdaHistories): Record<string, EdaHistory[]> => {
     switch (process) {
       case "CM_REV_IMP":
-        return {...entries[process], ...entries["CM_REV_SP"]}
+        return mergeProtocolEntries(REVOKE_PROTOCOLS, entries)
       default:
         return entries[process]
     }
@@ -74,6 +74,7 @@ export const Process_EC_REQ_ONL_MY_REQ_ONL:FC<{eeg: Eeg, protocols: string[], pa
               e.meteringPoints = e["message"]["meter"].meteringPoint ? [e["message"]["meter"].meteringPoint] : []
               break;
             case "AUFHEBUNG_CCMI":
+            case "AUFHEBUNG_CCMC":
               e.meteringPoint = e["message"]["responseData"].reduce((z: string, r: Record<string, any>) => r.meteringPoint ? r.meteringPoint : z, "-")
               e.meteringPoints = e["message"]["responseData"].map((m: Record<string, any>) => m.meteringPoint)
               e.responseCode = e["message"]["responseData"].reduce((z: string, r: Record<string, any>) => r.consentEnd ? new Date(r.consentEnd).toDateString() : z, "-")
