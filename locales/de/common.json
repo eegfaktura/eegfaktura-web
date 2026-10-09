@@ -113,8 +113,6 @@
     "account-owner_missing": "Kontoinhaber fehlt!",
     "account-name_missing": "Bankverbindung fehlt!",
     "account-mandate_reference_missing": "Mandatsreferenz fehlt!",
-    "gridoperator-id_missing": "Netzbetreiber-ID fehlt!",
-    "gridoperator-name_missing": "Netzbetreiber-Name fehlt!",
     "partition-factor_missing": "Teilnehmerfaktor fehlt!",
     "allocation-factor_missing": "Verteilungsfaktor fehlt!",
     "metering_missing_msg": "Zählpunktnummer fehlt!",

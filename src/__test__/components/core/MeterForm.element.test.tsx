@@ -18,10 +18,10 @@ const ctxValue = (area: string) => ({
   refresh: async () => 1
 } as unknown as EegState)
 
-const renderElement = (area: string, meter: Partial<Metering>) =>
+const renderElement = (area: string, meter: Partial<Metering>, meterReadOnly?: boolean) =>
   renderWithReactHookForm(
     <EegContext.Provider value={ctxValue(area)}>
-      <MeterFormElement rates={[]}/>
+      <MeterFormElement rates={[]} meterReadOnly={meterReadOnly}/>
     </EegContext.Provider>, {defaultValues: {
       status: 'INIT', processState: 'NEW', participantId: "", meteringPoint: "", direction: "CONSUMPTION", ...meter
     } as Metering})
@@ -41,6 +41,12 @@ describe("<MeterFormElement /> grid operator", () => {
     await screen.findByText('AT008000')
     screen.getByText('Energienetze Steiermark')
     expect(container.querySelector('[name=gridOperatorId]')).toBeNull()
+    expect(screen.queryByText(/Wird beim Speichern/)).not.toBeInTheDocument()
+  });
+
+  it("BEG: no hint on a read-only metering point that cannot be saved", async () => {
+    renderElement('BEG', {processState: 'ACTIVE', status: 'ACTIVE'} as Partial<Metering>, true)
+    await screen.findByText(/Netzbetreiber-ID/)
     expect(screen.queryByText(/Wird beim Speichern/)).not.toBeInTheDocument()
   });
 

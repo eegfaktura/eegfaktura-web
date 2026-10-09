@@ -153,9 +153,15 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
                      required: t("warnings.metering_missing_msg"),
                      minLength: {value: 33, message: "MIN-Zählpunktnummer beginnt mit AT gefolgt von 31 Nummern"},
                      maxLength: {value: 33, message: "MAX-Zählpunktnummer beginnt mit AT gefolgt von 31 Nummern"},
-                     pattern: {
+                     // A new number must start with AT + 6 digits: the backend derives the grid operator
+                     // from them (platform#107). Existing numbers keep the old, looser rule so that
+                     // metering points with a typo in the prefix can still be edited.
+                     pattern: meterReadOnly ? {
                        value: /^AT[0-9A-Z]*$/,
                        message: "Zählpunktnummer beginnt mit AT gefolgt von 31 Nummern od. Großbuchstaben"
+                     } : {
+                       value: /^AT[0-9]{6}[0-9A-Z]{25}$/,
+                       message: "Zählpunktnummer beginnt mit AT, 6 Ziffern (Netzbetreiber) und 25 Nummern od. Großbuchstaben"
                      }
                    }}
                    error={errors?.meteringPoint}
@@ -174,7 +180,7 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
             {/* Der Netzbetreiber wird im backend aus der Zählpunktnummer ermittelt (platform#107) */}
             <InputForm name={"gridOperatorId"} label={t("grid-operator.id")} control={control} type="text" protectedControl={true}/>
             <InputForm name={"gridOperatorName"} label={t("grid-operator.name")} control={control} type="text" protectedControl={true}/>
-            {!gridOperatorId && <IonText color="medium"><small>{t("grid-operator.derived_hint")}</small></IonText>}
+            {!gridOperatorId && isChangeable() && <IonText color="medium"><small>{t("grid-operator.derived_hint")}</small></IonText>}
         </>}
         <CheckboxComponent label={t("inverterCheckbox_label")} setChecked={setWithWechselrichter}
                            checked={withWechselrichter} style={{paddingTop: "0px"}}></CheckboxComponent>
