@@ -9,6 +9,11 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Fixed
+- **Revocations of the data release by the member were missing in the history.** The history view
+  for "Aufhebung der Datenfreigabe" only queried the protocols `CM_REV_IMP` (grid operator) and
+  `CM_REV_SP` (community). Revocations the member triggers, e.g. in the grid operator's portal
+  (`CM_REV_CUS` / `AUFHEBUNG_CCMC`), were stored but never shown. They are now queried and
+  shown with metering point and end date like `AUFHEBUNG_CCMI`.
 - **SEPA direct debit no longer contains members with direct debit type "Kein SEPA".** Members who
   pay by invoice (e.g. municipalities) had to be deleted from `…SEPA_Direct_Debit.xml` by hand
   before every import. They are now left out; `NbOfTxs` and `CtrlSum` are computed from the

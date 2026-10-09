@@ -10,6 +10,7 @@ import {useAllParticipants} from "../../../store/hook/ParticipantProvider";
 import {Api} from "../../../service";
 import {useLocale} from "../../../store/hook/useLocale";
 import {Process_EC_REQ_ONL_MY_REQ_ONL} from "./Process_EC_REQ_ONL.component";
+import {REVOKE_PROTOCOLS} from "./ProcessHistory.functions";
 
 interface ProcessHistoryComponentProps {
   eeg: Eeg
@@ -34,10 +35,7 @@ const ProcessHistoryComponent: FC<ProcessHistoryComponentProps> = ({eeg, edaProc
       case 3:
       case 4:
       case 5: {
-        const protocols = [historyItems[item-1]]
-        if (item === 2) {
-          protocols.push("CM_REV_SP")
-        }
+        const protocols = item === 2 ? REVOKE_PROTOCOLS : [historyItems[item-1]]
         return (
           <Process_EC_REQ_ONL_MY_REQ_ONL eeg={eeg} protocols={protocols} participants={participants} historyDate={historyDate} />
         )
