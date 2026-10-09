@@ -1,0 +1,117 @@
+# Tests on every pull request: the unit tests (Vitest) and the full suite (Vitest, then the
+# production build as rolling-release.yml makes it). Two checks report the known build defects on
+# their own, so the test jobs keep a clean signal: "Lockfile in sync" (known-errors #5) and
+# "Type check" (tsc, #6). Both stay red until those are fixed.
+#
+# Until #5 is fixed the test jobs install with --no-frozen-lockfile, as rolling-release.yml does.
+# Versions fixed, each release older than 7 days (checked 2026-10-09): Node 20.18.0 (.nvmrc),
+# pnpm 9.12.1. Actions pinned by commit SHA.
+
+name: PR Checks
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PNPM_VERSION: '9.12.1'
+
+jobs:
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install dependencies
+        run: |
+          npm install -g "pnpm@${PNPM_VERSION}"
+          pnpm install --no-frozen-lockfile
+
+      - name: Unit tests
+        run: pnpm exec vitest run
+
+  full:
+    name: Full test suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install dependencies
+        run: |
+          npm install -g "pnpm@${PNPM_VERSION}"
+          pnpm install --no-frozen-lockfile
+
+      - name: Tests
+        run: pnpm exec vitest run
+
+      - name: Production build
+        run: pnpm exec vite build
+
+  lockfile:
+    name: Lockfile in sync
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install exactly the lockfile
+        run: |
+          npm install -g "pnpm@${PNPM_VERSION}"
+          pnpm install --frozen-lockfile --ignore-scripts
+
+  typecheck:
+    name: Type check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install dependencies
+        run: |
+          npm install -g "pnpm@${PNPM_VERSION}"
+          pnpm install --no-frozen-lockfile
+
+      - name: tsc
+        run: pnpm exec tsc --noEmit
