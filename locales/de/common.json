@@ -114,7 +114,6 @@
     "account-name_missing": "Bankverbindung fehlt!",
     "account-mandate_reference_missing": "Mandatsreferenz fehlt!",
     "gridoperator-id_missing": "Netzbetreiber-ID fehlt!",
-    "gridoperator-id_length": "Netzbetreiber-ID besteht aus 8 Zeichen",
     "gridoperator-name_missing": "Netzbetreiber-Name fehlt!",
     "partition-factor_missing": "Teilnehmerfaktor fehlt!",
     "allocation-factor_missing": "Verteilungsfaktor fehlt!",
