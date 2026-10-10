@@ -32,7 +32,9 @@ on:
       - 'env/**'
     tags:
       - v*
+  # ready_for_review: a draft gets no image build; it runs once the PR is marked ready
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - master
       - main
@@ -44,6 +46,8 @@ env:
 
 jobs:
   build-and-push-image:
+    # pull requests: not while a draft (pr-checks.yml tests drafts)
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
 
     permissions:
