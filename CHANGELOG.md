@@ -91,6 +91,9 @@ this changelog highlights the changes relevant for overview and operations.
   `GET /api/billingRuns/{id}` every 2s. A separate polling flag, set only by the two pollers, now guards it.
   Internal: the unused state `failedRunId` is removed (no behaviour change).
 
+### CI
+- `rolling-release.yml`: no image build on a draft pull request — it runs when the pull request is marked ready for review (`ready_for_review`) and on every later push to it; `pr-checks.yml` still checks drafts. Pushes, tags and the deploy dispatch are unchanged.
+
 ## [1.7.2] – 2026-10-20
 
 ### Fixed
