@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.1.0] – 2026-10-11
+
 ### Changed
 - **Grid operator of a metering point is no longer entered by hand** (platform#107). The backend
   derives it from the metering point number. For BEGs the fields "Netzbetreiber-ID" and
