@@ -8,6 +8,58 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **Grid operator of a metering point is no longer entered by hand** (platform#107). The backend
+  derives it from the metering point number. For BEGs the fields "Netzbetreiber-ID" and
+  "Netzbetreiber-Name" in the metering point dialog are display only and can no longer be
+  corrected by hand (a new operator merger needs the backend's alias list). While no value is
+  stored and the metering point can be saved, a hint says that the value is determined from the
+  metering point number. New metering points are no longer prefilled with the EEG's grid
+  operator, and a new metering point number must start with `AT` and 6 digits (existing numbers
+  keep the old rule, so metering points with a typo in the prefix stay editable).
+  **Deploy order:** the backend with platform#107 first; with an old backend a new BEG metering
+  point would get no grid operator.
+
+### Fixed
+- **Revocations of the data release by the member were missing in the history.** The history view
+  for "Aufhebung der Datenfreigabe" only queried the protocols `CM_REV_IMP` (grid operator) and
+  `CM_REV_SP` (community). Revocations the member triggers, e.g. in the grid operator's portal
+  (`CM_REV_CUS` / `AUFHEBUNG_CCMC`), were stored but never shown. They are now queried and
+  shown with metering point and end date like `AUFHEBUNG_CCMI`.
+- **SEPA direct debit no longer contains members with direct debit type "Kein SEPA".** Members who
+  pay by invoice (e.g. municipalities) had to be deleted from `…SEPA_Direct_Debit.xml` by hand
+  before every import. They are now left out; `NbOfTxs` and `CtrlSum` are computed from the
+  remaining transactions, so the totals match. The dialog lists who was left out. The credit
+  transfer file (`…SEPA_Credit_Transfer.xml`) is unchanged.
+- **Names and remittance text are reduced to the SEPA character set.** Accents outside it were
+  exported unchanged and rejected by the bank (e.g. "René" → "Rene"); umlauts and ß stay, `&`
+  becomes `+`, other characters become a space; names are cut at 70, the remittance text at 140
+  characters. Mandate references are left as entered.
+- **SEPA export no longer fails for members without an IBAN.** An empty IBAN cell aborted the whole
+  export (`E_SEPA_DOWNLOAD`), and a credit note could end up with an empty `<IBAN/>`. Rows without
+  an IBAN are now left out of both files and listed in the dialog ("Ohne IBAN, bitte manuell
+  abwickeln") by account owner, like the "Kein SEPA" list. Names cut at the length limit no longer
+  end with a blank.
+
+## [1.0.13] – 2026-10-04
+
+### Fixed
+- **SEPA mandate date saved one day early when creating a member.** The date picker showed the
+  correct day, but after saving the record held the day before. react-hook-form clones the
+  form values in `handleSubmit` and turns every `Date` — including the `LocalDate` the picker
+  stored — into a plain `Date`, which serialises as UTC: local midnight on 4 June became
+  `2026-06-03T22:00:00.000Z`, and the backend kept that date. Editing an existing member was
+  not affected, because that path sends the `LocalDate` directly without the clone. The picker
+  now writes the date into the form as a `YYYY-MM-DD` string, which survives the clone.
+  Mandate dates entered at creation before this fix are still one day early in the data.
+
+### Security
+- The image no longer runs as root. Caddy listens on `:8080` per `caddy.conf`, well above
+  1024, so it never needed the privileges in the first place. A dedicated `app` user
+  (UID/GID 1000) now owns Caddy's XDG directories `/data` and `/config` — without that it
+  fails on startup while writing its own state. The served files under `/var/www` stay
+  root-owned; Caddy only reads them.
+
 ### Added
 - **Time-of-use tariffs (ZVT)**: consumer and producer tariffs gain a
   "Einfach | Zeitbasiert" mode in the tariff dialog. Time-based tariffs

@@ -5,7 +5,8 @@
   "grid-operator": {
     "header": "Netzbetreiber",
     "id": "Netzbetreiber-ID",
-    "name": "Netzbetreiber-Name"
+    "name": "Netzbetreiber-Name",
+    "derived_hint": "Wird beim Speichern aus der Zählpunktnummer ermittelt."
   },
   "participant": "Mitglied",
   "participant-nr": "Mitglieds-Nr",
@@ -130,9 +131,6 @@
     "account-owner_missing": "Kontoinhaber fehlt!",
     "account-name_missing": "Bankverbindung fehlt!",
     "account-mandate_reference_missing": "Mandatsreferenz fehlt!",
-    "gridoperator-id_missing": "Netzbetreiber-ID fehlt!",
-    "gridoperator-id_length": "Netzbetreiber-ID besteht aus 8 Zeichen",
-    "gridoperator-name_missing": "Netzbetreiber-Name fehlt!",
     "partition-factor_missing": "Teilnehmerfaktor fehlt!",
     "allocation-factor_missing": "Verteilungsfaktor fehlt!",
     "metering_missing_msg": "Zählpunktnummer fehlt!",

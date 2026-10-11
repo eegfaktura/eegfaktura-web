@@ -12,7 +12,7 @@ import {useAppDispatch, useAppSelector} from "../../store";
 import {ratesSelector} from "../../store/rate";
 import {selectedTenant} from "../../store/eeg";
 import MeterAddressFormElement from "../core/forms/MeterAddressForm/MeterAddressForm.element";
-import {useGridOperator, useOnlineState, useTenant} from "../../store/hook/Eeg.provider";
+import {useOnlineState, useTenant} from "../../store/hook/Eeg.provider";
 import moment from "moment";
 
 const AddMeterPaneComponent: FC = () => {
@@ -23,7 +23,6 @@ const AddMeterPaneComponent: FC = () => {
   const participant = useAppSelector(selectedParticipantSelector);
 
   const isOnline = useOnlineState()
-  const {gridOperatorId, gridOperatorName} = useGridOperator()
 
   const meter = {
     status: isOnline ? "INIT" : "ACTIVE",
@@ -32,8 +31,6 @@ const AddMeterPaneComponent: FC = () => {
     meteringPoint: "",
     direction: "CONSUMPTION",
     registeredSince: moment.utc().toDate(),
-    gridOperatorName: gridOperatorName,
-    gridOperatorId: gridOperatorId,
     // participantState: {activeSince: new Date(Date.now()), inactiveSince: moment.utc([2999, 11, 31]).toDate()} as ParticipantState,
     activationMode: 'ONLINE'
   } as Metering

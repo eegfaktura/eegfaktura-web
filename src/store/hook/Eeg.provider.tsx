@@ -236,11 +236,6 @@ export const useEegAllocation = () => {
   return eeg?.allocationMode
 }
 
-export const useGridOperator = () => {
-  const {eeg} = useContext(EegContext)
-  return {gridOperatorId: eeg?.gridOperator, gridOperatorName: eeg?.operatorName}
-}
-
 export const useTenantSwitch = () => {
   const {setTenant} = useContext(EegContext)
   return setTenant
