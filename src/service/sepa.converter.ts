@@ -283,39 +283,50 @@ export const createPmtInfId = (eeg: Eeg, period: SelectedPeriod) => {
 
 // Remittance text (Ustrd, max 140 characters). With "Mitglieder zusammenfassen" one booking can carry
 // many documents; the full list "Rechnung202600135 / Rechnung202600136 / …" then exceeded 140 characters
-// and was cut off silently (support ticket 6610818). Numbers of the same document type are written once
-// with their common prefix (at least three digits stay): "Rechnung202600135/136/138 / Gutschrift202600070/082".
-// What still does not fit is counted instead of cut: "… (+3 weitere)".
+// and was cut off silently (support ticket 6610818).
+// - If the full list fits, it is used unchanged.
+// - Otherwise numbers of the same document type and length are written once with their common prefix
+//   (at least three digits stay): "Rechnung202600135/136/138 / Gutschrift202600070/082". A number of
+//   another length is written in full with its type, so a short form is never ambiguous.
+// - If that still does not fit, the longest groups give up their last numbers first (every document
+//   type keeps at least its first one) and the rest is counted: "… (+3 weitere)".
+// Only a single document number longer than the limit is cut.
 export const compactReference = (invoiceIds: string[], maxLength = 140): string => {
-  const groups = new Map<string, string[]>()
+  const ids = Array.from(new Set(invoiceIds.map(i => String(i ?? '').trim()).filter(i => i !== '')))
+  const plain = toSepaText(ids.join(' / '), 1000)
+  if (plain.length <= maxLength) return plain
+
+  // groups in order of first appearance: one per document type and number length
+  const groups = new Map<string, { type: string, numbers: string[] }>()
   const other: string[] = []
-  for (const id of invoiceIds.map(i => String(i ?? '').trim()).filter(i => i !== '')) {
+  for (const id of ids) {
     const m = id.match(/^(\D*)(\d+)$/)
     if (!m) { other.push(id); continue }
-    groups.set(m[1], [...(groups.get(m[1]) ?? []), m[2]])
+    const key = `${m[1]}#${m[2].length}`
+    if (!groups.has(key)) groups.set(key, {type: m[1], numbers: []})
+    groups.get(key)!.numbers.push(m[2])
   }
-  // one token per document; the first of a group carries type and full number
-  const tokens: { text: string, sep: string }[] = []
-  groups.forEach((numbers, type) => {
-    const sameLength = numbers.every(n => n.length === numbers[0].length)
+  const parts = [...groups.values()].map(g => {
     let common = 0
-    if (sameLength && numbers.length > 1) {
-      while (common < numbers[0].length - 1 && numbers.every(n => n[common] === numbers[0][common])) common++
-    }
-    numbers.forEach((n, i) => tokens.push(i === 0
-      ? {text: `${type}${n}`, sep: ' / '}
-      : {text: sameLength ? n.slice(Math.max(0, Math.min(common, n.length - 3))) : n, sep: '/'}))
+    while (common < g.numbers[0].length - 1 && g.numbers.every(n => n[common] === g.numbers[0][common])) common++
+    const cut = Math.max(0, Math.min(common, g.numbers[0].length - 3))
+    return g.numbers.map((n, i) => i === 0 ? `${g.type}${n}` : n.slice(cut))
   })
-  other.forEach(o => tokens.push({text: o, sep: ' / '}))
+  other.forEach(o => parts.push([o]))
 
-  const join = (list: typeof tokens) => list.map((t, i) => (i === 0 ? '' : t.sep) + t.text).join('')
-  const full = toSepaText(join(tokens), 1000)
-  if (full.length <= maxLength) return full
-  for (let keep = tokens.length - 1; keep > 0; keep--) {
-    const text = toSepaText(`${join(tokens.slice(0, keep))} (+${tokens.length - keep} weitere)`, 1000)
-    if (text.length <= maxLength) return text
+  const render = (list: string[][], dropped: number) => toSepaText(
+    list.map(tokens => tokens.join('/')).join(' / ') + (dropped > 0 ? ` (+${dropped} weitere)` : ''), 1000)
+
+  let dropped = 0
+  let text = render(parts, 0)
+  while (text.length > maxLength) {
+    const longest = parts.reduce((best, tokens, i) => tokens.length > parts[best].length ? i : best, 0)
+    if (parts[longest].length <= 1) break
+    parts[longest].pop()
+    dropped++
+    text = render(parts, dropped)
   }
-  return toSepaText(join(tokens), maxLength)
+  return text.length <= maxLength ? text : toSepaText(text, maxLength)
 }
 
 const createRef = (item: SepaModelItem): string => compactReference(item.InvoiceIds, 140)

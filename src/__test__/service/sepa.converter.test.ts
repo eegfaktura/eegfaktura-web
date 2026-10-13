@@ -44,28 +44,35 @@ describe("createPmtInfId", () => {
 });
 
 describe("compactReference", () => {
-  it("keeps a single document unchanged", () => {
+  const ticket6610818 = ["Rechnung202600051", "Gutschrift202600021", "Rechnung202600061", "Gutschrift202600027", "Rechnung202600090",
+    "Gutschrift202600040", "Rechnung202600103", "Rechnung202600118", "Gutschrift202600056", "Rechnung202600123", "Gutschrift202600058"];
+
+  it("keeps the full list when it fits", () => {
     expect(compactReference(["Rechnung202600051"])).toBe("Rechnung202600051");
+    expect(compactReference(["Rechnung202600135", "Gutschrift202600070"])).toBe("Rechnung202600135 / Gutschrift202600070");
   });
-  it("writes numbers of one document type once with their common prefix", () => {
-    expect(compactReference(["Rechnung202600135", "Rechnung202600136", "Gutschrift202600070", "Rechnung202600138", "Gutschrift202600082"]))
-      .toBe("Rechnung202600135/136/138 / Gutschrift202600070/082");
-  });
-  it("fits the ticket 6610818 example (11 documents, 227 characters before) into 140 without losing numbers", () => {
-    const ids = ["Rechnung202600051", "Gutschrift202600021", "Rechnung202600061", "Gutschrift202600027", "Rechnung202600090",
-      "Gutschrift202600040", "Rechnung202600103", "Rechnung202600118", "Gutschrift202600056", "Rechnung202600123", "Gutschrift202600058"];
-    const ref = compactReference(ids);
-    expect(ref.length).toBeLessThanOrEqual(140);
+  it("writes numbers of one type once with their common prefix when the list is too long", () => {
+    const ref = compactReference(ticket6610818);
     expect(ref).toBe("Rechnung202600051/061/090/103/118/123 / Gutschrift202600021/027/040/056/058");
+    expect(ref.length).toBeLessThanOrEqual(140);
   });
-  it("counts what does not fit instead of cutting it off", () => {
-    const ids = Array.from({length: 40}, (_, i) => `Rechnung2026${String(1000 + i * 37).padStart(5, "0")}`);
-    const ref = compactReference(ids, 60);
-    expect(ref.length).toBeLessThanOrEqual(60);
-    expect(ref).toMatch(/^Rechnung2026\d{5}\/.*\(\+\d+ weitere\)$/);
+  it("never shortens a number of another length (no ambiguous short form)", () => {
+    expect(compactReference(["R1000", "R999", "R1001"], 17)).toBe("R1000/001 / R999");
+    expect(compactReference(["Rechnung20269", "Rechnung202610", "Rechnung202611"], 40)).toBe("Rechnung20269 / Rechnung202610/611");
   });
-  it("keeps numbers of different length in full and passes other ids through", () => {
-    expect(compactReference(["R99", "R1000", "Storno-A"])).toBe("R99/1000 / Storno-A");
+  it("drops from the longest group first, every type keeps its first number, the rest is counted", () => {
+    const ids = [...Array.from({length: 30}, (_, i) => `Rechnung2026${String(100 + i * 7).padStart(5, "0")}`), "Gutschrift202600070"];
+    const ref = compactReference(ids, 80);
+    expect(ref.length).toBeLessThanOrEqual(80);
+    expect(ref).toContain("Gutschrift202600070");
+    expect(ref).toMatch(/\(\+\d+ weitere\)$/);
+  });
+  it("lists a document only once", () => {
+    expect(compactReference(["Rechnung202600135", "Rechnung202600135"])).toBe("Rechnung202600135");
+  });
+  it("passes other ids through and cuts only a single overlong number", () => {
+    expect(compactReference(["Storno-A", "Rechnung1"])).toBe("Storno-A / Rechnung1");
+    expect(compactReference(["X".repeat(150)])).toHaveLength(140);
   });
 });
 
