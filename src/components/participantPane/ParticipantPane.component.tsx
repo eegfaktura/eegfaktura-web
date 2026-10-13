@@ -514,14 +514,10 @@ const ParticipantPaneComponent: FC = () => {
   }
 
   async function exportBillingExcel(billingRunId: string) {
-    if (eeg?.accountInfo.sepa) {
-      openBillingDownloadDialog(billingRunId)
-    } else {
-      try {
-        await Api.eegService.exportBillingExcel(tenant, billingRunId);
-      } catch (e) {
-        console.log(e as string);
-      }
+    try {
+      await Api.eegService.exportBillingExcel(tenant, billingRunId);
+    } catch (e) {
+      console.log(e as string);
     }
   }
 
@@ -899,7 +895,16 @@ const ParticipantPaneComponent: FC = () => {
                             slot="end"
                             icon={documentTextOutline}
                           ></IonIcon>
-                          {eeg?.accountInfo.sepa ? "SEPA" : "EXCEL"}
+                          {"EXCEL"}
+                        </IonButton>
+                        <IonButton
+                          onClick={() => openBillingDownloadDialog(billingRun.id)}
+                        >
+                          <IonIcon
+                            slot="end"
+                            icon={documentTextOutline}
+                          ></IonIcon>
+                          {"SEPA"}
                         </IonButton>
                       </div>
                       <IonButton
@@ -981,7 +986,16 @@ const ParticipantPaneComponent: FC = () => {
                             slot="end"
                             icon={documentTextOutline}
                           ></IonIcon>
-                          {eeg?.accountInfo.sepa ? "SEPA" : "EXCEL"}
+                          {"EXCEL"}
+                        </IonButton>
+                        <IonButton
+                          onClick={() => openBillingDownloadDialog(billingRun.id)}
+                        >
+                          <IonIcon
+                            slot="end"
+                            icon={documentTextOutline}
+                          ></IonIcon>
+                          {"SEPA"}
                         </IonButton>
                       </div>
                     </>

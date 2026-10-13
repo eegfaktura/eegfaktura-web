@@ -1,4 +1,4 @@
-import React, {FC} from "react";
+import React, {FC, useEffect, useRef} from "react";
 import SelectForm from "../form/SelectForm.component";
 import InputForm from "../form/InputForm.component";
 import DatePickerCoreElement from "./elements/DatePickerCore.element";
@@ -8,15 +8,41 @@ import {useLocale} from "../../store/hook/useLocale";
 import DatePickerFormElement from "../form/DatePickerForm.element";
 import {EegParticipant} from "../../models/members.model";
 import DatePickerInput from "../form/NewDatePickerForm.component";
+import {isDirectDebit, suggestMandateReference} from "../../util/MandateReference.util";
 
 
 export const DebitExtensionComponent: FC<{
   onUpdateBaseData?: (name: string, value: any) => void
 }> = ({onUpdateBaseData}) => {
   const {t} = useLocale("common")
-  const {control, watch, formState: {errors}} = useFormContext<EegParticipant>();
+  const {control, watch, setValue, getValues, formState: {errors}} = useFormContext<EegParticipant>();
 
   const sepaMode = watch("accountInfo.sepaDirectDebit")
+  const participantNumber = watch("participantNumber")
+  const debit = isDirectDebit(sepaMode)
+
+  // New member (no partial save): the mandate reference follows the member number while the
+  // field is empty or still holds the last suggestion (platform#143).
+  const lastSuggestion = useRef<string | undefined>(undefined)
+  useEffect(() => {
+    if (onUpdateBaseData || !debit) return
+    const next = suggestMandateReference(getValues("accountInfo.mandateReference"), participantNumber, lastSuggestion.current)
+    if (next !== undefined) {
+      setValue("accountInfo.mandateReference", next)
+      lastSuggestion.current = next
+    }
+  }, [participantNumber, debit])
+
+  // Existing member: switching to CORE/B2B fills an empty mandate reference once and saves it.
+  const onChangeDebitType = (name: string, value: any) => {
+    onUpdateBaseData?.(name, value)
+    if (!onUpdateBaseData || !isDirectDebit(value)) return
+    const next = suggestMandateReference(getValues("accountInfo.mandateReference"), getValues("participantNumber"))
+    if (next !== undefined) {
+      setValue("accountInfo.mandateReference", next)
+      onUpdateBaseData("accountInfo.mandateReference", next)
+    }
+  }
 
   const getDebitOptions = () => {
     return [
@@ -29,9 +55,12 @@ export const DebitExtensionComponent: FC<{
   return (
     <>
       <SelectForm name={"accountInfo.sepaDirectDebit"} label={t("account.sepaDirectDebit")} control={control}
-                  options={getDebitOptions()} onChangePartial={onUpdateBaseData}/>
-      {sepaMode !== 'NONE' &&
+                  options={getDebitOptions()} onChangePartial={onChangeDebitType}/>
+      {debit &&
           <>
+              <div style={{padding: "0 16px 6px", fontSize: "12px", color: "var(--ion-color-medium)"}}>
+                {t("account.mandate-hint")}
+              </div>
               <InputForm name={"accountInfo.bankName"} label={t("account.name")} control={control} type="text"
                          rules={{required: t("warnings.account-name_missing")}} error={errors.accountInfo?.bankName}
                          onChangePartial={onUpdateBaseData}/>

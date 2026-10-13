@@ -28,6 +28,7 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
   const [error, setError] = useState<string | null>(null)
   const [skippedDebit, setSkippedDebit] = useState<string[]>([])
   const [withoutIban, setWithoutIban] = useState<string[]>([])
+  const [missingCreditorId, setMissingCreditorId] = useState<boolean>(false)
   const [batch, setBatch] = useState<boolean>(true)
   const [summarize, setSummarize] = useState<boolean>(true)
 
@@ -42,8 +43,9 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
     if (files) {
       setSkippedDebit(files.skippedDebit)
       setWithoutIban(files.withoutIban)
+      setMissingCreditorId(files.missingCreditorId)
       return [
-        { blob: new Blob([files.debit.content], { type: 'application/xml' }), name: files.debit.name },
+        ...files.debit.map(f => ({ blob: new Blob([f.content], { type: 'application/xml' }), name: f.name })),
         { blob: new Blob([files.transfer.content], { type: 'application/xml' }), name: files.transfer.name },
       ];
     }
@@ -60,7 +62,6 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
         switch (err.message) {
           case "E_BIC_MISSING":
           case "E_IBAN_MISSING":
-          case "E_NO_CREDITOR_ID":
             setError(t_err(err.message))
         }
       }
@@ -111,6 +112,11 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
         </IonButton>
         {!!error && (
           <IonLabel>{error}</IonLabel>
+        )}
+        {missingCreditorId && (
+          <IonLabel>
+            <p>Keine Lastschrift-Datei: Dafür braucht die EEG eine Gläubiger-ID (Creditor-ID) in den EEG-Stammdaten. Die Gutschrift-Datei ist trotzdem erstellt.</p>
+          </IonLabel>
         )}
         {skippedDebit.length > 0 && (
           <IonLabel>

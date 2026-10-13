@@ -20,6 +20,7 @@ import DatePickerInput from "../form/NewDatePickerForm.component";
 import {Moment} from "moment";
 import {LocalDate} from "local-date";
 import {isValidEmailList} from "../../util/EmailAddress.util";
+import {isDirectDebit} from "../../util/MandateReference.util";
 
 interface MemberFormComponentProps {
   participant: EegParticipant
@@ -157,7 +158,8 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
       {/*</form>*/}
         <IonList>
           <IonListHeader>Bankdaten</IonListHeader>
-          <IbanInputForm name={"accountInfo.iban"} control={control} onChangePartial={onUpdateBaseData} error={errors.accountInfo?.iban}/>
+          <IbanInputForm name={"accountInfo.iban"} control={control} onChangePartial={onUpdateBaseData} error={errors.accountInfo?.iban}
+                         required={isDirectDebit(sepaMode)}/>
           <InputForm name={"accountInfo.owner"} label={t("account.owner")} control={control} type="text" onChangePartial={onUpdateBaseData}/>
 
           <DebitExtensionComponent onUpdateBaseData={onUpdateBaseData}/>
