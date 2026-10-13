@@ -9,6 +9,10 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Fixed
+- **Mandate reference suggestion only when the member number is not yet a mandate reference of
+  another member of the community** (platform#143, review E): a mandate reference must be unique per
+  creditor id. If the number becomes unusable while typing, the untouched earlier suggestion is cleared
+  instead of leaving a half-typed number; a reference typed by hand is never changed.
 - **SEPA payment information id uses the year of the billed period** (platform#143, review A). It
   used the current year, so an annual run done in January carried the wrong year.
 

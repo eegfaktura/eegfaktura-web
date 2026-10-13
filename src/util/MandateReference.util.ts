@@ -14,16 +14,22 @@ export const isValidMandateReference = (ref: string) => /^[A-Za-z0-9+?\/\-:().,'
 // platform#143: the member number is the suggested SEPA mandate reference. A reference is only
 // filled in while the field is empty, or while it still holds an earlier suggestion that nobody
 // changed by hand; a reference typed in, or already used for a direct debit, is never replaced.
-// A member number that is no valid SEPA mandate id (blanks, umlauts, "_", > 35 characters) is not
-// suggested. Returns the new value, or undefined when the field stays as it is.
+// A member number that is no valid SEPA mandate id (blanks, umlauts, "_", > 35 characters), or that
+// another member of the community already uses as mandate reference (unique per creditor id), is not
+// suggested; an earlier suggestion that nobody changed is then cleared again (""), so no half-typed or
+// foreign number stays behind. Returns the new value, or undefined when the field stays as it is.
 export const suggestMandateReference = (
   current: string | null | undefined,
   participantNumber: string | null | undefined,
   lastSuggestion?: string,
+  taken?: ReadonlySet<string>,
 ): string | undefined => {
   const cur = (current ?? "").trim()
   const nr = (participantNumber ?? "").trim()
-  if (nr === "" || cur === nr || !isValidMandateReference(nr)) return undefined
-  if (cur === "" || (lastSuggestion !== undefined && cur === lastSuggestion)) return nr
-  return undefined
+  const untouched = cur === "" || (lastSuggestion !== undefined && cur === lastSuggestion)
+  if (nr === "" || !isValidMandateReference(nr) || taken?.has(nr.toUpperCase())) {
+    return untouched && cur !== "" ? "" : undefined
+  }
+  if (cur === nr) return undefined
+  return untouched ? nr : undefined
 }

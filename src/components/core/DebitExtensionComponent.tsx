@@ -1,4 +1,4 @@
-import React, {FC, useEffect, useRef} from "react";
+import React, {FC, useEffect, useMemo, useRef} from "react";
 import SelectForm from "../form/SelectForm.component";
 import InputForm from "../form/InputForm.component";
 import DatePickerCoreElement from "./elements/DatePickerCore.element";
@@ -9,6 +9,8 @@ import DatePickerFormElement from "../form/DatePickerForm.element";
 import {EegParticipant} from "../../models/members.model";
 import DatePickerInput from "../form/NewDatePickerForm.component";
 import {isDirectDebit, suggestMandateReference} from "../../util/MandateReference.util";
+import {useAppSelector} from "../../store";
+import {allParticipantsSelector} from "../../store/participant";
 
 
 export const DebitExtensionComponent: FC<{
@@ -20,6 +22,14 @@ export const DebitExtensionComponent: FC<{
   const sepaMode = watch("accountInfo.sepaDirectDebit")
   const participantNumber = watch("participantNumber")
   const debit = isDirectDebit(sepaMode)
+
+  // mandate references the other members of this community already use (unique per creditor id)
+  const participants = useAppSelector(allParticipantsSelector)
+  const ownId = watch("id")
+  const takenReferences = useMemo(() => new Set(participants
+    .filter(p => p.id !== ownId)
+    .map(p => (p.accountInfo?.mandateReference ?? "").trim().toUpperCase())
+    .filter(r => r !== "")), [participants, ownId])
 
   // New member (no partial save): the mandate reference follows the member number while the
   // field is empty or still holds the last suggestion (platform#143).
@@ -34,12 +44,12 @@ export const DebitExtensionComponent: FC<{
       lastSuggestion.current = undefined
       return
     }
-    const next = suggestMandateReference(getValues("accountInfo.mandateReference"), participantNumber, lastSuggestion.current)
+    const next = suggestMandateReference(getValues("accountInfo.mandateReference"), participantNumber, lastSuggestion.current, takenReferences)
     if (next !== undefined) {
       setValue("accountInfo.mandateReference", next)
-      lastSuggestion.current = next
+      lastSuggestion.current = next === "" ? undefined : next
     }
-  }, [participantNumber, debit])
+  }, [participantNumber, debit, takenReferences])
 
   // Existing member: switching to CORE/B2B fills an empty mandate reference once and saves it.
   const onChangeDebitType = (name: string, value: any) => {
@@ -52,9 +62,10 @@ export const DebitExtensionComponent: FC<{
     }
     const saved = Promise.resolve(onUpdateBaseData(name, value))
     const next = isDirectDebit(value)
-      ? suggestMandateReference(getValues("accountInfo.mandateReference"), getValues("participantNumber"))
+      ? suggestMandateReference(getValues("accountInfo.mandateReference"), getValues("participantNumber"), undefined, takenReferences)
       : undefined
-    if (next === undefined) {
+    // existing member: only fill an empty reference, never clear one
+    if (next === undefined || next === "") {
       saved.then(revalidate)
       return
     }
