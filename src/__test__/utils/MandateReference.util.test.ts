@@ -29,6 +29,22 @@ describe("isDirectDebit", () => {
   });
 });
 
+describe("suggestMandateReference and references already in use", () => {
+  it("does not suggest a member number another member uses as mandate reference", () => {
+    expect(suggestMandateReference("", "4711", undefined, new Set(["4711"]))).toBeUndefined();
+    expect(suggestMandateReference("", "eeg-1", undefined, new Set(["EEG-1"]))).toBeUndefined();
+    expect(suggestMandateReference("", "4712", undefined, new Set(["4711"]))).toBe("4712");
+  });
+  it("clears an untouched earlier suggestion when the number becomes unusable", () => {
+    // typing 4 → 47 → 471 → 4711 while another member already uses 4711
+    expect(suggestMandateReference("471", "4711", "471", new Set(["4711"]))).toBe("");
+    // a reference typed by hand stays
+    expect(suggestMandateReference("M-9", "4711", "471", new Set(["4711"]))).toBeUndefined();
+    // member number removed: the untouched suggestion goes too
+    expect(suggestMandateReference("471", "", "471")).toBe("");
+  });
+});
+
 describe("suggestMandateReference and the SEPA mandate id", () => {
   it("does not suggest a member number that is no valid mandate id", () => {
     expect(suggestMandateReference("", "EEG 001")).toBeUndefined();

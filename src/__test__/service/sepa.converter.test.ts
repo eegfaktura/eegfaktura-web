@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {createSepaDirectDebit, debitInstrument, splitDebitByType, splitRowsByIban, toSepaText} from "../../service/sepa.converter";
+import {createPmtInfId, createSepaDirectDebit, debitInstrument, splitDebitByType, splitRowsByIban, toSepaText} from "../../service/sepa.converter";
 import {Eeg} from "../../models/eeg.model";
 
 describe("toSepaText", () => {
@@ -33,6 +33,13 @@ describe("splitDebitByType", () => {
     expect(debitInstrument(" none ")).toBe("NONE");
     expect(debitInstrument(null)).toBe("CORE");
     expect(debitInstrument("unknown")).toBe("CORE");
+  });
+});
+
+describe("createPmtInfId", () => {
+  it("uses the year of the billed period, not the current year", () => {
+    const eeg = {name: "EEG Test", settlementInterval: "ANNUAL"} as unknown as Eeg;
+    expect(createPmtInfId(eeg, {type: "YRP", year: 2025, segment: 0} as any)).toBe("EEGTEST-2025-Y000");
   });
 });
 
