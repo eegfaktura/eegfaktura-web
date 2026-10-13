@@ -112,7 +112,7 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
         )}
         {missingCreditorId && (
           <IonLabel>
-            <p>Keine Lastschrift-Datei: Dafür braucht die EEG eine Gläubiger-ID (Creditor-ID) in den EEG-Stammdaten. Die Gutschrift-Datei ist trotzdem erstellt.</p>
+            <p>Keine Lastschrift-Datei: Dafür braucht die EEG eine Gläubiger-ID (Creditor-ID) in den EEG-Stammdaten.</p>
           </IonLabel>
         )}
         {skippedDebit.length > 0 && (
@@ -126,7 +126,7 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
           </IonLabel>
         )}
 
-        {files && files.length === 0 && (
+        {files && files.length === 0 && !missingCreditorId && (
           <IonLabel>
             <p>Dieser Abrechnungslauf enthält keine Lastschriften und keine Gutschriften für SEPA.</p>
           </IonLabel>

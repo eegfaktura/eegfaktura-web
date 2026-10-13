@@ -21,6 +21,9 @@ this changelog highlights the changes relevant for overview and operations.
     mandate. The CORE file is unchanged; the B2B file only appears when the run has B2B debits.
     „Mitglieder zusammenfassen“ now sums per account, debit type and mandate reference, so a CORE
     and a B2B (or „Kein SEPA“) member sharing an account are no longer merged under the first one.
+    Two members on one account with different mandates are no longer netted either: an invoice of
+    one and a credit note of the other become a debit and a transfer (same total). The message id
+    of each file now includes the time, so two exports on one day do not repeat it.
   - **Without a creditor ID** the SEPA dialog no longer fails: it creates the credit transfer file
     and says that the direct debit file needs a creditor ID in the EEG master data.
   - **IBAN optional for „Kein SEPA“** (support ticket #6610550), for consumers and producers:

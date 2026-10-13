@@ -254,7 +254,8 @@ export const ConvertExcelToXML = async (tenant: string, billingRunId: string,
   }
 }
 
-const createMsgId = (num: number) => `MSG-${moment().format('YYYYMMDD')}-${zeroPad(num, 5)}`
+// unique per export (second precision) and per file kind: banks refuse a reused MsgId
+const createMsgId = (num: number) => `MSG-${moment().format('YYYYMMDDHHmmss')}-${zeroPad(num, 5)}`
 const zeroPad = (num: number, places: number) => String(num).padStart(places, '0')
 
 const buildEndToEndId = (endToEndId: string, collectionDate: Date, activePeriod: SelectedPeriod) => {

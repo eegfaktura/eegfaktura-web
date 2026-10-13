@@ -43,17 +43,26 @@ export const DebitExtensionComponent: FC<{
 
   // Existing member: switching to CORE/B2B fills an empty mandate reference once and saves it.
   const onChangeDebitType = (name: string, value: any) => {
-    const saved = Promise.resolve(onUpdateBaseData?.(name, value))
-    // the IBAN becomes required (or optional): show its state right away, not only on the next edit
-    setTimeout(() => trigger(["accountInfo.iban", "accountInfo.mandateDate"]))
-    if (!onUpdateBaseData || !isDirectDebit(value)) return
-    const next = suggestMandateReference(getValues("accountInfo.mandateReference"), getValues("participantNumber"))
-    if (next !== undefined) {
-      setValue("accountInfo.mandateReference", next)
-      // after the debit type is saved: each save answers with the whole member and resets the form,
-      // so a later-arriving debit-type answer would otherwise show the reference empty again
-      saved.then(() => onUpdateBaseData("accountInfo.mandateReference", next))
+    // the IBAN and the mandate date become required (or optional): show their state once the
+    // saves are answered — each answer carries the whole member and resets the form and its errors
+    const revalidate = () => setTimeout(() => trigger(["accountInfo.iban", "accountInfo.mandateDate"]))
+    if (!onUpdateBaseData) {
+      revalidate()
+      return
     }
+    const saved = Promise.resolve(onUpdateBaseData(name, value))
+    const next = isDirectDebit(value)
+      ? suggestMandateReference(getValues("accountInfo.mandateReference"), getValues("participantNumber"))
+      : undefined
+    if (next === undefined) {
+      saved.then(revalidate)
+      return
+    }
+    setValue("accountInfo.mandateReference", next)
+    // only after the debit type is saved (false: the save failed, nothing more is written)
+    saved
+      .then(ok => ok === false ? undefined : onUpdateBaseData("accountInfo.mandateReference", next))
+      .then(revalidate)
   }
 
   const getDebitOptions = () => {

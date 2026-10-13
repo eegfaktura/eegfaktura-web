@@ -132,8 +132,11 @@ const ParticipantDetailsPaneComponent: FC = () => {
       participantId: participantId,
       value: {path: Object.keys(value)[0], value: Object.values(value)[0]}
     })).unwrap()
-      // .then(() => console.log("Participant Updated"))
-      .catch((e) => console.error("Error by updating participant: ", e))
+      .then(() => true)
+      .catch((e) => {
+        console.error("Error by updating participant: ", e)
+        return false
+      })
   }
 
   const dynamicComponent = (componentKey: DynamicComponentKey) => {
