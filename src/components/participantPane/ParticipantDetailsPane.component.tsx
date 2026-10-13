@@ -127,7 +127,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
 
   const onUpdateParticipantPartial = (participantId: string, value: Record<string, any>) => {
     console.log("Participant Update Participant Partial", value)
-    dispatcher(updateParticipantPartial({
+    return dispatcher(updateParticipantPartial({
       tenant: tenant!.tenant,
       participantId: participantId,
       value: {path: Object.keys(value)[0], value: Object.values(value)[0]}

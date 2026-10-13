@@ -44,10 +44,7 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
       setSkippedDebit(files.skippedDebit)
       setWithoutIban(files.withoutIban)
       setMissingCreditorId(files.missingCreditorId)
-      return [
-        ...files.debit.map(f => ({ blob: new Blob([f.content], { type: 'application/xml' }), name: f.name })),
-        { blob: new Blob([files.transfer.content], { type: 'application/xml' }), name: files.transfer.name },
-      ];
+      return files.files.map(f => ({ blob: new Blob([f.content], { type: 'application/xml' }), name: f.name }));
     }
     return Promise.reject(new Error(`No file found`));
   }
@@ -129,6 +126,11 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
           </IonLabel>
         )}
 
+        {files && files.length === 0 && (
+          <IonLabel>
+            <p>Dieser Abrechnungslauf enthält keine Lastschriften und keine Gutschriften für SEPA.</p>
+          </IonLabel>
+        )}
         {files && files.map((file, i) =>
             <div key={i}>
               <IonCard>

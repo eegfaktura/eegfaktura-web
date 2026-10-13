@@ -897,15 +897,6 @@ const ParticipantPaneComponent: FC = () => {
                           ></IonIcon>
                           {"EXCEL"}
                         </IonButton>
-                        <IonButton
-                          onClick={() => openBillingDownloadDialog(billingRun.id)}
-                        >
-                          <IonIcon
-                            slot="end"
-                            icon={documentTextOutline}
-                          ></IonIcon>
-                          {"SEPA"}
-                        </IonButton>
                       </div>
                       <IonButton
                         expand="block"

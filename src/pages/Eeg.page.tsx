@@ -3,7 +3,6 @@ import {
   IonButton,
   IonCard,
   IonContent,
-  IonItem,
   IonPage, IonSelect, IonSelectOption,
   SelectChangeEventDetail, SelectCustomEvent
 } from "@ionic/react";

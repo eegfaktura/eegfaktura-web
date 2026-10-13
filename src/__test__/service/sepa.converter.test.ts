@@ -51,6 +51,8 @@ describe("createSepaDirectDebit", () => {
     expect(core).toMatch(/<LclInstrm>\s*<Cd>CORE<\/Cd>/);
     const id = (xml: string) => xml.match(/<PmtInfId>([^<]*)<\/PmtInfId>/)![1];
     expect(id(b2b)).toBe(id(core) + "-B2B");
+    const msgId = (xml: string) => xml.match(/<MsgId>([^<]*)<\/MsgId>/)![1];
+    expect(msgId(b2b)).not.toBe(msgId(core));
   });
 });
 

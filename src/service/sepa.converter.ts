@@ -4,6 +4,9 @@ import {Eeg} from "../models/eeg.model";
 import moment from "moment";
 import {SelectedPeriod} from "../models/energy.model";
 import {Api} from "./index";
+import {debitInstrument} from "../util/MandateReference.util";
+
+export {debitInstrument}
 
 interface SepaModelItem {
   Amount: number,
@@ -68,11 +71,6 @@ export const toSepaText = (str: string | undefined | null, maxLength = 70): stri
 // zaehlt als CORE. CORE und B2B kommen in getrennte Lastschrift-Dateien, weil eine Firmenlastschrift
 // mit B2B-Mandat nicht als CORE eingereicht werden darf. Gutschriften (Ueberweisung) sind davon nicht
 // betroffen.
-export const debitInstrument = (debitType: string | undefined | null): 'CORE' | 'B2B' | 'NONE' => {
-  const t = (debitType ?? '').trim().toUpperCase()
-  return t === 'NONE' || t === 'B2B' ? t : 'CORE'
-}
-
 export const splitDebitByType = (debit: SepaModelItem[]) => ({
   core: debit.filter(item => debitInstrument(item.DebitType) === 'CORE'),
   b2b: debit.filter(item => debitInstrument(item.DebitType) === 'B2B'),
@@ -171,7 +169,7 @@ export const ConvertExcelToXML = async (tenant: string, billingRunId: string,
     throw new Error("E_BIC_MISSING")
   }
 
-  if (eeg.accountInfo.iban.length === 0) {
+  if (!eeg.accountInfo.iban) {
     throw new Error("E_IBAN_MISSING")
   }
 
@@ -188,7 +186,8 @@ export const ConvertExcelToXML = async (tenant: string, billingRunId: string,
         return split.withIban
       })
       .then(records => records.reduce((result, item) => {
-        (result[item['Empfänger Konto IBAN']] = result[item['Empfänger Konto IBAN']] || []).push(item);
+        const key = `${item['Empfänger Konto IBAN']}|${debitInstrument(item['Empfänger Einzugsart'])}|${item['Empfänger Mandatsreferenz'] ?? ''}`;
+        (result[key] = result[key] || []).push(item);
         return result;
       }, {} as Record<string, Array<any>>))
       .then((rows: Record<string, Array<any>>) => (summerize ? summerizeSepaModel(rows) : createSepaModel(rows)))
@@ -231,20 +230,23 @@ export const ConvertExcelToXML = async (tenant: string, billingRunId: string,
 
     const {core, b2b, skipped} = splitDebitByType(invoiceFile.Debit)
     // Ohne Gläubiger-ID gibt es keine Lastschrift-Datei, die Gutschrift-Datei schon (platform#143).
+    // Eine Datei ohne Buchung entfällt: pain.008/pain.001 verlangen mindestens eine Transaktion.
     const creditorId = !!eeg.accountInfo.creditorId
-    const debit: {content: string, name: string}[] = []
-    if (creditorId) {
-      debit.push({content: await createSepaDirectDebit(core, eeg, activePeriod, collectionDate, batch, 'CORE'), name: buildFileName("SEPA_Direct_Debit", tenant, activePeriod)})
-      if (b2b.length > 0) {
-        debit.push({content: await createSepaDirectDebit(b2b, eeg, activePeriod, collectionDate, batch, 'B2B'), name: buildFileName("SEPA_Direct_Debit_B2B", tenant, activePeriod)})
-      }
+    const files: {content: string, name: string}[] = []
+    if (creditorId && core.length > 0) {
+      files.push({content: await createSepaDirectDebit(core, eeg, activePeriod, collectionDate, batch, 'CORE'), name: buildFileName("SEPA_Direct_Debit", tenant, activePeriod)})
+    }
+    if (creditorId && b2b.length > 0) {
+      files.push({content: await createSepaDirectDebit(b2b, eeg, activePeriod, collectionDate, batch, 'B2B'), name: buildFileName("SEPA_Direct_Debit_B2B", tenant, activePeriod)})
+    }
+    if (invoiceFile.Transfer.length > 0) {
+      files.push({content: await createSepaCreditTransfer(invoiceFile.Transfer, eeg, activePeriod, collectionDate, batch), name: buildFileName("SEPA_Credit_Transfer", tenant, activePeriod)})
     }
     return {
-      debit,
-      transfer: {content: await createSepaCreditTransfer(invoiceFile.Transfer, eeg, activePeriod, collectionDate, batch), name: buildFileName("SEPA_Credit_Transfer", tenant, activePeriod)},
+      files,
       skippedDebit: skipped.map(item => item.Name),
       withoutIban,
-      missingCreditorId: !creditorId,
+      missingCreditorId: !creditorId && core.length + b2b.length > 0,
     }
   } catch (error) {
     console.log(error);
@@ -370,7 +372,7 @@ export const createSepaDirectDebit = async (model: SepaModelItem[], eeg: Eeg, pe
     .ele('Document', { xmlns: 'urn:iso:std:iso:20022:tech:xsd:pain.008.001.02' })
       .ele('CstmrDrctDbtInitn')
         .ele('GrpHdr')
-          .ele('MsgId').txt(createMsgId(2)).up()
+          .ele('MsgId').txt(createMsgId(instrument === 'B2B' ? 3 : 2)).up()
           .ele('CreDtTm').txt(new Date().toISOString()).up()
           .ele('NbOfTxs').txt(model.length.toString()).up()
           .ele('CtrlSum').txt(sum.toFixed(2)).up()

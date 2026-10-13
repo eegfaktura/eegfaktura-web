@@ -27,7 +27,7 @@ interface MemberFormComponentProps {
   rates: EegTariff[]
   formId: string
   onSubmit: (data: EegParticipant) => void
-  onSubmitPartial: (participantId: string, value: Record<string, any>) => void
+  onSubmitPartial: (participantId: string, value: Record<string, any>) => void | Promise<unknown>
   changeable?: boolean
 }
 
@@ -79,7 +79,7 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
   const sepaMode = watch ? watch("accountInfo.sepaDirectDebit") : "NONE"
 
   const onUpdateBaseData = (name: string, value: any) => {
-    onSubmitPartial(participant.id, {[name]: value})
+    return onSubmitPartial(participant.id, {[name]: value})
   }
 
   if (!participant) {

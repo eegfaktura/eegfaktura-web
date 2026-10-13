@@ -28,3 +28,13 @@ describe("isDirectDebit", () => {
     expect(isDirectDebit(undefined)).toBe(true);
   });
 });
+
+describe("suggestMandateReference and the SEPA mandate id", () => {
+  it("does not suggest a member number that is no valid mandate id", () => {
+    expect(suggestMandateReference("", "EEG 001")).toBeUndefined();
+    expect(suggestMandateReference("", "M_12")).toBeUndefined();
+    expect(suggestMandateReference("", "Mü-1")).toBeUndefined();
+    expect(suggestMandateReference("", "1".repeat(36))).toBeUndefined();
+    expect(suggestMandateReference("", "EEG-001/A")).toBe("EEG-001/A");
+  });
+});
