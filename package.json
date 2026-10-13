@@ -26,7 +26,7 @@
     "classnames": "^2.5.1",
     "i18next": "^23.10.0",
     "i18next-browser-languagedetector": "^7.2.0",
-    "i18next-http-backend": "^2.5.0",
+    "i18next-http-backend": "^4.0.2",
     "ionicons": "^7.0.0",
     "local-date": "^2.0.6",
     "moment": "^2.31.0",
