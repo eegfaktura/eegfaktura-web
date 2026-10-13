@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {createPmtInfId, createSepaDirectDebit, debitInstrument, splitDebitByType, splitRowsByIban, toSepaText} from "../../service/sepa.converter";
+import {compactReference, createPmtInfId, createSepaDirectDebit, debitInstrument, splitDebitByType, splitRowsByIban, toSepaText} from "../../service/sepa.converter";
 import {Eeg} from "../../models/eeg.model";
 
 describe("toSepaText", () => {
@@ -40,6 +40,32 @@ describe("createPmtInfId", () => {
   it("uses the year of the billed period, not the current year", () => {
     const eeg = {name: "EEG Test", settlementInterval: "ANNUAL"} as unknown as Eeg;
     expect(createPmtInfId(eeg, {type: "YRP", year: 2025, segment: 0} as any)).toBe("EEGTEST-2025-Y000");
+  });
+});
+
+describe("compactReference", () => {
+  it("keeps a single document unchanged", () => {
+    expect(compactReference(["Rechnung202600051"])).toBe("Rechnung202600051");
+  });
+  it("writes numbers of one document type once with their common prefix", () => {
+    expect(compactReference(["Rechnung202600135", "Rechnung202600136", "Gutschrift202600070", "Rechnung202600138", "Gutschrift202600082"]))
+      .toBe("Rechnung202600135/136/138 / Gutschrift202600070/082");
+  });
+  it("fits the ticket 6610818 example (11 documents, 227 characters before) into 140 without losing numbers", () => {
+    const ids = ["Rechnung202600051", "Gutschrift202600021", "Rechnung202600061", "Gutschrift202600027", "Rechnung202600090",
+      "Gutschrift202600040", "Rechnung202600103", "Rechnung202600118", "Gutschrift202600056", "Rechnung202600123", "Gutschrift202600058"];
+    const ref = compactReference(ids);
+    expect(ref.length).toBeLessThanOrEqual(140);
+    expect(ref).toBe("Rechnung202600051/061/090/103/118/123 / Gutschrift202600021/027/040/056/058");
+  });
+  it("counts what does not fit instead of cutting it off", () => {
+    const ids = Array.from({length: 40}, (_, i) => `Rechnung2026${String(1000 + i * 37).padStart(5, "0")}`);
+    const ref = compactReference(ids, 60);
+    expect(ref.length).toBeLessThanOrEqual(60);
+    expect(ref).toMatch(/^Rechnung2026\d{5}\/.*\(\+\d+ weitere\)$/);
+  });
+  it("keeps numbers of different length in full and passes other ids through", () => {
+    expect(compactReference(["R99", "R1000", "Storno-A"])).toBe("R99/1000 / Storno-A");
   });
 });
 

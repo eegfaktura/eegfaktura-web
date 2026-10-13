@@ -8,6 +8,14 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **Shorter SEPA remittance text when several documents are combined** (support ticket 6610818). With
+  „Mitglieder zusammenfassen“ the text listed every document („Rechnung202600135 / Rechnung202600136 /
+  …“) and was cut off at the 140 characters banks allow, so document numbers went missing without
+  notice. Numbers of the same type are now written once with their common prefix
+  („Rechnung202600135/136/138 / Gutschrift202600070/082“); what still does not fit is counted
+  („… (+3 weitere)“) instead of being cut.
+
 ### Fixed
 - **Mandate reference suggestion only when the member number is not yet a mandate reference of
   another member of the community** (platform#143, review E): a mandate reference must be unique per

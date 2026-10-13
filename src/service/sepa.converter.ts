@@ -281,9 +281,44 @@ export const createPmtInfId = (eeg: Eeg, period: SelectedPeriod) => {
   return `${nameId}-${year}-${paymentInterval}`
 }
 
-const createRef = (item: SepaModelItem): string => {
-  return toSepaText(`${item.InvoiceIds.join(' / ')}`, 140)
+// Remittance text (Ustrd, max 140 characters). With "Mitglieder zusammenfassen" one booking can carry
+// many documents; the full list "Rechnung202600135 / Rechnung202600136 / …" then exceeded 140 characters
+// and was cut off silently (support ticket 6610818). Numbers of the same document type are written once
+// with their common prefix (at least three digits stay): "Rechnung202600135/136/138 / Gutschrift202600070/082".
+// What still does not fit is counted instead of cut: "… (+3 weitere)".
+export const compactReference = (invoiceIds: string[], maxLength = 140): string => {
+  const groups = new Map<string, string[]>()
+  const other: string[] = []
+  for (const id of invoiceIds.map(i => String(i ?? '').trim()).filter(i => i !== '')) {
+    const m = id.match(/^(\D*)(\d+)$/)
+    if (!m) { other.push(id); continue }
+    groups.set(m[1], [...(groups.get(m[1]) ?? []), m[2]])
+  }
+  // one token per document; the first of a group carries type and full number
+  const tokens: { text: string, sep: string }[] = []
+  groups.forEach((numbers, type) => {
+    const sameLength = numbers.every(n => n.length === numbers[0].length)
+    let common = 0
+    if (sameLength && numbers.length > 1) {
+      while (common < numbers[0].length - 1 && numbers.every(n => n[common] === numbers[0][common])) common++
+    }
+    numbers.forEach((n, i) => tokens.push(i === 0
+      ? {text: `${type}${n}`, sep: ' / '}
+      : {text: sameLength ? n.slice(Math.max(0, Math.min(common, n.length - 3))) : n, sep: '/'}))
+  })
+  other.forEach(o => tokens.push({text: o, sep: ' / '}))
+
+  const join = (list: typeof tokens) => list.map((t, i) => (i === 0 ? '' : t.sep) + t.text).join('')
+  const full = toSepaText(join(tokens), 1000)
+  if (full.length <= maxLength) return full
+  for (let keep = tokens.length - 1; keep > 0; keep--) {
+    const text = toSepaText(`${join(tokens.slice(0, keep))} (+${tokens.length - keep} weitere)`, 1000)
+    if (text.length <= maxLength) return text
+  }
+  return toSepaText(join(tokens), maxLength)
 }
+
+const createRef = (item: SepaModelItem): string => compactReference(item.InvoiceIds, 140)
 
 const createSepaCreditTransfer = async (model: SepaModelItem[], eeg: Eeg, period: SelectedPeriod, collectionDate: Date, batch: boolean) => {
 
