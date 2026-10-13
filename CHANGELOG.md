@@ -8,6 +8,10 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **SEPA payment information id uses the year of the billed period** (platform#143, review A). It
+  used the current year, so an annual run done in January carried the wrong year.
+
 ### Changed
 - **Payment modes per member instead of one switch per EEG** (platform#143).
   - The EEG setting „SEPA aktiv“ is gone. A finished billing run always offers both downloads:

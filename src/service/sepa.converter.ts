@@ -272,8 +272,9 @@ const getIdFromSettlementInterval = (settlementInterval: 'MONTHLY' | "ANNUAL" | 
   }
 }
 
-const createPmtInfId = (eeg: Eeg, period: SelectedPeriod) => {
-  const year = new Date().getFullYear()
+export const createPmtInfId = (eeg: Eeg, period: SelectedPeriod) => {
+  // year of the billed period: an annual run in January belongs to the previous year
+  const year = period.year
   const paymentInterval = getIdFromSettlementInterval(eeg.settlementInterval).toString() + zeroPad(period.segment, 3);
   const nameId = replaceUmlaute(eeg.name).replaceAll(' ', '').toUpperCase().slice(0,10)
 
