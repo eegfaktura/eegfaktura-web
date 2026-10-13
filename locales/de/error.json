@@ -15,6 +15,5 @@
     "revoke_consentIdEmpty": "Für diesen Zählpunkt fehlt noch die Consent-ID. Ohne diese Information kann der Abmeldeprozess nicht ausgeführt werden. Versuchen Sie die Teilnehmerliste anzufordern, damit die Consent-ID mit den Zählpunkten abgeglichen werden kann."
   },
   "E_BIC_MISSING": "Die BIC der EEG wurde noch nicht konfiguriert.",
-  "E_IBAN_MISSING": "Die IBAN der EEG wurde noch nicht konfiguriert.",
-  "E_NO_CREDITOR_ID": "Die CREDITOR_ID der EEG wurde noch nicht konfiguriert."
+  "E_IBAN_MISSING": "Die IBAN der EEG wurde noch nicht konfiguriert."
 }

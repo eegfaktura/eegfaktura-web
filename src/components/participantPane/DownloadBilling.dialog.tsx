@@ -28,6 +28,7 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
   const [error, setError] = useState<string | null>(null)
   const [skippedDebit, setSkippedDebit] = useState<string[]>([])
   const [withoutIban, setWithoutIban] = useState<string[]>([])
+  const [missingCreditorId, setMissingCreditorId] = useState<boolean>(false)
   const [batch, setBatch] = useState<boolean>(true)
   const [summarize, setSummarize] = useState<boolean>(true)
 
@@ -42,10 +43,8 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
     if (files) {
       setSkippedDebit(files.skippedDebit)
       setWithoutIban(files.withoutIban)
-      return [
-        { blob: new Blob([files.debit.content], { type: 'application/xml' }), name: files.debit.name },
-        { blob: new Blob([files.transfer.content], { type: 'application/xml' }), name: files.transfer.name },
-      ];
+      setMissingCreditorId(files.missingCreditorId)
+      return files.files.map(f => ({ blob: new Blob([f.content], { type: 'application/xml' }), name: f.name }));
     }
     return Promise.reject(new Error(`No file found`));
   }
@@ -60,7 +59,6 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
         switch (err.message) {
           case "E_BIC_MISSING":
           case "E_IBAN_MISSING":
-          case "E_NO_CREDITOR_ID":
             setError(t_err(err.message))
         }
       }
@@ -112,6 +110,11 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
         {!!error && (
           <IonLabel>{error}</IonLabel>
         )}
+        {missingCreditorId && (
+          <IonLabel>
+            <p>Keine Lastschrift-Datei: Dafür braucht die EEG eine Gläubiger-ID (Creditor-ID) in den EEG-Stammdaten.</p>
+          </IonLabel>
+        )}
         {skippedDebit.length > 0 && (
           <IonLabel>
             <p>Nicht in der Lastschrift (Einzugsart „Kein SEPA“): {skippedDebit.join(", ")}</p>
@@ -123,6 +126,11 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
           </IonLabel>
         )}
 
+        {files && files.length === 0 && !missingCreditorId && (
+          <IonLabel>
+            <p>Dieser Abrechnungslauf enthält keine Lastschriften und keine Gutschriften für SEPA.</p>
+          </IonLabel>
+        )}
         {files && files.map((file, i) =>
             <div key={i}>
               <IonCard>

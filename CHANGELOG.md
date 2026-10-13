@@ -8,6 +8,39 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **Payment modes per member instead of one switch per EEG** (platform#143).
+  - The EEG setting „SEPA aktiv“ is gone. A finished billing run always offers both downloads:
+    **EXCEL** (all documents) and **SEPA** (XML files); the preview offers EXCEL only (no bank
+    files from preview invoices). A file without any transaction is no longer created (banks reject
+    an empty pain.008/pain.001); a run with nothing to pay or collect says so.
+  - The direct debit type of the member decides alone: „Kein SEPA“ (`NONE`) is never debited; an
+    **empty type counts as CORE**, as before.
+  - **B2B debits get their own file** (`…SEPA_Direct_Debit_B2B`, `LclInstrm` `B2B`, own message
+    id). Until now every debit was submitted as CORE in one file, which does not match a B2B
+    mandate. The CORE file is unchanged; the B2B file only appears when the run has B2B debits.
+    „Mitglieder zusammenfassen“ now sums per account, debit type and mandate reference, so a CORE
+    and a B2B (or „Kein SEPA“) member sharing an account are no longer merged under the first one.
+    Two members on one account with different mandates are no longer netted either: an invoice of
+    one and a credit note of the other become a debit and a transfer (same total). The message id
+    of each file now includes the time, so two exports on one day do not repeat it.
+  - **Without a creditor ID** the SEPA dialog no longer fails: it creates the credit transfer file
+    and says that the direct debit file needs a creditor ID in the EEG master data.
+  - **IBAN optional for „Kein SEPA“** (support ticket #6610550), for consumers and producers:
+    without IBAN the member is settled in cash and appears in the dialog's „ohne IBAN“ list. With
+    CORE/B2B the IBAN stays required; an entered IBAN is still checked. When registering a member,
+    the account owner is only required for a debit or when an IBAN is entered.
+  - **New members start with CORE.** The mandate reference is suggested from the member number
+    while it is empty (on registration it follows the member number until typed over); switching
+    an existing member to CORE/B2B fills an empty reference once. An existing reference is never
+    replaced, and a member number that is no valid SEPA mandate id (blanks, umlauts, `_`, more
+    than 35 characters) is not suggested. Switching a new member to „Kein SEPA“ removes an
+    untouched suggestion. A hint under the debit type says that CORE/B2B needs a signed mandate,
+    and the mandate date is now required for CORE/B2B (the bank file needs it).
+- **IBAN check digits are verified** in every IBAN field (member and EEG): a typo or two swapped
+  digits now shows „IBAN ist ungültig (Prüfziffer stimmt nicht)“, and the field is not saved,
+  instead of failing later at the bank. Existing IBANs are only checked when edited.
+
 ## [1.1.0] – 2026-10-11
 
 ### Changed

@@ -1,11 +1,10 @@
 import React, {FC} from "react";
 import {Eeg, EegRegister} from "../../models/eeg.model";
-import {Control, Controller, FieldErrors} from "react-hook-form";
+import {Control, FieldErrors} from "react-hook-form";
 import InputForm from "../form/InputForm.component";
 import {Metering} from "../../models/meteringpoint.model";
 import SelectForm from "../form/SelectForm.component";
 import CorePageTemplate from "../core/CorePage.template";
-import {IonItem, IonToggle} from "@ionic/react";
 import {IbanInputForm} from "../form/IbanInputForm";
 
 
@@ -34,24 +33,6 @@ const BusinessEegPropertiesComponent: FC<BusinessEegPropertiesComponentProps> = 
       ]}></SelectForm>
       <IbanInputForm name={"accountInfo.iban"} control={control} />
       <InputForm name={"accountInfo.owner"} label="Kontoinhaber" control={control} type="text"/>
-      <IonItem lines="none">
-        <Controller
-          name={"accountInfo.sepa"}
-          control={control}
-          render={({field}) => {
-            const {onChange, value} = field;
-            return (<IonToggle
-              style={{width: "100%"}}
-              slot="start"
-              labelPlacement="start"
-              checked={value}
-              onIonChange={(e) => {
-                onChange(e.detail.checked);
-              }}>SEPA aktiv</IonToggle>)
-          }
-          }
-        />
-      </IonItem>
     {/*</CorePageTemplate>*/}
     </div>
   )

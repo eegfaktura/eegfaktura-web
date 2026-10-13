@@ -81,7 +81,8 @@
     "sepaDirectDebit": "Einzugsart",
     "sepaDebitOption_none": "Kein SEPA",
     "sepaDebitOption_b2b": "B2B",
-    "sepaDebitOption_core": "CORE"
+    "sepaDebitOption_core": "CORE",
+    "mandate-hint": "Für CORE und B2B muss ein unterschriebenes SEPA-Lastschriftmandat vorliegen. Ohne Mandat „Kein SEPA“ wählen."
   },
   "common-info": {
     "header": "Allgemeines",
@@ -113,6 +114,7 @@
     "account-owner_missing": "Kontoinhaber fehlt!",
     "account-name_missing": "Bankverbindung fehlt!",
     "account-mandate_reference_missing": "Mandatsreferenz fehlt!",
+    "account-mandate_date_missing": "Mandatsdatum fehlt!",
     "partition-factor_missing": "Teilnehmerfaktor fehlt!",
     "allocation-factor_missing": "Verteilungsfaktor fehlt!",
     "metering_missing_msg": "Zählpunktnummer fehlt!",
