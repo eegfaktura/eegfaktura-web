@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.2.0] – 2026-10-14
+
 ### Changed
 - **The direct debit type has to be chosen consciously** (platform#143, objection from the team on
   14.10.: CORE as default could debit members without a signed mandate).
