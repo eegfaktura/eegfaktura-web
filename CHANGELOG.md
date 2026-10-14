@@ -9,6 +9,13 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Changed
+- **The direct debit type has to be chosen consciously** (platform#143, objection from the team on
+  14.10.: CORE as default could debit members without a signed mandate).
+  - New member: no direct debit type is preselected; „Kein SEPA“, CORE or B2B must be chosen before
+    saving. IBAN, mandate reference and mandate date stay required only for CORE/B2B.
+  - A member **without a direct debit type is no longer debited**. Until now an empty type counted as
+    CORE. The SEPA download leaves them out of the direct debit file and lists them („keine Einzugsart
+    gewählt“); credit notes are still paid. The member form shows a hint while no type is set.
 - **SEPA remittance text keeps all document numbers when several documents are combined** (support
   ticket 6610818). With „Mitglieder zusammenfassen“ the text listed every document and was cut off at the
   140 characters banks allow, so document numbers went missing without notice. If the full list is too
@@ -32,7 +39,7 @@ this changelog highlights the changes relevant for overview and operations.
     files from preview invoices). A file without any transaction is no longer created (banks reject
     an empty pain.008/pain.001); a run with nothing to pay or collect says so.
   - The direct debit type of the member decides alone: „Kein SEPA“ (`NONE`) is never debited; an
-    **empty type counts as CORE**, as before.
+    empty type is not debited either (see the entry above).
   - **B2B debits get their own file** (`…SEPA_Direct_Debit_B2B`, `LclInstrm` `B2B`, own message
     id). Until now every debit was submitted as CORE in one file, which does not match a B2B
     mandate. The CORE file is unchanged; the B2B file only appears when the run has B2B debits.
@@ -47,7 +54,7 @@ this changelog highlights the changes relevant for overview and operations.
     without IBAN the member is settled in cash and appears in the dialog's „ohne IBAN“ list. With
     CORE/B2B the IBAN stays required; an entered IBAN is still checked. When registering a member,
     the account owner is only required for a debit or when an IBAN is entered.
-  - **New members start with CORE.** The mandate reference is suggested from the member number
+  - **Mandate reference suggestion.** The mandate reference is suggested from the member number
     while it is empty (on registration it follows the member number until typed over); switching
     an existing member to CORE/B2B fills an empty reference once. An existing reference is never
     replaced, and a member number that is no valid SEPA mandate id (blanks, umlauts, `_`, more

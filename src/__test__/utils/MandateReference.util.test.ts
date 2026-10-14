@@ -20,12 +20,12 @@ describe("suggestMandateReference", () => {
 });
 
 describe("isDirectDebit", () => {
-  it("is false only for 'Kein SEPA'", () => {
+  it("is true only for CORE and B2B, not for 'Kein SEPA' or no choice", () => {
     expect(isDirectDebit("NONE")).toBe(false);
     expect(isDirectDebit("CORE")).toBe(true);
-    expect(isDirectDebit("B2B")).toBe(true);
-    expect(isDirectDebit("")).toBe(true);
-    expect(isDirectDebit(undefined)).toBe(true);
+    expect(isDirectDebit("b2b")).toBe(true);
+    expect(isDirectDebit("")).toBe(false);
+    expect(isDirectDebit(undefined)).toBe(false);
   });
 });
 

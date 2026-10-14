@@ -54,6 +54,16 @@ describe("ConvertExcelToXML", () => {
     expect(r.missingCreditorId).toBe(true);
   });
 
+  it("does not debit a member without a debit type, lists them, and still pays their credit note", async () => {
+    serve([row("R1", "Anna", "AT026000000001349870", "Rechnung", "", 10), row("R2", "Carl", IBAN_B, "Rechnung", "CORE", 20),
+      row("G1", "Bert", "AT483200000012345864", "Gutschrift", "", 5)]);
+    const r = await run(eeg("AT12ZZZ00000000001"));
+    expect(r.unsetDebit).toEqual(["Anna"]);
+    expect(r.files.map(f => f.name)).toEqual([expect.stringMatching(/SEPA_Direct_Debit$/), expect.stringMatching(/SEPA_Credit_Transfer$/)]);
+    expect(r.files[0].content).not.toContain("AT026000000001349870");
+    expect(r.files[0].content).toContain("<InstdAmt Ccy=\"EUR\">20.00</InstdAmt>");
+  });
+
   it("lists 'Kein SEPA' debtors and does not flag a creditor ID when nothing is debited", async () => {
     serve([row("R1", "Anna", IBAN_A, "Rechnung", "NONE", 10)]);
     const r = await run(eeg(undefined));

@@ -21,18 +21,20 @@ describe("splitDebitByType", () => {
   const item = (Name: string, DebitType?: string) =>
     ({Amount: 10, Iban: "AT00", MandateRef: "", MandateDate: "", Name, EndToEndId: "", InvoiceIds: [], DebitType});
 
-  it("leaves 'Kein SEPA' out, splits B2B from CORE, an empty type counts as CORE", () => {
-    const {core, b2b, skipped} = splitDebitByType([item("A", "CORE"), item("B", "NONE"), item("C", "B2B"), item("D"), item("E", " ")]);
-    expect(core.map(i => i.Name)).toEqual(["A", "D", "E"]);
+  it("leaves 'Kein SEPA' and an empty type out, splits B2B from CORE", () => {
+    const {core, b2b, skipped, unset} = splitDebitByType([item("A", "CORE"), item("B", "NONE"), item("C", "B2B"), item("D"), item("E", " ")]);
+    expect(core.map(i => i.Name)).toEqual(["A"]);
     expect(b2b.map(i => i.Name)).toEqual(["C"]);
     expect(skipped.map(i => i.Name)).toEqual(["B"]);
+    expect(unset.map(i => i.Name)).toEqual(["D", "E"]);
   });
 
-  it("reads the type case-insensitively", () => {
+  it("reads the type case-insensitively; empty or unknown is UNSET", () => {
     expect(debitInstrument("b2b")).toBe("B2B");
+    expect(debitInstrument(" core ")).toBe("CORE");
     expect(debitInstrument(" none ")).toBe("NONE");
-    expect(debitInstrument(null)).toBe("CORE");
-    expect(debitInstrument("unknown")).toBe("CORE");
+    expect(debitInstrument(null)).toBe("UNSET");
+    expect(debitInstrument("unknown")).toBe("UNSET");
   });
 });
 

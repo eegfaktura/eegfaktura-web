@@ -1,12 +1,16 @@
-// Direct debit type of a member (platform#143): NONE ("Kein SEPA") means no direct debit, an empty
-// or unknown type counts as CORE. Used by the forms and the SEPA export alike.
-export const debitInstrument = (debitType: string | undefined | null): 'CORE' | 'B2B' | 'NONE' => {
+// Direct debit type of a member (platform#143): only CORE and B2B are collected by direct debit.
+// NONE ("Kein SEPA") means no direct debit; an empty or unknown type (UNSET) is not collected either,
+// because nobody chose it consciously — a debit needs a signed mandate. Used by the forms and the
+// SEPA export alike.
+export const debitInstrument = (debitType: string | undefined | null): 'CORE' | 'B2B' | 'NONE' | 'UNSET' => {
   const t = (debitType ?? '').trim().toUpperCase()
-  return t === 'NONE' || t === 'B2B' ? t : 'CORE'
+  return t === 'CORE' || t === 'B2B' || t === 'NONE' ? t : 'UNSET'
 }
 
-export const isDirectDebit = (sepaDirectDebit: string | null | undefined) =>
-  debitInstrument(sepaDirectDebit) !== 'NONE'
+export const isDirectDebit = (sepaDirectDebit: string | null | undefined) => {
+  const t = debitInstrument(sepaDirectDebit)
+  return t === 'CORE' || t === 'B2B'
+}
 
 // SEPA mandate id (MndtId): max 35 characters of the restricted set, no blanks.
 export const isValidMandateReference = (ref: string) => /^[A-Za-z0-9+?\/\-:().,']{1,35}$/.test(ref)

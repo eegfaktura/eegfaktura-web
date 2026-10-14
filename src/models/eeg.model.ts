@@ -111,7 +111,8 @@ export interface EegRate {
   items: EegRateItem[];
 }
 
-export type SepaDirectDebitType = 'B2B' | 'CORE' | 'NONE';
+// '' = not chosen yet: no direct debit (platform#143)
+export type SepaDirectDebitType = 'B2B' | 'CORE' | 'NONE' | '';
 
 export enum RateTypeEnum {
   AHEAD = "Vorauszahlung",
