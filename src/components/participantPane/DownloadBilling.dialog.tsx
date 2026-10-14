@@ -27,6 +27,7 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
   const [collectionDate, setCollectionDate] = useState<Date | null>(moment().toDate())
   const [error, setError] = useState<string | null>(null)
   const [skippedDebit, setSkippedDebit] = useState<string[]>([])
+  const [unsetDebit, setUnsetDebit] = useState<string[]>([])
   const [withoutIban, setWithoutIban] = useState<string[]>([])
   const [missingCreditorId, setMissingCreditorId] = useState<boolean>(false)
   const [batch, setBatch] = useState<boolean>(true)
@@ -42,6 +43,7 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
     const files = await ConvertExcelToXML(tenant, billingRunId, eeg, collectionDate!, period, batch, summarize)
     if (files) {
       setSkippedDebit(files.skippedDebit)
+      setUnsetDebit(files.unsetDebit)
       setWithoutIban(files.withoutIban)
       setMissingCreditorId(files.missingCreditorId)
       return files.files.map(f => ({ blob: new Blob([f.content], { type: 'application/xml' }), name: f.name }));
@@ -118,6 +120,11 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
         {skippedDebit.length > 0 && (
           <IonLabel>
             <p>Nicht in der Lastschrift (Einzugsart „Kein SEPA“): {skippedDebit.join(", ")}</p>
+          </IonLabel>
+        )}
+        {unsetDebit.length > 0 && (
+          <IonLabel>
+            <p>Nicht in der Lastschrift, weil keine Einzugsart gewählt ist (beim Mitglied CORE, B2B oder „Kein SEPA“ wählen): {unsetDebit.join(", ")}</p>
           </IonLabel>
         )}
         {withoutIban.length > 0 && (

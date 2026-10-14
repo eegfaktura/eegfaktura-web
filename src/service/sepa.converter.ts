@@ -67,14 +67,16 @@ export const toSepaText = (str: string | undefined | null, maxLength = 70): stri
     .slice(0, maxLength)
     .trim()
 
-// Einzugsart je Mitglied (platform#143): "Kein SEPA" (NONE) zahlt ohne Lastschrift, eine leere Einzugsart
-// zaehlt als CORE. CORE und B2B kommen in getrennte Lastschrift-Dateien, weil eine Firmenlastschrift
+// Einzugsart je Mitglied (platform#143): "Kein SEPA" (NONE) zahlt ohne Lastschrift. Eine leere Einzugsart
+// wird ebenfalls nicht eingezogen (unset), weil niemand sie bewusst gewaehlt hat; diese Mitglieder werden
+// im Dialog aufgelistet. CORE und B2B kommen in getrennte Lastschrift-Dateien, weil eine Firmenlastschrift
 // mit B2B-Mandat nicht als CORE eingereicht werden darf. Gutschriften (Ueberweisung) sind davon nicht
 // betroffen.
 export const splitDebitByType = (debit: SepaModelItem[]) => ({
   core: debit.filter(item => debitInstrument(item.DebitType) === 'CORE'),
   b2b: debit.filter(item => debitInstrument(item.DebitType) === 'B2B'),
   skipped: debit.filter(item => debitInstrument(item.DebitType) === 'NONE'),
+  unset: debit.filter(item => debitInstrument(item.DebitType) === 'UNSET'),
 })
 
 // Zeilen ohne IBAN (z.B. Mitglieder ohne Bankkonto, die auf Rechnung zahlen) koennen weder in die
@@ -228,7 +230,7 @@ export const ConvertExcelToXML = async (tenant: string, billingRunId: string,
       //   return result;
       // }, {Transfer: [], Debit: []} as SepaModel))
 
-    const {core, b2b, skipped} = splitDebitByType(invoiceFile.Debit)
+    const {core, b2b, skipped, unset} = splitDebitByType(invoiceFile.Debit)
     // Ohne Gläubiger-ID gibt es keine Lastschrift-Datei, die Gutschrift-Datei schon (platform#143).
     // Eine Datei ohne Buchung entfällt: pain.008/pain.001 verlangen mindestens eine Transaktion.
     const creditorId = !!eeg.accountInfo.creditorId
@@ -245,6 +247,7 @@ export const ConvertExcelToXML = async (tenant: string, billingRunId: string,
     return {
       files,
       skippedDebit: skipped.map(item => item.Name),
+      unsetDebit: unset.map(item => item.Name),
       withoutIban,
       missingCreditorId: !creditorId && core.length + b2b.length > 0,
     }

@@ -72,7 +72,7 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
     residentAddress: {street: '', type: 'RESIDENCE', city: '', streetNumber: '', zip: ''},
     billingAddress:  {street: '', type: 'BILLING', city: '', streetNumber: '', zip: ''},
     contact: {email: "", phone: ""},
-    accountInfo: {iban: '', owner: '', sepa: false, bankName: '', mandateReference: '', sepaDirectDebit: 'CORE'},
+    accountInfo: {iban: '', owner: '', sepa: false, bankName: '', mandateReference: '', sepaDirectDebit: ''},
     businessRole: 'EEG_PRIVATE',
     role: 'EEG_USER',
     optionals: {website: ''},

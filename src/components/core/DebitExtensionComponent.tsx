@@ -8,7 +8,7 @@ import {useLocale} from "../../store/hook/useLocale";
 import DatePickerFormElement from "../form/DatePickerForm.element";
 import {EegParticipant} from "../../models/members.model";
 import DatePickerInput from "../form/NewDatePickerForm.component";
-import {isDirectDebit, suggestMandateReference} from "../../util/MandateReference.util";
+import {debitInstrument, isDirectDebit, suggestMandateReference} from "../../util/MandateReference.util";
 import {useAppSelector} from "../../store";
 import {allParticipantsSelector} from "../../store/participant";
 
@@ -86,8 +86,15 @@ export const DebitExtensionComponent: FC<{
 
   return (
     <>
+      {/* no preselection: the debit type has to be chosen consciously (platform#143) */}
       <SelectForm name={"accountInfo.sepaDirectDebit"} label={t("account.sepaDirectDebit")} control={control}
-                  options={getDebitOptions()} onChangePartial={onChangeDebitType}/>
+                  options={getDebitOptions()} onChangePartial={onChangeDebitType}
+                  rules={{required: t("warnings.account-debit_type_missing")}} error={errors.accountInfo?.sepaDirectDebit}/>
+      {debitInstrument(sepaMode) === 'UNSET' &&
+          <div style={{padding: "0 16px 6px", fontSize: "12px", color: "var(--ion-color-medium)"}}>
+            {t("account.debit-type-hint")}
+          </div>
+      }
       {debit &&
           <>
               <div style={{padding: "0 16px 6px", fontSize: "12px", color: "var(--ion-color-medium)"}}>
