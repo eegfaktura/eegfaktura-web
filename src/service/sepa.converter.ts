@@ -247,7 +247,7 @@ export const ConvertExcelToXML = async (tenant: string, billingRunId: string,
     return {
       files,
       skippedDebit: skipped.map(item => item.Name),
-      unsetDebit: unset.map(item => item.Name),
+      unsetDebit: Array.from(new Set(unset.map(item => item.Name).filter(n => !!n))),
       withoutIban,
       missingCreditorId: !creditorId && core.length + b2b.length > 0,
     }
