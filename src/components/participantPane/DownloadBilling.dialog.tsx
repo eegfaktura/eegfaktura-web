@@ -124,7 +124,7 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
         )}
         {unsetDebit.length > 0 && (
           <IonLabel>
-            <p>Nicht in der Lastschrift, weil keine Einzugsart gewählt ist (beim Mitglied CORE, B2B oder „Kein SEPA“ wählen): {unsetDebit.join(", ")}</p>
+            <p>Nicht in der Lastschrift, weil keine Einzugsart gewählt ist: {unsetDebit.join(", ")}. Die Einzugsart beim Mitglied wählen; sie gilt für neu erstellte Abrechnungsläufe, dieser Lauf übernimmt sie erst, wenn er neu erstellt wird.</p>
           </IonLabel>
         )}
         {withoutIban.length > 0 && (
