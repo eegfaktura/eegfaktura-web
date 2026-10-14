@@ -83,7 +83,8 @@
     "sepaDebitOption_b2b": "B2B",
     "sepaDebitOption_core": "CORE",
     "mandate-hint": "Für CORE und B2B muss ein unterschriebenes SEPA-Lastschriftmandat vorliegen. Ohne Mandat „Kein SEPA“ wählen.",
-    "debit-type-hint": "Keine Einzugsart gewählt: Das Mitglied wird nicht per Lastschrift eingezogen."
+    "debit-type-hint": "Keine Einzugsart gewählt: Das Mitglied wird nicht per Lastschrift eingezogen.",
+    "debit-type-hint-mandate": "Es ist eine Mandatsreferenz ({{ref}}) gespeichert: Liegt ein unterschriebenes Mandat vor, CORE oder B2B wählen."
   },
   "common-info": {
     "header": "Allgemeines",

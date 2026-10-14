@@ -90,9 +90,13 @@ export const DebitExtensionComponent: FC<{
       <SelectForm name={"accountInfo.sepaDirectDebit"} label={t("account.sepaDirectDebit")} control={control}
                   options={getDebitOptions()} onChangePartial={onChangeDebitType}
                   rules={{required: t("warnings.account-debit_type_missing")}} error={errors.accountInfo?.sepaDirectDebit}/>
-      {debitInstrument(sepaMode) === 'UNSET' &&
+      {/* existing member without a type (new members get the required message instead); a stored
+          mandate reference hints that a mandate exists, while the mandate fields stay hidden */}
+      {onUpdateBaseData && debitInstrument(sepaMode) === 'UNSET' &&
           <div style={{padding: "0 16px 6px", fontSize: "12px", color: "var(--ion-color-medium)"}}>
             {t("account.debit-type-hint")}
+            {(getValues("accountInfo.mandateReference") ?? "").trim() !== "" &&
+              " " + t("account.debit-type-hint-mandate", {ref: getValues("accountInfo.mandateReference")})}
           </div>
       }
       {debit &&
