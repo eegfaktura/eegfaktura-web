@@ -17,7 +17,7 @@ import {useAppDispatch} from "../../store";
 import {ErrorState, setErrorState} from "../../store/eeg";
 import {BasicSelectComponent, SelectOptions} from "../form/BasicSelect.component";
 import {JoinStrings} from "../../util/Helper.util";
-import {meteringDisplayName} from "../../util/FilterHelper";
+import {meteringDisplayName, selectedMeters} from "../../util/FilterHelper";
 
 interface ProcessValues {
   communityId: string | undefined
@@ -74,7 +74,7 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
   const onRequest = (data: ProcessValues) => {
     if (data.meteringPoints && startDate && endDate) {
 
-      const meter = meters.filter((m) => data.meteringPoints?.find((s:string) => s === m.meteringPoint))
+      const meter = selectedMeters(useableMeters, data.meteringPoints)
       if (meter) {
         Api.eegService.syncMeteringPoint(
           eeg.id.toUpperCase(),

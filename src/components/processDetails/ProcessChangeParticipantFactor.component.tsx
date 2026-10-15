@@ -9,7 +9,7 @@ import {EdaProcess, Eeg} from "../../models/eeg.model";
 import {Metering, MeteringProcessStateType} from "../../models/meteringpoint.model";
 import {EegParticipant} from "../../models/members.model";
 import {useForm} from "react-hook-form";
-import {FilterByMeterState, meteringDisplayName} from "../../util/FilterHelper";
+import {FilterByMeterState, meteringDisplayName, selectedMeters} from "../../util/FilterHelper";
 import {Api} from "../../service";
 import {useLocale} from "../../store/hook/useLocale";
 import {JoinStrings} from "../../util/Helper.util";
@@ -63,7 +63,7 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
   const onRequest = (data: ProcessValues) => {
     if (data.meteringPoints) {
       const meter =
-        meters.filter((m) => data.meteringPoints?.find((s: string) => s === m.meteringPoint))
+        selectedMeters(useableMeters, data.meteringPoints)
       if (meter) {
         Api.eegService.changeMeterPartitionFactor(
           eeg.id.toUpperCase(),

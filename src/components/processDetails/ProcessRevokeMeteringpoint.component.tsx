@@ -12,7 +12,7 @@ import ProcessHeaderComponent from "./ProcessHeader.component";
 import ProcessContentComponent from "./ProcessContent.component";
 import {BasicSelectComponent, SelectOptions} from "../form/BasicSelect.component";
 import {Api} from "../../service";
-import {meteringDisplayName} from "../../util/FilterHelper";
+import {meteringDisplayName, selectedMeters} from "../../util/FilterHelper";
 import {useLocale} from "../../store/hook/useLocale";
 import {JoinStrings} from "../../util/Helper.util";
 import moment from "moment";
@@ -83,7 +83,7 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
   const onRequest = (data: ProcessValues) => {
     if (data.participantId && data.meteringPoints && consentEndDate) {
 
-      const meter = meters.filter((m) => data.meteringPoints?.find((s:string) => s === m.meteringPoint))
+      const meter = selectedMeters(useableMeters, data.meteringPoints)
       if (meter) {
         if (meter.filter(m => !(m.consentId && m.consentId.length > 0)).length === 0) {
           Api.eegService.revokeMeteringPoint(
