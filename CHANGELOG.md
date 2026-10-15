@@ -8,6 +8,15 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **EDA processes send a metering point only once** (support ticket 66110076). After an owner change a
+  metering point exists twice in a community (the old member's inactive entry and the new active one).
+  „Teilnahmefaktor ändern“ looked the selected numbers up in all meters and sent both entries, so the
+  grid operator rejected the request. „Zählpunkt aufheben“ and „Energiedaten anfordern“ had the same
+  lookup (revoke could fail with „Consent-ID leer“ or include the old consent). All three now send one
+  entry per selected metering point, from the meters of the chosen participant (or the whole community),
+  the active entry first; a selection that matches none is not sent.
+
 ## [1.2.0] – 2026-10-14
 
 ### Changed
