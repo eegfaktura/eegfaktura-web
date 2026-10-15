@@ -74,7 +74,8 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
   const onRequest = (data: ProcessValues) => {
     if (data.meteringPoints && startDate && endDate) {
 
-      const meter = selectedMeters(useableMeters, data.meteringPoints)
+      // „Gesamte Gemeinschaft“ fills the selection from all meters and keeps an earlier participant choice
+      const meter = selectedMeters(selectEntire ? meters : useableMeters, data.meteringPoints)
       if (meter) {
         Api.eegService.syncMeteringPoint(
           eeg.id.toUpperCase(),
