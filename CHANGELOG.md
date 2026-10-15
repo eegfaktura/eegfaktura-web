@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.2.1] – 2026-10-15
+
 ### Fixed
 - **EDA processes send a metering point only once** (support ticket 66110076). After an owner change a
   metering point exists twice in a community (the old member's inactive entry and the new active one).
