@@ -64,7 +64,7 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
     if (data.meteringPoints) {
       const meter =
         selectedMeters(useableMeters, data.meteringPoints)
-      if (meter) {
+      if (meter.length > 0) {  // empty: the selection does not belong to the chosen participant
         Api.eegService.changeMeterPartitionFactor(
           eeg.id.toUpperCase(),
           meter.map(m => {return {meter: m.meteringPoint, direction: m.direction, gridOperatorId: m.gridOperatorId, activation: m.participantState.activeSince, partFact: data.partFact || 100}}))

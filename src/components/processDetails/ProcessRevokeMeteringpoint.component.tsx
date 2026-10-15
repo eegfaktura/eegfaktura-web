@@ -84,7 +84,7 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
     if (data.participantId && data.meteringPoints && consentEndDate) {
 
       const meter = selectedMeters(useableMeters, data.meteringPoints)
-      if (meter) {
+      if (meter.length > 0) {  // empty: the selection does not belong to the chosen participant
         if (meter.filter(m => !(m.consentId && m.consentId.length > 0)).length === 0) {
           Api.eegService.revokeMeteringPoint(
             eeg.id.toUpperCase(), data.participantId,
