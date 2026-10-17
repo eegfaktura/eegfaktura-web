@@ -80,12 +80,18 @@ const ContractDocumentComponent: FC<ContractDocumentComponentProps> = ({tenant, 
             .map(e => e as File))
             .catch((e: Error) => toaster({
               message: `Vertrag konnte nicht hochgeladen werden: ${e.message}`,
-              duration: 3500,
+              duration: 8000,
               position: 'bottom',
               color: "danger"
             }))
             .finally(() => Api.fileService.loadContractDocumentInfos(tenant, participant.id)
-              .then(docs => setContractDocs(docs)))
+              .then(docs => setContractDocs(docs))
+              .catch(() => toaster({
+                message: "Vertragsliste konnte nicht neu geladen werden.",
+                duration: 3500,
+                position: 'bottom',
+                color: "danger"
+              })))
         }
       },
       cssClass: "upload-contract",

@@ -31,7 +31,7 @@ export class FileService extends BaseService {
       try {
         uploaded.push(await this.uploadContractDocument(tenant, participantId, file))
       } catch (e) {
-        failed.push(`${file.name}: ${(e as Error).message}`)
+        failed.push(`${file.name}: ${e instanceof Error ? e.message : String(e)}`)
       }
     }
     if (failed.length > 0) {
