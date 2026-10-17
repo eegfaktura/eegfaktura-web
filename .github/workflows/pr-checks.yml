@@ -77,8 +77,6 @@ jobs:
 
   lockfile:
     name: Lockfile in sync
-    # Report-only: the lockfile is known to be out of sync; the job must not turn a PR red.
-    continue-on-error: true
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -93,6 +91,8 @@ jobs:
           node-version-file: .nvmrc
 
       - name: Install exactly the lockfile
+        # Report-only: the lockfile is known to be out of sync; the step must not turn a PR red.
+        continue-on-error: true
         run: |
           npm install -g "pnpm@${PNPM_VERSION}"
           pnpm install --frozen-lockfile --ignore-scripts
