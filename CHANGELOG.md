@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.2.2] – 2026-10-17
+
 ### Fixed
 - **Contract upload stores every selected file and reports failures** (finding 261005-ca2). The upload
   dialog lets you add several files, but only the first one was stored; the others were dropped without
