@@ -90,12 +90,18 @@ jobs:
         with:
           node-version-file: .nvmrc
 
+      - name: Install pnpm
+        run: npm install -g "pnpm@${PNPM_VERSION}"
+
       - name: Install exactly the lockfile
+        id: reportonly
         # Report-only: the lockfile is known to be out of sync; the step must not turn a PR red.
         continue-on-error: true
-        run: |
-          npm install -g "pnpm@${PNPM_VERSION}"
-          pnpm install --frozen-lockfile --ignore-scripts
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Report the known failure
+        if: steps.reportonly.outcome == 'failure'
+        run: echo "::warning::pnpm-lock.yaml is out of sync with package.json (report-only)."
 
   typecheck:
     name: Type check

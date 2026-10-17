@@ -251,7 +251,7 @@ jobs:
           name: build-dependencies
           path: ${{ runner.temp }}/poms
           if-no-files-found: ignore
-          retention-days: 30
+          retention-days: 1
 
   vulnerabilities:
     name: Vulnerable dependencies
