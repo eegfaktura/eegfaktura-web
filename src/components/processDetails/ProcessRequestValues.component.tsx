@@ -17,7 +17,7 @@ import {useAppDispatch} from "../../store";
 import {ErrorState, setErrorState} from "../../store/eeg";
 import {BasicSelectComponent, SelectOptions} from "../form/BasicSelect.component";
 import {JoinStrings} from "../../util/Helper.util";
-import {meteringDisplayName} from "../../util/FilterHelper";
+import {meteringDisplayName, selectedMeters} from "../../util/FilterHelper";
 
 interface ProcessValues {
   communityId: string | undefined
@@ -74,8 +74,9 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
   const onRequest = (data: ProcessValues) => {
     if (data.meteringPoints && startDate && endDate) {
 
-      const meter = meters.filter((m) => data.meteringPoints?.find((s:string) => s === m.meteringPoint))
-      if (meter) {
+      // „Gesamte Gemeinschaft“ fills the selection from all meters and keeps an earlier participant choice
+      const meter = selectedMeters(selectEntire ? meters : useableMeters, data.meteringPoints)
+      if (meter.length > 0) {  // empty: the selection does not belong to the chosen participant
         Api.eegService.syncMeteringPoint(
           eeg.id.toUpperCase(),
           meter.map(m => {return {meter: m.meteringPoint, direction: m.direction}}),

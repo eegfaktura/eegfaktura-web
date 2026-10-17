@@ -8,6 +8,95 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.2.2] – 2026-10-17
+
+### Fixed
+- **Contract upload stores every selected file and reports failures** (finding 261005-ca2). The upload
+  dialog lets you add several files, but only the first one was stored; the others were dropped without
+  notice. Each file is now uploaded on its own (also when a member is activated with documents). When the
+  filestore rejects a file (e.g. „Invalid content_type“) or answers with a GraphQL error, the contract
+  pane shows a red toast with the file name and the reason, the other files are still stored, and the
+  list is reloaded from the filestore. When a member is activated with documents, a failed upload no
+  longer stops the activation: the member is activated and gets the info mail as before, and a warning
+  toast names the files that were not stored and says they can be uploaded later under „Verträge“
+  (before, an HTTP error from the filestore stopped the activation and other filestore errors were ignored). The file name is sent as a GraphQL variable, so names with quotes no longer break the request.
+- **The due date in the SEPA file is exactly the date chosen in the dialog** (finding 261005-ca1). The
+  execution/collection date (`ReqdExctnDt`, `ReqdColltnDt`) was written as the UTC date, so in Austria it
+  could be one day earlier than chosen, depending on the time of day carried by the chosen date (e.g. a
+  date taken while the clock was between 00:00 and 02:00). It is now the local calendar date.
+
+## [1.2.1] – 2026-10-15
+
+### Fixed
+- **EDA processes send a metering point only once** (support ticket 66110076). After an owner change a
+  metering point exists twice in a community (the old member's inactive entry and the new active one).
+  „Teilnahmefaktor ändern“ looked the selected numbers up in all meters and sent both entries, so the
+  grid operator rejected the request. „Zählpunkt aufheben“ and „Energiedaten anfordern“ had the same
+  lookup (revoke could fail with „Consent-ID leer“ or include the old consent). All three now send one
+  entry per selected metering point, from the meters of the chosen participant (or the whole community),
+  the active entry first; a selection that matches none is not sent.
+
+## [1.2.0] – 2026-10-14
+
+### Changed
+- **The direct debit type has to be chosen consciously** (platform#143, objection from the team on
+  14.10.: CORE as default could debit members without a signed mandate).
+  - New member: no direct debit type is preselected; „Kein SEPA“, CORE or B2B must be chosen before
+    saving. IBAN, mandate reference and mandate date stay required only for CORE/B2B.
+  - A member **without a direct debit type is no longer debited**. Until now an empty type counted as
+    CORE. The SEPA download leaves them out of the direct debit file and lists them („keine Einzugsart
+    gewählt“); credit notes are still paid. The member form shows a hint while no type is set.
+- **SEPA remittance text keeps all document numbers when several documents are combined** (support
+  ticket 6610818). With „Mitglieder zusammenfassen“ the text listed every document and was cut off at the
+  140 characters banks allow, so document numbers went missing without notice. If the full list is too
+  long, numbers of the same type are written once with their common prefix
+  („Rechnung202600135/136/138 / Gutschrift202600070/082“); if that is still too long, the longest group
+  gives up numbers first (every document type stays visible) and the rest is counted („… (+3 weitere)“).
+  A list that fits stays unchanged.
+
+### Fixed
+- **Mandate reference suggestion only when the member number is not yet a mandate reference of
+  another member of the community** (platform#143, review E): a mandate reference must be unique per
+  creditor id. If the number becomes unusable while typing, the untouched earlier suggestion is cleared
+  instead of leaving a half-typed number; a reference typed by hand is never changed.
+- **SEPA payment information id uses the year of the billed period** (platform#143, review A). It
+  used the current year, so an annual run done in January carried the wrong year.
+
+### Changed
+- **Payment modes per member instead of one switch per EEG** (platform#143).
+  - The EEG setting „SEPA aktiv“ is gone. A finished billing run always offers both downloads:
+    **EXCEL** (all documents) and **SEPA** (XML files); the preview offers EXCEL only (no bank
+    files from preview invoices). A file without any transaction is no longer created (banks reject
+    an empty pain.008/pain.001); a run with nothing to pay or collect says so.
+  - The direct debit type of the member decides alone: „Kein SEPA“ (`NONE`) is never debited; an
+    empty type is not debited either (see the entry above).
+  - **B2B debits get their own file** (`…SEPA_Direct_Debit_B2B`, `LclInstrm` `B2B`, own message
+    id). Until now every debit was submitted as CORE in one file, which does not match a B2B
+    mandate. The CORE file is unchanged; the B2B file only appears when the run has B2B debits.
+    „Mitglieder zusammenfassen“ now sums per account, debit type and mandate reference, so a CORE
+    and a B2B (or „Kein SEPA“) member sharing an account are no longer merged under the first one.
+    Two members on one account with different mandates are no longer netted either: an invoice of
+    one and a credit note of the other become a debit and a transfer (same total). The message id
+    of each file now includes the time, so two exports on one day do not repeat it.
+  - **Without a creditor ID** the SEPA dialog no longer fails: it creates the credit transfer file
+    and says that the direct debit file needs a creditor ID in the EEG master data.
+  - **IBAN optional for „Kein SEPA“** (support ticket #6610550), for consumers and producers:
+    without IBAN the member is settled in cash and appears in the dialog's „ohne IBAN“ list. With
+    CORE/B2B the IBAN stays required; an entered IBAN is still checked. When registering a member,
+    the account owner is only required for a debit or when an IBAN is entered.
+  - **Mandate reference suggestion.** The mandate reference is suggested from the member number
+    while it is empty (on registration it follows the member number until typed over); switching
+    an existing member to CORE/B2B fills an empty reference once. An existing reference is never
+    replaced, and a member number that is no valid SEPA mandate id (blanks, umlauts, `_`, more
+    than 35 characters) is not suggested. Switching a new member to „Kein SEPA“ removes an
+    untouched suggestion. A hint under the debit type says that CORE/B2B needs a signed mandate,
+    and the mandate date is now required for CORE/B2B (the bank file needs it).
+- **IBAN check digits are verified** in every IBAN field (member and EEG): a typo or two swapped
+  digits now shows „IBAN ist ungültig (Prüfziffer stimmt nicht)“, and the field is not saved,
+  instead of failing later at the bank. Existing IBANs are only checked when edited.
+
+## [1.1.0] – 2026-10-11
+
 ### Changed
 - **Grid operator of a metering point is no longer entered by hand** (platform#107). The backend
   derives it from the metering point number. For BEGs the fields "Netzbetreiber-ID" and
