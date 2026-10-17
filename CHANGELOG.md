@@ -18,6 +18,10 @@ this changelog highlights the changes relevant for overview and operations.
   longer stops the activation: the member is activated and gets the info mail as before, and a warning
   toast names the files that were not stored and says they can be uploaded later under „Verträge“
   (before, an HTTP error from the filestore stopped the activation and other filestore errors were ignored). The file name is sent as a GraphQL variable, so names with quotes no longer break the request.
+- **The due date in the SEPA file is exactly the date chosen in the dialog** (finding 261005-ca1). The
+  execution/collection date (`ReqdExctnDt`, `ReqdColltnDt`) was written as the UTC date, so in Austria it
+  could be one day earlier than chosen, depending on the time of day carried by the chosen date (e.g. a
+  date taken while the clock was between 00:00 and 02:00). It is now the local calendar date.
 
 ## [1.2.1] – 2026-10-15
 
