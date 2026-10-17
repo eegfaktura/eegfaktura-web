@@ -1,5 +1,5 @@
-// The dialog gives the chosen date as local time: a typed date is local midnight, a picked date
-// keeps the time of day. In Vienna both are still the previous day in UTC (finding 261005-ca1).
+// The dialog gives the chosen date as local time, possibly local midnight; a picked date
+// keeps the time of day. Between 00:00 and 02:00 in Vienna that is still the previous day in UTC (finding 261005-ca1).
 process.env.TZ = 'Europe/Vienna'
 
 import { describe, it, expect, vi } from "vitest";

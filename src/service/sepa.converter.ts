@@ -5,6 +5,7 @@ import moment from "moment";
 import {SelectedPeriod} from "../models/energy.model";
 import {Api} from "./index";
 import {debitInstrument} from "../util/MandateReference.util";
+import {toLocalISODate} from "../util/Helper.util";
 
 export {debitInstrument}
 
@@ -361,7 +362,7 @@ const createSepaCreditTransfer = async (model: SepaModelItem[], eeg: Eeg, period
               .ele('Cd').txt('SEPA').up()
             .up()
           .up()
-          .ele('ReqdExctnDt').txt(moment(collectionDate).format('YYYY-MM-DD')).up()
+          .ele('ReqdExctnDt').txt(toLocalISODate(collectionDate)).up()
           .ele('Dbtr')
             .ele('Nm').txt(toSepaText(eeg.accountInfo.owner)).up()
           .up()
@@ -443,7 +444,7 @@ export const createSepaDirectDebit = async (model: SepaModelItem[], eeg: Eeg, pe
             .up()
             .ele('SeqTp').txt('RCUR').up()
           .up()
-          .ele('ReqdColltnDt').txt(moment(collectionDate).format('YYYY-MM-DD')).up()
+          .ele('ReqdColltnDt').txt(toLocalISODate(collectionDate)).up()
           .ele('Cdtr')
             .ele('Nm').txt(toSepaText(eeg.accountInfo.owner)).up()
           .up()

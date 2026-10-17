@@ -11,8 +11,8 @@ this changelog highlights the changes relevant for overview and operations.
 ### Fixed
 - **The due date in the SEPA file is exactly the date chosen in the dialog** (finding 261005-ca1). The
   execution/collection date (`ReqdExctnDt`, `ReqdColltnDt`) was written as the UTC date, so in Austria it
-  could be one day earlier than chosen: always for a typed date, and for a picked date when exporting
-  between 00:00 and 02:00. It is now the local calendar date.
+  could be one day earlier than chosen, depending on the time of day carried by the chosen date (e.g. a
+  date taken while the clock was between 00:00 and 02:00). It is now the local calendar date.
 
 ## [1.2.1] – 2026-10-15
 
