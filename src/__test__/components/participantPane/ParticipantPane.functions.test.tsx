@@ -19,7 +19,7 @@ vi.mock("../../../store/energy", () => ({
   ],
 }));
 
-import {buildAllocationMapFromSelected} from "../../../components/participantPane/ParticipantPane.functions";
+import {buildAllocationMapFromSelected, uploadActivationDocuments} from "../../../components/participantPane/ParticipantPane.functions";
 
 describe("<ParticipantPane/> Functions", () => {
   it("allocate invoice member and metering points", async () => {
@@ -64,5 +64,25 @@ describe("<ParticipantPane/> Functions", () => {
       {participantId: "1234567890", meteringPoint: "AT0000000000000000000000000000001", allocationKWh: 10},
       {participantId: "1234567890", meteringPoint: "AT0000000000000000000000000000002", allocationKWh: 0},
     ])
+  });
+})
+
+describe("uploadActivationDocuments", () => {
+  const file = new File(["x"], "a.png", {type: "image/png"});
+
+  it("does not call the upload without files", async () => {
+    const upload = vi.fn();
+    await expect(uploadActivationDocuments(upload, [])).resolves.toBeUndefined();
+    expect(upload).not.toHaveBeenCalled();
+  });
+
+  it("resolves without warning when the upload succeeds", async () => {
+    await expect(uploadActivationDocuments(async () => [], [file])).resolves.toBeUndefined();
+  });
+
+  it("resolves with a warning naming the failed files instead of rejecting", async () => {
+    const warning = await uploadActivationDocuments(() => Promise.reject(new Error("a.png: Invalid content_type")), [file]);
+    expect(warning).toContain("a.png: Invalid content_type");
+    expect(warning).toContain("später im Bereich Verträge");
   });
 })

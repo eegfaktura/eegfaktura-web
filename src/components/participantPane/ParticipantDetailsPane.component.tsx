@@ -40,6 +40,7 @@ import {ratesSelector} from "../../store/rate";
 import {meteringInterReportSelectorV2, selectedPeriodSelector} from "../../store/energy";
 import MeterChartComponent from "./MeterChart.component";
 import {Api} from "../../service";
+import {uploadActivationDocuments} from "./ParticipantPane.functions";
 import {useLocale} from "../../store/hook/useLocale";
 import {useAccessGroups, useTenant} from "../../store/hook/Eeg.provider";
 import {useMoveMeteringPointHook} from "../../store/hook/MoveMeteringPoint.hook";
@@ -170,26 +171,19 @@ const ParticipantDetailsPaneComponent: FC = () => {
 
   function onWillDismiss(participant: EegParticipant, meters: Metering[], ev: CustomEvent<OverlayEventDetail<FormData>>) {
 
-    const uploadFiles = async (tenant: string, participantId: string, data?: FormData) => {
-      if (data) {
-        const files = data.getAll("docfiles").map(e => e as File)
-        if (files.length > 0) {
-          return Api.fileService.uploadContractDocuments(tenant, participantId, files)
-        }
-      }
-      return new Promise<any>((resolve) => resolve(true))
-    }
-
     if (ev.detail.role === 'confirm') {
-      uploadFiles(tenant!.tenant, participant.id, ev.detail.data)
-        .then(() => {
-          return participant
+      const files = ev.detail.data ? ev.detail.data.getAll("docfiles").map(e => e as File) : []
+      uploadActivationDocuments(f => Api.fileService.uploadContractDocuments(tenant!.tenant, participant.id, f), files)
+        .then((uploadWarning) => {
+          if (uploadWarning) {
+            toaster({message: uploadWarning, duration: 8000, position: 'top', color: "warning"})
+          }
+          return dispatcher(confirmParticipant(
+            {tenant: tenant!.tenant,
+              participantId: participant.id,
+              meters: meters.filter(m=>m.enabled)
+            })).unwrap()
         })
-        .then(() => dispatcher(confirmParticipant(
-          {tenant: tenant!.tenant,
-            participantId: participant.id,
-            meters: meters.filter(m=>m.enabled)
-          })).unwrap())
         .then((value) => presentToast(`${value.firstname} ist nun Mitglied deiner EEG. Ein Infomail wurde an ${value.contact.email} gesendet.`))
         .catch(() => presentToast('Mitglied konnte nicht aktiviert werden.'))
     }
