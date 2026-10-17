@@ -8,6 +8,8 @@
 # for those packages). --ignore-scripts keeps their install scripts from running.
 # Versions fixed, each release older than 7 days (checked 2026-10-09): Node 20.18.0 (.nvmrc),
 # pnpm 9.12.1. Actions pinned by commit SHA.
+# Every job keeps its output as an artifact for 30 days (test-results-<job>, known-errors-<job>),
+# for the CI report collector (vfeeg-development/eegfaktura-dev).
 
 name: PR Checks
 
@@ -47,7 +49,18 @@ jobs:
           pnpm install --no-frozen-lockfile --ignore-scripts
 
       - name: Unit tests
-        run: pnpm exec vitest run
+        run: |
+          mkdir -p "$RUNNER_TEMP/results"
+          pnpm exec vitest run --reporter=default --reporter=junit --outputFile.junit="$RUNNER_TEMP/results/unit.xml"
+
+      - name: Keep the test results
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-results-unit
+          path: ${{ runner.temp }}/results
+          if-no-files-found: ignore
+          retention-days: 30
 
   full:
     name: Full test suite
@@ -70,10 +83,21 @@ jobs:
           pnpm install --no-frozen-lockfile --ignore-scripts
 
       - name: Tests
-        run: pnpm exec vitest run
+        run: |
+          mkdir -p "$RUNNER_TEMP/results"
+          pnpm exec vitest run --reporter=default --reporter=junit --outputFile.junit="$RUNNER_TEMP/results/full.xml"
 
       - name: Production build
         run: pnpm exec vite build
+
+      - name: Keep the test results
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-results-full
+          path: ${{ runner.temp }}/results
+          if-no-files-found: ignore
+          retention-days: 30
 
   lockfile:
     name: Lockfile in sync
@@ -97,11 +121,23 @@ jobs:
         id: reportonly
         # Report-only: the lockfile is known to be out of sync; the step must not turn a PR red.
         continue-on-error: true
-        run: pnpm install --frozen-lockfile --ignore-scripts
+        run: |
+          set -o pipefail
+          mkdir -p "$RUNNER_TEMP/results"
+          pnpm install --frozen-lockfile --ignore-scripts 2>&1 | tee "$RUNNER_TEMP/results/lockfile.log"
 
       - name: Report the known failure
         if: steps.reportonly.outcome == 'failure'
         run: echo "::warning::pnpm-lock.yaml is out of sync with package.json (report-only)."
+
+      - name: Keep the check output
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: known-errors-lockfile
+          path: ${{ runner.temp }}/results
+          if-no-files-found: ignore
+          retention-days: 30
 
   typecheck:
     name: Type check
@@ -124,4 +160,16 @@ jobs:
           pnpm install --no-frozen-lockfile --ignore-scripts
 
       - name: tsc
-        run: pnpm exec tsc --noEmit
+        run: |
+          set -o pipefail
+          mkdir -p "$RUNNER_TEMP/results"
+          pnpm exec tsc --noEmit 2>&1 | tee "$RUNNER_TEMP/results/tsc.log"
+
+      - name: Keep the check output
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-results-typecheck
+          path: ${{ runner.temp }}/results
+          if-no-files-found: ignore
+          retention-days: 30
