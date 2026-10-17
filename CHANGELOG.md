@@ -8,6 +8,16 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **Contract upload stores every selected file and reports failures** (finding 261005-ca2). The upload
+  dialog lets you add several files, but only the first one was stored; the others were dropped without
+  notice. Each file is now uploaded on its own (also when a member is activated with documents). When the
+  filestore rejects a file (e.g. „Invalid content_type“) or answers with a GraphQL error, the contract
+  pane shows a red toast with the file name and the reason, the other files are still stored, and the
+  list is reloaded from the filestore. When a member is activated, a failed upload now stops the
+  activation with the existing „Mitglied konnte nicht aktiviert werden.“ message, as an HTTP error already
+  did. The file name is sent as a GraphQL variable, so names with quotes no longer break the request.
+
 ## [1.2.1] – 2026-10-15
 
 ### Fixed
