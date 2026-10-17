@@ -8,6 +8,15 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- CI: PR checks (tests on every pull request) and a security scan (leaked secrets in new commits,
+  vulnerable dependencies, Dockerfile/Kubernetes misconfigurations). Dependency and misconfiguration
+  findings are only reported and do not block; a leaked secret in new commits fails the check. Jobs for
+  known failing tests are report-only.
+- CI: every run keeps its scan and test results as artifacts for 30 days (`scan-*`,
+  `test-results-<job>`, `known-errors-<job>`) for a CI report collector; the secret scan keeps
+  outcomes and counts only.
+
 ## [1.2.2] – 2026-10-17
 
 ### Fixed
