@@ -9,6 +9,15 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Fixed
+- **Contract upload stores every selected file and reports failures** (finding 261005-ca2). The upload
+  dialog lets you add several files, but only the first one was stored; the others were dropped without
+  notice. Each file is now uploaded on its own (also when a member is activated with documents). When the
+  filestore rejects a file (e.g. „Invalid content_type“) or answers with a GraphQL error, the contract
+  pane shows a red toast with the file name and the reason, the other files are still stored, and the
+  list is reloaded from the filestore. When a member is activated with documents, a failed upload no
+  longer stops the activation: the member is activated and gets the info mail as before, and a warning
+  toast names the files that were not stored and says they can be uploaded later under „Verträge“
+  (before, an HTTP error from the filestore stopped the activation and other filestore errors were ignored). The file name is sent as a GraphQL variable, so names with quotes no longer break the request.
 - **The due date in the SEPA file is exactly the date chosen in the dialog** (finding 261005-ca1). The
   execution/collection date (`ReqdExctnDt`, `ReqdColltnDt`) was written as the UTC date, so in Austria it
   could be one day earlier than chosen, depending on the time of day carried by the chosen date (e.g. a
