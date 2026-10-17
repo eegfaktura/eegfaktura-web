@@ -75,3 +75,14 @@ export const filterSearchQuery = (entities: EegParticipant[], query: string | un
     return entities;
   }
 }
+
+// Uploads the documents chosen when a member is activated. A failed upload must not stop the
+// activation: resolves with a warning text for the user instead, undefined when all went well.
+export const uploadActivationDocuments = (upload: (files: File[]) => Promise<unknown>, files: File[]): Promise<string | undefined> => {
+  if (files.length === 0) {
+    return Promise.resolve(undefined)
+  }
+  return upload(files).then(
+    () => undefined,
+    (e) => `Nicht hochgeladen: ${e instanceof Error ? e.message : String(e)}. Die Dokumente können später im Bereich Verträge hochgeladen werden.`)
+}

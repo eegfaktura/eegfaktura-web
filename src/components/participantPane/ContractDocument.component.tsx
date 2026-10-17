@@ -8,7 +8,7 @@ import {
   IonList,
   IonListHeader, IonRow,
   IonToolbar, useIonAlert,
-  useIonModal
+  useIonModal, useIonToast
 } from "@ionic/react";
 import {eegPdfDoc, eegStar} from "../../eegIcons";
 import {ContractInfo, EegParticipant} from "../../models/members.model";
@@ -26,6 +26,7 @@ interface ContractDocumentComponentProps {
 const ContractDocumentComponent: FC<ContractDocumentComponentProps> = ({tenant, participant}) => {
   const [contractDocs, setContractDocs] = useState<ContractInfo[]>([])
   const [presentAlert] = useIonAlert();
+  const [toaster] = useIonToast();
 
   useEffect(() => {
     if (tenant && participant) {
@@ -77,14 +78,20 @@ const ContractDocumentComponent: FC<ContractDocumentComponentProps> = ({tenant, 
           const data:FormData = ev.detail.data
           Api.fileService.uploadContractDocuments(tenant, participant.id, data.getAll("docfiles")
             .map(e => e as File))
-            .then((r) => {
-              const fileInfo = {id: r.data.addFile.id,
-                fileCategory: "contract",
-                createdAt: r.data.addFile.createdAt,
-                name: r.data.addFile.name,
-                userId: participant.id} as ContractInfo
-              setContractDocs(prev => [...prev, fileInfo])
-            })
+            .catch((e: Error) => toaster({
+              message: `Vertrag konnte nicht hochgeladen werden: ${e.message}`,
+              duration: 8000,
+              position: 'bottom',
+              color: "danger"
+            }))
+            .finally(() => Api.fileService.loadContractDocumentInfos(tenant, participant.id)
+              .then(docs => setContractDocs(docs))
+              .catch(() => toaster({
+                message: "Vertragsliste konnte nicht neu geladen werden.",
+                duration: 3500,
+                position: 'bottom',
+                color: "danger"
+              })))
         }
       },
       cssClass: "upload-contract",
