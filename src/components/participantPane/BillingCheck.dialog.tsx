@@ -15,7 +15,7 @@ import {
   IonTitle,
   IonToolbar,
 } from "@ionic/react";
-import {alertCircle, checkmarkCircle, helpCircle, informationCircle} from "ionicons/icons";
+import {alertCircle, checkmarkCircle, helpCircle, informationCircle, warning} from "ionicons/icons";
 import moment from "moment";
 import {EegParticipant} from "../../models/members.model";
 import {ActiveTenant, EegTariff} from "../../models/eeg.model";
@@ -31,8 +31,8 @@ import {
   evaluateBillingChecks,
 } from "./BillingCheck.functions";
 
-// 'check': „Daten prüfen“ without billing; 'preview' / 'billing': shown before the run is started.
-export type BillingCheckMode = 'check' | 'preview' | 'billing'
+// Shown before the run is started: 'preview' or the final 'billing'.
+export type BillingCheckMode = 'preview' | 'billing'
 
 const statusIcon: Record<CheckStatus, { icon: string, color: string, text: string }> = {
   OK: {icon: checkmarkCircle, color: "success", text: "OK"},
@@ -108,16 +108,19 @@ export const BillingCheckDialog: FC<{
     <>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Daten prüfen ({date(start.getTime())} – {date(end.getTime())})</IonTitle>
+          <IonTitle>Prüfung vor der Abrechnung ({date(start.getTime())} – {date(end.getTime())})</IonTitle>
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
         {mode === 'billing' && (
-          <p>
-            Wenn Du „{confirmText}“ wählst, werden die Rechnungen endgültig erstellt und die fortlaufenden
-            Rechnungsnummern vergeben. Dieser Vorgang ist unumkehrbar und Änderungen an den Rechnungen sind danach
-            nicht mehr möglich. Willst Du wirklich das angewählte Verrechnungsintervall jetzt abrechnen?
-          </p>
+          <IonItem color="warning" lines="none" className="ion-margin-bottom">
+            <IonIcon slot="start" icon={warning}/>
+            <IonLabel className="ion-text-wrap">
+              <strong>Dieser Vorgang ist unumkehrbar.</strong> Wenn Du „{confirmText}“ wählst, werden die Rechnungen
+              endgültig erstellt und die fortlaufenden Rechnungsnummern vergeben. Änderungen an den Rechnungen sind
+              danach nicht mehr möglich. Willst Du wirklich das angewählte Verrechnungsintervall jetzt abrechnen?
+            </IonLabel>
+          </IonItem>
         )}
         {!overview && <IonSpinner name="dots"/>}
         {overview && (
@@ -171,14 +174,10 @@ export const BillingCheckDialog: FC<{
       <IonFooter>
         <IonToolbar>
           <IonButtons slot="end">
-            {mode === 'check'
-              ? <IonButton onClick={() => onDismiss(null, 'cancel')}>Schließen</IonButton>
-              : <>
-                <IonButton onClick={() => onDismiss(null, 'cancel')}>Abbrechen</IonButton>
-                <IonButton fill="solid" onClick={() => onDismiss(null, 'confirm')}>
-                  {confirmText}
-                </IonButton>
-              </>}
+            <IonButton onClick={() => onDismiss(null, 'cancel')}>Abbrechen</IonButton>
+            <IonButton fill="solid" onClick={() => onDismiss(null, 'confirm')}>
+              {confirmText}
+            </IonButton>
           </IonButtons>
         </IonToolbar>
       </IonFooter>

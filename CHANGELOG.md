@@ -17,9 +17,8 @@ this changelog highlights the changes relevant for overview and operations.
   from the start of the period (or the first activation in it, for a community that starts mid-period) to
   the end. The checks only warn; the run starts with
   „Trotzdem abrechnen“ / „Trotzdem Vorschau erstellen“, also while the checks are still loading. For the
-  final run the overview replaces the confirmation „Abrechnungslauf“ and repeats its text. A new button
-  „Daten prüfen“ in billing mode (lowest of the billing buttons, same style as „Vorschau erstellen“)
-  shows the same overview without billing. The picked invoice date now survives re-renders
+  final run the overview replaces the confirmation „Abrechnungslauf“, repeats its text and highlights
+  that the run cannot be undone. The picked invoice date now survives re-renders
   of the billing pane. The energy checks need energystore with `POST /eeg/v2/{ecId}/billing-check`;
   without it they show „nicht geprüft“ and billing works as before.
 - CI: PR checks (tests on every pull request) and a security scan (leaked secrets in new commits,

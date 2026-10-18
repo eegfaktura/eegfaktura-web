@@ -165,10 +165,10 @@ const ParticipantPaneComponent: FC = () => {
     billingDownload()
   }
 
-  // Checks before a billing run (platform#148): shown before preview and billing, and by „Daten prüfen“.
+  // Checks before a billing run (platform#148): shown before preview and billing.
   // They only warn; the run starts on confirm. The document date is taken when the button is clicked.
   const rates = useAppSelector(ratesMapSelector);
-  const [billingCheckMode, setBillingCheckMode] = useState<BillingCheckMode>('check');
+  const [billingCheckMode, setBillingCheckMode] = useState<BillingCheckMode>('preview');
   const billingCheckOpen = useRef(false);
   const [billingCheck, billingCheckDismiss] = useIonModal(BillingCheckDialog, {
     mode: billingCheckMode,
@@ -179,7 +179,7 @@ const ParticipantPaneComponent: FC = () => {
     onDismiss: (data: any, role: string) => billingCheckDismiss(data, role),
   });
 
-  const openBillingCheck = (mode: BillingCheckMode, documentDate?: Date) => {
+  const openBillingCheck = (mode: BillingCheckMode, documentDate: Date) => {
     if (!activePeriod || billingCheckOpen.current) {
       return
     }
@@ -187,7 +187,7 @@ const ParticipantPaneComponent: FC = () => {
     setBillingCheckMode(mode)
     billingCheck({
       onWillDismiss: (e: CustomEvent) => {
-        if (e.detail.role === 'confirm' && mode !== 'check' && documentDate) {
+        if (e.detail.role === 'confirm') {
           onDoBilling(mode === 'preview', documentDate)
         }
       },
@@ -1003,11 +1003,6 @@ const ParticipantPaneComponent: FC = () => {
                       </div>
                     </>
                   )}
-                  <IonButton
-                    expand="block"
-                    disabled={activePeriod === undefined}
-                    onClick={() => openBillingCheck('check')}
-                  >{`DATEN PRÜFEN`}</IonButton>
                 </IonCol>
               </IonRow>
             </div>
