@@ -145,6 +145,28 @@ describe("BillingCheck functions", () => {
     expect(ok.completeness).toEqual({status: 'OK', incomplete: []})
   })
 
+  it("completeness: owner change, no activation date, inactive on the clock change day", () => {
+    const oct = [new Date(2026, 9, 1), new Date(2026, 9, 31)] as [Date, Date]
+    const meters = activeMetersInPeriod([
+      participant("Old", [meter("AT1", {until: "2026-10-25"})]),   // inactive on the 25-hour day
+      participant("New", [meter("AT1", {since: "2026-10-25"})]),   // same metering point, new owner
+      {...participant("X", []), meters: [{...meter("AT2", {}), participantState: {activeSince: null, inactiveSince: null}} as unknown as Metering]},
+    ], oct[0], oct[1])
+    const cps = buildBillingCheckRequest(meters, oct[0], oct[1]).cps
+    const periodStart = oct[0].getTime(), periodEnd = new Date(2026, 9, 31, 23, 45).getTime()
+    const last25 = new Date(2026, 9, 25, 23, 45).getTime()
+    const res = evaluateBillingChecks(meters, rates, energy({
+      periodStart, periodEnd,
+      meters: [
+        {...cps[0], l3Count: 0, l3Days: [], firstData: periodStart, lastData: last25},       // complete until its inactive day
+        {...cps[1], l3Count: 0, l3Days: [], firstData: cps[1].activeSince, lastData: last25}, // new owner: data stops on the 25th
+        {...cps[2], l3Count: 0, l3Days: [], firstData: periodStart, lastData: periodEnd},   // no activation date: whole period
+      ],
+    }))
+    expect(res.completeness.incomplete.map(m => m.meter.participantName)).toEqual(["Max New"])
+    expect(res.completeness.incomplete[0].expectedEnd).toBe(periodEnd)
+  })
+
   it("a meter without activation date is still checked", () => {
     const meters = activeMetersInPeriod([participant("A", [
       {...meter("AT1", {tariff_id: undefined as unknown as string}), participantState: {activeSince: null, inactiveSince: null}} as unknown as Metering,
