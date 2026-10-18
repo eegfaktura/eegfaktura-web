@@ -91,6 +91,8 @@ import HeaderFavButtonComponent from "../core/HeaderFavButton.component";
 import {Virtuoso} from "react-virtuoso";
 import {types} from "sass";
 import {DownloadBillingDialog} from "./DownloadBilling.dialog";
+import {BillingCheckDialog, BillingCheckMode} from "./BillingCheck.dialog";
+import {ratesMapSelector} from "../../store/rate";
 
 const ParticipantPaneComponent: FC = () => {
   const dispatcher = useAppDispatch();
@@ -160,6 +162,37 @@ const ParticipantPaneComponent: FC = () => {
   const openBillingDownloadDialog = (billingRunId: string)=> {
     setDownloadBillingId(billingRunId)
     billingDownload()
+  }
+
+  // Checks before a billing run (platform#148): shown before preview and billing, and by „Daten prüfen“.
+  // They only warn; the run starts on confirm. The document date is taken when the button is clicked.
+  const rates = useAppSelector(ratesMapSelector);
+  const [billingCheckMode, setBillingCheckMode] = useState<BillingCheckMode>('check');
+  const pendingBilling = useRef<{ preview: boolean, documentDate: Date } | undefined>();
+  const [billingCheck, billingCheckDismiss] = useIonModal(BillingCheckDialog, {
+    mode: billingCheckMode,
+    tenant: {tenant, ecId, rcNr},
+    period: activePeriod,
+    participants: allParticipants,
+    rates: rates,
+    onDismiss: (data: any, role: string) => billingCheckDismiss(data, role),
+  });
+
+  const openBillingCheck = (mode: BillingCheckMode, documentDate?: Date) => {
+    if (!activePeriod) {
+      return
+    }
+    setBillingCheckMode(mode)
+    pendingBilling.current = mode === 'check' || !documentDate ? undefined : {preview: mode === 'preview', documentDate}
+    billingCheck({
+      onWillDismiss: (e: CustomEvent) => {
+        const pending = pendingBilling.current
+        pendingBilling.current = undefined
+        if (e.detail.role === 'confirm' && pending) {
+          onDoBilling(pending.preview, pending.documentDate)
+        }
+      },
+    })
   }
 
   useEffect(() => {
@@ -848,7 +881,7 @@ const ParticipantPaneComponent: FC = () => {
                       <IonButton
                         expand="block"
                         disabled={activePeriod === undefined}
-                        onClick={() => onDoBilling(true, documentDatePreview)}
+                        onClick={() => openBillingCheck('preview', documentDatePreview)}
                       >{`VORSCHAU ERSTELLEN`}</IonButton>
                     </>
                   )}
@@ -874,7 +907,7 @@ const ParticipantPaneComponent: FC = () => {
                       >
                         <IonButton
                           disabled={activePeriod === undefined}
-                          onClick={() => onDoBilling(true, documentDateBilling)}
+                          onClick={() => openBillingCheck('preview', documentDateBilling)}
                         >
                           {`Vorschau Akt.`}
                           <IonIcon
@@ -901,28 +934,7 @@ const ParticipantPaneComponent: FC = () => {
                       <IonButton
                         expand="block"
                         disabled={activePeriod === undefined || !previewValid}
-                        onClick={() =>
-                          presentAlert({
-                            subHeader: "Abrechnungslauf",
-                            message:
-                              "Wenn Du „OK“ wählst, werden die Rechnungen endgültig erstellt und die fortlaufenden Rechnungsnummern vergeben. Dieser Vorgang ist unumkehrbar und Änderungen an den Rechnungen sind danach nicht mehr möglich. Willst Du wirklich das angewählte Verrechnungsintervall jetzt abrechnen?",
-                            buttons: [
-                              {
-                                text: "Cancel",
-                                role: "cancel",
-                              },
-                              {
-                                text: "OK",
-                                role: "confirmInvoice",
-                              },
-                            ],
-                            onDidDismiss: (e: CustomEvent) => {
-                              if (e.detail.role === "confirmInvoice") {
-                                onDoBilling(false, documentDateBilling);
-                              }
-                            },
-                          })
-                        }
+                        onClick={() => openBillingCheck('billing', documentDateBilling)}
                       >{`ABRECHNUNG DURCHFÜHREN (${billingInfo.length})`}</IonButton>
                     </>
                   )}
@@ -1003,6 +1015,8 @@ const ParticipantPaneComponent: FC = () => {
                 setChecked={(c) => activateBilling(c)}
               ></SlideButtonComponent>
             </div>
+            <IonButton size="small" fill="outline" disabled={activePeriod === undefined}
+                       onClick={() => openBillingCheck('check')}>Daten prüfen</IonButton>
             <div
               style={{
                 marginRight: "20px",
