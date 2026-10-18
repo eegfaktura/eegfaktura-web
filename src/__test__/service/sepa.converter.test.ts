@@ -39,9 +39,27 @@ describe("splitDebitByType", () => {
 });
 
 describe("createPmtInfId", () => {
+  const now = new Date(2026, 9, 18, 10, 53, 7);
+
   it("uses the year of the billed period, not the current year", () => {
     const eeg = {name: "EEG Test", settlementInterval: "ANNUAL"} as unknown as Eeg;
-    expect(createPmtInfId(eeg, {type: "YRP", year: 2025, segment: 0} as any)).toBe("EEGTEST-2025-Y000");
+    expect(createPmtInfId(eeg, {type: "YRP", year: 2025, segment: 0} as any, 'G', now)).toBe("G261018105307-EEGTEST-2025-Y000");
+  });
+
+  // the bank refuses a file whose first 16 characters ("Bestandskontrollnummer") it has seen before
+  it("is unique in its first 16 characters per file kind and export time, also with a long name", () => {
+    const eeg = {name: "EEG Strasshof an der Nordbahn", settlementInterval: "QUARTER"} as unknown as Eeg;
+    const q3 = {type: "QRP", year: 2026, segment: 3} as any;
+    const ids = [
+      createPmtInfId(eeg, q3, 'G', now),
+      createPmtInfId(eeg, q3, 'C', now),
+      createPmtInfId(eeg, q3, 'B', now),
+      createPmtInfId(eeg, q3, 'G', new Date(now.getTime() + 1000)),
+      createPmtInfId(eeg, {type: "QRP", year: 2026, segment: 4} as any, 'G', new Date(2027, 0, 20, 9, 0, 0)),
+    ];
+    expect(new Set(ids.map(id => id.slice(0, 16))).size).toBe(ids.length);
+    ids.forEach(id => expect(id.length).toBeLessThanOrEqual(35));
+    expect(ids[0]).toBe("G261018105307-EEGSTRASSH-2026-QY003");
   });
 });
 
@@ -86,13 +104,14 @@ describe("createSepaDirectDebit", () => {
   const period = {type: "MRP", year: 2026, segment: 9} as any;
   const items = [{Amount: 12.5, Iban: "AT611904300234573201", MandateRef: "M1", MandateDate: "2026-01-01", Name: "Firma X", EndToEndId: "1", InvoiceIds: ["R-1"], DebitType: "B2B"}];
 
-  it("writes the instrument into LclInstrm and keeps the CORE payment id unchanged", async () => {
+  it("writes the instrument into LclInstrm and gives CORE and B2B their own payment id", async () => {
     const b2b = await createSepaDirectDebit(items, eeg, period, new Date("2026-10-15"), true, "B2B");
     const core = await createSepaDirectDebit(items, eeg, period, new Date("2026-10-15"), true, "CORE");
     expect(b2b).toMatch(/<LclInstrm>\s*<Cd>B2B<\/Cd>/);
     expect(core).toMatch(/<LclInstrm>\s*<Cd>CORE<\/Cd>/);
     const id = (xml: string) => xml.match(/<PmtInfId>([^<]*)<\/PmtInfId>/)![1];
-    expect(id(b2b)).toBe(id(core) + "-B2B");
+    expect(id(b2b)).toMatch(/^B\d{12}-EEGTEST-2026-MY009$/);
+    expect(id(core)).toMatch(/^C\d{12}-EEGTEST-2026-MY009$/);
     const msgId = (xml: string) => xml.match(/<MsgId>([^<]*)<\/MsgId>/)![1];
     expect(msgId(b2b)).not.toBe(msgId(core));
   });

@@ -8,6 +8,20 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.2.3] – 2026-10-18
+
+### Fixed
+- **The bank accepts more than one SEPA file per year** (user report 18.10.2026). Austrian banks take the first
+  16 characters of the payment information id (`PmtInfId`) as the "Bestandskontrollnummer" and refuse a file
+  whose first 16 characters they have seen before („Die Bestandskontrollnummer muss auf 16 Zeichen eindeutig
+  sein“). The id was name, year and period, e.g. `EEGSTRASSH-2026-QY003`: the credit transfer and the direct
+  debit of one period always had the same id, and with a name of 10 or more characters every file of a year had
+  the same first 16 characters. After the first file (e.g. the direct debit) the bank refused the next one
+  (e.g. the credit transfer for the credit notes, or the next period). The id now starts with the file kind (`G` credit transfer, `C` direct debit CORE,
+  `B` direct debit B2B) and the export time to the second, followed by name, year and period, e.g.
+  `G261018105307-EEGSTRASSH-2026-QY003` (at most 35 characters). The B2B file no longer ends in `-B2B`; the
+  kind letter tells it apart. Files exported before this version are unchanged.
+
 ### Added
 - CI: PR checks (tests on every pull request) and a security scan (leaked secrets in new commits,
   vulnerable dependencies, Dockerfile/Kubernetes misconfigurations). Dependency and misconfiguration

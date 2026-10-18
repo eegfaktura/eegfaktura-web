@@ -276,13 +276,21 @@ const getIdFromSettlementInterval = (settlementInterval: 'MONTHLY' | "ANNUAL" | 
   }
 }
 
-export const createPmtInfId = (eeg: Eeg, period: SelectedPeriod) => {
+// G = credit transfer (Gutschriften), C = direct debit CORE, B = direct debit B2B
+export type PmtInfKind = 'G' | 'C' | 'B'
+
+// Payment information id, at most 35 characters. Austrian banks take its first 16 characters as the
+// "Bestandskontrollnummer" and refuse a file whose first 16 characters were used before. These start
+// with the file kind and the export time (to the second), so every file is unique there; name, year and
+// period of the billing follow. Before, the id started with the name and year ("EEGSTRASSH-2026-…"), and
+// the bank took only the first file of a year.
+export const createPmtInfId = (eeg: Eeg, period: SelectedPeriod, kind: PmtInfKind, now: Date = new Date()) => {
   // year of the billed period: an annual run in January belongs to the previous year
   const year = period.year
   const paymentInterval = getIdFromSettlementInterval(eeg.settlementInterval).toString() + zeroPad(period.segment, 3);
   const nameId = replaceUmlaute(eeg.name).replaceAll(' ', '').toUpperCase().slice(0,10)
 
-  return `${nameId}-${year}-${paymentInterval}`
+  return `${kind}${moment(now).format('YYMMDDHHmmss')}-${nameId}-${year}-${paymentInterval}`
 }
 
 // Remittance text (Ustrd, max 140 characters). With "Mitglieder zusammenfassen" one booking can carry
@@ -352,7 +360,7 @@ const createSepaCreditTransfer = async (model: SepaModelItem[], eeg: Eeg, period
           .up()
         .up()
         .ele('PmtInf')
-          .ele('PmtInfId').txt(createPmtInfId(eeg, period)).up()
+          .ele('PmtInfId').txt(createPmtInfId(eeg, period, 'G')).up()
           .ele('PmtMtd').txt('TRF').up()
           .ele('BtchBookg').txt((batch ? "true" : "false")).up()
           .ele('NbOfTxs').txt(model.length.toString()).up()
@@ -433,7 +441,7 @@ export const createSepaDirectDebit = async (model: SepaModelItem[], eeg: Eeg, pe
           .up()
         .up()
         .ele('PmtInf')
-          .ele('PmtInfId').txt(createPmtInfId(eeg, period) + (instrument === 'B2B' ? '-B2B' : '')).up()
+          .ele('PmtInfId').txt(createPmtInfId(eeg, period, instrument === 'B2B' ? 'B' : 'C')).up()
           .ele('PmtMtd').txt('DD').up()
           .ele('BtchBookg').txt((batch ? "true" : "false")).up()
           .ele('NbOfTxs').txt(model.length.toString()).up()
