@@ -6,7 +6,7 @@ import {BillingCheckRequest, BillingCheckResponse, BillingCheckTotals} from "../
 
 // Checks before a billing run (platform#148). They only warn; none of them blocks the billing.
 
-export type CheckStatus = 'OK' | 'INFO' | 'WARNING' | 'NOT_CHECKED'
+export type CheckStatus = 'OK' | 'WARNING' | 'NOT_CHECKED'
 
 export interface CheckedMeter {
   participantName: string
@@ -38,12 +38,18 @@ export interface IncompleteMeter {
 export interface BillingCheckOverview {
   tariff: { status: CheckStatus, missing: CheckedMeter[] }
   l3: { status: CheckStatus, findings: L3Finding[], reason?: string }
-  balance: { status: CheckStatus, totals?: BillingCheckTotals, reason?: string }
+  // difference: production – allocated in kWh, float noise rounded away (6 decimals); text: what the status means
+  balance: { status: CheckStatus, totals?: BillingCheckTotals, difference?: number, text?: string, reason?: string }
   completeness: { status: CheckStatus, incomplete: IncompleteMeter[], reason?: string }
 }
 
-// Rounding only; there is deliberately no percentage threshold.
-const BALANCE_TOLERANCE_KWH = 0.001
+// The production counts as completely distributed when production and allocated differ by less than this.
+const BALANCE_TOLERANCE_KWH = 0.01
+
+// The difference for the dialog: three decimals, cut off rather than rounded, so a green difference never reads
+// 0,01 (0,0097 -> 0,009) and a yellow one never reads 0. Float noise is rounded away first (0,006, not 0,00599...).
+export const kWhDiff = (v: number) =>
+  `${(Math.trunc(Math.round(v * 1e6) / 1e3) / 1e3 + 0).toLocaleString("de-AT", {maximumFractionDigits: 3})} kWh`
 
 // Activation dates are days; the backend sends them as UTC midnight, which is a later hour of the same
 // day in local time. energystore expects the local start of the day.
@@ -121,7 +127,15 @@ export const evaluateBillingChecks = (
     .filter(f => f.meter && f.count > 0)
 
   const totals = energy.totals
-  const balanceStatus: CheckStatus = totals.allocated > totals.produced + BALANCE_TOLERANCE_KWH ? 'WARNING' : 'INFO'
+  // OK only when the production was distributed completely (difference production – allocated below 0,01 kWh).
+  // One value for the status and the display: the sums carry float noise (0.01 can arrive as 0.00999...).
+  const difference = Math.round((totals.produced - totals.allocated) * 1e6) / 1e6
+  const balanceStatus: CheckStatus = Math.abs(difference) < BALANCE_TOLERANCE_KWH ? 'OK' : 'WARNING'
+  const balanceText = balanceStatus === 'WARNING'
+    ? (difference < 0 ? "Es wurde mehr Energie verteilt als produziert." : "Nicht die ganze Produktion wurde verteilt.")
+    : (totals.produced === 0 && totals.allocated === 0
+      ? "Keine Produktion im Zeitraum."
+      : "Die Produktion wurde vollständig verteilt.")
 
   // Every metering point needs values for its active part of the period: from the period start or its activation
   // day to the period end or its inactive day (23:45). energystore counts the quarter hours without a value, also
@@ -145,7 +159,7 @@ export const evaluateBillingChecks = (
   return {
     tariff,
     l3: {status: findings.length > 0 ? 'WARNING' : 'OK', findings},
-    balance: {status: balanceStatus, totals},
+    balance: {status: balanceStatus, totals, difference, text: balanceText},
     completeness: {status: incomplete.length > 0 ? 'WARNING' : 'OK', incomplete},
   }
 }
