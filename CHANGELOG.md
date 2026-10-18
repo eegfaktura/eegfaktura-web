@@ -14,13 +14,16 @@ this changelog highlights the changes relevant for overview and operations.
 - **The bank accepts more than one SEPA file per year** (user report 18.10.2026). Austrian banks take the first
   16 characters of the payment information id (`PmtInfId`) as the "Bestandskontrollnummer" and refuse a file
   whose first 16 characters they have seen before („Die Bestandskontrollnummer muss auf 16 Zeichen eindeutig
-  sein“). The id was name, year and period, e.g. `EEGSTRASSH-2026-QY003`: the credit transfer and the direct
-  debit of one period always had the same id, and with a name of 10 or more characters every file of a year had
-  the same first 16 characters. After the first file (e.g. the direct debit) the bank refused the next one
-  (e.g. the credit transfer for the credit notes, or the next period). The id now starts with the file kind (`G` credit transfer, `C` direct debit CORE,
-  `B` direct debit B2B) and the export time to the second, followed by name, year and period, e.g.
-  `G261018105307-EEGSTRASSH-2026-QY003` (at most 35 characters). The B2B file no longer ends in `-B2B`; the
-  kind letter tells it apart. Files exported before this version are unchanged.
+  sein“). The id was name, year and settlement interval, e.g. `EEGSTRASSH-2026-QY003`: the credit transfer and
+  the direct debit of one period always had the same id, and for most names (from 9 characters) every file of a
+  year had the same first 16 characters. After the first file (e.g. the direct debit) the bank refused the next
+  one (e.g. the credit transfer for the credit notes, or the next period). The id now starts with the file kind
+  (`G` credit transfer, `C` direct debit CORE, `B` direct debit B2B), the year and the billed period, followed
+  by the name, e.g. `G2026YQ003-EEGSTRASSH`. Every file kind of every period is unique; the same file uploaded
+  a second time still has the same id and is refused by the bank (no double debit). The period is the billed
+  one (before, a monthly community's quarterly billing read `MY003`), the name part keeps only A–Z and 0–9, and
+  the B2B file no longer ends in `-B2B`. The message id (`MsgId`) also starts with the file kind now
+  (`MSG-C-<UTC time>`). Files exported before this version are unchanged.
 
 ### Added
 - CI: PR checks (tests on every pull request) and a security scan (leaked secrets in new commits,

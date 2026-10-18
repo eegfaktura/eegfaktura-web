@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {compactReference, createPmtInfId, createSepaDirectDebit, debitInstrument, splitDebitByType, splitRowsByIban, toSepaText} from "../../service/sepa.converter";
+import {compactReference, createPmtInfId, createSepaCreditTransfer, createSepaDirectDebit, debitInstrument, splitDebitByType, splitRowsByIban, toSepaText} from "../../service/sepa.converter";
 import {Eeg} from "../../models/eeg.model";
 
 describe("toSepaText", () => {
@@ -39,27 +39,37 @@ describe("splitDebitByType", () => {
 });
 
 describe("createPmtInfId", () => {
-  const now = new Date(2026, 9, 18, 10, 53, 7);
-
   it("uses the year of the billed period, not the current year", () => {
-    const eeg = {name: "EEG Test", settlementInterval: "ANNUAL"} as unknown as Eeg;
-    expect(createPmtInfId(eeg, {type: "YRP", year: 2025, segment: 0} as any, 'G', now)).toBe("G261018105307-EEGTEST-2025-Y000");
+    const eeg = {name: "EEG Test"} as unknown as Eeg;
+    expect(createPmtInfId(eeg, {type: "Y", year: 2025, segment: 0}, 'G')).toBe("G2025Y000-EEGTEST");
   });
 
   // the bank refuses a file whose first 16 characters ("Bestandskontrollnummer") it has seen before
-  it("is unique in its first 16 characters per file kind and export time, also with a long name", () => {
-    const eeg = {name: "EEG Strasshof an der Nordbahn", settlementInterval: "QUARTER"} as unknown as Eeg;
-    const q3 = {type: "QRP", year: 2026, segment: 3} as any;
+  it("is unique in its first 16 characters per file kind and period, also with a long name", () => {
+    const eeg = {name: "EEG Strasshof an der Nordbahn"} as unknown as Eeg;
+    const q3 = {type: "YQ", year: 2026, segment: 3} as const;
     const ids = [
-      createPmtInfId(eeg, q3, 'G', now),
-      createPmtInfId(eeg, q3, 'C', now),
-      createPmtInfId(eeg, q3, 'B', now),
-      createPmtInfId(eeg, q3, 'G', new Date(now.getTime() + 1000)),
-      createPmtInfId(eeg, {type: "QRP", year: 2026, segment: 4} as any, 'G', new Date(2027, 0, 20, 9, 0, 0)),
+      createPmtInfId(eeg, q3, 'G'),
+      createPmtInfId(eeg, q3, 'C'),
+      createPmtInfId(eeg, q3, 'B'),
+      createPmtInfId(eeg, {...q3, segment: 4}, 'G'),
+      createPmtInfId(eeg, {type: "YM", year: 2026, segment: 3}, 'G'),
+      createPmtInfId(eeg, {...q3, year: 2027}, 'G'),
     ];
     expect(new Set(ids.map(id => id.slice(0, 16))).size).toBe(ids.length);
     ids.forEach(id => expect(id.length).toBeLessThanOrEqual(35));
-    expect(ids[0]).toBe("G261018105307-EEGSTRASSH-2026-QY003");
+    expect(ids[0]).toBe("G2026YQ003-EEGSTRASSH");
+  });
+
+  // a file downloaded and uploaded again must be refused by the bank (no double debit)
+  it("is the same for the same file kind and period", () => {
+    const eeg = {name: "EEG Test"} as unknown as Eeg;
+    expect(createPmtInfId(eeg, {type: "YM", year: 2026, segment: 9}, 'C')).toBe(createPmtInfId(eeg, {type: "YM", year: 2026, segment: 9}, 'C'));
+  });
+
+  it("keeps only A-Z and 0-9 of the name", () => {
+    const eeg = {name: "B&S Énergie/Wind Grüß"} as unknown as Eeg;
+    expect(createPmtInfId(eeg, {type: "Y", year: 2026, segment: 0}, 'C')).toBe("C2026Y000-BSENERGIEW");
   });
 });
 
@@ -101,19 +111,24 @@ describe("createSepaDirectDebit", () => {
     name: "EEG Test", settlementInterval: "MONTHLY",
     accountInfo: {owner: "EEG Test", iban: "AT61 1904 3002 3457 3201", bic: "TESTATWW", creditorId: "AT12ZZZ00000000001"},
   } as unknown as Eeg;
-  const period = {type: "MRP", year: 2026, segment: 9} as any;
+  const period = {type: "YM", year: 2026, segment: 9} as any;
   const items = [{Amount: 12.5, Iban: "AT611904300234573201", MandateRef: "M1", MandateDate: "2026-01-01", Name: "Firma X", EndToEndId: "1", InvoiceIds: ["R-1"], DebitType: "B2B"}];
 
-  it("writes the instrument into LclInstrm and gives CORE and B2B their own payment id", async () => {
+  it("writes the instrument into LclInstrm and gives every file its own payment id", async () => {
     const b2b = await createSepaDirectDebit(items, eeg, period, new Date("2026-10-15"), true, "B2B");
     const core = await createSepaDirectDebit(items, eeg, period, new Date("2026-10-15"), true, "CORE");
     expect(b2b).toMatch(/<LclInstrm>\s*<Cd>B2B<\/Cd>/);
     expect(core).toMatch(/<LclInstrm>\s*<Cd>CORE<\/Cd>/);
     const id = (xml: string) => xml.match(/<PmtInfId>([^<]*)<\/PmtInfId>/)![1];
-    expect(id(b2b)).toMatch(/^B\d{12}-EEGTEST-2026-MY009$/);
-    expect(id(core)).toMatch(/^C\d{12}-EEGTEST-2026-MY009$/);
+    const transfer = await createSepaCreditTransfer(items, eeg, period, new Date("2026-10-15"), true);
+    expect(id(b2b)).toBe("B2026YM009-EEGTEST");
+    expect(id(core)).toBe("C2026YM009-EEGTEST");
+    expect(id(transfer)).toBe("G2026YM009-EEGTEST");
     const msgId = (xml: string) => xml.match(/<MsgId>([^<]*)<\/MsgId>/)![1];
-    expect(msgId(b2b)).not.toBe(msgId(core));
+    // the bank's 16-character check must tell the three files of one export apart, in both ids
+    for (const ids of [[b2b, core, transfer].map(id), [b2b, core, transfer].map(msgId)]) {
+      expect(new Set(ids.map(x => x.slice(0, 16))).size).toBe(3);
+    }
   });
 });
 
