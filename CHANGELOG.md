@@ -8,6 +8,22 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.3.0] – 2026-10-18
+
+### Added
+- **Checks before billing** (platform#148). Before a preview and before the final billing run, an
+  overview shows four checks for the selected period: metering points active in the period without a
+  tariff (also an archived tariff; the member fee tariff is not checked), L3 values per metering point
+  with days, the energy balance of the community (info; a warning only if more was distributed than
+  produced) and whether every metering point has energy data for its active part of the period (from the
+  period start or its activation day to the period end or its inactive day); gaps in the middle are shown
+  with the number of missing quarter hours and the days, e.g. „96 Viertelstunde(n) fehlen (14.02.)“. The checks only warn; the run starts with
+  „Trotzdem abrechnen“ / „Trotzdem Vorschau erstellen“, also while the checks are still loading. For the
+  final run the overview replaces the confirmation „Abrechnungslauf“, repeats its text and highlights
+  that the run cannot be undone. The picked invoice date now survives re-renders
+  of the billing pane. The energy checks need energystore 1.6.0 (`POST /eeg/v2/{ecId}/billing-check`);
+  without it they show „nicht geprüft“ and billing works as before.
+
 ## [1.2.3] – 2026-10-18
 
 ### Added

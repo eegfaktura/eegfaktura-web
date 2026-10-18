@@ -13,6 +13,7 @@ import {AuthService} from "./auth.service";
 import {reportDateGraphqlQuery, uploadEnergyGraphqlMutation} from "./graphql-query";
 import {ExcelReportRequest} from "../models/reports.model";
 import {ActiveTenant} from "../models/eeg.model";
+import {BillingCheckRequest, BillingCheckResponse} from "../models/billingCheck.model";
 
 export class EnergyService extends BaseService {
   public constructor(authService: AuthService) {
@@ -159,6 +160,30 @@ export class EnergyService extends BaseService {
     })
       .then(this.handleErrors)
       .then( response => this.handleDownload(response, "energy-export"));
+  }
+
+  async fetchBillingCheck(tenant: ActiveTenant, payload: BillingCheckRequest, signal?: AbortSignal, timeoutMs = 60000): Promise<BillingCheckResponse> {
+    const controller = new AbortController()
+    signal?.addEventListener('abort', () => controller.abort(), {once: true})
+    const token = await this.lookupToken()
+    if (controller.signal.aborted) {
+      return Promise.reject(new DOMException("aborted", "AbortError"))
+    }
+    const timer = setTimeout(() => controller.abort(), timeoutMs)
+    try {
+      return await fetch(`${ENERGY_API_SERVER}/eeg/v2/${tenant.ecId}/billing-check`, {
+        method: 'POST',
+        headers: {
+          ...this.getSecureHeadersX(token, tenant.rcNr),
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      }).then(this.handleErrors).then(res => res.json());
+    } finally {
+      clearTimeout(timer)
+    }
   }
 
   // async fetchReport(tenant: string, ecId: string, year: number, segment: number, type: string, token?: string): Promise<EegEnergyReport> {
