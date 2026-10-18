@@ -21,6 +21,10 @@ export interface BillingCheckMeter extends BillingCheckCp {
   l3Days: string[]
   firstData: number | null
   lastData: number | null
+  // quarter hours without a value in the active part of the period and the days with one (YYYY-MM-DD);
+  // missing from an energystore without this field
+  missingCount?: number
+  missingDays?: string[]
 }
 
 export interface BillingCheckTotals {

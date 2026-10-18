@@ -31,6 +31,8 @@ export interface IncompleteMeter {
   expectedEnd: number    // last quarter hour expected: period end or the inactive day 23:45
   firstData: number | null
   lastData: number | null
+  missingCount: number   // quarter hours without a value; 0 if energystore does not count them
+  missingDays: string[]  // YYYY-MM-DD
 }
 
 export interface BillingCheckOverview {
@@ -81,6 +83,20 @@ export const buildBillingCheckRequest = (meters: CheckedMeter[], start: Date, en
   })),
 })
 
+/** Consecutive days as ranges: ["2026-02-14", "2026-02-21", "2026-02-22"] → "14.02., 21.02.–22.02." */
+export const formatDayRanges = (days: string[]): string => {
+  const ranges: [moment.Moment, moment.Moment][] = []
+  for (const d of days.map(x => moment(x, "YYYY-MM-DD"))) {
+    const last = ranges[ranges.length - 1]
+    if (last && d.diff(last[1], 'days') === 1) {
+      last[1] = d
+    } else {
+      ranges.push([d, d])
+    }
+  }
+  return ranges.map(([a, b]) => a.isSame(b) ? a.format("DD.MM.") : `${a.format("DD.MM.")}–${b.format("DD.MM.")}`).join(", ")
+}
+
 /** A metering point tariff is missing if none is set or it is not among the active tariffs (archived). */
 export const checkTariffs = (meters: CheckedMeter[], rates: Record<string, EegTariff>): BillingCheckOverview['tariff'] => {
   const missing = meters.filter(m => !m.tariffId || !rates[m.tariffId])
@@ -108,8 +124,8 @@ export const evaluateBillingChecks = (
   const balanceStatus: CheckStatus = totals.allocated > totals.produced + BALANCE_TOLERANCE_KWH ? 'WARNING' : 'INFO'
 
   // Every metering point needs values for its active part of the period: from the period start or its activation
-  // day to the period end or its inactive day (23:45). Checked are the first and the last quarter hour with a
-  // value; a gap in between is not detected.
+  // day to the period end or its inactive day (23:45). energystore counts the quarter hours without a value, also
+  // gaps in between; an older energystore without that count is checked by the first and the last value only.
   const incomplete = energy.meters
     .map((r, i): IncompleteMeter => ({
       meter: meters[i],
@@ -119,9 +135,12 @@ export const evaluateBillingChecks = (
         : energy.periodEnd,
       firstData: r.firstData,
       lastData: r.lastData,
+      missingCount: r.missingCount ?? 0,
+      missingDays: r.missingDays ?? [],
     }))
-    .filter(m => m.meter && (m.firstData === null || m.lastData === null ||
-      m.firstData > m.expectedStart || m.lastData < m.expectedEnd))
+    .filter((m, i) => m.meter && (m.firstData === null || m.lastData === null || (energy.meters[i].missingCount !== undefined
+      ? m.missingCount > 0
+      : m.firstData > m.expectedStart || m.lastData < m.expectedEnd)))
 
   return {
     tariff,

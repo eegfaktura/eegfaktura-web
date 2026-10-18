@@ -14,7 +14,8 @@ this changelog highlights the changes relevant for overview and operations.
   tariff (also an archived tariff; the member fee tariff is not checked), L3 values per metering point
   with days, the energy balance of the community (info; a warning only if more was distributed than
   produced) and whether every metering point has energy data for its active part of the period (from the
-  period start or its activation day to the period end or its inactive day). The checks only warn; the run starts with
+  period start or its activation day to the period end or its inactive day); gaps in the middle are shown
+  with the number of missing quarter hours and the days, e.g. „96 Viertelstunde(n) fehlen (14.02.)“. The checks only warn; the run starts with
   „Trotzdem abrechnen“ / „Trotzdem Vorschau erstellen“, also while the checks are still loading. For the
   final run the overview replaces the confirmation „Abrechnungslauf“, repeats its text and highlights
   that the run cannot be undone. The picked invoice date now survives re-renders

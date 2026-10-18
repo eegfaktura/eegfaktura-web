@@ -29,6 +29,7 @@ import {
   CheckedMeter,
   CheckStatus,
   evaluateBillingChecks,
+  formatDayRanges,
   IncompleteMeter,
 } from "./BillingCheck.functions";
 
@@ -53,6 +54,10 @@ const incompleteText = (m: IncompleteMeter) => {
   if (m.firstData === null || m.lastData === null) {
     return `${meterLabel(m.meter)}: keine Energiedaten`
   }
+  if (m.missingCount > 0) {
+    return `${meterLabel(m.meter)}: ${m.missingCount} Viertelstunde(n) fehlen (${formatDayRanges(m.missingDays)})`
+  }
+  // energystore without missing count: only the start and the end are known
   const gaps = []
   if (m.firstData > m.expectedStart) gaps.push(`erst ab ${dateTime(m.firstData)}`)
   if (m.lastData < m.expectedEnd) gaps.push(`nur bis ${dateTime(m.lastData)}`)

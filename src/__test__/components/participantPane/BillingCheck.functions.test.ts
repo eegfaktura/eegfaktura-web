@@ -9,6 +9,7 @@ import {
   buildBillingCheckRequest,
   checkTariffs,
   evaluateBillingChecks,
+  formatDayRanges,
 } from "../../../components/participantPane/BillingCheck.functions";
 
 const start = new Date(2026, 1, 1)
@@ -165,6 +166,26 @@ describe("BillingCheck functions", () => {
     }))
     expect(res.completeness.incomplete.map(m => m.meter.participantName)).toEqual(["Max New"])
     expect(res.completeness.incomplete[0].expectedEnd).toBe(periodEnd)
+  })
+
+  it("completeness detects a gap in the middle from the missing count", () => {
+    const e = energy()
+    const meters = activeMetersInPeriod([participant("A", [meter("AT1", {}), meter("AT2", {})])], start, end)
+    const cps = buildBillingCheckRequest(meters, start, end).cps
+    const res = evaluateBillingChecks(meters, rates, energy({
+      meters: [
+        {...cps[0], l3Count: 0, l3Days: [], firstData: e.periodStart, lastData: e.periodEnd, missingCount: 96, missingDays: ["2026-02-14"]},
+        {...cps[1], l3Count: 0, l3Days: [], firstData: e.periodStart, lastData: e.periodEnd, missingCount: 0, missingDays: []},
+      ],
+    }))
+    expect(res.completeness.status).toBe('WARNING')
+    expect(res.completeness.incomplete.map(m => [m.meter.meteringPoint, m.missingCount, m.missingDays])).toEqual([["AT1", 96, ["2026-02-14"]]])
+  })
+
+  it("formats missing days as ranges", () => {
+    expect(formatDayRanges(["2026-02-14", "2026-02-21", "2026-02-22", "2026-02-23", "2026-02-28", "2026-03-01"]))
+      .toBe("14.02., 21.02.–23.02., 28.02.–01.03.")
+    expect(formatDayRanges([])).toBe("")
   })
 
   it("a meter without activation date is still checked", () => {
