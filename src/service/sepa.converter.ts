@@ -40,11 +40,11 @@ const replaceUmlaute = (str: string)=>  {
     '\u00df': 'ss',
   }
   return str
-    .replace(/[\u00dc|\u00c4|\u00d6][a-z]/g, (a: string) => {
+    .replace(/[\u00dc\u00c4\u00d6][a-z]/g, (a: string) => {
       const big = umlautMap[a.slice(0, 1)];
       return big.charAt(0) + big.charAt(1).toLowerCase() + a.slice(1);
     })
-    .replace(new RegExp('['+Object.keys(umlautMap).join('|')+']',"g"),
+    .replace(new RegExp('['+Object.keys(umlautMap).join('')+']',"g"),
       (a) => umlautMap[a]
     );
 }
@@ -258,8 +258,9 @@ export const ConvertExcelToXML = async (tenant: string, billingRunId: string,
   }
 }
 
-// unique per export (second precision) and per file kind: banks refuse a reused MsgId
-const createMsgId = (num: number) => `MSG-${moment().format('YYYYMMDDHHmmss')}-${zeroPad(num, 5)}`
+// unique per export (second precision, UTC: no repeated hour when the clocks go back) and per file kind,
+// within the first 16 characters: banks refuse a reused MsgId
+const createMsgId = (kind: PmtInfKind) => `M${kind}${moment.utc().format('YYYYMMDDHHmmss')}`
 const zeroPad = (num: number, places: number) => String(num).padStart(places, '0')
 
 const buildEndToEndId = (endToEndId: string, collectionDate: Date, activePeriod: SelectedPeriod) => {
@@ -267,22 +268,23 @@ const buildEndToEndId = (endToEndId: string, collectionDate: Date, activePeriod:
 }
 
 
-const getIdFromSettlementInterval = (settlementInterval: 'MONTHLY' | "ANNUAL" | "BIANNUAL" | "QUARTER") => {
-  switch (settlementInterval) {
-    case 'ANNUAL': return 'Y'
-    case 'BIANNUAL': return 'HY'
-    case 'QUARTER': return 'QY'
-    case 'MONTHLY': return 'MY'
-  }
-}
+// G = credit transfer (Gutschriften), C = direct debit CORE, B = direct debit B2B
+export type PmtInfKind = 'G' | 'C' | 'B'
 
-export const createPmtInfId = (eeg: Eeg, period: SelectedPeriod) => {
+// Payment information id, at most 35 characters. Austrian banks take its first 16 characters as the
+// "Bestandskontrollnummer" and refuse a file whose first 16 characters were used before. These are
+// file kind, year, period type and segment of the billed period, then the name: every file kind of every
+// period is unique, and a file uploaded a second time (same kind and period) is refused by a bank that
+// checks this, which protects the members from being debited twice. Before, the id started with the name and year
+// ("EEGSTRASSH-2026-…"), and the bank took only the first file of a year.
+export const createPmtInfId = (eeg: Eeg, period: SelectedPeriod, kind: PmtInfKind) => {
+  // only A-Z and 0-9 from the name (accents dropped), so no character outside the SEPA set gets in
+  const nameId = replaceUmlaute((eeg.name ?? '').normalize('NFC')).normalize('NFD').toUpperCase()
+    .replace(/[^A-Z0-9]/g, '').slice(0, 10)
+
   // year of the billed period: an annual run in January belongs to the previous year
-  const year = period.year
-  const paymentInterval = getIdFromSettlementInterval(eeg.settlementInterval).toString() + zeroPad(period.segment, 3);
-  const nameId = replaceUmlaute(eeg.name).replaceAll(' ', '').toUpperCase().slice(0,10)
-
-  return `${nameId}-${year}-${paymentInterval}`
+  const id = `${kind}${period.year}${period.type}${zeroPad(period.segment, 3)}`
+  return nameId ? `${id}-${nameId}` : id
 }
 
 // Remittance text (Ustrd, max 140 characters). With "Mitglieder zusammenfassen" one booking can carry
@@ -335,7 +337,7 @@ export const compactReference = (invoiceIds: string[], maxLength = 140): string 
 
 const createRef = (item: SepaModelItem): string => compactReference(item.InvoiceIds, 140)
 
-const createSepaCreditTransfer = async (model: SepaModelItem[], eeg: Eeg, period: SelectedPeriod, collectionDate: Date, batch: boolean) => {
+export const createSepaCreditTransfer = async (model: SepaModelItem[], eeg: Eeg, period: SelectedPeriod, collectionDate: Date, batch: boolean) => {
 
   const sum = model.reduce((sum, r) => sum + r.Amount, 0)
 
@@ -343,7 +345,7 @@ const createSepaCreditTransfer = async (model: SepaModelItem[], eeg: Eeg, period
     .ele('Document', { xmlns: 'urn:iso:std:iso:20022:tech:xsd:pain.001.001.03' })
       .ele('CstmrCdtTrfInitn')
         .ele('GrpHdr')
-          .ele('MsgId').txt(createMsgId(1)).up()
+          .ele('MsgId').txt(createMsgId('G')).up()
           .ele('CreDtTm').txt(new Date().toISOString()).up()
           .ele('NbOfTxs').txt(model.length.toString()).up()
           .ele('CtrlSum').txt(sum.toFixed(2)).up()
@@ -352,7 +354,7 @@ const createSepaCreditTransfer = async (model: SepaModelItem[], eeg: Eeg, period
           .up()
         .up()
         .ele('PmtInf')
-          .ele('PmtInfId').txt(createPmtInfId(eeg, period)).up()
+          .ele('PmtInfId').txt(createPmtInfId(eeg, period, 'G')).up()
           .ele('PmtMtd').txt('TRF').up()
           .ele('BtchBookg').txt((batch ? "true" : "false")).up()
           .ele('NbOfTxs').txt(model.length.toString()).up()
@@ -424,7 +426,7 @@ export const createSepaDirectDebit = async (model: SepaModelItem[], eeg: Eeg, pe
     .ele('Document', { xmlns: 'urn:iso:std:iso:20022:tech:xsd:pain.008.001.02' })
       .ele('CstmrDrctDbtInitn')
         .ele('GrpHdr')
-          .ele('MsgId').txt(createMsgId(instrument === 'B2B' ? 3 : 2)).up()
+          .ele('MsgId').txt(createMsgId(instrument === 'B2B' ? 'B' : 'C')).up()
           .ele('CreDtTm').txt(new Date().toISOString()).up()
           .ele('NbOfTxs').txt(model.length.toString()).up()
           .ele('CtrlSum').txt(sum.toFixed(2)).up()
@@ -433,7 +435,7 @@ export const createSepaDirectDebit = async (model: SepaModelItem[], eeg: Eeg, pe
           .up()
         .up()
         .ele('PmtInf')
-          .ele('PmtInfId').txt(createPmtInfId(eeg, period) + (instrument === 'B2B' ? '-B2B' : '')).up()
+          .ele('PmtInfId').txt(createPmtInfId(eeg, period, instrument === 'B2B' ? 'B' : 'C')).up()
           .ele('PmtMtd').txt('DD').up()
           .ele('BtchBookg').txt((batch ? "true" : "false")).up()
           .ele('NbOfTxs').txt(model.length.toString()).up()
