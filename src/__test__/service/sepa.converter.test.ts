@@ -68,8 +68,14 @@ describe("createPmtInfId", () => {
   });
 
   it("keeps only A-Z and 0-9 of the name", () => {
-    const eeg = {name: "B&S Énergie/Wind Grüß"} as unknown as Eeg;
-    expect(createPmtInfId(eeg, {type: "Y", year: 2026, segment: 0}, 'C')).toBe("C2026Y000-BSENERGIEW");
+    const y = {type: "Y", year: 2026, segment: 0} as const;
+    const id = (name: string) => createPmtInfId({name} as unknown as Eeg, y, 'C');
+    expect(id("B&S Énergie/Wind Grüß")).toBe("C2026Y000-BSENERGIEW");
+    expect(id("EEG Nord|ost")).toBe("C2026Y000-EEGNORDOST");
+    expect(id("EEG A | B")).toBe("C2026Y000-EEGAB");
+    // umlaut entered decomposed (u + combining diaeresis) gives the same id as the composed one
+    expect(id("Grüne")).toBe(id("Grüne"));
+    expect(id("&&")).toBe("C2026Y000");
   });
 });
 

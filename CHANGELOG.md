@@ -10,6 +10,15 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [1.2.3] – 2026-10-18
 
+### Added
+- CI: PR checks (tests on every pull request) and a security scan (leaked secrets in new commits,
+  vulnerable dependencies, Dockerfile/Kubernetes misconfigurations). Dependency and misconfiguration
+  findings are only reported and do not block; a leaked secret in new commits fails the check. Jobs for
+  known failing tests are report-only.
+- CI: every run keeps its scan and test results as artifacts for 30 days (`scan-*`,
+  `test-results-<job>`, `known-errors-<job>`) for a CI report collector; the secret scan keeps
+  outcomes and counts only.
+
 ### Fixed
 - **The bank accepts more than one SEPA file per year** (user report 18.10.2026). Austrian banks take the first
   16 characters of the payment information id (`PmtInfId`) as the "Bestandskontrollnummer" and refuse a file
@@ -20,19 +29,13 @@ this changelog highlights the changes relevant for overview and operations.
   one (e.g. the credit transfer for the credit notes, or the next period). The id now starts with the file kind
   (`G` credit transfer, `C` direct debit CORE, `B` direct debit B2B), the year and the billed period, followed
   by the name, e.g. `G2026YQ003-EEGSTRASSH`. Every file kind of every period is unique; the same file uploaded
-  a second time still has the same id and is refused by the bank (no double debit). The period is the billed
-  one (before, a monthly community's quarterly billing read `MY003`), the name part keeps only A–Z and 0–9, and
-  the B2B file no longer ends in `-B2B`. The message id (`MsgId`) also starts with the file kind now
-  (`MSG-C-<UTC time>`). Files exported before this version are unchanged.
-
-### Added
-- CI: PR checks (tests on every pull request) and a security scan (leaked secrets in new commits,
-  vulnerable dependencies, Dockerfile/Kubernetes misconfigurations). Dependency and misconfiguration
-  findings are only reported and do not block; a leaked secret in new commits fails the check. Jobs for
-  known failing tests are report-only.
-- CI: every run keeps its scan and test results as artifacts for 30 days (`scan-*`,
-  `test-results-<job>`, `known-errors-<job>`) for a CI report collector; the secret scan keeps
-  outcomes and counts only.
+  a second time still has the same id and is refused by a bank that checks the Bestandskontrollnummer (no
+  double debit). The period is the billed one (before, a monthly community's quarterly billing read `MY003`),
+  the name part keeps only A–Z and 0–9, and the B2B file no longer ends in `-B2B`. A `|` in the community name
+  no longer breaks the export. The message id (`MsgId`) is now the file kind and the UTC time to the second (`MC20261018105307`), unique in its first 16 characters.
+  Files exported before this version are unchanged. **For a period already submitted with an older version,
+  upload only the files the bank has not taken yet:** a new export carries new ids, so the bank would accept
+  e.g. the direct debit a second time.
 
 ## [1.2.2] – 2026-10-17
 

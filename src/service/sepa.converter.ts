@@ -40,11 +40,11 @@ const replaceUmlaute = (str: string)=>  {
     '\u00df': 'ss',
   }
   return str
-    .replace(/[\u00dc|\u00c4|\u00d6][a-z]/g, (a: string) => {
+    .replace(/[\u00dc\u00c4\u00d6][a-z]/g, (a: string) => {
       const big = umlautMap[a.slice(0, 1)];
       return big.charAt(0) + big.charAt(1).toLowerCase() + a.slice(1);
     })
-    .replace(new RegExp('['+Object.keys(umlautMap).join('|')+']',"g"),
+    .replace(new RegExp('['+Object.keys(umlautMap).join('')+']',"g"),
       (a) => umlautMap[a]
     );
 }
@@ -258,9 +258,9 @@ export const ConvertExcelToXML = async (tenant: string, billingRunId: string,
   }
 }
 
-// unique per export (second precision, UTC: no repeated hour when the clocks go back) and per file kind:
-// banks refuse a reused MsgId; the kind comes first, so the files of one export differ in the first 16 characters
-const createMsgId = (kind: PmtInfKind) => `MSG-${kind}-${moment.utc().format('YYYYMMDDHHmmss')}`
+// unique per export (second precision, UTC: no repeated hour when the clocks go back) and per file kind,
+// within the first 16 characters: banks refuse a reused MsgId
+const createMsgId = (kind: PmtInfKind) => `M${kind}${moment.utc().format('YYYYMMDDHHmmss')}`
 const zeroPad = (num: number, places: number) => String(num).padStart(places, '0')
 
 const buildEndToEndId = (endToEndId: string, collectionDate: Date, activePeriod: SelectedPeriod) => {
@@ -274,15 +274,17 @@ export type PmtInfKind = 'G' | 'C' | 'B'
 // Payment information id, at most 35 characters. Austrian banks take its first 16 characters as the
 // "Bestandskontrollnummer" and refuse a file whose first 16 characters were used before. These are
 // file kind, year, period type and segment of the billed period, then the name: every file kind of every
-// period is unique, and a file uploaded a second time (same kind and period) is refused by the bank, which
-// protects the members from being debited twice. Before, the id started with the name and year
+// period is unique, and a file uploaded a second time (same kind and period) is refused by a bank that
+// checks this, which protects the members from being debited twice. Before, the id started with the name and year
 // ("EEGSTRASSH-2026-…"), and the bank took only the first file of a year.
 export const createPmtInfId = (eeg: Eeg, period: SelectedPeriod, kind: PmtInfKind) => {
   // only A-Z and 0-9 from the name (accents dropped), so no character outside the SEPA set gets in
-  const nameId = replaceUmlaute(eeg.name).normalize('NFD').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)
+  const nameId = replaceUmlaute((eeg.name ?? '').normalize('NFC')).normalize('NFD').toUpperCase()
+    .replace(/[^A-Z0-9]/g, '').slice(0, 10)
 
   // year of the billed period: an annual run in January belongs to the previous year
-  return `${kind}${period.year}${period.type}${zeroPad(period.segment, 3)}-${nameId}`
+  const id = `${kind}${period.year}${period.type}${zeroPad(period.segment, 3)}`
+  return nameId ? `${id}-${nameId}` : id
 }
 
 // Remittance text (Ustrd, max 140 characters). With "Mitglieder zusammenfassen" one booking can carry
