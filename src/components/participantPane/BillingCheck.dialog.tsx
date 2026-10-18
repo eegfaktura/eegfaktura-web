@@ -15,7 +15,7 @@ import {
   IonTitle,
   IonToolbar,
 } from "@ionic/react";
-import {alertCircle, checkmarkCircle, helpCircle, informationCircle, warning} from "ionicons/icons";
+import {alertCircle, checkmarkCircle, helpCircle, warning} from "ionicons/icons";
 import moment from "moment";
 import {EegParticipant} from "../../models/members.model";
 import {ActiveTenant, EegTariff} from "../../models/eeg.model";
@@ -31,6 +31,7 @@ import {
   evaluateBillingChecks,
   formatDayRanges,
   IncompleteMeter,
+  kWhDiff,
 } from "./BillingCheck.functions";
 
 // Shown before the run is started: 'preview' or the final 'billing'.
@@ -38,7 +39,6 @@ export type BillingCheckMode = 'preview' | 'billing'
 
 const statusIcon: Record<CheckStatus, { icon: string, color: string, text: string }> = {
   OK: {icon: checkmarkCircle, color: "success", text: "OK"},
-  INFO: {icon: informationCircle, color: "primary", text: "Info"},
   WARNING: {icon: alertCircle, color: "warning", text: "Warnung"},
   NOT_CHECKED: {icon: helpCircle, color: "medium", text: "nicht geprüft"},
 }
@@ -162,16 +162,14 @@ export const BillingCheckDialog: FC<{
             <CheckRow
               title="Energiebilanz"
               status={overview.balance.status}
-              text={overview.balance.reason ?? (overview.balance.status === 'WARNING'
-                ? "Es wurde mehr Energie verteilt als produziert."
-                : "Summen der Gemeinschaft im Zeitraum.")}
+              text={overview.balance.reason ?? overview.balance.text ?? ""}
               details={overview.balance.totals && [
                 `Produktion: ${kWh(overview.balance.totals.produced)}`,
                 `Verbrauch: ${kWh(overview.balance.totals.consumed)}`,
                 `Verteilt (Anteil an der Erzeugung): ${kWh(overview.balance.totals.allocated)}`,
                 `Eigendeckung: ${kWh(overview.balance.totals.selfCovered)}`,
                 `Überschuss: ${kWh(overview.balance.totals.surplus)}`,
-                `Differenz Produktion – Verteilt: ${kWh(overview.balance.totals.produced - overview.balance.totals.allocated)}`,
+                `Differenz Produktion – Verteilt: ${kWhDiff(overview.balance.difference ?? 0)}`,
               ]}
             />
             <CheckRow
