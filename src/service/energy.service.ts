@@ -163,10 +163,13 @@ export class EnergyService extends BaseService {
   }
 
   async fetchBillingCheck(tenant: ActiveTenant, payload: BillingCheckRequest, signal?: AbortSignal, timeoutMs = 60000): Promise<BillingCheckResponse> {
-    const token = await this.lookupToken()
     const controller = new AbortController()
+    signal?.addEventListener('abort', () => controller.abort(), {once: true})
+    const token = await this.lookupToken()
+    if (controller.signal.aborted) {
+      return Promise.reject(new DOMException("aborted", "AbortError"))
+    }
     const timer = setTimeout(() => controller.abort(), timeoutMs)
-    signal?.addEventListener('abort', () => controller.abort())
     try {
       return await fetch(`${ENERGY_API_SERVER}/eeg/v2/${tenant.ecId}/billing-check`, {
         method: 'POST',

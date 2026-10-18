@@ -100,14 +100,17 @@ export const evaluateBillingChecks = (
   const totals = energy.totals
   const balanceStatus: CheckStatus = totals.allocated > totals.produced + BALANCE_TOLERANCE_KWH ? 'WARNING' : 'INFO'
 
-  // Complete if a metering point active until the end of the period has values from the start of its active part
-  // of the period (the period start, or its activation day) to the end. A community that starts mid-period is
-  // complete without data before its start.
-  const covered = energy.meters.some(r =>
-    r.firstData !== null && r.lastData !== null &&
-    (r.inactiveSince <= 0 || r.inactiveSince >= localDay(new Date(energy.periodEnd))) &&
-    r.firstData <= Math.max(energy.periodStart, r.activeSince) && r.lastData >= energy.periodEnd)
-  const first = energy.meters.map(r => r.firstData).filter((t): t is number => t !== null)
+  // Complete if a metering point active until the end of the period has values from the expected start to the
+  // end. The expected start is the period start, or the first activation of any requested metering point if that
+  // is later: a community that starts mid-period is complete without data before its start, but one meter
+  // activated mid-period does not hide a gap of the others.
+  const expectedStart = Math.max(energy.periodStart, Math.min(...energy.meters.map(r => r.activeSince)))
+  const untilEnd = energy.meters.filter(r =>
+    r.lastData !== null && r.lastData >= energy.periodEnd &&
+    (r.inactiveSince <= 0 || r.inactiveSince >= localDay(new Date(energy.periodEnd))))
+  const covered = untilEnd.some(r => r.firstData !== null && r.firstData <= expectedStart)
+  // „vorhanden ab“ refers to the metering points that reach the end of the period
+  const first = untilEnd.map(r => r.firstData).filter((t): t is number => t !== null)
   const last = energy.meters.map(r => r.lastData).filter((t): t is number => t !== null)
 
   return {
@@ -118,7 +121,7 @@ export const evaluateBillingChecks = (
       status: covered ? 'OK' : 'WARNING',
       dataFrom: first.length > 0 ? Math.min(...first) : undefined,
       dataUntil: last.length > 0 ? Math.max(...last) : undefined,
-      endReached: last.some(t => t >= energy.periodEnd),
+      endReached: untilEnd.length > 0,
     },
   }
 }

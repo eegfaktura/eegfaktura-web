@@ -105,7 +105,7 @@ describe("BillingCheck functions", () => {
     expect(warn.l3.findings[0]).toMatchObject({count: 2, days: ["2026-02-10"]})
     expect(warn.l3.findings[0].meter.meteringPoint).toBe("AT2")
     expect(warn.balance.status).toBe('WARNING')
-    expect(warn.completeness).toEqual({status: 'WARNING', dataFrom: e.periodStart, dataUntil: until, endReached: false})
+    expect(warn.completeness).toEqual({status: 'WARNING', dataFrom: undefined, dataUntil: until, endReached: false})
   })
 
   it("completeness counts from the activation day; a gap at the start is a warning", () => {
@@ -123,6 +123,17 @@ describe("BillingCheck functions", () => {
       meters: [{...buildBillingCheckRequest(early, start, end).cps[0], l3Count: 0, l3Days: [], firstData: gapStart, lastData: e.periodEnd}],
     }))
     expect(gap.completeness).toEqual({status: 'WARNING', dataFrom: gapStart, dataUntil: e.periodEnd, endReached: true})
+
+    // one meter activated mid-period does not hide a gap at the start of the others
+    const mixed = activeMetersInPeriod([participant("A", [meter("AT1", {}), meter("AT2", {since: "2026-02-15"})])], start, end)
+    const [c1, c2] = buildBillingCheckRequest(mixed, start, end).cps
+    const hidden = evaluateBillingChecks(mixed, rates, energy({
+      meters: [
+        {...c1, l3Count: 0, l3Days: [], firstData: c2.activeSince, lastData: e.periodEnd},
+        {...c2, l3Count: 0, l3Days: [], firstData: c2.activeSince, lastData: e.periodEnd},
+      ],
+    }))
+    expect(hidden.completeness).toMatchObject({status: 'WARNING', dataFrom: c2.activeSince, endReached: true})
 
     // a meter that ended before the period end does not make the period complete
     const ended = activeMetersInPeriod([participant("A", [meter("AT1", {until: "2026-02-10"})])], start, end)
