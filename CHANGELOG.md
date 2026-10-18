@@ -8,7 +8,7 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
-## [1.2.3] – 2026-10-18
+## [1.3.0] – 2026-10-18
 
 ### Added
 - **Checks before billing** (platform#148). Before a preview and before the final billing run, an
@@ -21,8 +21,12 @@ this changelog highlights the changes relevant for overview and operations.
   „Trotzdem abrechnen“ / „Trotzdem Vorschau erstellen“, also while the checks are still loading. For the
   final run the overview replaces the confirmation „Abrechnungslauf“, repeats its text and highlights
   that the run cannot be undone. The picked invoice date now survives re-renders
-  of the billing pane. The energy checks need energystore with `POST /eeg/v2/{ecId}/billing-check`;
+  of the billing pane. The energy checks need energystore 1.6.0 (`POST /eeg/v2/{ecId}/billing-check`);
   without it they show „nicht geprüft“ and billing works as before.
+
+## [1.2.3] – 2026-10-18
+
+### Added
 - CI: PR checks (tests on every pull request) and a security scan (leaked secrets in new commits,
   vulnerable dependencies, Dockerfile/Kubernetes misconfigurations). Dependency and misconfiguration
   findings are only reported and do not block; a leaked secret in new commits fails the check. Jobs for
