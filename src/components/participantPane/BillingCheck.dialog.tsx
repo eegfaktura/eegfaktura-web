@@ -55,7 +55,8 @@ const incompleteText = (m: IncompleteMeter) => {
     return `${meterLabel(m.meter)}: keine Energiedaten`
   }
   if (m.missingCount > 0) {
-    return `${meterLabel(m.meter)}: ${m.missingCount} Viertelstunde(n) fehlen (${formatDayRanges(m.missingDays)})`
+    const count = m.missingCount === 1 ? "1 Viertelstunde fehlt" : `${m.missingCount} Viertelstunden fehlen`
+    return `${meterLabel(m.meter)}: ${count} (${formatDayRanges(m.missingDays)})`
   }
   // energystore without missing count: only the start and the end are known
   const gaps = []
