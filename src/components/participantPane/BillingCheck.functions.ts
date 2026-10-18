@@ -43,7 +43,7 @@ export interface BillingCheckOverview {
 }
 
 // Rounding only; there is deliberately no percentage threshold.
-const BALANCE_TOLERANCE_KWH = 0.001
+const BALANCE_TOLERANCE_KWH = 0.01
 
 // Activation dates are days; the backend sends them as UTC midnight, which is a later hour of the same
 // day in local time. energystore expects the local start of the day.
@@ -121,9 +121,9 @@ export const evaluateBillingChecks = (
     .filter(f => f.meter && f.count > 0)
 
   const totals = energy.totals
-  // OK only when the production was distributed completely (difference production – allocated about 0)
+  // OK only when the production was distributed completely (difference production – allocated below 0,01 kWh)
   const balanceStatus: CheckStatus =
-    Math.abs(totals.produced - totals.allocated) <= BALANCE_TOLERANCE_KWH ? 'OK' : 'WARNING'
+    Math.abs(totals.produced - totals.allocated) < BALANCE_TOLERANCE_KWH ? 'OK' : 'WARNING'
 
   // Every metering point needs values for its active part of the period: from the period start or its activation
   // day to the period end or its inactive day (23:45). energystore counts the quarter hours without a value, also

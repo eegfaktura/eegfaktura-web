@@ -202,8 +202,11 @@ describe("BillingCheck functions", () => {
     // rounding differences either way are no warning
     expect(evaluateBillingChecks([], rates, energy({totals: totals(100.0005)})).balance.status).toBe('OK')
     expect(evaluateBillingChecks([], rates, energy({totals: totals(99.9995)})).balance.status).toBe('OK')
+    expect(evaluateBillingChecks([], rates, energy({totals: totals(99.991)})).balance.status).toBe('OK')
+    expect(evaluateBillingChecks([], rates, energy({totals: totals(100.009)})).balance.status).toBe('OK')
     expect(evaluateBillingChecks([], rates, energy({totals: totals(99.9)})).balance.status).toBe('WARNING')
     expect(evaluateBillingChecks([], rates, energy({totals: totals(100.01)})).balance.status).toBe('WARNING')
+    expect(evaluateBillingChecks([], rates, energy({totals: totals(99.98)})).balance.status).toBe('WARNING')
   })
 
   it("no energy data in the period", () => {

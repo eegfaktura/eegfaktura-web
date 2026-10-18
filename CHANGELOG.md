@@ -12,9 +12,9 @@ this changelog highlights the changes relevant for overview and operations.
 
 ### Changed
 - **Checks before billing: the energy balance is green or yellow** (feedback of the project group). It is OK
-  (green) when the production was distributed completely (difference production – allocated at most 0,001 kWh) and
+  (green) when the production was distributed completely (difference production – allocated below 0,01 kWh) and
   a warning (yellow) otherwise, with the text „Nicht die ganze Produktion wurde verteilt.“ or, as before, „Es wurde
-  mehr Energie verteilt als produziert.“ Before, it was only an info. The difference is shown with three decimals,
+  mehr Energie verteilt als produziert.“ Before, it was only an info. The difference is shown with three decimals (cut off, not rounded),
   so a warning never shows „0 kWh“. A warning changes the button to „Trotzdem …“ like the other checks.
 
 ## [1.3.0] – 2026-10-18

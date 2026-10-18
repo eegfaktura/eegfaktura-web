@@ -43,8 +43,10 @@ const statusIcon: Record<CheckStatus, { icon: string, color: string, text: strin
 }
 
 // rounded first, so a rounding difference of -0.001 is shown as 0, not -0
-const kWh = (v: number, digits = 2) =>
-  `${(Math.round(v * 10 ** digits) / 10 ** digits + 0).toLocaleString("de-AT", {maximumFractionDigits: digits})} kWh`
+const kWh = (v: number) => `${(Math.round(v * 100) / 100 + 0).toLocaleString("de-AT", {maximumFractionDigits: 2})} kWh`
+// the balance is green below 0,01 kWh: three decimals, cut off rather than rounded, so a green difference never
+// reads 0,01 (0,0097 → 0,009) and a yellow one never reads 0
+const kWhDiff = (v: number) => `${(Math.trunc(v * 1000) / 1000 + 0).toLocaleString("de-AT", {maximumFractionDigits: 3})} kWh`
 const date = (t: number) => moment(t).format("DD.MM.YYYY")
 const dateTime = (t: number) => moment(t).format("DD.MM.YYYY HH:mm")
 const meterLabel = (m: CheckedMeter) =>
@@ -173,8 +175,7 @@ export const BillingCheckDialog: FC<{
                 `Verteilt (Anteil an der Erzeugung): ${kWh(overview.balance.totals.allocated)}`,
                 `Eigendeckung: ${kWh(overview.balance.totals.selfCovered)}`,
                 `Überschuss: ${kWh(overview.balance.totals.surplus)}`,
-                // three decimals: the check tolerates 0,001 kWh, a warning must show a difference
-                `Differenz Produktion – Verteilt: ${kWh(overview.balance.totals.produced - overview.balance.totals.allocated, 3)}`,
+                `Differenz Produktion – Verteilt: ${kWhDiff(overview.balance.totals.produced - overview.balance.totals.allocated)}`,
               ]}
             />
             <CheckRow
