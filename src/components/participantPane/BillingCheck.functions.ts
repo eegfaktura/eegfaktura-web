@@ -24,13 +24,20 @@ export interface L3Finding {
   days: string[]
 }
 
+// A metering point without energy data for its whole active part of the period.
+export interface IncompleteMeter {
+  meter: CheckedMeter
+  expectedStart: number  // first quarter hour expected: period start or activation day
+  expectedEnd: number    // last quarter hour expected: period end or the inactive day 23:45
+  firstData: number | null
+  lastData: number | null
+}
+
 export interface BillingCheckOverview {
   tariff: { status: CheckStatus, missing: CheckedMeter[] }
   l3: { status: CheckStatus, findings: L3Finding[], reason?: string }
   balance: { status: CheckStatus, totals?: BillingCheckTotals, reason?: string }
-  // dataFrom/dataUntil: earliest first and latest last quarter hour with a value over all metering points
-  // endReached: some metering point has values until the end of the period (then data is missing at the start)
-  completeness: { status: CheckStatus, dataFrom?: number, dataUntil?: number, endReached?: boolean, reason?: string }
+  completeness: { status: CheckStatus, incomplete: IncompleteMeter[], reason?: string }
 }
 
 // Rounding only; there is deliberately no percentage threshold.
@@ -89,7 +96,7 @@ export const evaluateBillingChecks = (
 
   if ('error' in energy) {
     const notChecked = {status: 'NOT_CHECKED' as CheckStatus, reason: energy.error}
-    return {tariff, l3: {...notChecked, findings: []}, balance: notChecked, completeness: notChecked}
+    return {tariff, l3: {...notChecked, findings: []}, balance: notChecked, completeness: {...notChecked, incomplete: []}}
   }
 
   // energystore answers in request order, one entry per requested meter
@@ -100,28 +107,26 @@ export const evaluateBillingChecks = (
   const totals = energy.totals
   const balanceStatus: CheckStatus = totals.allocated > totals.produced + BALANCE_TOLERANCE_KWH ? 'WARNING' : 'INFO'
 
-  // Complete if a metering point active until the end of the period has values from the expected start to the
-  // end. The expected start is the period start, or the first activation of any requested metering point if that
-  // is later: a community that starts mid-period is complete without data before its start, but one meter
-  // activated mid-period does not hide a gap of the others.
-  const expectedStart = Math.max(energy.periodStart, Math.min(...energy.meters.map(r => r.activeSince)))
-  const untilEnd = energy.meters.filter(r =>
-    r.lastData !== null && r.lastData >= energy.periodEnd &&
-    (r.inactiveSince <= 0 || r.inactiveSince >= localDay(new Date(energy.periodEnd))))
-  const covered = untilEnd.some(r => r.firstData !== null && r.firstData <= expectedStart)
-  // „vorhanden ab“ refers to the metering points that reach the end of the period
-  const first = untilEnd.map(r => r.firstData).filter((t): t is number => t !== null)
-  const last = energy.meters.map(r => r.lastData).filter((t): t is number => t !== null)
+  // Every metering point needs values for its active part of the period: from the period start or its activation
+  // day to the period end or its inactive day (23:45). Checked are the first and the last quarter hour with a
+  // value; a gap in between is not detected.
+  const incomplete = energy.meters
+    .map((r, i): IncompleteMeter => ({
+      meter: meters[i],
+      expectedStart: Math.max(energy.periodStart, r.activeSince),
+      expectedEnd: r.inactiveSince > 0
+        ? Math.min(energy.periodEnd, moment(r.inactiveSince).hour(23).minute(45).valueOf())
+        : energy.periodEnd,
+      firstData: r.firstData,
+      lastData: r.lastData,
+    }))
+    .filter(m => m.meter && (m.firstData === null || m.lastData === null ||
+      m.firstData > m.expectedStart || m.lastData < m.expectedEnd))
 
   return {
     tariff,
     l3: {status: findings.length > 0 ? 'WARNING' : 'OK', findings},
     balance: {status: balanceStatus, totals},
-    completeness: {
-      status: covered ? 'OK' : 'WARNING',
-      dataFrom: first.length > 0 ? Math.min(...first) : undefined,
-      dataUntil: last.length > 0 ? Math.max(...last) : undefined,
-      endReached: untilEnd.length > 0,
-    },
+    completeness: {status: incomplete.length > 0 ? 'WARNING' : 'OK', incomplete},
   }
 }

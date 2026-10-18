@@ -13,9 +13,8 @@ this changelog highlights the changes relevant for overview and operations.
   overview shows four checks for the selected period: metering points active in the period without a
   tariff (also an archived tariff; the member fee tariff is not checked), L3 values per metering point
   with days, the energy balance of the community (info; a warning only if more was distributed than
-  produced) and whether at least one metering point active until the end of the period has energy data
-  from the start of the period (or the first activation in it, for a community that starts mid-period) to
-  the end. The checks only warn; the run starts with
+  produced) and whether every metering point has energy data for its active part of the period (from the
+  period start or its activation day to the period end or its inactive day). The checks only warn; the run starts with
   „Trotzdem abrechnen“ / „Trotzdem Vorschau erstellen“, also while the checks are still loading. For the
   final run the overview replaces the confirmation „Abrechnungslauf“, repeats its text and highlights
   that the run cannot be undone. The picked invoice date now survives re-renders

@@ -29,6 +29,7 @@ import {
   CheckedMeter,
   CheckStatus,
   evaluateBillingChecks,
+  IncompleteMeter,
 } from "./BillingCheck.functions";
 
 // Shown before the run is started: 'preview' or the final 'billing'.
@@ -47,6 +48,16 @@ const date = (t: number) => moment(t).format("DD.MM.YYYY")
 const dateTime = (t: number) => moment(t).format("DD.MM.YYYY HH:mm")
 const meterLabel = (m: CheckedMeter) =>
   `${m.participantName} – ${m.equipmentName ? m.equipmentName + " – " : ""}${m.meteringPoint}`
+
+const incompleteText = (m: IncompleteMeter) => {
+  if (m.firstData === null || m.lastData === null) {
+    return `${meterLabel(m.meter)}: keine Energiedaten`
+  }
+  const gaps = []
+  if (m.firstData > m.expectedStart) gaps.push(`erst ab ${dateTime(m.firstData)}`)
+  if (m.lastData < m.expectedEnd) gaps.push(`nur bis ${dateTime(m.lastData)}`)
+  return `${meterLabel(m.meter)}: Energiedaten ${gaps.join(" und ")}`
+}
 
 const hasWarning = (o: BillingCheckOverview) =>
   [o.tariff.status, o.l3.status, o.balance.status, o.completeness.status].includes('WARNING')
@@ -161,12 +172,9 @@ export const BillingCheckDialog: FC<{
               title="Vollständigkeit"
               status={overview.completeness.status}
               text={overview.completeness.reason ?? (overview.completeness.status === 'OK'
-                ? "Energiedaten für den ganzen Zeitraum vorhanden."
-                : overview.completeness.dataUntil === undefined
-                  ? "Keine Energiedaten im Zeitraum."
-                  : overview.completeness.endReached
-                    ? `Energiedaten fehlen am Beginn des Zeitraums (vorhanden ab ${dateTime(overview.completeness.dataFrom!)}).`
-                    : `Energiedaten nur bis ${dateTime(overview.completeness.dataUntil)} vorhanden.`)}
+                ? "Alle Zählpunkte haben Energiedaten für ihren aktiven Zeitraum."
+                : `${overview.completeness.incomplete.length} Zählpunkt(e) mit unvollständigen Energiedaten.`)}
+              details={overview.completeness.incomplete.map(incompleteText)}
             />
           </IonList>
         )}
