@@ -41,7 +41,8 @@ const statusIcon: Record<CheckStatus, { icon: string, color: string, text: strin
   NOT_CHECKED: {icon: helpCircle, color: "medium", text: "nicht geprüft"},
 }
 
-const kWh = (v: number) => `${v.toLocaleString("de-AT", {maximumFractionDigits: 2})} kWh`
+// rounded first, so a rounding difference of -0.001 is shown as 0, not -0
+const kWh = (v: number) => `${(Math.round(v * 100) / 100 + 0).toLocaleString("de-AT", {maximumFractionDigits: 2})} kWh`
 const date = (t: number) => moment(t).format("DD.MM.YYYY")
 const dateTime = (t: number) => moment(t).format("DD.MM.YYYY HH:mm")
 const meterLabel = (m: CheckedMeter) =>
