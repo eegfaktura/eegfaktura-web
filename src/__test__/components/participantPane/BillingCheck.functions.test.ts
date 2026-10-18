@@ -10,6 +10,7 @@ import {
   checkTariffs,
   evaluateBillingChecks,
   formatDayRanges,
+  kWhDiff,
 } from "../../../components/participantPane/BillingCheck.functions";
 
 const start = new Date(2026, 1, 1)
@@ -209,6 +210,26 @@ describe("BillingCheck functions", () => {
     expect(evaluateBillingChecks([], rates, energy({totals: totals(99.98)})).balance.status).toBe('WARNING')
   })
 
+  it("a difference of exactly 0,01 kWh is a warning, whatever the float noise", () => {
+    const at = (produced: number, allocated: number) =>
+      evaluateBillingChecks([], rates, energy({totals: {produced, consumed: 0, allocated, selfCovered: 0, surplus: 0}})).balance
+    for (const [p, a] of [[1000.01, 1000], [0.03, 0.02], [100, 99.99]]) {
+      const b = at(p, a)
+      expect(b.status).toBe('WARNING')
+      expect(b.difference).toBe(0.01)
+      expect(b.text).toBe("Nicht die ganze Produktion wurde verteilt.")
+    }
+    expect(at(100, 100.01).text).toBe("Es wurde mehr Energie verteilt als produziert.")
+    expect(at(100, 100).text).toBe("Die Produktion wurde vollständig verteilt.")
+  })
+
+  it("the difference is shown with three decimals, cut off", () => {
+    expect(kWhDiff(3718.292 - 3718.286)).toBe("0,006 kWh")
+    expect(kWhDiff(0.0097)).toBe("0,009 kWh")
+    expect(kWhDiff(-0.0004)).toBe("0 kWh")
+    expect(kWhDiff(-0.012)).toBe("-0,012 kWh")
+  })
+
   it("no energy data in the period", () => {
     const meters = activeMetersInPeriod([participant("A", [meter("AT1", {})])], start, end)
     const res = evaluateBillingChecks(meters, rates, energy({
@@ -218,6 +239,7 @@ describe("BillingCheck functions", () => {
     expect(res.completeness.status).toBe('WARNING')
     expect(res.completeness.incomplete).toHaveLength(1)
     expect(res.balance.status).toBe('OK')         // nothing produced, nothing distributed
+    expect(res.balance.text).toBe("Keine Produktion im Zeitraum.")
   })
 
   it("energystore not reachable: tariff check still runs, the others are not checked", () => {

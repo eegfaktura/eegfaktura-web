@@ -31,6 +31,7 @@ import {
   evaluateBillingChecks,
   formatDayRanges,
   IncompleteMeter,
+  kWhDiff,
 } from "./BillingCheck.functions";
 
 // Shown before the run is started: 'preview' or the final 'billing'.
@@ -44,9 +45,6 @@ const statusIcon: Record<CheckStatus, { icon: string, color: string, text: strin
 
 // rounded first, so a rounding difference of -0.001 is shown as 0, not -0
 const kWh = (v: number) => `${(Math.round(v * 100) / 100 + 0).toLocaleString("de-AT", {maximumFractionDigits: 2})} kWh`
-// the balance is green below 0,01 kWh: three decimals, cut off rather than rounded, so a green difference never
-// reads 0,01 (0,0097 → 0,009) and a yellow one never reads 0
-const kWhDiff = (v: number) => `${(Math.trunc(v * 1000) / 1000 + 0).toLocaleString("de-AT", {maximumFractionDigits: 3})} kWh`
 const date = (t: number) => moment(t).format("DD.MM.YYYY")
 const dateTime = (t: number) => moment(t).format("DD.MM.YYYY HH:mm")
 const meterLabel = (m: CheckedMeter) =>
@@ -164,18 +162,14 @@ export const BillingCheckDialog: FC<{
             <CheckRow
               title="Energiebilanz"
               status={overview.balance.status}
-              text={overview.balance.reason ?? (overview.balance.status === 'OK'
-                ? "Die Produktion wurde vollständig verteilt."
-                : overview.balance.totals && overview.balance.totals.allocated > overview.balance.totals.produced
-                  ? "Es wurde mehr Energie verteilt als produziert."
-                  : "Nicht die ganze Produktion wurde verteilt.")}
+              text={overview.balance.reason ?? overview.balance.text ?? ""}
               details={overview.balance.totals && [
                 `Produktion: ${kWh(overview.balance.totals.produced)}`,
                 `Verbrauch: ${kWh(overview.balance.totals.consumed)}`,
                 `Verteilt (Anteil an der Erzeugung): ${kWh(overview.balance.totals.allocated)}`,
                 `Eigendeckung: ${kWh(overview.balance.totals.selfCovered)}`,
                 `Überschuss: ${kWh(overview.balance.totals.surplus)}`,
-                `Differenz Produktion – Verteilt: ${kWhDiff(overview.balance.totals.produced - overview.balance.totals.allocated)}`,
+                `Differenz Produktion – Verteilt: ${kWhDiff(overview.balance.difference ?? 0)}`,
               ]}
             />
             <CheckRow
