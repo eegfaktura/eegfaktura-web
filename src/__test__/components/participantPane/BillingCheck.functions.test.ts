@@ -105,7 +105,39 @@ describe("BillingCheck functions", () => {
     expect(warn.l3.findings[0]).toMatchObject({count: 2, days: ["2026-02-10"]})
     expect(warn.l3.findings[0].meter.meteringPoint).toBe("AT2")
     expect(warn.balance.status).toBe('WARNING')
-    expect(warn.completeness).toEqual({status: 'WARNING', dataUntil: until})
+    expect(warn.completeness).toEqual({status: 'WARNING', dataFrom: e.periodStart, dataUntil: until, endReached: false})
+  })
+
+  it("completeness counts from the activation day; a gap at the start is a warning", () => {
+    const e = energy()
+    const late = activeMetersInPeriod([participant("A", [meter("AT1", {since: "2026-02-05"})])], start, end)
+    const cp = buildBillingCheckRequest(late, start, end).cps[0]
+    const ok = evaluateBillingChecks(late, rates, energy({
+      meters: [{...cp, l3Count: 0, l3Days: [], firstData: cp.activeSince, lastData: e.periodEnd}],
+    }))
+    expect(ok.completeness.status).toBe('OK')
+
+    const early = activeMetersInPeriod([participant("A", [meter("AT1", {})])], start, end)
+    const gapStart = moment(start).add(3, 'day').valueOf()
+    const gap = evaluateBillingChecks(early, rates, energy({
+      meters: [{...buildBillingCheckRequest(early, start, end).cps[0], l3Count: 0, l3Days: [], firstData: gapStart, lastData: e.periodEnd}],
+    }))
+    expect(gap.completeness).toEqual({status: 'WARNING', dataFrom: gapStart, dataUntil: e.periodEnd, endReached: true})
+
+    // a meter that ended before the period end does not make the period complete
+    const ended = activeMetersInPeriod([participant("A", [meter("AT1", {until: "2026-02-10"})])], start, end)
+    const endedCp = buildBillingCheckRequest(ended, start, end).cps[0]
+    expect(evaluateBillingChecks(ended, rates, energy({
+      meters: [{...endedCp, l3Count: 0, l3Days: [], firstData: e.periodStart, lastData: e.periodEnd}],
+    })).completeness.status).toBe('WARNING')
+  })
+
+  it("a meter without activation date is still checked", () => {
+    const meters = activeMetersInPeriod([participant("A", [
+      {...meter("AT1", {tariff_id: undefined as unknown as string}), participantState: {activeSince: null, inactiveSince: null}} as unknown as Metering,
+    ])], start, end)
+    expect(meters).toHaveLength(1)
+    expect(checkTariffs(meters, rates).status).toBe('WARNING')
   })
 
   it("rounding differences in the balance are no warning", () => {
@@ -119,7 +151,7 @@ describe("BillingCheck functions", () => {
       meters: [{...buildBillingCheckRequest(meters, start, end).cps[0], l3Count: 0, l3Days: [], firstData: null, lastData: null}],
       totals: {produced: 0, consumed: 0, allocated: 0, selfCovered: 0, surplus: 0},
     }))
-    expect(res.completeness).toEqual({status: 'WARNING', dataUntil: undefined})
+    expect(res.completeness).toEqual({status: 'WARNING', dataFrom: undefined, dataUntil: undefined, endReached: false})
     expect(res.balance.status).toBe('INFO')
   })
 

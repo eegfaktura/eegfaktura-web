@@ -90,11 +90,12 @@ export const BillingCheckDialog: FC<{
   useEffect(() => {
     const meters = activeMetersInPeriod(participants, start, end)
     let cancelled = false
-    Api.energyService.fetchBillingCheck(tenant, buildBillingCheckRequest(meters, start, end))
+    const controller = new AbortController()
+    Api.energyService.fetchBillingCheck(tenant, buildBillingCheckRequest(meters, start, end), controller.signal)
       .then(res => evaluateBillingChecks(meters, rates, res))
       .catch(() => evaluateBillingChecks(meters, rates, {error: "Energiedaten konnten nicht abgefragt werden."}))
       .then(o => { if (!cancelled) setOverview(o) })
-    return () => { cancelled = true }
+    return () => { cancelled = true; controller.abort() }
   }, [])
 
   const warned = !!overview && hasWarning(overview)
@@ -112,9 +113,9 @@ export const BillingCheckDialog: FC<{
       <IonContent className="ion-padding">
         {mode === 'billing' && (
           <p>
-            Wenn Du „Abrechnen“ wählst, werden die Rechnungen endgültig erstellt und die fortlaufenden
+            Wenn Du „{confirmText}“ wählst, werden die Rechnungen endgültig erstellt und die fortlaufenden
             Rechnungsnummern vergeben. Dieser Vorgang ist unumkehrbar und Änderungen an den Rechnungen sind danach
-            nicht mehr möglich.
+            nicht mehr möglich. Willst Du wirklich das angewählte Verrechnungsintervall jetzt abrechnen?
           </p>
         )}
         {!overview && <IonSpinner name="dots"/>}
@@ -157,9 +158,11 @@ export const BillingCheckDialog: FC<{
               status={overview.completeness.status}
               text={overview.completeness.reason ?? (overview.completeness.status === 'OK'
                 ? "Energiedaten für den ganzen Zeitraum vorhanden."
-                : overview.completeness.dataUntil
-                  ? `Energiedaten nur bis ${dateTime(overview.completeness.dataUntil)} vorhanden.`
-                  : "Keine Energiedaten im Zeitraum.")}
+                : overview.completeness.dataUntil === undefined
+                  ? "Keine Energiedaten im Zeitraum."
+                  : overview.completeness.endReached
+                    ? `Energiedaten fehlen am Beginn des Zeitraums (vorhanden ab ${dateTime(overview.completeness.dataFrom!)}).`
+                    : `Energiedaten nur bis ${dateTime(overview.completeness.dataUntil)} vorhanden.`)}
             />
           </IonList>
         )}
@@ -171,7 +174,7 @@ export const BillingCheckDialog: FC<{
               ? <IonButton onClick={() => onDismiss(null, 'cancel')}>Schließen</IonButton>
               : <>
                 <IonButton onClick={() => onDismiss(null, 'cancel')}>Abbrechen</IonButton>
-                <IonButton fill="solid" disabled={!overview} onClick={() => onDismiss(null, 'confirm')}>
+                <IonButton fill="solid" onClick={() => onDismiss(null, 'confirm')}>
                   {confirmText}
                 </IonButton>
               </>}

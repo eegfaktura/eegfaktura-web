@@ -13,10 +13,12 @@ this changelog highlights the changes relevant for overview and operations.
   overview shows four checks for the selected period: metering points active in the period without a
   tariff (also an archived tariff; the member fee tariff is not checked), L3 values per metering point
   with days, the energy balance of the community (info; a warning only if more was distributed than
-  produced) and whether at least one metering point has energy data for the whole period. The checks only
-  warn; the run starts with „Trotzdem abrechnen“ / „Trotzdem Vorschau erstellen“. For the final run the
-  overview replaces the confirmation „Abrechnungslauf“. A new button „Daten prüfen“ shows the same
-  overview without billing. The energy checks need energystore with `POST /eeg/v2/{ecId}/billing-check`;
+  produced) and whether at least one metering point active until the end of the period has energy data
+  from the start of its active part of the period to the end. The checks only warn; the run starts with
+  „Trotzdem abrechnen“ / „Trotzdem Vorschau erstellen“, also while the checks are still loading. For the
+  final run the overview replaces the confirmation „Abrechnungslauf“ and repeats its text. A new button
+  „Daten prüfen“ shows the same overview without billing. The picked invoice date now survives re-renders
+  of the billing pane. The energy checks need energystore with `POST /eeg/v2/{ecId}/billing-check`;
   without it they show „nicht geprüft“ and billing works as before.
 - CI: PR checks (tests on every pull request) and a security scan (leaked secrets in new commits,
   vulnerable dependencies, Dockerfile/Kubernetes misconfigurations). Dependency and misconfiguration

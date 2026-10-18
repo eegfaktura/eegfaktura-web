@@ -28,7 +28,9 @@ export interface BillingCheckOverview {
   tariff: { status: CheckStatus, missing: CheckedMeter[] }
   l3: { status: CheckStatus, findings: L3Finding[], reason?: string }
   balance: { status: CheckStatus, totals?: BillingCheckTotals, reason?: string }
-  completeness: { status: CheckStatus, dataUntil?: number, reason?: string }
+  // dataFrom/dataUntil: earliest first and latest last quarter hour with a value over all metering points
+  // endReached: some metering point has values until the end of the period (then data is missing at the start)
+  completeness: { status: CheckStatus, dataFrom?: number, dataUntil?: number, endReached?: boolean, reason?: string }
 }
 
 // Rounding only; there is deliberately no percentage threshold.
@@ -55,7 +57,8 @@ export const activeMetersInPeriod = (participants: EegParticipant[], start: Date
       equipmentName: m.equipmentName,
       direction: m.direction,
       tariffId: m.tariff_id,
-      activeSince: localDay(m.participantState.activeSince),
+      // no activation date: treat as active from the start, so the meter is still checked
+      activeSince: m.participantState.activeSince ? localDay(m.participantState.activeSince) : 0,
       inactiveSince: m.participantState.inactiveSince ? localDay(m.participantState.inactiveSince) : 0,
     }))
     .filter(m => m.activeSince <= localDay(end) && (m.inactiveSince === 0 || m.inactiveSince >= localDay(start))))
@@ -97,17 +100,25 @@ export const evaluateBillingChecks = (
   const totals = energy.totals
   const balanceStatus: CheckStatus = totals.allocated > totals.produced + BALANCE_TOLERANCE_KWH ? 'WARNING' : 'INFO'
 
+  // Complete if a metering point active until the end of the period has values from the start of its active part
+  // of the period (the period start, or its activation day) to the end. A community that starts mid-period is
+  // complete without data before its start.
   const covered = energy.meters.some(r =>
-    r.firstData !== null && r.lastData !== null && r.firstData <= energy.periodStart && r.lastData >= energy.periodEnd)
-  const lastData = energy.meters
-    .map(r => r.lastData)
-    .filter((t): t is number => t !== null)
-    .reduce<number | undefined>((max, t) => max === undefined || t > max ? t : max, undefined)
+    r.firstData !== null && r.lastData !== null &&
+    (r.inactiveSince <= 0 || r.inactiveSince >= localDay(new Date(energy.periodEnd))) &&
+    r.firstData <= Math.max(energy.periodStart, r.activeSince) && r.lastData >= energy.periodEnd)
+  const first = energy.meters.map(r => r.firstData).filter((t): t is number => t !== null)
+  const last = energy.meters.map(r => r.lastData).filter((t): t is number => t !== null)
 
   return {
     tariff,
     l3: {status: findings.length > 0 ? 'WARNING' : 'OK', findings},
     balance: {status: balanceStatus, totals},
-    completeness: {status: covered ? 'OK' : 'WARNING', dataUntil: lastData},
+    completeness: {
+      status: covered ? 'OK' : 'WARNING',
+      dataFrom: first.length > 0 ? Math.min(...first) : undefined,
+      dataUntil: last.length > 0 ? Math.max(...last) : undefined,
+      endReached: last.some(t => t >= energy.periodEnd),
+    },
   }
 }
