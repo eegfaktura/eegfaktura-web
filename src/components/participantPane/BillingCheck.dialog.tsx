@@ -15,7 +15,7 @@ import {
   IonTitle,
   IonToolbar,
 } from "@ionic/react";
-import {alertCircle, checkmarkCircle, helpCircle, informationCircle, warning} from "ionicons/icons";
+import {alertCircle, checkmarkCircle, helpCircle, warning} from "ionicons/icons";
 import moment from "moment";
 import {EegParticipant} from "../../models/members.model";
 import {ActiveTenant, EegTariff} from "../../models/eeg.model";
@@ -38,13 +38,13 @@ export type BillingCheckMode = 'preview' | 'billing'
 
 const statusIcon: Record<CheckStatus, { icon: string, color: string, text: string }> = {
   OK: {icon: checkmarkCircle, color: "success", text: "OK"},
-  INFO: {icon: informationCircle, color: "primary", text: "Info"},
   WARNING: {icon: alertCircle, color: "warning", text: "Warnung"},
   NOT_CHECKED: {icon: helpCircle, color: "medium", text: "nicht geprüft"},
 }
 
 // rounded first, so a rounding difference of -0.001 is shown as 0, not -0
-const kWh = (v: number) => `${(Math.round(v * 100) / 100 + 0).toLocaleString("de-AT", {maximumFractionDigits: 2})} kWh`
+const kWh = (v: number, digits = 2) =>
+  `${(Math.round(v * 10 ** digits) / 10 ** digits + 0).toLocaleString("de-AT", {maximumFractionDigits: digits})} kWh`
 const date = (t: number) => moment(t).format("DD.MM.YYYY")
 const dateTime = (t: number) => moment(t).format("DD.MM.YYYY HH:mm")
 const meterLabel = (m: CheckedMeter) =>
@@ -162,16 +162,19 @@ export const BillingCheckDialog: FC<{
             <CheckRow
               title="Energiebilanz"
               status={overview.balance.status}
-              text={overview.balance.reason ?? (overview.balance.status === 'WARNING'
-                ? "Es wurde mehr Energie verteilt als produziert."
-                : "Summen der Gemeinschaft im Zeitraum.")}
+              text={overview.balance.reason ?? (overview.balance.status === 'OK'
+                ? "Die Produktion wurde vollständig verteilt."
+                : overview.balance.totals && overview.balance.totals.allocated > overview.balance.totals.produced
+                  ? "Es wurde mehr Energie verteilt als produziert."
+                  : "Nicht die ganze Produktion wurde verteilt.")}
               details={overview.balance.totals && [
                 `Produktion: ${kWh(overview.balance.totals.produced)}`,
                 `Verbrauch: ${kWh(overview.balance.totals.consumed)}`,
                 `Verteilt (Anteil an der Erzeugung): ${kWh(overview.balance.totals.allocated)}`,
                 `Eigendeckung: ${kWh(overview.balance.totals.selfCovered)}`,
                 `Überschuss: ${kWh(overview.balance.totals.surplus)}`,
-                `Differenz Produktion – Verteilt: ${kWh(overview.balance.totals.produced - overview.balance.totals.allocated)}`,
+                // three decimals: the check tolerates 0,001 kWh, a warning must show a difference
+                `Differenz Produktion – Verteilt: ${kWh(overview.balance.totals.produced - overview.balance.totals.allocated, 3)}`,
               ]}
             />
             <CheckRow

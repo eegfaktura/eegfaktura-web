@@ -90,7 +90,7 @@ describe("BillingCheck functions", () => {
       ],
     }))
     expect(ok.l3.status).toBe('OK')
-    expect(ok.balance.status).toBe('INFO')
+    expect(ok.balance.status).toBe('WARNING')     // 20 kWh produced, not distributed
     expect(ok.completeness.status).toBe('OK')
 
     const until = moment(end).subtract(2, 'day').hour(23).minute(45).valueOf()
@@ -196,9 +196,14 @@ describe("BillingCheck functions", () => {
     expect(checkTariffs(meters, rates).status).toBe('WARNING')
   })
 
-  it("rounding differences in the balance are no warning", () => {
-    const res = evaluateBillingChecks([], rates, energy({totals: {produced: 100, consumed: 0, allocated: 100.0005, selfCovered: 0, surplus: 0}}))
-    expect(res.balance.status).toBe('INFO')
+  it("balance is OK only when the production was distributed completely", () => {
+    const totals = (allocated: number) => ({produced: 100, consumed: 0, allocated, selfCovered: 0, surplus: 0})
+    expect(evaluateBillingChecks([], rates, energy({totals: totals(100)})).balance.status).toBe('OK')
+    // rounding differences either way are no warning
+    expect(evaluateBillingChecks([], rates, energy({totals: totals(100.0005)})).balance.status).toBe('OK')
+    expect(evaluateBillingChecks([], rates, energy({totals: totals(99.9995)})).balance.status).toBe('OK')
+    expect(evaluateBillingChecks([], rates, energy({totals: totals(99.9)})).balance.status).toBe('WARNING')
+    expect(evaluateBillingChecks([], rates, energy({totals: totals(100.01)})).balance.status).toBe('WARNING')
   })
 
   it("no energy data in the period", () => {
@@ -209,7 +214,7 @@ describe("BillingCheck functions", () => {
     }))
     expect(res.completeness.status).toBe('WARNING')
     expect(res.completeness.incomplete).toHaveLength(1)
-    expect(res.balance.status).toBe('INFO')
+    expect(res.balance.status).toBe('OK')         // nothing produced, nothing distributed
   })
 
   it("energystore not reachable: tariff check still runs, the others are not checked", () => {

@@ -6,7 +6,7 @@ import {BillingCheckRequest, BillingCheckResponse, BillingCheckTotals} from "../
 
 // Checks before a billing run (platform#148). They only warn; none of them blocks the billing.
 
-export type CheckStatus = 'OK' | 'INFO' | 'WARNING' | 'NOT_CHECKED'
+export type CheckStatus = 'OK' | 'WARNING' | 'NOT_CHECKED'
 
 export interface CheckedMeter {
   participantName: string
@@ -121,7 +121,9 @@ export const evaluateBillingChecks = (
     .filter(f => f.meter && f.count > 0)
 
   const totals = energy.totals
-  const balanceStatus: CheckStatus = totals.allocated > totals.produced + BALANCE_TOLERANCE_KWH ? 'WARNING' : 'INFO'
+  // OK only when the production was distributed completely (difference production – allocated about 0)
+  const balanceStatus: CheckStatus =
+    Math.abs(totals.produced - totals.allocated) <= BALANCE_TOLERANCE_KWH ? 'OK' : 'WARNING'
 
   // Every metering point needs values for its active part of the period: from the period start or its activation
   // day to the period end or its inactive day (23:45). energystore counts the quarter hours without a value, also
