@@ -1003,6 +1003,11 @@ const ParticipantPaneComponent: FC = () => {
                       </div>
                     </>
                   )}
+                  <IonButton
+                    expand="block"
+                    disabled={activePeriod === undefined}
+                    onClick={() => openBillingCheck('check')}
+                  >{`DATEN PRÜFEN`}</IonButton>
                 </IonCol>
               </IonRow>
             </div>
@@ -1015,8 +1020,6 @@ const ParticipantPaneComponent: FC = () => {
                 setChecked={(c) => activateBilling(c)}
               ></SlideButtonComponent>
             </div>
-            <IonButton size="small" fill="outline" disabled={activePeriod === undefined}
-                       onClick={() => openBillingCheck('check')}>Daten prüfen</IonButton>
             <div
               style={{
                 marginRight: "20px",
