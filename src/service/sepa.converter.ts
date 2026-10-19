@@ -166,7 +166,8 @@ const createSepaModel = async (rows: Record<string, Array<any>>) => {
 export const ConvertExcelToXML = async (tenant: string, billingRunId: string,
                                         eeg: Eeg, collectionDate: Date,
                                         activePeriod: SelectedPeriod,
-                                        batch: boolean, summerize: boolean) => {
+                                        batch: boolean, summerize: boolean,
+                                        transferDate: Date = collectionDate) => {
 
   if (!eeg.accountInfo.bic) {
     throw new Error("E_BIC_MISSING")
@@ -243,7 +244,7 @@ export const ConvertExcelToXML = async (tenant: string, billingRunId: string,
       files.push({content: await createSepaDirectDebit(b2b, eeg, activePeriod, collectionDate, batch, 'B2B'), name: buildFileName("SEPA_Direct_Debit_B2B", tenant, activePeriod)})
     }
     if (invoiceFile.Transfer.length > 0) {
-      files.push({content: await createSepaCreditTransfer(invoiceFile.Transfer, eeg, activePeriod, collectionDate, batch), name: buildFileName("SEPA_Credit_Transfer", tenant, activePeriod)})
+      files.push({content: await createSepaCreditTransfer(invoiceFile.Transfer, eeg, activePeriod, transferDate, batch), name: buildFileName("SEPA_Credit_Transfer", tenant, activePeriod)})
     }
     return {
       files,

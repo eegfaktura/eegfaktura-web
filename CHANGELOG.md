@@ -8,6 +8,13 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **SEPA export: separate date for the credit transfers** (platform#167). The SEPA dialog has two dates: „Einzug am“
+  for the direct debits (`ReqdColltnDt`) and „Überweisung am“ for the credit transfers (`ReqdExctnDt`), so the
+  community's account is covered when the credit notes are paid. The transfer date starts 5 days after the debit date
+  and follows it until it is changed by hand; a transfer before the debit shows a warning. Before, one due date
+  applied to all files.
+
 ### Fixed
 - **A rejected metering point no longer disappears from the member list** (feedback Manuel Wurzinger, 19.10.2026).
   A metering point that had left and whose new registration was rejected kept its old inactive date and dropped
