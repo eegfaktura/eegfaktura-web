@@ -20,11 +20,40 @@ import {Eeg} from "../../models/eeg.model";
 import {downloadOutline, settingsSharp} from "ionicons/icons";
 import {useLocale} from "../../store/hook/useLocale";
 
+const TRANSFER_DAYS_AFTER_DEBIT = 5
+// debit date + 5 days, moved from a weekend to the following Monday (banks execute on business days)
+const defaultTransferDate = (debit: Date) => {
+  const d = moment(debit).add(TRANSFER_DAYS_AFTER_DEBIT, 'days')
+  if (d.isoWeekday() === 6) d.add(2, 'days')
+  if (d.isoWeekday() === 7) d.add(1, 'days')
+  return d.toDate()
+}
+
 export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg: Eeg, period: SelectedPeriod, onDismiss: (data?: string | null | undefined | number, role?: string) => void}> = ({billingRunId, tenant, eeg, period, onDismiss})=>  {
   const inputRef = useRef<HTMLIonInputElement>(null);
 
   const [files, setFiles] = useState<{ blob: Blob, name: string }[] | null>(null)
   const [collectionDate, setCollectionDate] = useState<Date | null>(moment().toDate())
+  // Credit transfers some days after the direct debits, so the community's account is covered (platform#167).
+  // Follows the debit date until it is changed by hand.
+  const [transferDate, setTransferDate] = useState<Date | null>(defaultTransferDate(new Date()))
+  const [transferTouched, setTransferTouched] = useState(false)
+  const onCollectionDate = (value: Date | null) => {
+    setFiles(null)   // files generated with the old date must not be downloaded
+    setCollectionDate(value)
+    if (!transferTouched && value) {
+      setTransferDate(defaultTransferDate(value))
+    }
+  }
+  const onTransferDate = (value: Date | null) => {
+    // the picker reports its date on every close: only a different day counts as a manual change
+    if (value && transferDate && moment(value).isSame(transferDate, 'day')) return
+    setFiles(null)
+    setTransferTouched(true)
+    setTransferDate(value)
+  }
+  const transferBeforeDebit = !!collectionDate && !!transferDate &&
+    moment(transferDate).startOf('day').isBefore(moment(collectionDate).startOf('day'))
   const [error, setError] = useState<string | null>(null)
   const [skippedDebit, setSkippedDebit] = useState<string[]>([])
   const [unsetDebit, setUnsetDebit] = useState<string[]>([])
@@ -40,7 +69,7 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
   }, []);
 
   const prepareSepaFilesForDownload = async (): Promise<{ blob: Blob, name: string }[]> => {
-    const files = await ConvertExcelToXML(tenant, billingRunId, eeg, collectionDate!, period, batch, summarize)
+    const files = await ConvertExcelToXML(tenant, billingRunId, eeg, collectionDate!, period, batch, summarize, transferDate!)
     if (files) {
       setSkippedDebit(files.skippedDebit)
       setUnsetDebit(files.unsetDebit)
@@ -96,7 +125,14 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
-        <DatePickerCoreElement label={"Fälligkeitsdatum"} name={"collectionDate"} initialValue={collectionDate} placeholder={"fällig am ..."} onChange={(name, value) => setCollectionDate(value)} />
+        <DatePickerCoreElement label={"Einzug am (Lastschriften)"} name={"collectionDate"} initialValue={collectionDate} placeholder={"fällig am ..."} onChange={(name, value) => onCollectionDate(value)} />
+        <DatePickerCoreElement label={"Überweisung am (Gutschriften)"} name={"transferDate"} initialValue={transferDate} placeholder={"überweisen am ..."}
+                               onChange={(name, value) => onTransferDate(value)} />
+        {transferBeforeDebit && (
+          <IonItem lines="none" color="warning">
+            <IonLabel className="ion-text-wrap">Die Überweisung liegt vor dem Einzug — das Konto ist dann womöglich nicht gedeckt.</IonLabel>
+          </IonItem>
+        )}
 
         <IonList>
           <IonItem>
@@ -106,7 +142,7 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
             <IonCheckbox checked={summarize} onIonChange={() => setSummarize(!summarize)}>Mitglieder zusammenfassen</IonCheckbox>
           </IonItem>
         </IonList>
-        <IonButton className="ion-back" onClick={onCreate} disabled={!collectionDate}>
+        <IonButton className="ion-back" onClick={onCreate} disabled={!collectionDate || !transferDate}>
           Generieren
         </IonButton>
         {!!error && (
