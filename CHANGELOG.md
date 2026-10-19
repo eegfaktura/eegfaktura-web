@@ -8,6 +8,19 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **Billing: the totals include the metering point fees.** „Gesamte EEG“ in the billing dialog, the amount per member
+  in the list and the total in the member's billing details now add the metering point fees, which billing already
+  delivered (`meteringPointFeeSum`). Before, these totals were lower than the documents and the Excel export by the
+  fees. The billing dialog says „Gesamte EEG (brutto)“, and the details show a line „Zählpunktgebühren“; their energy
+  lines say „brutto“ instead of „netto“, which is what the amounts always were.
+
+### Removed
+- **Dashboard: no money amounts.** The block „Finanzen“ is now „Energiemengen“ and shows only kWh. The euro amounts
+  for „Eingekauft“ and „Verkauft“ and the „Marge EEG“ are gone: they were an estimate from the current tariffs
+  (net, without membership and metering point fees, with a wrong VZP discount and the unused EZP base fee) and did
+  not match the billing. The amounts are in the billing dialog.
+
 ## [1.4.0] – 2026-10-19
 
 ### Added

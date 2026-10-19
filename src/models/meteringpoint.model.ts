@@ -112,5 +112,6 @@ export interface ParticipantBillType {
   id: string;
   amount: number;
   participantFee: number;
+  meteringPointFeeSum: number;
   meteringPoints: MeteringBillType[]
 }

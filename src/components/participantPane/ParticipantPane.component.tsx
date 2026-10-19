@@ -82,7 +82,7 @@ import DatePickerCoreElement from "../core/elements/DatePickerCore.element";
 import {filterActiveMeter, filterActiveParticipantAndMeter,} from "../../util/FilterHelper.unit";
 import moment from "moment";
 import {Api} from "../../service";
-import {buildAllocationMapFromSelected, filterSearchQuery} from "./ParticipantPane.functions";
+import {billTotal, buildAllocationMapFromSelected, filterSearchQuery} from "./ParticipantPane.functions";
 import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
 import {withOpenProblems} from "./ParticipantPane.functions";
 import FilterSegmentComponent from "./FilterSegment.component";
@@ -363,14 +363,7 @@ const ParticipantPaneComponent: FC = () => {
 
   const billingSum = () => {
     if (billingInfo) {
-      // const sum = billingInfo.reduce((i, s) => i + s.amount + s.meteringPoints.reduce((mi, ms) => mi + ms.amount, 0), 0)
-      const sum = billingInfo.reduce(
-        (i, s) =>
-          i +
-          s.participantFee +
-          s.meteringPoints.reduce((mi, ms) => mi + ms.amount, 0),
-        0
-      );
+      const sum = billingInfo.reduce((i, s) => i + billTotal(s), 0);
       return (Math.round(sum * 100) / 100).toFixed(2);
     }
     return 0;
@@ -861,7 +854,7 @@ const ParticipantPaneComponent: FC = () => {
                 <IonCol>
                   <IonItem lines="none">
                     <IonLabel slot="end">
-                      Gesamte EEG: {billingSum()} €
+                      Gesamte EEG (brutto): {billingSum()} €
                     </IonLabel>
                   </IonItem>
                 </IonCol>

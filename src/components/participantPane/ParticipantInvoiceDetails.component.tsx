@@ -8,6 +8,7 @@ import RateCardComponent from "../RateCard.component";
 import MeterCardComponent from "./MeterCard.component";
 import {IonGrid, IonIcon, IonItem, IonLabel, IonRow} from "@ionic/react";
 import {eegSumSign} from "../../eegIcons";
+import {billTotal} from "./ParticipantPane.functions";
 
 
 type RateModelGroup = Record<string, Record<string, number>>
@@ -105,11 +106,23 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
     return (<></>)
   }
 
+  const getMeteringPointFeeLine = (fee: number) => {
+    if (fee > 0) {
+      return (
+        <div style={{display: "flex", justifyContent: "space-between", width: "100%"}}>
+          <div style={{padding: "5px"}}>Zählpunktgebühren:</div>
+          <div style={{padding: "5px"}}>{fee.toFixed(2)} €</div>
+        </div>
+      )
+    }
+    return (<></>)
+  }
+
   const getCreditLine = (credit: number) => {
     if (credit > 0) {
       return (
         <div style={{display: "flex", justifyContent: "space-between", width: "100%"}}>
-          <div style={{padding: "5px"}}>Energielieferung netto:</div>
+          <div style={{padding: "5px"}}>Energielieferung brutto:</div>
           <div style={{padding: "5px"}}>{credit.toFixed(2)} €</div>
         </div>
       )
@@ -120,7 +133,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
     if (debit < 0) {
       return (
         <div style={{display: "flex", justifyContent: "space-between", width: "100%"}}>
-          <div style={{padding: "5px"}}>Energiebezug netto:</div>
+          <div style={{padding: "5px"}}>Energiebezug brutto:</div>
           <div style={{padding: "5px"}}>{debit.toFixed(2)} €</div>
         </div>
       )
@@ -136,6 +149,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
       return (
         <div style={{width: "100%"}}>
           {getParticipantLine(memberBill.participantFee)}
+          {getMeteringPointFeeLine(memberBill.meteringPointFeeSum)}
           {getCreditLine(credit)}
           {getDebitLine(debit)}
         </div>
@@ -175,7 +189,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
                   {memberBill ? <>
                     <IonItem lines="none" mode="md" style={{"--min-height": "32px", fontSize: "14px"}}>
                       <IonIcon style={{marginTop: "5px", marginBottom: "5px"}} icon={eegSumSign} slot="start"></IonIcon>
-                      <span>{memberBill.meteringPoints.reduce((s, m) => s + m.amount, memberBill.participantFee).toFixed(2)}</span> €
+                      <span>{billTotal(memberBill).toFixed(2)}</span> €
                     </IonItem></> : <></>}
                 </div>
               </IonRow>
