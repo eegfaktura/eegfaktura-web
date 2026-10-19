@@ -16,8 +16,10 @@ this changelog highlights the changes relevant for overview and operations.
   shows the rejected, invalid and revoked ones, until the community acts (register again or archive). Only the list changes: billing, energy
   reports, export and dashboard counts still use the metering points of the period. Metering points that simply left
   still drop out after their period.
-- The exclamation mark of a metering point that has left is red, like that of a rejected one (not while its end date
-  is still ahead); an invalid registration also shows the exclamation mark.
+- Metering point card (member list, invoice details, registration): the exclamation mark of a metering point that
+  has left is red, like that of a rejected one (from the day after its last day of participation); an invalid
+  registration also shows the exclamation mark. In the member list, metering points with an open problem are
+  sorted with the members that need attention.
 
 ## [1.3.1] – 2026-10-18
 

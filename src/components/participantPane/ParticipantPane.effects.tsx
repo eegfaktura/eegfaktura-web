@@ -1,6 +1,6 @@
 import {useMemo} from "react";
 import {EegParticipant} from "../../models/members.model";
-import {filterMeters, withOpenProblems} from "./ParticipantPane.functions";
+import {filterMeters} from "./ParticipantPane.functions";
 import {hasOpenProblem} from "../../util/FilterHelper.unit";
 import moment from "moment";
 
@@ -83,7 +83,7 @@ export const filterParticipant = (options: FilterParticipantProps) => {
           .map(p => ({...p, meters: p.meters.filter(hasOpenProblem)}))
         return filterMeters(sorted3, hideProducers, hideConsumers, false)
       default:
-        return filterMeters(withOpenProblems(sortedParticipants, participants), hideProducers, hideConsumers, hideMeter /*!(hideProducers || hideConsumers)*/)
+        return filterMeters(sortedParticipants, hideProducers, hideConsumers, hideMeter /*!(hideProducers || hideConsumers)*/)
     }
   }, [selectedFilter, participants, sortedParticipants, hideConsumers, hideProducers, hideMeter])
 }

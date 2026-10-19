@@ -4,6 +4,7 @@ import {eegExclamation, eegPlug, eegSolar} from "../../eegIcons";
 import {EegParticipant} from "../../models/members.model";
 import {Metering} from "../../models/meteringpoint.model";
 import cn from "classnames"
+import moment from "moment";
 
 import "./Member.component.css";
 import {useAppSelector} from "../../store";
@@ -64,8 +65,10 @@ const MeterCardComponent: FC<MeterCardComponentProps> = ({participant, meter, hi
   const isMeterRejected = () => meter.processState === "REVOKED" || meter.processState === "REJECTED" || meter.processState === "INVALID"
   const isMeterActive = () => meter.processState === "ACTIVE" || meter.processState === "INACTIVE"
   const isMeterInactive = () => meter.processState === "INACTIVE"
-  // deregistration confirmed with an end date still ahead: the metering point still takes part
-  const hasLeft = () => !meter.participantState || new Date(meter.participantState.inactiveSince).getTime() <= Date.now()
+  // true once the last day of participation (inactiveSince, inclusive, local day) is over; a deregistration
+  // confirmed with an end date still ahead keeps the normal colour
+  const hasLeft = () => !!meter.participantState?.inactiveSince &&
+    moment(meter.participantState.inactiveSince).endOf('day').isBefore(moment())
 
   const meterValue = () => {
     if (report && !isNaN(report.allocated)) {

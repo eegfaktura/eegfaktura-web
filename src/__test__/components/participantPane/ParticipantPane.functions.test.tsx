@@ -96,6 +96,10 @@ describe("withOpenProblems (member list)", () => {
     // the period list itself (billing, reports) is unchanged
     expect(period[0].meters).toHaveLength(1)
   })
+  it("adds a re-registration in progress that keeps its old inactive date", () => {
+    const all = [{id: "1", meters: [m("AT4", "INACTIVE", "PENDING")]} as EegParticipant]
+    expect(withOpenProblems([{id: "1", meters: [] as Metering[]} as EegParticipant], all)[0].meters.map(x => x.meteringPoint)).toEqual(["AT4"])
+  })
   it("does not add a metering point twice", () => {
     const all = [{id: "1", meters: [m("AT2", "INIT", "INVALID")]} as EegParticipant]
     expect(withOpenProblems(all, all)).toEqual(all)

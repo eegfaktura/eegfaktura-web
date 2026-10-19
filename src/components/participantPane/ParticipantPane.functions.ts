@@ -23,15 +23,15 @@ export const buildAllocationMapFromSelected = (participants: EegParticipant[], c
     })
 };
 
+const inRegistration = (m: Metering) =>
+  m.processState === 'NEW' || m.processState === 'INIT' || m.processState === 'PENDING' || m.processState === 'APPROVED'
+
 /**
  * List view only: adds the metering points with an open problem (rejected, invalid, revoked registration) or a
  * registration in progress that the period filter dropped, e.g. a re-registration after leaving (it keeps the old
  * inactive date until the grid operator completes it). Billing, reports and counts keep
  * using the period-filtered participants, so these metering points are never billed outside their period.
  */
-const inRegistration = (m: Metering) =>
-  m.processState === 'NEW' || m.processState === 'INIT' || m.processState === 'PENDING' || m.processState === 'APPROVED'
-
 export const withOpenProblems = (periodParticipants: EegParticipant[], allParticipants: EegParticipant[]) =>
   periodParticipants.map(p => {
     const extra = (allParticipants.find(a => a.id === p.id)?.meters ?? [])
