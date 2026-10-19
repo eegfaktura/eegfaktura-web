@@ -97,6 +97,15 @@ export interface InvoiceDocumentResponse {
   participantId: string;
 }
 
+// The amounts of one billing document (billing: GET /billingRuns/{id}/billingDocuments); only the fields used here.
+export interface BillingDocumentAmounts {
+  billingDocumentType: "INVOICE" | "CREDIT_NOTE" | "CREDIT_NOTE_RC" | "INFO";
+  netAmountInEuro: number | null;
+  vat1SumInEuro: number | null;
+  vat2SumInEuro: number | null;
+  grossAmountInEuro: number | null;
+}
+
 export interface MeteringEnergyGroupType {
   participantId: string;
   meteringPoint: string;

@@ -85,6 +85,8 @@ import {Api} from "../../service";
 import {billTotal, buildAllocationMapFromSelected, filterSearchQuery} from "./ParticipantPane.functions";
 import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
 import {withOpenProblems} from "./ParticipantPane.functions";
+import {billingTotals, BillingTotals} from "./BillingTotals.functions";
+import BillingTotalsTable from "./BillingTotalsTable.component";
 import FilterSegmentComponent from "./FilterSegment.component";
 import {VariableSizeList} from "react-window";
 
@@ -205,6 +207,18 @@ const ParticipantPaneComponent: FC = () => {
     if (showAmount && !billingRun) {
       dispatcher(resetParticipantAmounts());
     }
+  }, [billingRun, showAmount]);
+
+  // Totals per document type (platform#169). The preview is a billing run too, so this works before billing.
+  const [totals, setTotals] = useState<BillingTotals | undefined>(undefined);
+  useEffect(() => {
+    setTotals(undefined);
+    if (!showAmount || !billingRun || !billingRun.id) return;
+    let current = true;
+    Api.eegService.fetchBillingDocuments(tenant, billingRun.id)
+      .then(documents => current && setTotals(billingTotals(documents)))
+      .catch(() => current && setTotals(undefined));
+    return () => { current = false };
   }, [billingRun, showAmount]);
 
   useEffect(() => {
@@ -850,6 +864,7 @@ const ParticipantPaneComponent: FC = () => {
         <div className={"pane-footer"}>
           {showAmount && (
             <div>
+              {totals && <BillingTotalsTable totals={totals}/>}
               <IonRow>
                 <IonCol>
                   <IonItem lines="none">

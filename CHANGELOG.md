@@ -8,6 +8,13 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **Billing: totals per document type** (platform#169). Above „Gesamte EEG (brutto)“ the billing dialog shows invoices
+  and credit notes with count, net, VAT and gross, read from the run's documents (billing
+  `GET /billingRuns/{id}/billingDocuments`, no change in billing), in the preview and after billing. Credit notes to
+  producers with a VAT ID that carry no VAT are shown as a net amount with a note that the community may owe the VAT
+  (reverse charge); billing does not compute that VAT. Info documents count as credit notes, as in the SEPA export.
+
 ### Fixed
 - **Billing: the totals include the metering point fees.** „Gesamte EEG“ in the billing dialog, the amount per member
   in the list and the total in the member's billing details now add the metering point fees, which billing already
