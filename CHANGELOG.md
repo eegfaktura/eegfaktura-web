@@ -8,6 +8,12 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **Process history: „Datenfreigabe-Aufhebung“ was always empty** (platform#170). Since 1.2.0 the view asks for three
+  protocols at once (`CM_REV_IMP;CM_REV_SP;CM_REV_CUS`). The backend (Go) drops a query parameter with a raw `;`, so
+  the protocol arrived empty and no entry matched. The list is now sent encoded (`%3B`); the backend splits it as
+  before. The other history categories ask for one protocol and were not affected.
+
 ## [1.5.0] – 2026-10-19
 
 ### Added

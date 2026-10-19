@@ -518,7 +518,8 @@ export class EegService extends EegBaseService {
 
   async getHistories1(tenant: string, protocols: Array<string>, beginTimestamp: number, endTimestamp: number): Promise<EdaHistories> {
     const token = await this.lookupToken()
-    return await fetch(`${API_API_SERVER}/process/history?start=${beginTimestamp}&end=${endTimestamp}&protocol=${protocols.join(';')}&ps=0`, {
+    // encoded: Go (backend) drops a query parameter with a raw ";", the list arrived empty (platform#170)
+    return await fetch(`${API_API_SERVER}/process/history?start=${beginTimestamp}&end=${endTimestamp}&protocol=${encodeURIComponent(protocols.join(';'))}&ps=0`, {
       method: 'GET',
       headers: {
         ...this.getSecureHeaders(token, tenant),
