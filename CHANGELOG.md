@@ -16,7 +16,7 @@ this changelog highlights the changes relevant for overview and operations.
     die zu erwartende Kontobewegung aus dieser Abrechnung“, in the same number format as the table (de-AT).
   - Below, two computed margins: „Marge bei Regelbesteuerung (netto)“ = invoices net minus credit notes net (VAT and
     reverse charge are neutral with input tax), and „Marge bei Kleinunternehmerregelung (brutto)“ = invoices gross
-    minus credit notes gross minus the reverse charge VAT. The reverse charge VAT is 20 % (fixed, the standard rate
+    minus credit notes and info documents gross minus the reverse charge VAT. The reverse charge VAT is 20 % (fixed, the standard rate
     for electricity) on the credit note lines without VAT to producers with a VAT ID; billing does not compute it, and
     for a credit note that mixes lines with and without VAT the net without VAT is taken back from the VAT sums and
     can be a few cents off. Info documents, if a run still has any, get their own row and count as paid out.
@@ -26,7 +26,8 @@ this changelog highlights the changes relevant for overview and operations.
     to producers with a VAT ID. Nothing blocks.
 
 ### Fixed
-- **Billing: the totals include the metering point fees.** „Gesamte EEG“ in the billing dialog, the amount per member
+- **Billing: the totals include the metering point fees.** The billing dialog total (before „Gesamte EEG“, now
+  „Saldo Zahlungen (brutto)“), the amount per member
   in the list and the total in the member's billing details now add the metering point fees, which billing already
   delivered (`meteringPointFeeSum`). Before, these totals were lower than the documents and the Excel export by the
   fees. The details show a line „Zählpunktgebühren“; their energy

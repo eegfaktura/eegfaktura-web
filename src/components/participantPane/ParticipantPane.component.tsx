@@ -213,9 +213,11 @@ const ParticipantPaneComponent: FC = () => {
   // Reloaded with the member amounts as well: a failed preview keeps the billing run but replaces its documents.
   // The totals keep the run they belong to: while the same run reloads, the old totals stay (no flicker); totals of
   // another run (other period) are not shown.
+  // After a failed preview billing leaves partial documents: no totals for that run until a preview succeeds.
   const [runTotals, setRunTotals] = useState<{ runId: string, totals: BillingTotals } | undefined>(undefined);
+  const [failedRunId, setFailedRunId] = useState<string | undefined>(undefined);
   useEffect(() => {
-    if (!showAmount || !billingRun || !billingRun.id) {
+    if (!showAmount || !billingRun || !billingRun.id || billingRun.id === failedRunId) {
       setRunTotals(undefined);
       return;
     }
@@ -223,9 +225,13 @@ const ParticipantPaneComponent: FC = () => {
     let current = true;
     Api.eegService.fetchBillingDocuments(tenant, runId)
       .then(documents => current && setRunTotals({runId, totals: billingTotals(documents)}))
-      .catch(() => current && errorToast("Die Summen der Abrechnung konnten nicht geladen werden."));
+      .catch(() => {
+        if (!current) return;
+        setRunTotals(undefined);
+        errorToast("Die Summen der Abrechnung konnten nicht geladen werden.");
+      });
     return () => { current = false };
-  }, [tenant, billingRun?.id, billingInfo, showAmount]);
+  }, [tenant, billingRun?.id, billingInfo, showAmount, failedRunId]);
 
   useEffect(() => {
     if (checkedParticipant) {
@@ -495,8 +501,8 @@ const ParticipantPaneComponent: FC = () => {
   };
 
   const [previewValid, setPreviewValid] = useState(true);
-  // Only the totals of the shown run, and none after a failed preview (billing leaves partial documents then).
-  const totals = runTotals && billingRun && runTotals.runId === billingRun.id && previewValid ? runTotals.totals : undefined;
+  // Only the totals of the shown run.
+  const totals = runTotals && billingRun && runTotals.runId === billingRun.id ? runTotals.totals : undefined;
   const onDoBilling =(preview: boolean, documentDate: Date) => {
     if (activePeriod) {
       documentDate?.setHours(12);
@@ -523,6 +529,7 @@ const ParticipantPaneComponent: FC = () => {
           //Abrechnung fehlgeschlagen
         ) {
           setPreviewValid(false);
+          setFailedRunId(returnValue.payload.billing.billingRunId ?? billingRun?.id);
           presentAlert({
             subHeader: "Fehler bei der Vorschauerstellung",
             message:
@@ -531,6 +538,7 @@ const ParticipantPaneComponent: FC = () => {
           });
         } else {
           setPreviewValid(true);
+          setFailedRunId(undefined);
           dispatcher(
             fetchBillingRun({
               tenant: tenant,
@@ -879,7 +887,8 @@ const ParticipantPaneComponent: FC = () => {
                     <IonLabel slot="end" style={{textAlign: "right"}}>
                       Saldo Zahlungen (brutto): {billingSum()} €
                       <div style={{fontSize: "11px", color: "var(--ion-color-medium, #92949c)"}}>
-                        Rechnungen minus Gutschriften, die zu erwartende Kontobewegung aus dieser Abrechnung
+                        Rechnungen minus Gutschriften{totals && totals.infos.count > 0 ? " und Info-Belege" : ""}, die zu
+                        erwartende Kontobewegung aus dieser Abrechnung
                       </div>
                     </IonLabel>
                   </IonItem>
