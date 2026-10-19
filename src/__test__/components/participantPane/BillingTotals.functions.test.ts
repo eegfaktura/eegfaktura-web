@@ -4,12 +4,12 @@ import {BillingDocumentAmounts} from "../../../models/meteringpoint.model";
 
 // VAT 1 at 20 %, VAT 2 at 10 % when set.
 const doc = (billingDocumentType: BillingDocumentAmounts["billingDocumentType"], net: number, vat1: number, vat2 = 0,
-             recipientName: string | null = "Muster"): BillingDocumentAmounts =>
+             recipientName: string | null = "Muster", participantId: string | null = recipientName): BillingDocumentAmounts =>
   ({
     billingDocumentType, netAmountInEuro: net,
     vat1Percent: vat1 ? 20 : null, vat1SumInEuro: vat1,
     vat2Percent: vat2 ? 10 : null, vat2SumInEuro: vat2,
-    grossAmountInEuro: net + vat1 + vat2, recipientName,
+    grossAmountInEuro: net + vat1 + vat2, participantId, recipientName,
   })
 
 describe("billingTotals", () => {
@@ -28,7 +28,7 @@ describe("billingTotals", () => {
     const t = billingTotals([
       doc("INFO", 4, 0.8),
       {billingDocumentType: "INVOICE", netAmountInEuro: null, vat1Percent: null, vat1SumInEuro: null,
-        vat2Percent: null, vat2SumInEuro: null, grossAmountInEuro: 6, recipientName: null},
+        vat2Percent: null, vat2SumInEuro: null, grossAmountInEuro: 6, participantId: null, recipientName: null},
     ])
     expect(t.infos).toEqual({count: 1, net: 4, vat: 0.8, gross: 4.8})
     expect(t.creditNotes.count).toBe(0)
@@ -55,6 +55,11 @@ describe("billingTotals", () => {
       doc("CREDIT_NOTE_RC", 5, 1, 0, null),
     ])
     expect(t.vatIdCreditNotesWithVat).toEqual({vat: 21, recipients: ["?", "Ähm", "Zach"]})
+  })
+
+  it("counts two producers with the same name twice", () => {
+    const t = billingTotals([doc("CREDIT_NOTE_RC", 50, 10, 0, "Huber", "p1"), doc("CREDIT_NOTE_RC", 50, 10, 0, "Huber", "p2")])
+    expect(t.vatIdCreditNotesWithVat.recipients).toEqual(["Huber", "Huber"])
   })
 
   it("has no warning without VAT on credit notes to producers with a VAT ID", () => {

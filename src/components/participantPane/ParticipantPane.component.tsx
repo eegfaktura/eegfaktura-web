@@ -211,19 +211,21 @@ const ParticipantPaneComponent: FC = () => {
 
   // Totals per document type (platform#169). The preview is a billing run too, so this works before billing.
   // Reloaded with the member amounts as well: a failed preview keeps the billing run but replaces its documents.
-  const [totals, setTotals] = useState<BillingTotals | undefined>(undefined);
+  // The totals keep the run they belong to: while the same run reloads, the old totals stay (no flicker); totals of
+  // another run (other period) are not shown.
+  const [runTotals, setRunTotals] = useState<{ runId: string, totals: BillingTotals } | undefined>(undefined);
   useEffect(() => {
-    // Keep the old totals until the new ones are there, so the table does not flicker.
     if (!showAmount || !billingRun || !billingRun.id) {
-      setTotals(undefined);
+      setRunTotals(undefined);
       return;
     }
+    const runId = billingRun.id;
     let current = true;
-    Api.eegService.fetchBillingDocuments(tenant, billingRun.id)
-      .then(documents => current && setTotals(billingTotals(documents)))
+    Api.eegService.fetchBillingDocuments(tenant, runId)
+      .then(documents => current && setRunTotals({runId, totals: billingTotals(documents)}))
       .catch(() => current && errorToast("Die Summen der Abrechnung konnten nicht geladen werden."));
     return () => { current = false };
-  }, [billingRun?.id, billingInfo, showAmount]);
+  }, [tenant, billingRun?.id, billingInfo, showAmount]);
 
   useEffect(() => {
     if (checkedParticipant) {
@@ -493,7 +495,9 @@ const ParticipantPaneComponent: FC = () => {
   };
 
   const [previewValid, setPreviewValid] = useState(true);
-  const onDoBilling = (preview: boolean, documentDate: Date) => {
+  // Only the totals of the shown run, and none after a failed preview (billing leaves partial documents then).
+  const totals = runTotals && billingRun && runTotals.runId === billingRun.id && previewValid ? runTotals.totals : undefined;
+  const onDoBilling =(preview: boolean, documentDate: Date) => {
     if (activePeriod) {
       documentDate?.setHours(12);
       const invoiceRequest = {

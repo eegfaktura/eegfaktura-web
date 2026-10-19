@@ -58,7 +58,8 @@ export const billingTotals = (documents: BillingDocumentAmounts[]): BillingTotal
   const infos = empty()
   let reverseChargeNet = 0
   let paidOutVat = 0
-  const recipients = new Set<string>()
+  // per member (two producers can have the same name)
+  const recipients = new Map<string, string>()
   documents.forEach(d => {
     switch (d.billingDocumentType) {
       case "INVOICE":
@@ -70,7 +71,7 @@ export const billingTotals = (documents: BillingDocumentAmounts[]): BillingTotal
         const vat = vatOf(d)
         if (vat !== 0) {
           paidOutVat += vat
-          recipients.add(d.recipientName || "?")
+          recipients.set(d.participantId || `doc-${recipients.size}`, d.recipientName || "?")
         }
         break
       }
@@ -90,7 +91,7 @@ export const billingTotals = (documents: BillingDocumentAmounts[]): BillingTotal
     },
     vatIdCreditNotesWithVat: {
       vat: cents(paidOutVat),
-      recipients: Array.from(recipients).sort((a, b) => a.localeCompare(b, "de")),
+      recipients: Array.from(recipients.values()).sort((a, b) => a.localeCompare(b, "de")),
     },
     infos: round(infos),
   }

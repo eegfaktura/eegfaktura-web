@@ -97,7 +97,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
   }
 
   const getParticipantLine = (fee: number) => {
-    if (fee > 0) {
+    if (fee !== 0) {
       return (
         <div style={{display: "flex", justifyContent: "space-between", width: "100%"}}>
           <div style={{padding: "5px"}}>Mitgliedsbeitrag:</div>
@@ -151,7 +151,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
       return (
         <div style={{width: "100%"}}>
           {getParticipantLine(memberBill.participantFee)}
-          {getMeteringPointFeeLine(memberBill.meteringPointFeeSum)}
+          {getMeteringPointFeeLine(memberBill.meteringPointFeeSum ?? 0)}
           {getCreditLine(credit)}
           {getDebitLine(debit)}
         </div>

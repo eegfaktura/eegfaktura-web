@@ -106,6 +106,7 @@ export interface BillingDocumentAmounts {
   vat2Percent: number | null;
   vat2SumInEuro: number | null;
   grossAmountInEuro: number | null;
+  participantId: string | null;
   recipientName: string | null;
 }
 
@@ -124,6 +125,7 @@ export interface ParticipantBillType {
   id: string;
   amount: number;
   participantFee: number;
-  meteringPointFeeSum: number;
+  // Missing from older billing versions.
+  meteringPointFeeSum?: number;
   meteringPoints: MeteringBillType[]
 }
