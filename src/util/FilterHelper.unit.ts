@@ -4,6 +4,13 @@ import {Metering} from "../models/meteringpoint.model";
 import moment from "moment";
 
 /**
+ * A rejected, invalid or revoked registration needs action (register again or archive). Such a metering point stays
+ * visible in every period, also when it was inactive before (e.g. re-registration after leaving was rejected).
+ */
+export const hasOpenProblem = (m: Metering) =>
+  m.processState === 'REJECTED' || m.processState === 'INVALID' || m.processState === 'REVOKED'
+
+/**
  * filter active participant for a particular period (start to end). A active Participants has metering points with status ACTIVE or INACTIVE.
  * INACTIVE meteringpoint has been revoked by netoperators or by customer itself.
  * ACTIVE meteringpoints are still participate
@@ -20,7 +27,7 @@ export const filterActiveParticipantAndMeter = (participants: EegParticipant[], 
         (m.participantState
           ? (new Date(m.participantState.inactiveSince).getTime() >= endDate && new Date(m.participantState.activeSince).getTime() <= endDate) ||
           (new Date(m.participantState.inactiveSince).getTime() >= start.getTime() && new Date(m.participantState.inactiveSince).getTime() <= endDate)
-          : true) || (m.status !== 'ACTIVE' && m.status !== 'INACTIVE')
+          : true) || (m.status !== 'ACTIVE' && m.status !== 'INACTIVE') || hasOpenProblem(m)
       )
     } as EegParticipant
   })/*.filter(p => p.meters.length > 0)*/

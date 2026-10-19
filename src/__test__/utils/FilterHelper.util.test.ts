@@ -22,6 +22,15 @@ describe("Filter Helpers", () => {
     expect(activeParticipants(ps, new Date(2024, 0, 31), new Date(2024, 5, 20))).toEqual(ps)
   });
 
+  it("a rejected re-registration stays visible after the meter went inactive", async () => {
+    const rejected = {id: "3", meters: [{meteringPoint: "AT1111111111111111111111113", status: "INACTIVE", processState: "REJECTED",
+      participantState: {activeSince: new Date(2024, 0, 31), inactiveSince: new Date(2024, 2, 31)} as ParticipantState} as Metering]} as EegParticipant
+    const left = {id: "4", meters: [{meteringPoint: "AT1111111111111111111111114", status: "INACTIVE", processState: "INACTIVE",
+      participantState: {activeSince: new Date(2024, 0, 31), inactiveSince: new Date(2024, 2, 31)} as ParticipantState} as Metering]} as EegParticipant
+    // Period Apr–Jun 2024: both went inactive 31 Mar; only the rejected one needs action and stays
+    expect(activeParticipants([rejected, left], new Date(2024, 3, 1), new Date(2024, 5, 20))).toEqual([rejected])
+  });
+
   it("filter active participants and meters (1)", async () => {
     const ps = participants()
     // Period Apr–Jun 2024: participant 2's meter went inactive 31 Mar → dropped.

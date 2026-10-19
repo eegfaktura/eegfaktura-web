@@ -110,7 +110,8 @@ const MeterCardComponent: FC<MeterCardComponentProps> = ({participant, meter, hi
       <IonGrid fixed={true} style={{paddingTop: "12px"}}>
         <IonRow style={meterColorStyle()}>
           <IonCol size={"1"}>
-            <IonIcon icon={isMeterRejected() || isMeterInactive() ? eegExclamation : isGenerator(meter) ? eegSolar : eegPlug} size="small"></IonIcon>
+            <IonIcon icon={isMeterRejected() || isMeterInactive() ? eegExclamation : isGenerator(meter) ? eegSolar : eegPlug} size="small"
+                     style={isMeterInactive() ? {color: "#dc1e1e"} : undefined}></IonIcon>
           </IonCol>
           <IonCol size={isMeterPending() ? "11" : "7"}>
             {/*<IonLabel style={{textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap"}}>{participant.participant.meters[0].meteringPoint}</IonLabel>*/}
