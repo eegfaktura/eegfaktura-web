@@ -83,9 +83,11 @@ import DatePickerCoreElement from "../core/elements/DatePickerCore.element";
 import {filterActiveMeter, filterActiveParticipantAndMeter,} from "../../util/FilterHelper.unit";
 import moment from "moment";
 import {Api} from "../../service";
-import {buildAllocationMapFromSelected, filterSearchQuery} from "./ParticipantPane.functions";
+import {billTotal, buildAllocationMapFromSelected, filterSearchQuery} from "./ParticipantPane.functions";
 import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
 import {withOpenProblems} from "./ParticipantPane.functions";
+import {billingTotals, BillingTotals, salesTaxation} from "./BillingTotals.functions";
+import BillingTotalsTable, {euro, MarginLines} from "./BillingTotalsTable.component";
 import FilterSegmentComponent from "./FilterSegment.component";
 import {VariableSizeList} from "react-window";
 
@@ -207,6 +209,30 @@ const ParticipantPaneComponent: FC = () => {
       dispatcher(resetParticipantAmounts());
     }
   }, [billingRun, showAmount]);
+
+  // Totals per document type (platform#169). The preview is a billing run too, so this works before billing.
+  // Reloaded with the member amounts as well: a failed preview keeps the billing run but replaces its documents.
+  // The totals keep the run they belong to: while the same run reloads, the old totals stay (no flicker); totals of
+  // another run (other period) are not shown.
+  // After a failed preview billing leaves partial documents: no totals for that run until a preview succeeds.
+  const [runTotals, setRunTotals] = useState<{ runId: string, totals: BillingTotals } | undefined>(undefined);
+  const [failedRunId, setFailedRunId] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    if (!showAmount || !billingRun || !billingRun.id || billingRun.id === failedRunId) {
+      setRunTotals(undefined);
+      return;
+    }
+    const runId = billingRun.id;
+    let current = true;
+    Api.eegService.fetchBillingDocuments(tenant, runId)
+      .then(documents => current && setRunTotals({runId, totals: billingTotals(documents)}))
+      .catch(() => {
+        if (!current) return;
+        setRunTotals(undefined);
+        errorToast("Die Summen der Abrechnung konnten nicht geladen werden.");
+      });
+    return () => { current = false };
+  }, [tenant, billingRun?.id, billingInfo, showAmount, failedRunId]);
 
   useEffect(() => {
     if (checkedParticipant) {
@@ -392,17 +418,10 @@ const ParticipantPaneComponent: FC = () => {
 
   const billingSum = () => {
     if (billingInfo) {
-      // const sum = billingInfo.reduce((i, s) => i + s.amount + s.meteringPoints.reduce((mi, ms) => mi + ms.amount, 0), 0)
-      const sum = billingInfo.reduce(
-        (i, s) =>
-          i +
-          s.participantFee +
-          s.meteringPoints.reduce((mi, ms) => mi + ms.amount, 0),
-        0
-      );
-      return (Math.round(sum * 100) / 100).toFixed(2);
+      const sum = billingInfo.reduce((i, s) => i + billTotal(s), 0);
+      return euro(Math.round(sum * 100) / 100);
     }
-    return 0;
+    return euro(0);
   };
 
   const dismiss = (range: [Date | null, Date | null]) => {
@@ -511,7 +530,11 @@ const ParticipantPaneComponent: FC = () => {
   };
 
   const [previewValid, setPreviewValid] = useState(true);
-  const onDoBilling = (preview: boolean, documentDate: Date) => {
+  // Only the totals of the shown run; none while an asynchronous run is running or after it failed (env/billing:
+  // the run reports FAILED instead of an error text, its documents can be partial).
+  const totals = runTotals && billingRun && runTotals.runId === billingRun.id
+    && billingRun.runStatus !== "RUNNING" && billingRun.runStatus !== "FAILED" ? runTotals.totals : undefined;
+  const onDoBilling =(preview: boolean, documentDate: Date) => {
     if (activePeriod) {
       documentDate?.setHours(12);
       const invoiceRequest = {
@@ -535,6 +558,7 @@ const ParticipantPaneComponent: FC = () => {
       dispatcher(fetchEnergyBills({tenant, invoiceRequest})).then((returnValue: any) => {
         if (fetchEnergyBills.rejected.match(returnValue)) {
           setPreviewValid(false);
+          // env/billing: a failed asynchronous run shows as runStatus FAILED, the totals hide then (see `totals`)
           presentAlert({
             subHeader: "Fehler beim Abrechnungslauf",
             message:
@@ -544,6 +568,7 @@ const ParticipantPaneComponent: FC = () => {
           });
         } else {
           setPreviewValid(true);
+          setFailedRunId(undefined);
         }
         // Run-Status der Periode aktualisieren (NEW/DONE/FAILED sichtbar machen)
         dispatcher(
@@ -882,15 +907,21 @@ const ParticipantPaneComponent: FC = () => {
         <div className={"pane-footer"}>
           {showAmount && (
             <div>
+              {totals && <BillingTotalsTable totals={totals}/>}
               <IonRow>
                 <IonCol>
                   <IonItem lines="none">
-                    <IonLabel slot="end">
-                      Gesamte EEG: {billingSum()} €
+                    <IonLabel slot="end" style={{textAlign: "right"}}>
+                      Saldo Zahlungen (brutto): {billingSum()} €
+                      <div style={{fontSize: "11px", color: "var(--ion-color-medium, #92949c)"}}>
+                        Rechnungen minus Gutschriften{totals && totals.infos.count > 0 ? " und Info-Belege" : ""}, die zu
+                        erwartende Kontobewegung aus dieser Abrechnung
+                      </div>
                     </IonLabel>
                   </IonItem>
                 </IonCol>
               </IonRow>
+              {totals && <MarginLines totals={totals} taxation={salesTaxation(billingInfo, allParticipants, rates)}/>}
               <IonRow>
                 <IonCol size="12">
                   {billingRunIsFetching ||

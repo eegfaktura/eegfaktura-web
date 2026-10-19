@@ -8,6 +8,7 @@ import RateCardComponent from "../RateCard.component";
 import MeterCardComponent from "./MeterCard.component";
 import {IonGrid, IonIcon, IonItem, IonLabel, IonRow} from "@ionic/react";
 import {eegSumSign} from "../../eegIcons";
+import {billTotal} from "./ParticipantPane.functions";
 
 
 type RateModelGroup = Record<string, Record<string, number>>
@@ -48,9 +49,11 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
 
   const createParticipantFeeCard = (tariff_id: string, fee: number) => {
     const tariff = rates.find((r) => r.id === tariff_id)
+    // Tariff not (or no longer) loaded: the fee still shows in the summary below.
+    if (!tariff) return <></>
     return (
       <div key={tariff_id}>
-        <RateCardComponent rate={tariff!}/>
+        <RateCardComponent rate={tariff}/>
         <IonItem lines="none" fill={undefined} style={{"--background": "transparent"}}>
           <IonLabel slot="end">{fee.toFixed(2)} €</IonLabel>
         </IonItem>
@@ -94,10 +97,22 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
   }
 
   const getParticipantLine = (fee: number) => {
-    if (fee > 0) {
+    if (fee !== 0) {
       return (
         <div style={{display: "flex", justifyContent: "space-between", width: "100%"}}>
           <div style={{padding: "5px"}}>Mitgliedsbeitrag:</div>
+          <div style={{padding: "5px"}}>{fee.toFixed(2)} €</div>
+        </div>
+      )
+    }
+    return (<></>)
+  }
+
+  const getMeteringPointFeeLine = (fee: number) => {
+    if (fee !== 0) {
+      return (
+        <div style={{display: "flex", justifyContent: "space-between", width: "100%"}}>
+          <div style={{padding: "5px"}}>Zählpunktgebühren:</div>
           <div style={{padding: "5px"}}>{fee.toFixed(2)} €</div>
         </div>
       )
@@ -109,7 +124,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
     if (credit > 0) {
       return (
         <div style={{display: "flex", justifyContent: "space-between", width: "100%"}}>
-          <div style={{padding: "5px"}}>Energielieferung netto:</div>
+          <div style={{padding: "5px"}}>Energielieferung brutto:</div>
           <div style={{padding: "5px"}}>{credit.toFixed(2)} €</div>
         </div>
       )
@@ -120,7 +135,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
     if (debit < 0) {
       return (
         <div style={{display: "flex", justifyContent: "space-between", width: "100%"}}>
-          <div style={{padding: "5px"}}>Energiebezug netto:</div>
+          <div style={{padding: "5px"}}>Energiebezug brutto:</div>
           <div style={{padding: "5px"}}>{debit.toFixed(2)} €</div>
         </div>
       )
@@ -136,6 +151,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
       return (
         <div style={{width: "100%"}}>
           {getParticipantLine(memberBill.participantFee)}
+          {getMeteringPointFeeLine(memberBill.meteringPointFeeSum ?? 0)}
           {getCreditLine(credit)}
           {getDebitLine(debit)}
         </div>
@@ -143,7 +159,8 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
     }
   }
 
-  if (!rateGroups || Object.keys(rateGroups).length === 0) {
+  // A member with fees but without energy amounts (no kWh in the period) still gets the details.
+  if (!memberBill || (Object.keys(rateGroups).length === 0 && !memberBill.participantFee && !memberBill.meteringPointFeeSum)) {
     return (
       <></>
     )
@@ -175,7 +192,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
                   {memberBill ? <>
                     <IonItem lines="none" mode="md" style={{"--min-height": "32px", fontSize: "14px"}}>
                       <IonIcon style={{marginTop: "5px", marginBottom: "5px"}} icon={eegSumSign} slot="start"></IonIcon>
-                      <span>{memberBill.meteringPoints.reduce((s, m) => s + m.amount, memberBill.participantFee).toFixed(2)}</span> €
+                      <span>{billTotal(memberBill).toFixed(2)}</span> €
                     </IonItem></> : <></>}
                 </div>
               </IonRow>

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import {AccountInfo, Address, Contact, Optionals} from "../../../models/eeg.model";
-import {Metering} from "../../../models/meteringpoint.model";
+import {Metering, ParticipantBillType} from "../../../models/meteringpoint.model";
 import {EegParticipant} from "../../../models/members.model";
 
 // buildAllocationMapFromSelected reads the per-participant energy report from the
@@ -31,7 +31,7 @@ vi.mock("../../../store/rate", () => ({
   }),
 }));
 
-import {buildAllocationMapFromSelected, uploadActivationDocuments, withOpenProblems} from "../../../components/participantPane/ParticipantPane.functions";
+import {billTotal, buildAllocationMapFromSelected, uploadActivationDocuments, withOpenProblems} from "../../../components/participantPane/ParticipantPane.functions";
 
 describe("<ParticipantPane/> Functions", () => {
   it("allocate invoice member and metering points", async () => {
@@ -147,5 +147,19 @@ describe("withOpenProblems (member list)", () => {
   it("does not add a metering point twice", () => {
     const all = [{id: "1", meters: [m("AT2", "INIT", "INVALID")]} as EegParticipant]
     expect(withOpenProblems(all, all)).toEqual(all)
+  })
+})
+
+describe("billTotal", () => {
+  it("adds membership fee, metering point fees and metering points, credit notes negative", () => {
+    const bill = {
+      id: "1", amount: 0, participantFee: 30, meteringPointFeeSum: 2.4,
+      meteringPoints: [{id: "AT1", amount: 12.5}, {id: "AT2", amount: -8.25}],
+    } as ParticipantBillType
+    expect(billTotal(bill)).toBeCloseTo(36.65, 10)
+  })
+
+  it("is the fees alone without metering point amounts", () => {
+    expect(billTotal({id: "1", amount: 0, participantFee: 0, meteringPointFeeSum: 1.2, meteringPoints: []})).toBe(1.2)
   })
 })
