@@ -8,6 +8,29 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.4.0] – 2026-10-19
+
+### Added
+- **SEPA export: separate date for the credit transfers** (platform#167). The SEPA dialog has two dates: „Einzug am“
+  for the direct debits (`ReqdColltnDt`) and „Überweisung am“ for the credit transfers (`ReqdExctnDt`), so the
+  community's account is covered when the credit notes are paid. The transfer date starts 5 days after the debit date
+  (a weekend moves to the Monday) and follows it until it is changed by hand; a transfer before the debit shows a
+  warning. The EndToEndId of a credit transfer carries the transfer date. Changing a date discards files generated
+  before. Before, one due date applied to all files.
+
+### Fixed
+- **A rejected metering point no longer disappears from the member list** (feedback Manuel Wurzinger, 19.10.2026).
+  A metering point that had left and whose new registration was rejected kept its old inactive date and dropped
+  out of the list for later periods; the filter „Abgelehnt“ did not show it either. The member list now always shows
+  metering points with a rejected, invalid or revoked registration or a registration in progress, „Abgelehnt“
+  shows the rejected, invalid and revoked ones, until the community acts (register again or archive). Only the list changes: billing, energy
+  reports, export and dashboard counts still use the metering points of the period. Metering points that simply left
+  still drop out after their period.
+- Metering point card (member list, invoice details, registration): the exclamation mark of a metering point that
+  has left is red, like that of a rejected one (from the day after its last day of participation); an invalid
+  registration also shows the exclamation mark. In the member list, metering points with an open problem are
+  sorted with the members that need attention.
+
 ## [1.3.1] – 2026-10-18
 
 ### Changed

@@ -1,4 +1,4 @@
-import React, {FC, useContext, useEffect, useRef, useState} from "react";
+import React, {FC, useContext, useEffect, useMemo, useRef, useState} from "react";
 
 import {EegParticipant} from "../../models/members.model";
 import {
@@ -85,6 +85,7 @@ import moment from "moment";
 import {Api} from "../../service";
 import {buildAllocationMapFromSelected, filterSearchQuery} from "./ParticipantPane.functions";
 import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
+import {withOpenProblems} from "./ParticipantPane.functions";
 import FilterSegmentComponent from "./FilterSegment.component";
 import {VariableSizeList} from "react-window";
 
@@ -252,7 +253,9 @@ const ParticipantPaneComponent: FC = () => {
     }
   }, [billingRunStatus, billingRun])
 
-  const sortedParticipants1 = sortParticipants({participants, hideProducers, hideConsumers})
+  // list only: metering points with an open problem stay visible in every period, sorted with them
+  const listParticipants = useMemo(() => withOpenProblems(participants, allParticipants), [participants, allParticipants])
+  const sortedParticipants1 = sortParticipants({participants: listParticipants, hideProducers, hideConsumers})
 
   const viewEntities = filterParticipant({
     selectedFilter,
@@ -908,7 +911,7 @@ const ParticipantPaneComponent: FC = () => {
                           (billingRun.errorSummary || "unbekannter Fehler")}
                       </div>
                       <DatePickerCoreElement
-                        initialValue={documentDatePreview}
+                        initialValue={documentDatePreview.current}
                         name={"documentDatePreview"}
                         label="Rechnungsdatum"
                         placeholder={"Datum"}
@@ -917,7 +920,7 @@ const ParticipantPaneComponent: FC = () => {
                       <IonButton
                         expand="block"
                         disabled={activePeriod === undefined}
-                        onClick={() => onDoBilling(true, documentDatePreview)}
+                        onClick={() => onDoBilling(true, documentDatePreview.current)}
                       >{`VORSCHAU ERSTELLEN`}</IonButton>
                     </>
                   )}

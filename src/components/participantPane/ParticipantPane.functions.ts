@@ -4,6 +4,7 @@ import {meteringEnergyGroup1} from "../../store/energy";
 import {ratesMapSelector} from "../../store/rate";
 import {store} from "../../store";
 import {zvtTimeWindows} from "../../util/Helper.util";
+import {hasOpenProblem} from "../../util/FilterHelper.unit";
 
 export const buildAllocationMapFromSelected = (participants: EegParticipant[], checkedParticipant: Record<string, boolean>): MeteringEnergyGroupType[] => {
   const participantReport = meteringEnergyGroup1(store.getState())
@@ -32,6 +33,22 @@ export const buildAllocationMapFromSelected = (participants: EegParticipant[], c
       })//.filter(e => e.allocationKWh > 0)
     })
 };
+
+const inRegistration = (m: Metering) =>
+  m.processState === 'NEW' || m.processState === 'INIT' || m.processState === 'PENDING' || m.processState === 'APPROVED'
+
+/**
+ * List view only: adds the metering points with an open problem (rejected, invalid, revoked registration) or a
+ * registration in progress that the period filter dropped, e.g. a re-registration after leaving (it keeps the old
+ * inactive date until the grid operator completes it). Billing, reports and counts keep
+ * using the period-filtered participants, so these metering points are never billed outside their period.
+ */
+export const withOpenProblems = (periodParticipants: EegParticipant[], allParticipants: EegParticipant[]) =>
+  periodParticipants.map(p => {
+    const extra = (allParticipants.find(a => a.id === p.id)?.meters ?? [])
+      .filter(m => (hasOpenProblem(m) || inRegistration(m)) && !p.meters.some(x => x.meteringPoint === m.meteringPoint))
+    return extra.length > 0 ? {...p, meters: [...p.meters, ...extra]} : p
+  })
 
 export const filterMeters = (p: EegParticipant[], hideProducers: boolean, hideConsumers: boolean, showEmptyMembers: boolean = true) => {
   return p
