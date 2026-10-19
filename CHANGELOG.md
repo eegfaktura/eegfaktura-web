@@ -12,13 +12,13 @@ this changelog highlights the changes relevant for overview and operations.
 - **Billing: totals per document type** (platform#169). Above „Gesamte EEG (brutto)“ the billing dialog shows invoices
   and credit notes with count, net, VAT and gross, read from the run's documents (billing
   `GET /billingRuns/{id}/billingDocuments`, no change in billing), in the preview and after billing. Below
-  „Gesamte EEG (brutto)“ a line shows the VAT the community owes for reverse charge, if it applies: 20 % (fixed, the
-  standard rate for electricity) on the credit note lines without VAT to producers with a VAT ID. billing does not
-  compute this VAT; the documents have only sums per VAT rate, so for a credit note that mixes lines with and without
-  VAT the net without VAT is taken back from the VAT sums and can be a few cents off. A small business with a VAT ID
-  owes no reverse charge, hence „sofern anwendbar“. If such credit notes pay out VAT, a warning names the VAT
-  and the producers (up to 10): with reverse charge the community owes the VAT, so the producer tariff must be
-  without VAT. The warning does not block. Info documents, if a run still has any, get their own row.
+  „Gesamte EEG (brutto)“ a line shows a computed value for reverse charge: 20 % (fixed, the standard rate for
+  electricity) on the credit note lines without VAT to producers with a VAT ID. billing does not compute this VAT;
+  the documents have only sums per VAT rate, so for a credit note that mixes lines with and without VAT the net
+  without VAT is taken back from the VAT sums and can be a few cents off. If such credit notes show VAT, a note
+  names the VAT and the producers (up to 10). Both texts describe the documents only and refer to the community's
+  tax adviser, with „Keine steuerliche Beratung“: whether reverse charge applies is not for the software to say.
+  The note does not block. Info documents, if a run still has any, get their own row.
   „Gesamte EEG (brutto)“ uses the same number format as the table (de-AT).
 
 ### Fixed

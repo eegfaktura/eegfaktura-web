@@ -37,12 +37,14 @@ const BillingTotalsTable: FC<{ totals: BillingTotals }> = ({totals}) => (
   </div>
 )
 
-// Shown below „Gesamte EEG (brutto)“: the VAT the community owes for credit note lines without VAT to producers with
-// a VAT ID, if reverse charge applies. billing does not compute it; an estimate at the standard rate.
+// Shown below „Gesamte EEG (brutto)“: the VAT for credit note lines without VAT to producers with a VAT ID, if
+// reverse charge applies. billing does not compute it; an estimate at the standard rate. Worded as a computed value,
+// not as tax advice (decision 19.10.2026).
 export const ReverseChargeLine: FC<{ totals: BillingTotals }> = ({totals}) => (
   <div style={{padding: "0 16px 8px", fontSize: "12px", textAlign: "right"}}>
-    Reverse Charge ({REVERSE_CHARGE_VAT_PERCENT} % auf {euro(totals.reverseCharge.net)} € netto, sofern anwendbar):
-    {" "}<strong>{euro(totals.reverseCharge.vat)} €</strong> USt, von der EEG abzuführen
+    Rechnerischer Wert bei Reverse Charge ({REVERSE_CHARGE_VAT_PERCENT} % auf {euro(totals.reverseCharge.net)} € netto
+    aus Gutschriften ohne USt an Erzeuger mit UID): <strong>{euro(totals.reverseCharge.vat)} €</strong>. Ob Reverse
+    Charge anzuwenden ist, bitte mit der Steuerberatung klären.
   </div>
 )
 
@@ -56,9 +58,10 @@ const PaidOutVatWarning: FC<{ vat: number, recipients: string[] }> = ({vat, reci
       margin: "6px 0 0", padding: "6px", borderLeft: "4px solid var(--ion-color-warning, #ffc409)",
       background: "rgba(255, 196, 9, 0.15)"
     }}>
-      <strong>Achtung:</strong> {euro(vat)} € USt werden an Erzeuger mit UID ausgezahlt
-      ({recipients.length}): {shown}{more > 0 ? ` und ${more} weitere` : ""}. Gilt für sie Reverse Charge, schuldet die
-      EEG die USt und zahlt sie nicht aus: Dann den Erzeugertarif ohne USt anlegen und die Vorschau wiederholen.
+      {/* Describes the documents only, no tax advice (decision 19.10.2026). */}
+      <strong>Hinweis:</strong> {euro(vat)} € USt auf Gutschriften an Erzeuger mit UID
+      ({shown}{more > 0 ? ` und ${more} weitere` : ""}). Bitte mit eurer Steuerberatung prüfen, ob Reverse Charge
+      anzuwenden ist. Keine steuerliche Beratung.
     </div>
   )
 }
