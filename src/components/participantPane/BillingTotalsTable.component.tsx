@@ -1,7 +1,7 @@
 import React, {FC} from "react";
 import {AmountSum, BillingTotals} from "./BillingTotals.functions";
 
-const euro = (v: number) => v.toLocaleString("de-AT", {minimumFractionDigits: 2, maximumFractionDigits: 2})
+export const euro = (v: number) => v.toLocaleString("de-AT", {minimumFractionDigits: 2, maximumFractionDigits: 2})
 
 const cell: React.CSSProperties = {padding: "2px 6px", textAlign: "right", whiteSpace: "nowrap"}
 
@@ -29,12 +29,14 @@ const BillingTotalsTable: FC<{ totals: BillingTotals }> = ({totals}) => (
       <tbody>
       <Row label="Rechnungen" sum={totals.invoices}/>
       <Row label="Gutschriften" sum={totals.creditNotes}/>
+      {totals.infos.count > 0 && <Row label="Info-Belege" sum={totals.infos}/>}
       </tbody>
     </table>
-    {totals.reverseChargeNet > 0 && (
+    {totals.vatIdCreditNotes.count > 0 && (
       <div style={{padding: "4px 6px 0"}}>
-        Davon Gutschriften ohne USt an Erzeuger mit UID: {euro(totals.reverseChargeNet)} € netto. Die USt dafür
-        führt ggf. die EEG ab (Reverse Charge).
+        Davon an Erzeuger mit UID ({totals.vatIdCreditNotes.count}): {euro(totals.vatIdCreditNotes.net)} € netto,
+        {" "}{euro(totals.vatIdCreditNotes.vat)} € USt. Wo keine USt ausgewiesen ist, führt sie ggf. die EEG ab
+        (Reverse Charge).
       </div>
     )}
   </div>

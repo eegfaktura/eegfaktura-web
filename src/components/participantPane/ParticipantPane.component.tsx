@@ -86,7 +86,7 @@ import {billTotal, buildAllocationMapFromSelected, filterSearchQuery} from "./Pa
 import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
 import {withOpenProblems} from "./ParticipantPane.functions";
 import {billingTotals, BillingTotals} from "./BillingTotals.functions";
-import BillingTotalsTable from "./BillingTotalsTable.component";
+import BillingTotalsTable, {euro} from "./BillingTotalsTable.component";
 import FilterSegmentComponent from "./FilterSegment.component";
 import {VariableSizeList} from "react-window";
 
@@ -210,6 +210,7 @@ const ParticipantPaneComponent: FC = () => {
   }, [billingRun, showAmount]);
 
   // Totals per document type (platform#169). The preview is a billing run too, so this works before billing.
+  // Reloaded with the member amounts as well: a failed preview keeps the billing run but replaces its documents.
   const [totals, setTotals] = useState<BillingTotals | undefined>(undefined);
   useEffect(() => {
     setTotals(undefined);
@@ -217,9 +218,9 @@ const ParticipantPaneComponent: FC = () => {
     let current = true;
     Api.eegService.fetchBillingDocuments(tenant, billingRun.id)
       .then(documents => current && setTotals(billingTotals(documents)))
-      .catch(() => current && setTotals(undefined));
+      .catch(() => current && errorToast("Die Summen der Abrechnung konnten nicht geladen werden."));
     return () => { current = false };
-  }, [billingRun, showAmount]);
+  }, [billingRun, billingInfo, showAmount]);
 
   useEffect(() => {
     if (checkedParticipant) {
@@ -378,9 +379,9 @@ const ParticipantPaneComponent: FC = () => {
   const billingSum = () => {
     if (billingInfo) {
       const sum = billingInfo.reduce((i, s) => i + billTotal(s), 0);
-      return (Math.round(sum * 100) / 100).toFixed(2);
+      return euro(Math.round(sum * 100) / 100);
     }
-    return 0;
+    return euro(0);
   };
 
   const dismiss = (range: [Date | null, Date | null]) => {

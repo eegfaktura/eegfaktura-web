@@ -158,7 +158,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
   }
 
   // A member with fees but without energy amounts (no kWh in the period) still gets the details.
-  if (!memberBill || (Object.keys(rateGroups).length === 0 && !participantRate && !memberBill.meteringPointFeeSum)) {
+  if (!memberBill || (Object.keys(rateGroups).length === 0 && !memberBill.participantFee && !memberBill.meteringPointFeeSum)) {
     return (
       <></>
     )
