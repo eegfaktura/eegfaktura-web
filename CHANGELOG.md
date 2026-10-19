@@ -20,8 +20,9 @@ this changelog highlights the changes relevant for overview and operations.
     for electricity) on the credit note lines without VAT to producers with a VAT ID; billing does not compute it, and
     for a credit note that mixes lines with and without VAT the net without VAT is taken back from the VAT sums and
     can be a few cents off. Info documents, if a run still has any, get their own row and count as paid out.
-  - Only the margin that fits is shown, read from the consumer tariffs of the metering points billed in the run:
-    all with VAT → standard taxation, all without → small business scheme. Mixed tariffs show both lines and
+  - Only the margin that fits is shown, read from today's consumer tariffs of the metering points billed in the run
+    (per member): all with VAT (rate above 0) → standard taxation, all without → small business scheme. For an older
+    run whose tariffs changed since, the choice follows today's tariffs. Mixed tariffs show both lines and
     „Verbrauchertarife teils mit, teils ohne USt. Bitte prüfen.“; without a known consumer tariff both lines show.
     The membership fee does not count, it can be without VAT under standard taxation as well.
   - If credit notes to producers with a VAT ID show VAT, a note names the VAT and the producers (up to 10).

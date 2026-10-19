@@ -529,7 +529,12 @@ const ParticipantPaneComponent: FC = () => {
           //Abrechnung fehlgeschlagen
         ) {
           setPreviewValid(false);
-          setFailedRunId(returnValue.payload.billing.billingRunId ?? billingRun?.id);
+          // Partial documents only when billing failed after replacing them: not for a closed run or a run it
+          // did not reach (no billingRunId).
+          const failedRun = returnValue.payload?.billing?.billingRunId;
+          if (failedRun && !returnValue.payload.billing.abstractText.includes("bereits abgeschlossen")) {
+            setFailedRunId(failedRun);
+          }
           presentAlert({
             subHeader: "Fehler bei der Vorschauerstellung",
             message:

@@ -96,13 +96,14 @@ describe("billingTotals", () => {
 })
 
 describe("salesTaxation", () => {
-  const tariff = (id: string, type: "VZP" | "EZP" | "EEG", useVat: boolean) => ({id, type, useVat} as EegTariff)
+  const tariff = (id: string, type: "VZP" | "EZP" | "EEG", useVat: boolean, vatInPercent = useVat ? "20" : "0") =>
+    ({id, type, useVat, vatInPercent} as EegTariff)
   const rates = {
-    vat: tariff("vat", "VZP", true), novat: tariff("novat", "VZP", false),
+    vat: tariff("vat", "VZP", true), novat: tariff("novat", "VZP", false), vat0: tariff("vat0", "VZP", true, "0"),
     prod: tariff("prod", "EZP", false), fee: tariff("fee", "EEG", false),
   }
-  const member = (meters: [string, "CONSUMPTION" | "GENERATION", string][]) =>
-    ({meters: meters.map(([meteringPoint, direction, tariff_id]) => ({meteringPoint, direction, tariff_id}))} as unknown as EegParticipant)
+  const member = (meters: [string, "CONSUMPTION" | "GENERATION", string][], id = "x") =>
+    ({id, meters: meters.map(([meteringPoint, direction, tariff_id]) => ({meteringPoint, direction, tariff_id}))} as unknown as EegParticipant)
   const bill = (...ids: string[]) => ({id: "x", amount: 0, participantFee: 0, meteringPoints: ids.map(id => ({id, amount: 1}))})
 
   it("is standard taxation when the billed consumer tariffs have VAT, producers and fees do not count", () => {
@@ -118,6 +119,15 @@ describe("salesTaxation", () => {
     const p = [member([["AT1", "CONSUMPTION", "vat"], ["AT3", "CONSUMPTION", "novat"]])]
     expect(salesTaxation([bill("AT1", "AT3")], p, rates)).toBe("MIXED")
     expect(salesTaxation([bill("AT1")], p, rates)).toBe("STANDARD")
+  })
+
+  it("matches member and metering point: the old record of a moved metering point does not count", () => {
+    const p = [member([["AT1", "CONSUMPTION", "vat"]], "x"), member([["AT1", "CONSUMPTION", "novat"]], "old")]
+    expect(salesTaxation([bill("AT1")], p, rates)).toBe("STANDARD")
+  })
+
+  it("counts VAT on with a rate of 0 as without VAT, like billing", () => {
+    expect(salesTaxation([bill("AT1")], [member([["AT1", "CONSUMPTION", "vat0"]])], rates)).toBe("SMALL_BUSINESS")
   })
 
   it("is unknown without a known consumer tariff", () => {

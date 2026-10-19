@@ -2,20 +2,23 @@ import {BillingDocumentAmounts, ParticipantBillType} from "../../models/metering
 import {EegParticipant} from "../../models/members.model";
 import {EegTariff} from "../../models/eeg.model";
 
-// How the community taxes its sales, read from the consumer tariffs of the metering points billed in the run
+// How the community taxes its sales, read from the current consumer tariffs of the metering points billed in the run
 // (decision 19.10.2026): selling electricity with VAT means standard taxation, without VAT the small business scheme.
-// The membership fee does not count (it can be without VAT under standard taxation as well).
+// The membership fee does not count (it can be without VAT under standard taxation as well). The tariffs are today's:
+// for an older run whose tariffs changed since, the result follows the change.
 // MIXED: tariffs with and without VAT; UNKNOWN: no consumer tariff found (e.g. tariffs not loaded).
 export type SalesTaxation = "STANDARD" | "SMALL_BUSINESS" | "MIXED" | "UNKNOWN"
 
 export const salesTaxation = (bills: ParticipantBillType[], participants: EegParticipant[],
                               rates: Record<string, EegTariff>): SalesTaxation => {
-  const billed = new Set(bills.flatMap(b => b.meteringPoints.map(m => m.id)))
+  // per member and metering point: a metering point that moved to another member is billed for one of them only
+  const billed = new Set(bills.flatMap(b => b.meteringPoints.map(m => `${b.id}@${m.id}`)))
   const withVat = new Set<boolean>()
   participants.forEach(p => p.meters.forEach(m => {
-    if (m.direction !== "CONSUMPTION" || !billed.has(m.meteringPoint)) return
+    if (m.direction !== "CONSUMPTION" || !billed.has(`${p.id}@${m.meteringPoint}`)) return
     const tariff = m.tariff_id ? rates[m.tariff_id] : undefined
-    if (tariff && tariff.type === "VZP") withVat.add(!!tariff.useVat)
+    // billing charges VAT only with a rate above 0
+    if (tariff && tariff.type === "VZP") withVat.add(!!tariff.useVat && Number(tariff.vatInPercent ?? 0) > 0)
   }))
   if (withVat.size === 2) return "MIXED"
   if (withVat.has(true)) return "STANDARD"
