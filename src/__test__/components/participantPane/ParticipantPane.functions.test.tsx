@@ -19,7 +19,7 @@ vi.mock("../../../store/energy", () => ({
   ],
 }));
 
-import {buildAllocationMapFromSelected, uploadActivationDocuments} from "../../../components/participantPane/ParticipantPane.functions";
+import {buildAllocationMapFromSelected, uploadActivationDocuments, withOpenProblems} from "../../../components/participantPane/ParticipantPane.functions";
 
 describe("<ParticipantPane/> Functions", () => {
   it("allocate invoice member and metering points", async () => {
@@ -85,4 +85,23 @@ describe("uploadActivationDocuments", () => {
     expect(warning).toContain("a.png: Invalid content_type");
     expect(warning).toContain("später im Bereich Verträge");
   });
+})
+
+describe("withOpenProblems (member list)", () => {
+  const m = (id: string, status: string, processState: string) => ({meteringPoint: id, status, processState} as Metering)
+  it("adds the rejected metering points the period filter dropped, nothing else", () => {
+    const all = [{id: "1", meters: [m("AT1", "ACTIVE", "ACTIVE"), m("AT2", "INACTIVE", "REJECTED"), m("AT3", "INACTIVE", "INACTIVE")]} as EegParticipant]
+    const period = [{id: "1", meters: [m("AT1", "ACTIVE", "ACTIVE")]} as EegParticipant]
+    expect(withOpenProblems(period, all)[0].meters.map(x => x.meteringPoint)).toEqual(["AT1", "AT2"])
+    // the period list itself (billing, reports) is unchanged
+    expect(period[0].meters).toHaveLength(1)
+  })
+  it("adds a re-registration in progress that keeps its old inactive date", () => {
+    const all = [{id: "1", meters: [m("AT4", "INACTIVE", "PENDING")]} as EegParticipant]
+    expect(withOpenProblems([{id: "1", meters: [] as Metering[]} as EegParticipant], all)[0].meters.map(x => x.meteringPoint)).toEqual(["AT4"])
+  })
+  it("does not add a metering point twice", () => {
+    const all = [{id: "1", meters: [m("AT2", "INIT", "INVALID")]} as EegParticipant]
+    expect(withOpenProblems(all, all)).toEqual(all)
+  })
 })

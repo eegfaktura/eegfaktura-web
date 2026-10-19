@@ -1,6 +1,7 @@
 import {useMemo} from "react";
 import {EegParticipant} from "../../models/members.model";
 import {filterMeters} from "./ParticipantPane.functions";
+import {hasOpenProblem} from "../../util/FilterHelper.unit";
 import moment from "moment";
 
 interface SortParticipantProps {
@@ -77,13 +78,9 @@ export const filterParticipant = (options: FilterParticipantProps) => {
           })
         return filterMeters(sorted2, hideProducers, hideConsumers, false)
       case 'rejected':
-        const sorted3 = participants.filter(p => p.meters.findIndex(meter => meter.status === "INIT") >= 0)
-          .map(p => {
-            return {
-              ...p, meters: p.meters.filter(m =>
-                m.processState === "REJECTED" || m.processState === "INVALID" || m.processState === "REVOKED")
-            }
-          })
+        // also meters that were inactive before (re-registration after leaving was rejected)
+        const sorted3 = participants.filter(p => p.meters.some(hasOpenProblem))
+          .map(p => ({...p, meters: p.meters.filter(hasOpenProblem)}))
         return filterMeters(sorted3, hideProducers, hideConsumers, false)
       default:
         return filterMeters(sortedParticipants, hideProducers, hideConsumers, hideMeter /*!(hideProducers || hideConsumers)*/)
