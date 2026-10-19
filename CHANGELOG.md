@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.5.0] – 2026-10-19
+
 ### Added
 - **Billing: totals per document type and margins** (platform#169). The billing dialog shows invoices and credit
   notes with count, net, VAT and gross, read from the run's documents (billing
