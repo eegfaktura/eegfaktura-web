@@ -13,8 +13,10 @@ this changelog highlights the changes relevant for overview and operations.
   and credit notes with count, net, VAT and gross, read from the run's documents (billing
   `GET /billingRuns/{id}/billingDocuments`, no change in billing), in the preview and after billing. Below, the
   credit notes to producers with a VAT ID with net and VAT and a note that where no VAT is shown the community may owe
-  it (reverse charge); billing does not compute that VAT. Info documents, if a run still has any, get their own row.
-  „Gesamte EEG (brutto)“ uses the same number format (1.234,56).
+  it (reverse charge); billing does not compute that VAT. If such credit notes pay out VAT, a warning names the VAT
+  and the producers (up to 10): with reverse charge the community owes the VAT, so the producer tariff must be
+  without VAT. The warning does not block. Info documents, if a run still has any, get their own row.
+  „Gesamte EEG (brutto)“ uses the same number format as the table (de-AT).
 
 ### Fixed
 - **Billing: the totals include the metering point fees.** „Gesamte EEG“ in the billing dialog, the amount per member

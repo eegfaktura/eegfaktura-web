@@ -213,14 +213,17 @@ const ParticipantPaneComponent: FC = () => {
   // Reloaded with the member amounts as well: a failed preview keeps the billing run but replaces its documents.
   const [totals, setTotals] = useState<BillingTotals | undefined>(undefined);
   useEffect(() => {
-    setTotals(undefined);
-    if (!showAmount || !billingRun || !billingRun.id) return;
+    // Keep the old totals until the new ones are there, so the table does not flicker.
+    if (!showAmount || !billingRun || !billingRun.id) {
+      setTotals(undefined);
+      return;
+    }
     let current = true;
     Api.eegService.fetchBillingDocuments(tenant, billingRun.id)
       .then(documents => current && setTotals(billingTotals(documents)))
       .catch(() => current && errorToast("Die Summen der Abrechnung konnten nicht geladen werden."));
     return () => { current = false };
-  }, [billingRun, billingInfo, showAmount]);
+  }, [billingRun?.id, billingInfo, showAmount]);
 
   useEffect(() => {
     if (checkedParticipant) {

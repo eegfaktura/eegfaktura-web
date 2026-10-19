@@ -1,7 +1,8 @@
 import React, {FC} from "react";
 import {AmountSum, BillingTotals} from "./BillingTotals.functions";
 
-export const euro = (v: number) => v.toLocaleString("de-AT", {minimumFractionDigits: 2, maximumFractionDigits: 2})
+// "+ 0" turns -0 into 0, so a total that rounds to zero does not show as "-0,00".
+export const euro = (v: number) => (v + 0).toLocaleString("de-AT", {minimumFractionDigits: 2, maximumFractionDigits: 2})
 
 const cell: React.CSSProperties = {padding: "2px 6px", textAlign: "right", whiteSpace: "nowrap"}
 
@@ -39,7 +40,25 @@ const BillingTotalsTable: FC<{ totals: BillingTotals }> = ({totals}) => (
         (Reverse Charge).
       </div>
     )}
+    {totals.vatIdCreditNotesWithVat.recipients.length > 0 && <PaidOutVatWarning {...totals.vatIdCreditNotesWithVat}/>}
   </div>
 )
+
+const SHOWN_RECIPIENTS = 10
+
+const PaidOutVatWarning: FC<{ vat: number, recipients: string[] }> = ({vat, recipients}) => {
+  const shown = recipients.slice(0, SHOWN_RECIPIENTS).join(", ")
+  const more = recipients.length - SHOWN_RECIPIENTS
+  return (
+    <div style={{
+      margin: "6px 0 0", padding: "6px", borderLeft: "4px solid var(--ion-color-warning, #ffc409)",
+      background: "rgba(255, 196, 9, 0.15)"
+    }}>
+      <strong>Achtung:</strong> {euro(vat)} € USt werden an Erzeuger mit UID ausgezahlt
+      ({recipients.length}): {shown}{more > 0 ? ` und ${more} weitere` : ""}. Gilt für sie Reverse Charge, schuldet die
+      EEG die USt und zahlt sie nicht aus: Dann den Erzeugertarif ohne USt anlegen und die Vorschau wiederholen.
+    </div>
+  )
+}
 
 export default BillingTotalsTable

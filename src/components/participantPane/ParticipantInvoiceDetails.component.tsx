@@ -49,9 +49,11 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
 
   const createParticipantFeeCard = (tariff_id: string, fee: number) => {
     const tariff = rates.find((r) => r.id === tariff_id)
+    // Tariff not (or no longer) loaded: the fee still shows in the summary below.
+    if (!tariff) return <></>
     return (
       <div key={tariff_id}>
-        <RateCardComponent rate={tariff!}/>
+        <RateCardComponent rate={tariff}/>
         <IonItem lines="none" fill={undefined} style={{"--background": "transparent"}}>
           <IonLabel slot="end">{fee.toFixed(2)} €</IonLabel>
         </IonItem>
@@ -107,7 +109,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
   }
 
   const getMeteringPointFeeLine = (fee: number) => {
-    if (fee > 0) {
+    if (fee !== 0) {
       return (
         <div style={{display: "flex", justifyContent: "space-between", width: "100%"}}>
           <div style={{padding: "5px"}}>Zählpunktgebühren:</div>

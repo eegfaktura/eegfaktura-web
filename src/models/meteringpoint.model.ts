@@ -104,6 +104,7 @@ export interface BillingDocumentAmounts {
   vat1SumInEuro: number | null;
   vat2SumInEuro: number | null;
   grossAmountInEuro: number | null;
+  recipientName: string | null;
 }
 
 export interface MeteringEnergyGroupType {
