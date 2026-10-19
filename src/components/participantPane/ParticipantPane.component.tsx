@@ -86,7 +86,7 @@ import {billTotal, buildAllocationMapFromSelected, filterSearchQuery} from "./Pa
 import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
 import {withOpenProblems} from "./ParticipantPane.functions";
 import {billingTotals, BillingTotals} from "./BillingTotals.functions";
-import BillingTotalsTable, {euro} from "./BillingTotalsTable.component";
+import BillingTotalsTable, {euro, ReverseChargeLine} from "./BillingTotalsTable.component";
 import FilterSegmentComponent from "./FilterSegment.component";
 import {VariableSizeList} from "react-window";
 
@@ -878,6 +878,7 @@ const ParticipantPaneComponent: FC = () => {
                   </IonItem>
                 </IonCol>
               </IonRow>
+              {totals && totals.reverseCharge.net > 0 && <ReverseChargeLine totals={totals}/>}
               <IonRow>
                 <IonCol size="12">
                   {billingRunIsFetching ||

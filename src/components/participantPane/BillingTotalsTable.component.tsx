@@ -1,5 +1,5 @@
 import React, {FC} from "react";
-import {AmountSum, BillingTotals} from "./BillingTotals.functions";
+import {AmountSum, BillingTotals, REVERSE_CHARGE_VAT_PERCENT} from "./BillingTotals.functions";
 
 // "+ 0" turns -0 into 0, so a total that rounds to zero does not show as "-0,00".
 export const euro = (v: number) => (v + 0).toLocaleString("de-AT", {minimumFractionDigits: 2, maximumFractionDigits: 2})
@@ -33,14 +33,16 @@ const BillingTotalsTable: FC<{ totals: BillingTotals }> = ({totals}) => (
       {totals.infos.count > 0 && <Row label="Info-Belege" sum={totals.infos}/>}
       </tbody>
     </table>
-    {totals.vatIdCreditNotes.count > 0 && (
-      <div style={{padding: "4px 6px 0"}}>
-        Davon an Erzeuger mit UID ({totals.vatIdCreditNotes.count}): {euro(totals.vatIdCreditNotes.net)} € netto,
-        {" "}{euro(totals.vatIdCreditNotes.vat)} € USt. Wo keine USt ausgewiesen ist, führt sie ggf. die EEG ab
-        (Reverse Charge).
-      </div>
-    )}
     {totals.vatIdCreditNotesWithVat.recipients.length > 0 && <PaidOutVatWarning {...totals.vatIdCreditNotesWithVat}/>}
+  </div>
+)
+
+// Shown below „Gesamte EEG (brutto)“: the VAT the community owes for credit note lines without VAT to producers with
+// a VAT ID, if reverse charge applies. billing does not compute it; an estimate at the standard rate.
+export const ReverseChargeLine: FC<{ totals: BillingTotals }> = ({totals}) => (
+  <div style={{padding: "0 16px 8px", fontSize: "12px", textAlign: "right"}}>
+    Reverse Charge ({REVERSE_CHARGE_VAT_PERCENT} % auf {euro(totals.reverseCharge.net)} € netto, sofern anwendbar):
+    {" "}<strong>{euro(totals.reverseCharge.vat)} €</strong> USt, von der EEG abzuführen
   </div>
 )
 

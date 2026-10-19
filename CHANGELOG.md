@@ -11,9 +11,12 @@ this changelog highlights the changes relevant for overview and operations.
 ### Added
 - **Billing: totals per document type** (platform#169). Above „Gesamte EEG (brutto)“ the billing dialog shows invoices
   and credit notes with count, net, VAT and gross, read from the run's documents (billing
-  `GET /billingRuns/{id}/billingDocuments`, no change in billing), in the preview and after billing. Below, the
-  credit notes to producers with a VAT ID with net and VAT and a note that where no VAT is shown the community may owe
-  it (reverse charge); billing does not compute that VAT. If such credit notes pay out VAT, a warning names the VAT
+  `GET /billingRuns/{id}/billingDocuments`, no change in billing), in the preview and after billing. Below
+  „Gesamte EEG (brutto)“ a line shows the VAT the community owes for reverse charge, if it applies: 20 % (fixed, the
+  standard rate for electricity) on the credit note lines without VAT to producers with a VAT ID. billing does not
+  compute this VAT; the documents have only sums per VAT rate, so for a credit note that mixes lines with and without
+  VAT the net without VAT is taken back from the VAT sums and can be a few cents off. A small business with a VAT ID
+  owes no reverse charge, hence „sofern anwendbar“. If such credit notes pay out VAT, a warning names the VAT
   and the producers (up to 10): with reverse charge the community owes the VAT, so the producer tariff must be
   without VAT. The warning does not block. Info documents, if a run still has any, get their own row.
   „Gesamte EEG (brutto)“ uses the same number format as the table (de-AT).

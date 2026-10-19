@@ -1,13 +1,19 @@
 import {describe, expect, it} from "vitest";
-import {billingTotals} from "../../../components/participantPane/BillingTotals.functions";
+import {billingTotals, netWithoutVat} from "../../../components/participantPane/BillingTotals.functions";
 import {BillingDocumentAmounts} from "../../../models/meteringpoint.model";
 
+// VAT 1 at 20 %, VAT 2 at 10 % when set.
 const doc = (billingDocumentType: BillingDocumentAmounts["billingDocumentType"], net: number, vat1: number, vat2 = 0,
              recipientName: string | null = "Muster"): BillingDocumentAmounts =>
-  ({billingDocumentType, netAmountInEuro: net, vat1SumInEuro: vat1, vat2SumInEuro: vat2, grossAmountInEuro: net + vat1 + vat2, recipientName})
+  ({
+    billingDocumentType, netAmountInEuro: net,
+    vat1Percent: vat1 ? 20 : null, vat1SumInEuro: vat1,
+    vat2Percent: vat2 ? 10 : null, vat2SumInEuro: vat2,
+    grossAmountInEuro: net + vat1 + vat2, recipientName,
+  })
 
 describe("billingTotals", () => {
-  it("sums invoices and credit notes separately, credit notes to producers with a VAT ID count in both", () => {
+  it("sums invoices and credit notes separately, credit notes to producers with a VAT ID are credit notes", () => {
     const t = billingTotals([
       doc("INVOICE", 10.1, 2.02),
       doc("INVOICE", 0.2, 0.04, 0.01),
@@ -16,17 +22,27 @@ describe("billingTotals", () => {
     ])
     expect(t.invoices).toEqual({count: 2, net: 10.3, vat: 2.07, gross: 12.37})
     expect(t.creditNotes).toEqual({count: 2, net: 8, vat: 0.6, gross: 8.6})
-    expect(t.vatIdCreditNotes).toEqual({count: 1, net: 3, vat: 0.6, gross: 3.6})
   })
 
   it("keeps info documents apart and treats missing amounts as 0", () => {
     const t = billingTotals([
       doc("INFO", 4, 0.8),
-      {billingDocumentType: "INVOICE", netAmountInEuro: null, vat1SumInEuro: null, vat2SumInEuro: null, grossAmountInEuro: 6, recipientName: null},
+      {billingDocumentType: "INVOICE", netAmountInEuro: null, vat1Percent: null, vat1SumInEuro: null,
+        vat2Percent: null, vat2SumInEuro: null, grossAmountInEuro: 6, recipientName: null},
     ])
     expect(t.infos).toEqual({count: 1, net: 4, vat: 0.8, gross: 4.8})
     expect(t.creditNotes.count).toBe(0)
     expect(t.invoices).toEqual({count: 1, net: 0, vat: 0, gross: 6})
+  })
+
+  it("estimates reverse charge VAT at 20 % on the lines without VAT of credit notes to producers with a VAT ID", () => {
+    const t = billingTotals([
+      doc("CREDIT_NOTE_RC", 100, 0),
+      doc("CREDIT_NOTE_RC", 150, 10),     // 50 net with VAT, 100 net without
+      doc("CREDIT_NOTE", 40, 0),          // no VAT ID: not reverse charge
+      doc("INVOICE", 30, 0),
+    ])
+    expect(t.reverseCharge).toEqual({net: 200, vat: 40})
   })
 
   it("lists producers with a VAT ID whose credit notes pay out VAT, once each and sorted", () => {
@@ -48,6 +64,26 @@ describe("billingTotals", () => {
 
   it("is all zero without documents", () => {
     const t = billingTotals([])
-    expect(t.invoices.gross + t.creditNotes.gross + t.infos.gross).toBe(0)
+    expect(t.invoices.gross + t.creditNotes.gross + t.infos.gross + t.reverseCharge.vat).toBe(0)
+  })
+})
+
+describe("netWithoutVat", () => {
+  it("is the whole net without VAT", () => {
+    expect(netWithoutVat(doc("CREDIT_NOTE_RC", 123.45, 0))).toBe(123.45)
+  })
+
+  it("takes back the net of the lines with VAT from both rates", () => {
+    // 50 at 20 % (VAT 10) and 30 at 10 % (VAT 3), 20 without VAT
+    expect(netWithoutVat(doc("CREDIT_NOTE_RC", 100, 10, 3))).toBe(20)
+  })
+
+  it("is 0 when every line has VAT, also with rounded VAT per line", () => {
+    // three lines of 0.33 net: VAT 0.07 each (rounded), so 0.21 VAT on 0.99 net
+    expect(netWithoutVat(doc("CREDIT_NOTE_RC", 0.99, 0.21))).toBe(0)
+  })
+
+  it("is 0 for a VAT sum without its rate", () => {
+    expect(netWithoutVat({...doc("CREDIT_NOTE_RC", 100, 10), vat1Percent: null})).toBe(0)
   })
 })

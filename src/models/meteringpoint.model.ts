@@ -101,7 +101,9 @@ export interface InvoiceDocumentResponse {
 export interface BillingDocumentAmounts {
   billingDocumentType: "INVOICE" | "CREDIT_NOTE" | "CREDIT_NOTE_RC" | "INFO";
   netAmountInEuro: number | null;
+  vat1Percent: number | null;
   vat1SumInEuro: number | null;
+  vat2Percent: number | null;
   vat2SumInEuro: number | null;
   grossAmountInEuro: number | null;
   recipientName: string | null;

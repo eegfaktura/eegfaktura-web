@@ -7,13 +7,16 @@ export interface AmountSum {
   gross: number
 }
 
+// VAT rate for the reverse charge estimate: the standard rate for electricity. billing has no rate for lines with 0 %.
+export const REVERSE_CHARGE_VAT_PERCENT = 20
+
 export interface BillingTotals {
   invoices: AmountSum
   // All credit notes, including those to producers with a VAT ID.
   creditNotes: AmountSum
-  // Credit notes to producers with a VAT ID (CREDIT_NOTE_RC). Whether reverse charge applies is a tax question:
-  // billing takes the VAT per line from the producer tariff, a document can mix lines with and without VAT.
-  vatIdCreditNotes: AmountSum
+  // Lines without VAT on credit notes to producers with a VAT ID (CREDIT_NOTE_RC): the community owes the VAT for
+  // them if reverse charge applies (not for a small business with a VAT ID). An estimate at 20 %.
+  reverseCharge: { net: number, vat: number }
   // Credit notes to producers with a VAT ID that pay out VAT: wrong if reverse charge applies (the community owes
   // the VAT then). The recipients, so the community can check their producer tariffs.
   vatIdCreditNotesWithVat: { vat: number, recipients: string[] }
@@ -24,20 +27,36 @@ export interface BillingTotals {
 
 const cents = (v: number) => Math.round(v * 100) / 100 + 0
 const empty = (): AmountSum => ({count: 0, net: 0, vat: 0, gross: 0})
+const vatOf = (d: BillingDocumentAmounts) => Number(d.vat1SumInEuro ?? 0) + Number(d.vat2SumInEuro ?? 0)
 const add = (sum: AmountSum, d: BillingDocumentAmounts) => {
   sum.count += 1
   sum.net += Number(d.netAmountInEuro ?? 0)
-  sum.vat += Number(d.vat1SumInEuro ?? 0) + Number(d.vat2SumInEuro ?? 0)
+  sum.vat += vatOf(d)
   sum.gross += Number(d.grossAmountInEuro ?? 0)
 }
 const round = (s: AmountSum): AmountSum => ({count: s.count, net: cents(s.net), vat: cents(s.vat), gross: cents(s.gross)})
+
+// Net of the lines without VAT. The document has only sums per VAT rate, so the net of the lines with VAT is taken
+// back from VAT sum and rate: exact for a document without VAT, a few cents off for a mixed one (VAT is rounded per
+// line). A VAT sum without its rate cannot be taken back; such a document counts as having no lines without VAT.
+export const netWithoutVat = (d: BillingDocumentAmounts): number => {
+  let net = Number(d.netAmountInEuro ?? 0)
+  for (const [sum, percent] of [[d.vat1SumInEuro, d.vat1Percent], [d.vat2SumInEuro, d.vat2Percent]]) {
+    const vat = Number(sum ?? 0)
+    if (vat === 0) continue
+    const rate = Number(percent ?? 0)
+    if (rate <= 0) return 0
+    net -= vat * 100 / rate
+  }
+  return Math.max(0, cents(net))
+}
 
 // Totals of a billing run (preview or final) from its documents, the same values as in the Excel export.
 export const billingTotals = (documents: BillingDocumentAmounts[]): BillingTotals => {
   const invoices = empty()
   const creditNotes = empty()
-  const vatIdCreditNotes = empty()
   const infos = empty()
+  let reverseChargeNet = 0
   let paidOutVat = 0
   const recipients = new Set<string>()
   documents.forEach(d => {
@@ -46,9 +65,9 @@ export const billingTotals = (documents: BillingDocumentAmounts[]): BillingTotal
         add(invoices, d)
         break
       case "CREDIT_NOTE_RC": {
-        add(vatIdCreditNotes, d)
         add(creditNotes, d)
-        const vat = Number(d.vat1SumInEuro ?? 0) + Number(d.vat2SumInEuro ?? 0)
+        reverseChargeNet += netWithoutVat(d)
+        const vat = vatOf(d)
         if (vat !== 0) {
           paidOutVat += vat
           recipients.add(d.recipientName || "?")
@@ -65,7 +84,10 @@ export const billingTotals = (documents: BillingDocumentAmounts[]): BillingTotal
   return {
     invoices: round(invoices),
     creditNotes: round(creditNotes),
-    vatIdCreditNotes: round(vatIdCreditNotes),
+    reverseCharge: {
+      net: cents(reverseChargeNet),
+      vat: cents(cents(reverseChargeNet) * REVERSE_CHARGE_VAT_PERCENT / 100),
+    },
     vatIdCreditNotesWithVat: {
       vat: cents(paidOutVat),
       recipients: Array.from(recipients).sort((a, b) => a.localeCompare(b, "de")),
