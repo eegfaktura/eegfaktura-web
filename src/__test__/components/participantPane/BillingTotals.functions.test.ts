@@ -1,6 +1,8 @@
 import {describe, expect, it} from "vitest";
-import {billingTotals, netWithoutVat} from "../../../components/participantPane/BillingTotals.functions";
+import {billingTotals, netWithoutVat, salesTaxation} from "../../../components/participantPane/BillingTotals.functions";
 import {BillingDocumentAmounts} from "../../../models/meteringpoint.model";
+import {EegTariff} from "../../../models/eeg.model";
+import {EegParticipant} from "../../../models/members.model";
 
 // VAT 1 at 20 %, VAT 2 at 10 % when set.
 const doc = (billingDocumentType: BillingDocumentAmounts["billingDocumentType"], net: number, vat1: number, vat2 = 0,
@@ -90,6 +92,36 @@ describe("billingTotals", () => {
   it("is all zero without documents", () => {
     const t = billingTotals([])
     expect(t.invoices.gross + t.creditNotes.gross + t.infos.gross + t.reverseCharge.vat).toBe(0)
+  })
+})
+
+describe("salesTaxation", () => {
+  const tariff = (id: string, type: "VZP" | "EZP" | "EEG", useVat: boolean) => ({id, type, useVat} as EegTariff)
+  const rates = {
+    vat: tariff("vat", "VZP", true), novat: tariff("novat", "VZP", false),
+    prod: tariff("prod", "EZP", false), fee: tariff("fee", "EEG", false),
+  }
+  const member = (meters: [string, "CONSUMPTION" | "GENERATION", string][]) =>
+    ({meters: meters.map(([meteringPoint, direction, tariff_id]) => ({meteringPoint, direction, tariff_id}))} as unknown as EegParticipant)
+  const bill = (...ids: string[]) => ({id: "x", amount: 0, participantFee: 0, meteringPoints: ids.map(id => ({id, amount: 1}))})
+
+  it("is standard taxation when the billed consumer tariffs have VAT, producers and fees do not count", () => {
+    const p = [member([["AT1", "CONSUMPTION", "vat"], ["AT2", "GENERATION", "prod"]])]
+    expect(salesTaxation([bill("AT1", "AT2")], p, rates)).toBe("STANDARD")
+  })
+
+  it("is the small business scheme without VAT on the consumer tariffs", () => {
+    expect(salesTaxation([bill("AT1")], [member([["AT1", "CONSUMPTION", "novat"]])], rates)).toBe("SMALL_BUSINESS")
+  })
+
+  it("is mixed with both, but ignores consumer meters not billed in the run", () => {
+    const p = [member([["AT1", "CONSUMPTION", "vat"], ["AT3", "CONSUMPTION", "novat"]])]
+    expect(salesTaxation([bill("AT1", "AT3")], p, rates)).toBe("MIXED")
+    expect(salesTaxation([bill("AT1")], p, rates)).toBe("STANDARD")
+  })
+
+  it("is unknown without a known consumer tariff", () => {
+    expect(salesTaxation([bill("AT1")], [member([["AT1", "CONSUMPTION", "missing"]])], rates)).toBe("UNKNOWN")
   })
 })
 

@@ -1,5 +1,5 @@
 import React, {FC} from "react";
-import {AmountSum, BillingTotals, REVERSE_CHARGE_VAT_PERCENT} from "./BillingTotals.functions";
+import {AmountSum, BillingTotals, REVERSE_CHARGE_VAT_PERCENT, SalesTaxation} from "./BillingTotals.functions";
 
 // "+ 0" turns -0 into 0, so a total that rounds to zero does not show as "-0,00".
 export const euro = (v: number) => (v + 0).toLocaleString("de-AT", {minimumFractionDigits: 2, maximumFractionDigits: 2})
@@ -42,15 +42,20 @@ const BillingTotalsTable: FC<{ totals: BillingTotals }> = ({totals}) => (
 // is a cost only without input tax, so it is deducted from the small business margin. Worded as computed values, not
 // as tax advice; the reverse charge sentence only when the run has credit notes to producers with a VAT ID and the
 // note on paid-out VAT does not already say it.
-export const MarginLines: FC<{ totals: BillingTotals }> = ({totals}) => (
+// Only the margin that fits the consumer tariffs (with VAT: standard taxation, without: small business scheme); both
+// when the tariffs are mixed or unknown.
+export const MarginLines: FC<{ totals: BillingTotals, taxation: SalesTaxation }> = ({totals, taxation}) => (
   <div style={{padding: "0 16px 8px", fontSize: "12px", textAlign: "right"}}>
-    <div>Marge bei Regelbesteuerung (netto): <strong>{euro(totals.marginStandard)} €</strong></div>
-    <div>
-      Marge bei Kleinunternehmerregelung (brutto
-      {totals.reverseCharge.vat > 0 &&
-        `, abzgl. ${euro(totals.reverseCharge.vat)} € rechnerischer USt bei Reverse Charge (${REVERSE_CHARGE_VAT_PERCENT} %)`}):
-      {" "}<strong>{euro(totals.marginSmallBusiness)} €</strong>
-    </div>
+    {taxation !== "SMALL_BUSINESS" &&
+      <div>Marge bei Regelbesteuerung (netto): <strong>{euro(totals.marginStandard)} €</strong></div>}
+    {taxation !== "STANDARD" &&
+      <div>
+        Marge bei Kleinunternehmerregelung (brutto
+        {totals.reverseCharge.vat > 0 &&
+          `, abzgl. ${euro(totals.reverseCharge.vat)} € rechnerischer USt bei Reverse Charge (${REVERSE_CHARGE_VAT_PERCENT} %)`}):
+        {" "}<strong>{euro(totals.marginSmallBusiness)} €</strong>
+      </div>}
+    {taxation === "MIXED" && <div>Verbrauchertarife teils mit, teils ohne USt. Bitte prüfen.</div>}
     <div style={{color: "var(--ion-color-medium, #92949c)"}}>
       Rechnerische Werte, keine steuerliche Beratung.
       {totals.vatIdCreditNoteCount > 0 && totals.vatIdCreditNotesWithVat.recipients.length === 0 &&

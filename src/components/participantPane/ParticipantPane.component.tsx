@@ -85,7 +85,7 @@ import {Api} from "../../service";
 import {billTotal, buildAllocationMapFromSelected, filterSearchQuery} from "./ParticipantPane.functions";
 import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
 import {withOpenProblems} from "./ParticipantPane.functions";
-import {billingTotals, BillingTotals} from "./BillingTotals.functions";
+import {billingTotals, BillingTotals, salesTaxation} from "./BillingTotals.functions";
 import BillingTotalsTable, {euro, MarginLines} from "./BillingTotalsTable.component";
 import FilterSegmentComponent from "./FilterSegment.component";
 import {VariableSizeList} from "react-window";
@@ -894,7 +894,7 @@ const ParticipantPaneComponent: FC = () => {
                   </IonItem>
                 </IonCol>
               </IonRow>
-              {totals && <MarginLines totals={totals}/>}
+              {totals && <MarginLines totals={totals} taxation={salesTaxation(billingInfo, allParticipants, rates)}/>}
               <IonRow>
                 <IonCol size="12">
                   {billingRunIsFetching ||
