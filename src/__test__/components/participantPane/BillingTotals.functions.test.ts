@@ -57,6 +57,26 @@ describe("billingTotals", () => {
     expect(t.vatIdCreditNotesWithVat).toEqual({vat: 21, recipients: ["?", "Ähm", "Zach"]})
   })
 
+  it("computes both margins, the small business one without input tax and minus reverse charge VAT", () => {
+    // the documents of the dev test preview (TE100200, August 2026)
+    const t = billingTotals([
+      doc("INVOICE", 23.5, 4.7, 0, "001"),
+      doc("CREDIT_NOTE_RC", 9.6, 1.92, 0, "002"),
+      doc("INVOICE", 11.1, 2.22, 0, "003"),
+      doc("CREDIT_NOTE_RC", 12, 0, 0, "003"),
+    ])
+    expect(t.marginStandard).toBe(13)
+    expect(t.reverseCharge).toEqual({net: 12, vat: 2.4})
+    expect(t.marginSmallBusiness).toBe(15.6)
+    expect(t.vatIdCreditNoteCount).toBe(2)
+  })
+
+  it("counts info documents as paid out in both margins", () => {
+    const t = billingTotals([doc("INVOICE", 100, 20), doc("INFO", 30, 6)])
+    expect(t.marginStandard).toBe(70)
+    expect(t.marginSmallBusiness).toBe(84)
+  })
+
   it("counts two producers with the same name twice", () => {
     const t = billingTotals([doc("CREDIT_NOTE_RC", 50, 10, 0, "Huber", "p1"), doc("CREDIT_NOTE_RC", 50, 10, 0, "Huber", "p2")])
     expect(t.vatIdCreditNotesWithVat.recipients).toEqual(["Huber", "Huber"])

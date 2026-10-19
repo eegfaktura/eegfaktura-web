@@ -20,9 +20,16 @@ export interface BillingTotals {
   // Credit notes to producers with a VAT ID that pay out VAT: wrong if reverse charge applies (the community owes
   // the VAT then). The recipients, so the community can check their producer tariffs.
   vatIdCreditNotesWithVat: { vat: number, recipients: string[] }
+  // Number of credit notes to producers with a VAT ID, with or without VAT.
+  vatIdCreditNoteCount: number
   // Info documents (producer with a VAT ID, community without credit notes for all producers; no longer offered in
   // the settings). They are paid like credit notes in the SEPA export.
   infos: AmountSum
+  // Computed margins (decision 19.10.2026). Standard taxation: VAT is passed on (input tax), so invoices net minus
+  // credit notes net; reverse charge is neutral. Small business: no input tax, so VAT paid on credit notes is a cost
+  // and the reverse charge VAT is paid by the community: invoices gross minus credit notes gross minus reverse charge.
+  marginStandard: number
+  marginSmallBusiness: number
 }
 
 const cents = (v: number) => Math.round(v * 100) / 100 + 0
@@ -58,6 +65,7 @@ export const billingTotals = (documents: BillingDocumentAmounts[]): BillingTotal
   const infos = empty()
   let reverseChargeNet = 0
   let paidOutVat = 0
+  let vatIdCreditNoteCount = 0
   // per member (two producers can have the same name)
   const recipients = new Map<string, string>()
   documents.forEach(d => {
@@ -67,6 +75,7 @@ export const billingTotals = (documents: BillingDocumentAmounts[]): BillingTotal
         break
       case "CREDIT_NOTE_RC": {
         add(creditNotes, d)
+        vatIdCreditNoteCount += 1
         reverseChargeNet += netWithoutVat(d)
         const vat = vatOf(d)
         if (vat !== 0) {
@@ -82,17 +91,22 @@ export const billingTotals = (documents: BillingDocumentAmounts[]): BillingTotal
         add(creditNotes, d)
     }
   })
+  const reverseCharge = {
+    net: cents(reverseChargeNet),
+    vat: cents(cents(reverseChargeNet) * REVERSE_CHARGE_VAT_PERCENT / 100),
+  }
   return {
     invoices: round(invoices),
     creditNotes: round(creditNotes),
-    reverseCharge: {
-      net: cents(reverseChargeNet),
-      vat: cents(cents(reverseChargeNet) * REVERSE_CHARGE_VAT_PERCENT / 100),
-    },
+    reverseCharge,
     vatIdCreditNotesWithVat: {
       vat: cents(paidOutVat),
       recipients: Array.from(recipients.values()).sort((a, b) => a.localeCompare(b, "de")),
     },
+    vatIdCreditNoteCount,
     infos: round(infos),
+    // info documents are paid like credit notes
+    marginStandard: cents(invoices.net - creditNotes.net - infos.net),
+    marginSmallBusiness: cents(invoices.gross - creditNotes.gross - infos.gross - reverseCharge.vat),
   }
 }

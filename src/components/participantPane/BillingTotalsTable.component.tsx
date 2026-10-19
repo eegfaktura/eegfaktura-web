@@ -37,14 +37,25 @@ const BillingTotalsTable: FC<{ totals: BillingTotals }> = ({totals}) => (
   </div>
 )
 
-// Shown below „Gesamte EEG (brutto)“: the VAT for credit note lines without VAT to producers with a VAT ID, if
-// reverse charge applies. billing does not compute it; an estimate at the standard rate. Worded as a computed value,
-// not as tax advice (decision 19.10.2026).
-export const ReverseChargeLine: FC<{ totals: BillingTotals }> = ({totals}) => (
+// Shown below „Saldo Zahlungen (brutto)“: computed margins for standard taxation and for the small business scheme
+// (decision 19.10.2026). The reverse charge VAT (20 % on the credit note lines without VAT to producers with a VAT ID)
+// is a cost only without input tax, so it is deducted from the small business margin. Worded as computed values, not
+// as tax advice; the reverse charge sentence only when the run has credit notes to producers with a VAT ID and the
+// note on paid-out VAT does not already say it.
+export const MarginLines: FC<{ totals: BillingTotals }> = ({totals}) => (
   <div style={{padding: "0 16px 8px", fontSize: "12px", textAlign: "right"}}>
-    Rechnerischer Wert bei Reverse Charge ({REVERSE_CHARGE_VAT_PERCENT} % auf {euro(totals.reverseCharge.net)} € netto
-    aus Gutschriften ohne USt an Erzeuger mit UID): <strong>{euro(totals.reverseCharge.vat)} €</strong>. Ob Reverse
-    Charge anzuwenden ist, bitte mit der Steuerberatung klären.
+    <div>Marge bei Regelbesteuerung (netto): <strong>{euro(totals.marginStandard)} €</strong></div>
+    <div>
+      Marge bei Kleinunternehmerregelung (brutto
+      {totals.reverseCharge.vat > 0 &&
+        `, abzgl. ${euro(totals.reverseCharge.vat)} € rechnerischer USt bei Reverse Charge (${REVERSE_CHARGE_VAT_PERCENT} %)`}):
+      {" "}<strong>{euro(totals.marginSmallBusiness)} €</strong>
+    </div>
+    <div style={{color: "var(--ion-color-medium, #92949c)"}}>
+      Rechnerische Werte, keine steuerliche Beratung.
+      {totals.vatIdCreditNoteCount > 0 && totals.vatIdCreditNotesWithVat.recipients.length === 0 &&
+        " Ob Reverse Charge anzuwenden ist, bitte mit der Steuerberatung klären."}
+    </div>
   </div>
 )
 

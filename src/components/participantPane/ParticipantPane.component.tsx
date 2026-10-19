@@ -86,7 +86,7 @@ import {billTotal, buildAllocationMapFromSelected, filterSearchQuery} from "./Pa
 import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
 import {withOpenProblems} from "./ParticipantPane.functions";
 import {billingTotals, BillingTotals} from "./BillingTotals.functions";
-import BillingTotalsTable, {euro, ReverseChargeLine} from "./BillingTotalsTable.component";
+import BillingTotalsTable, {euro, MarginLines} from "./BillingTotalsTable.component";
 import FilterSegmentComponent from "./FilterSegment.component";
 import {VariableSizeList} from "react-window";
 
@@ -876,13 +876,16 @@ const ParticipantPaneComponent: FC = () => {
               <IonRow>
                 <IonCol>
                   <IonItem lines="none">
-                    <IonLabel slot="end">
-                      Gesamte EEG (brutto): {billingSum()} €
+                    <IonLabel slot="end" style={{textAlign: "right"}}>
+                      Saldo Zahlungen (brutto): {billingSum()} €
+                      <div style={{fontSize: "11px", color: "var(--ion-color-medium, #92949c)"}}>
+                        Rechnungen minus Gutschriften, die zu erwartende Kontobewegung aus dieser Abrechnung
+                      </div>
                     </IonLabel>
                   </IonItem>
                 </IonCol>
               </IonRow>
-              {totals && totals.reverseCharge.net > 0 && <ReverseChargeLine totals={totals}/>}
+              {totals && <MarginLines totals={totals}/>}
               <IonRow>
                 <IonCol size="12">
                   {billingRunIsFetching ||
