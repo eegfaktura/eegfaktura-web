@@ -22,13 +22,13 @@ describe("Filter Helpers", () => {
     expect(activeParticipants(ps, new Date(2024, 0, 31), new Date(2024, 5, 20))).toEqual(ps)
   });
 
-  it("a rejected re-registration stays visible after the meter went inactive", async () => {
+  it("a rejected re-registration after leaving stays out of the period (billing, reports)", async () => {
     const rejected = {id: "3", meters: [{meteringPoint: "AT1111111111111111111111113", status: "INACTIVE", processState: "REJECTED",
       participantState: {activeSince: new Date(2024, 0, 31), inactiveSince: new Date(2024, 2, 31)} as ParticipantState} as Metering]} as EegParticipant
-    const left = {id: "4", meters: [{meteringPoint: "AT1111111111111111111111114", status: "INACTIVE", processState: "INACTIVE",
-      participantState: {activeSince: new Date(2024, 0, 31), inactiveSince: new Date(2024, 2, 31)} as ParticipantState} as Metering]} as EegParticipant
-    // Period Apr–Jun 2024: both went inactive 31 Mar; only the rejected one needs action and stays
-    expect(activeParticipants([rejected, left], new Date(2024, 3, 1), new Date(2024, 5, 20))).toEqual([rejected])
+    const activeRejected = {id: "5", meters: [{meteringPoint: "AT1111111111111111111111115", status: "ACTIVE", processState: "REJECTED",
+      participantState: {activeSince: new Date(2024, 6, 1), inactiveSince: new Date(2999, 11, 31)} as ParticipantState} as Metering]} as EegParticipant
+    // Apr–Jun 2024: after the first one left and before the second one joined — neither may be billed
+    expect(activeParticipants([rejected, activeRejected], new Date(2024, 3, 1), new Date(2024, 5, 20))).toEqual([])
   });
 
   it("filter active participants and meters (1)", async () => {

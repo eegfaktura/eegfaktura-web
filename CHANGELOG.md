@@ -11,10 +11,13 @@ this changelog highlights the changes relevant for overview and operations.
 ### Fixed
 - **A rejected metering point no longer disappears from the member list** (feedback Manuel Wurzinger, 19.10.2026).
   A metering point that had left and whose new registration was rejected kept its old inactive date and dropped
-  out of the list for later periods; the filter „Abgelehnt“ did not show it either. Metering points with a rejected,
-  invalid or revoked registration now stay visible in every period and in „Abgelehnt“ until the community acts
-  (register again or archive). Metering points that simply left still drop out after their period.
-- The exclamation mark of an inactive metering point is red, like that of a rejected one.
+  out of the list for later periods; the filter „Abgelehnt“ did not show it either. The member list now always shows
+  metering points with a rejected, invalid or revoked registration or a registration in progress, „Abgelehnt“
+  shows the rejected, invalid and revoked ones, until the community acts (register again or archive). Only the list changes: billing, energy
+  reports, export and dashboard counts still use the metering points of the period. Metering points that simply left
+  still drop out after their period.
+- The exclamation mark of a metering point that has left is red, like that of a rejected one (not while its end date
+  is still ahead); an invalid registration also shows the exclamation mark.
 
 ## [1.3.1] – 2026-10-18
 
