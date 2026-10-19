@@ -13,7 +13,8 @@ this changelog highlights the changes relevant for overview and operations.
   in the list and the total in the member's billing details now add the metering point fees, which billing already
   delivered (`meteringPointFeeSum`). Before, these totals were lower than the documents and the Excel export by the
   fees. The billing dialog says „Gesamte EEG (brutto)“, and the details show a line „Zählpunktgebühren“; their energy
-  lines say „brutto“ instead of „netto“, which is what the amounts always were.
+  lines say „brutto“ instead of „netto“, which is what the amounts always were. A member with fees but no energy
+  amounts in the period now gets the details too; before, the panel stayed empty.
 
 ### Removed
 - **Dashboard: no money amounts.** The block „Finanzen“ is now „Energiemengen“ and shows only kWh. The euro amounts
