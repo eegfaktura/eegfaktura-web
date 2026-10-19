@@ -1,4 +1,4 @@
-import {Metering, MeteringEnergyGroupType} from "../../models/meteringpoint.model";
+import {Metering, MeteringEnergyGroupType, ParticipantBillType} from "../../models/meteringpoint.model";
 import {EegParticipant} from "../../models/members.model";
 import {meteringEnergyGroup1} from "../../store/energy";
 import {store} from "../../store";
@@ -38,6 +38,11 @@ export const withOpenProblems = (periodParticipants: EegParticipant[], allPartic
       .filter(m => (hasOpenProblem(m) || inRegistration(m)) && !p.meters.some(x => x.meteringPoint === m.meteringPoint))
     return extra.length > 0 ? {...p, meters: [...p.meters, ...extra]} : p
   })
+
+// Gross amount of a member in a billing run: positive is paid by the member, negative is paid to the member.
+// The same items as on the documents and in the Excel export, metering point fees included.
+export const billTotal = (bill: ParticipantBillType) =>
+  bill.meteringPoints.reduce((sum, m) => sum + m.amount, bill.participantFee + (bill.meteringPointFeeSum ?? 0))
 
 export const filterMeters = (p: EegParticipant[], hideProducers: boolean, hideConsumers: boolean, showEmptyMembers: boolean = true) => {
   return p

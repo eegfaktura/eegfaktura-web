@@ -8,6 +8,45 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.5.0] – 2026-10-19
+
+### Added
+- **Billing: totals per document type and margins** (platform#169). The billing dialog shows invoices and credit
+  notes with count, net, VAT and gross, read from the run's documents (billing
+  `GET /billingRuns/{id}/billingDocuments`, no change in billing), in the preview and after billing.
+  - „Gesamte EEG (brutto)“ is now „Saldo Zahlungen (brutto)“ with the explanation „Rechnungen minus Gutschriften,
+    die zu erwartende Kontobewegung aus dieser Abrechnung“, in the same number format as the table (de-AT).
+  - Below, two computed margins: „Marge bei Regelbesteuerung (netto)“ = invoices net minus credit notes net (VAT and
+    reverse charge are neutral with input tax), and „Marge bei Kleinunternehmerregelung (brutto)“ = invoices gross
+    minus credit notes and info documents gross minus the reverse charge VAT. The reverse charge VAT is 20 % (fixed, the standard rate
+    for electricity) on the credit note lines without VAT to producers with a VAT ID; billing does not compute it, and
+    for a credit note that mixes lines with and without VAT the net without VAT is taken back from the VAT sums and
+    can be a few cents off. Info documents, if a run still has any, get their own row and count as paid out.
+  - Only the margin that fits is shown, read from today's consumer tariffs of the metering points billed in the run
+    (per member): all with VAT (rate above 0) → standard taxation, all without → small business scheme. For an older
+    run whose tariffs changed since, the choice follows today's tariffs. Mixed tariffs show both lines and
+    „Verbrauchertarife teils mit, teils ohne USt. Bitte prüfen.“; without a known consumer tariff both lines show.
+    The membership fee does not count, it can be without VAT under standard taxation as well.
+  - If credit notes to producers with a VAT ID show VAT, a note names the VAT and the producers (up to 10).
+  - All texts describe the documents only, „Rechnerische Werte, keine steuerliche Beratung“; whether reverse charge
+    applies is for the community's tax adviser. The reverse charge sentence appears only when the run has credit notes
+    to producers with a VAT ID. Nothing blocks.
+
+### Fixed
+- **Billing: the totals include the metering point fees.** The billing dialog total (before „Gesamte EEG“, now
+  „Saldo Zahlungen (brutto)“), the amount per member
+  in the list and the total in the member's billing details now add the metering point fees, which billing already
+  delivered (`meteringPointFeeSum`). Before, these totals were lower than the documents and the Excel export by the
+  fees. The details show a line „Zählpunktgebühren“; their energy
+  lines say „brutto“ instead of „netto“, which is what the amounts always were. A member with fees but no energy
+  amounts in the period now gets the details too; before, the panel stayed empty.
+
+### Removed
+- **Dashboard: no money amounts.** The block „Finanzen“ is now „Energiemengen“ and shows only kWh. The euro amounts
+  for „Eingekauft“ and „Verkauft“ and the „Marge EEG“ are gone: they were an estimate from the current tariffs
+  (net, without membership and metering point fees, with a wrong VZP discount and the unused EZP base fee) and did
+  not match the billing. The amounts are in the billing dialog.
+
 ## [1.4.0] – 2026-10-19
 
 ### Added

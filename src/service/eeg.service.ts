@@ -1,6 +1,7 @@
 import {BillingConfig, EdaHistories, Eeg, EegNotification, EegTariff} from "../models/eeg.model";
 import {EegParticipant} from "../models/members.model";
 import {
+  BillingDocumentAmounts,
   BillingRun,
   ClearingPreviewRequest,
   ClearingPreviewResponse,
@@ -189,6 +190,18 @@ export class EegService extends EegBaseService {
   async fetchParticipantAmounts(tenant : string, billingRunId : string) : Promise<ParticipantBillType[]> {
     const token = await this.lookupToken()
     return await fetch(`${BILLING_API_SERVER}/api/billingRuns/${billingRunId}/participantAmounts`, {
+      method: 'GET',
+      headers: {
+        ...this.getSecureHeaders(token, tenant),
+        'Accept': 'application/json',
+        "Content-Type": "application/json",
+      },
+    }).then(this.handleErrors).then(res => res.json())
+  }
+
+  async fetchBillingDocuments(tenant : string, billingRunId : string) : Promise<BillingDocumentAmounts[]> {
+    const token = await this.lookupToken()
+    return await fetch(`${BILLING_API_SERVER}/api/billingRuns/${billingRunId}/billingDocuments`, {
       method: 'GET',
       headers: {
         ...this.getSecureHeaders(token, tenant),
