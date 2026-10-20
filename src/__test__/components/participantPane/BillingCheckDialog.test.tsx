@@ -25,4 +25,11 @@ describe("BillingCheckDialog buttons (pilot feedback 20.10.2026)", () => {
     fireEvent.click(screen.getByText("Zurück"))
     expect(onDismiss).toHaveBeenCalledWith(null, 'cancel')
   })
+
+  it("enables the run also when the check fails (result „nicht geprüft“)", async () => {
+    Api.energyService = {fetchBillingCheck: vi.fn(() => Promise.reject(new Error("down")))} as unknown as typeof Api.energyService
+    render(<BillingCheckDialog mode="preview" tenant={tenant} period={period} participants={[]} rates={{}} onDismiss={vi.fn()}/>)
+    await waitFor(() => expect(screen.getByText(/Vorschau erstellen/)).toBeTruthy())
+    expect(screen.getByText(/Vorschau erstellen/).closest("ion-button")!.getAttribute("disabled")).toBe("false")
+  })
 })
