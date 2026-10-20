@@ -318,6 +318,11 @@ export const zvtTimeWindows = (tariff?: EegTariff): TariffTimeWindow[] | undefin
   return windows.length > 0 ? windows : undefined
 }
 
+// A time-based tariff without an active window must not be saved: web would bill it as a simple tariff (no windows,
+// no buckets), billing as time-based, and the billing run stops (platform#175).
+export const zvtWithoutActiveWindow = (tariff?: Partial<EegTariff>): boolean =>
+  !!tariff && !!tariff.useTimeTariff && !tariff.timeTariff1Active && !tariff.timeTariff2Active
+
 // Key over the time windows of the time-based tariffs that metering points use: changes when such a tariff becomes
 // time-based or its windows change, so the energy report (it carries the buckets billing needs) is fetched again.
 // Constant for EEGs without time-based tariffs and for unused tariffs, so other tariff edits do not fetch again.
