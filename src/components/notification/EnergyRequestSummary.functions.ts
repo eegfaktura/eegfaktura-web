@@ -1,16 +1,23 @@
 import moment from "moment";
+import {EegParticipant} from "../../models/members.model";
+import {activeMetersInPeriod, CheckedMeter} from "../participantPane/BillingCheck.functions";
 
 // Summary of an energy data request (backend energyrequest.Summary, platform#173)
+export interface RequestedMeter {
+  meteringPoint: string
+  from: number
+  to: number
+}
+
 export interface EnergyRequestSummary {
   type: "ZUSAMMENFASSUNG_PT"
   runId: string
   from: number
   to: number
   requested: number
-  complete: number
+  accepted: RequestedMeter[]
   rejected: { meteringPoint: string, codes: string[] }[]
   noAnswer: string[]
-  incomplete: { meteringPoint: string, dataFrom?: number, dataTo?: number }[]
   skipped: { meteringPoint: string, reason: string }[]
   superseded: string[]
 }
@@ -35,9 +42,6 @@ const SKIP_REASONS: Record<string, string> = {
 
 export const formatDay = (ms: number) => moment(ms).format("DD.MM.YYYY")
 
-// a delivery ends at the start of the next day (exclusive): show the last day it covers
-const lastDataDay = (dataTo: number) => formatDay(dataTo - 1)
-
 // The problem groups in display order; groups without metering points are left out.
 export const summaryGroups = (s: EnergyRequestSummary): SummaryGroup[] => [
   {
@@ -49,13 +53,6 @@ export const summaryGroups = (s: EnergyRequestSummary): SummaryGroup[] => [
     lines: (s.noAnswer ?? []).map(m => ({meteringPoint: m})),
   },
   {
-    title: "Angenommen, aber Daten unvollständig",
-    lines: (s.incomplete ?? []).map(i => ({
-      meteringPoint: i.meteringPoint,
-      detail: i.dataFrom && i.dataTo ? `Daten ${formatDay(i.dataFrom)} – ${lastDataDay(i.dataTo)}` : "keine Daten",
-    })),
-  },
-  {
     title: "Nicht angefordert",
     lines: (s.skipped ?? []).map(k => ({meteringPoint: k.meteringPoint, detail: SKIP_REASONS[k.reason] ?? k.reason})),
   },
@@ -64,3 +61,11 @@ export const summaryGroups = (s: EnergyRequestSummary): SummaryGroup[] => [
     lines: (s.superseded ?? []).map(m => ({meteringPoint: m})),
   },
 ].filter(g => g.lines.length > 0)
+
+// The accepted metering points as the energy data check before billing (platform#148) sees them in the requested
+// period: same active periods, same completeness rule.
+export const acceptedMetersToCheck = (s: EnergyRequestSummary, participants: EegParticipant[]): CheckedMeter[] => {
+  const accepted = new Set((s.accepted ?? []).map(m => m.meteringPoint))
+  return activeMetersInPeriod(participants, new Date(s.from), new Date(s.to))
+    .filter(m => accepted.has(m.meteringPoint))
+}
