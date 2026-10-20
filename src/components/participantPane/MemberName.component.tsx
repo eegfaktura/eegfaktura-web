@@ -1,5 +1,6 @@
 import React, {FC, useContext} from "react";
 import {memberActivity} from "../../util/MemberActivity.util";
+import {selectParticipantById} from "../../store/participant";
 import {CheckboxCustomEvent, IonButton, IonCheckbox, IonCol, IonIcon, IonItem, IonLabel,} from "@ionic/react";
 import {eegExclamation} from "../../eegIcons";
 import {EegParticipant} from "../../models/members.model";
@@ -24,6 +25,8 @@ const MemberNameComponent: FC<MemberNameComponentProps> =
   ({participant, isChecked, showAmount, tariff, onCheck, onSelect, onAdd}) => {
 
   const bill = useAppSelector(selectBillByParticipant(participant.id))
+  // the list entry can hold only some metering points (filters, period): the status needs all of them
+  const fullParticipant = useAppSelector(selectParticipantById(participant.id))
   const {
     setShowAddMeterPane,
   } = useContext(ParticipantContext);
@@ -74,7 +77,7 @@ const MemberNameComponent: FC<MemberNameComponentProps> =
                 <div style={{display: "flex", justifyContent: "space-between"}}>
                   <span style={{fontSize: "15px", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap"}}>{renderMemberName()}</span>
                   {/* platform#165: no active and no registering metering point left */}
-                  {memberActivity(participant) === 'INACTIVE' &&
+                  {memberActivity(fullParticipant ?? participant) === 'INACTIVE' &&
                     <span style={{fontSize: "11px", color: "var(--ion-color-medium, #92949c)", marginLeft: "6px", whiteSpace: "nowrap"}}>inaktiv</span>}
                   {showAmount && <span>{euroAmount()}</span>}
                 </div>

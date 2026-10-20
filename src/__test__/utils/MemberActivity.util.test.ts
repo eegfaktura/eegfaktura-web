@@ -26,3 +26,14 @@ describe("memberActivity (platform#165)", () => {
       .toEqual({ACTIVE: 1, PENDING: 1, INACTIVE: 1})
   })
 })
+
+describe("memberActivity without metering points (platform#165)", () => {
+  it("is inactive when the stored status is ACTIVE (its metering points were moved away), else pending", () => {
+    expect(memberActivity({meters: [], status: 'ACTIVE'} as unknown as EegParticipant)).toBe('INACTIVE')
+    expect(memberActivity({meters: [], status: 'NEW'} as unknown as EegParticipant)).toBe('PENDING')
+  })
+
+  it("treats a metering point without status as not yet registered", () => {
+    expect(memberActivity({meters: [{processState: 'ACTIVE'}]} as unknown as EegParticipant)).toBe('PENDING')
+  })
+})

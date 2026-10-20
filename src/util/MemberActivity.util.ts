@@ -1,17 +1,20 @@
 import {EegParticipant} from "../models/members.model";
-import {MeteringProcessStateType} from "../models/meteringpoint.model";
 
 // Status of a member derived from its metering points (platform#165, same rule as the backend's master data export):
 // ACTIVE with at least one active metering point; PENDING without one but with one being registered, or with no
-// metering point yet; INACTIVE when all of them have left, were archived or rejected. The stored status is not used.
+// metering point yet; INACTIVE when all of them have left, were archived or rejected. A member without metering
+// points whose stored status is ACTIVE had some and they were moved away: INACTIVE. Pass the member with all its
+// metering points (the store entity), not a filtered list entry.
 export type MemberActivity = 'ACTIVE' | 'PENDING' | 'INACTIVE'
 
-const ENDED: string[] = ['REJECTED', 'INVALID', 'REVOKED', 'ARCHIVED', 'ABORTED', 'INACTIVE'] as MeteringProcessStateType[]
+// process states that end a registration (a metering point without status counts as not yet registered, like INIT)
+const ENDED: string[] = ['REJECTED', 'INVALID', 'REVOKED', 'ARCHIVED', 'ABORTED', 'INACTIVE']
 
 export const memberActivity = (p: EegParticipant): MemberActivity => {
   const meters = p.meters ?? []
   if (meters.some(m => m.status === 'ACTIVE')) return 'ACTIVE'
-  if (meters.length === 0 || meters.some(m => m.status === 'INIT' && !ENDED.includes(m.processState))) return 'PENDING'
+  if (meters.length === 0) return p.status === 'ACTIVE' ? 'INACTIVE' : 'PENDING'
+  if (meters.some(m => (m.status === 'INIT' || !m.status) && !ENDED.includes(m.processState))) return 'PENDING'
   return 'INACTIVE'
 }
 

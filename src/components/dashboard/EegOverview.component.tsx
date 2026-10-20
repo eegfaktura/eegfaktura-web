@@ -23,13 +23,12 @@ const EegOverviewComponent: FC<EegOverviewComponentProps> = ({participants, rate
   const allParticipants = useAppSelector(allParticipantsSelector)
   const members = useMemo(() => countMemberActivity(allParticipants), [allParticipants])
 
-  const [, consumerCount, producerCount, tariffUsage] = useMemo(() => {
+  const [consumerCount, producerCount, tariffUsage] = useMemo(() => {
       const defaultRateCount: Record<string, number> = Object.keys(rateMap).reduce((o, v) => {
         return {...o, [v]: 0}
       }, {} as Record<string, number>)
 
       const s = participants.reduce((r, p) => {
-        r.p += 1
         p.meters.forEach(m => {
           m.direction === 'CONSUMPTION' ? r.c += 1 : r.pp += 1
           if (m.tariff_id) {
@@ -37,9 +36,9 @@ const EegOverviewComponent: FC<EegOverviewComponentProps> = ({participants, rate
           }
         })
         return r
-      }, {p: 0, c: 0, pp: 0, t: defaultRateCount})
+      }, {c: 0, pp: 0, t: defaultRateCount})
 
-    return [s.p, s.c, s.pp, s.t]
+    return [s.c, s.pp, s.t]
       // setConsumerCount(s.c)
       // setProducerCount(s.pp)
       // setParticipantCount(s.p)
