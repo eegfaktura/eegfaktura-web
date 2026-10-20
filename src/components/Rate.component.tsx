@@ -1,4 +1,4 @@
-import React, {FC} from "react";
+import React, {FC, useEffect} from "react";
 import {IonCard, IonCardContent, IonCol, IonGrid, IonList, IonListHeader, IonRow} from "@ionic/react";
 import InputFormComponent from "./form/InputForm.component";
 import {useFormContext} from "react-hook-form";
@@ -9,6 +9,7 @@ import {useRateType} from "../store/hook/Rate.provider";
 import NumberInputForm from "./form/NumberInput.component";
 import SelectForm from "./form/SelectForm.component";
 import {useLocale} from "../store/hook/useLocale";
+import {zvtWithoutActiveWindow} from "../util/Helper.util";
 
 // ZVT: Von/Bis sind reine Auswahlfelder - genau die 96 Viertelstunden-Werte
 // des Tages (00:00 ... 23:45), passend zum 15-min-Raster der Energiedaten.
@@ -24,14 +25,18 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
     const {t} = useLocale("common")
     const {currentRateType, setRateType} = useRateType()
     const {
-      // register,
+      register,
       handleSubmit,
       control,
       setValue,
       watch,
       reset,
+      trigger,
       formState: {errors}
     } = useFormContext<EegTariff>()
+
+    // platform#175: a time-based tariff needs an active window, otherwise the form is invalid (save disabled)
+    register("useTimeTariff", {validate: (_, values) => !zvtWithoutActiveWindow(values)})
 
     const setShowVat = (s: boolean) => {
       // if (!s) {
@@ -106,6 +111,12 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
       setValue(n === 1 ? "timeTariff1Active" : "timeTariff2Active", active,
         {shouldValidate: true, shouldDirty: true})
     }
+
+    // the window fields get their rules only on the render after (de)activating a window: validate again then, so
+    // the save button does not stay enabled for a form that cannot be submitted
+    useEffect(() => {
+      trigger()
+    }, [useTimeTariff, tt1Active, tt2Active])
 
     const handleRateType = (type: number) => {
       switch (type) {
@@ -227,6 +238,12 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
       )
     }
 
+    const renderZvtNoActiveWindow = () => zvtWithoutActiveWindow(watch()) && (
+      <p style={{color: "var(--ion-color-danger)", fontSize: "0.85em", margin: "8px 4px"}}>
+        {t("zvt.warn_no_active_window")}
+      </p>
+    )
+
     const renderZvtMode = () => (
       <div style={{marginBottom: "16px"}}>
         <ToggleButtonComponent
@@ -260,6 +277,7 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
                   <NumberInputForm label={t("zvt.basePrice")} control={control} name={"centPerKWh"}/>
                   {renderZvtWindow(1)}
                   {renderZvtWindow(2)}
+                  {renderZvtNoActiveWindow()}
                 </>
               ) : (
                 <NumberInputForm label={t("centPerKWh")} control={control} name={"centPerKWh"}/>
@@ -275,6 +293,7 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
                   <NumberInputForm label={t("zvt.basePrice")} control={control} name={"centPerKWh"}/>
                   {renderZvtWindow(1)}
                   {renderZvtWindow(2)}
+                  {renderZvtNoActiveWindow()}
                 </>
               ) : (
                 <>

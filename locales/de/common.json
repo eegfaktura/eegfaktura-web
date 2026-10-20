@@ -55,7 +55,8 @@
     "warn_raster": "Nur 15-Minuten-Raster (00/15/30/45)",
     "warn_equal": "Von und Bis dürfen nicht gleich sein",
     "warn_overlap": "Die beiden Zeiträume dürfen sich nicht überschneiden",
-    "warn_price_missing": "Preis ist erforderlich"
+    "warn_price_missing": "Preis ist erforderlich",
+    "warn_no_active_window": "Bei einem zeitbasierten Tarif muss mindestens ein Zeitraum aktiv sein (Häkchen „Zeitraum aktiv“) und Von und Bis haben. Sonst kann der Tarif nicht gespeichert werden."
   },
   "useMeteringPointFee": "Zählpunktgebühr einheben?",
   "meteringPointFee": "Zählpunktgebühr in €",
