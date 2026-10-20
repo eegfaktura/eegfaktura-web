@@ -1,6 +1,7 @@
 import moment from "moment";
+import {Metering} from "../../models/meteringpoint.model";
 import {EegParticipant} from "../../models/members.model";
-import {activeMetersInPeriod, CheckedMeter} from "../participantPane/BillingCheck.functions";
+import {CheckedMeter} from "../participantPane/BillingCheck.functions";
 
 // Summary of an energy data request (backend energyrequest.Summary, platform#173)
 export interface RequestedMeter {
@@ -62,10 +63,50 @@ export const summaryGroups = (s: EnergyRequestSummary): SummaryGroup[] => [
   },
 ].filter(g => g.lines.length > 0)
 
-// The accepted metering points as the energy data check before billing (platform#148) sees them in the requested
-// period: same active periods, same completeness rule.
-export const acceptedMetersToCheck = (s: EnergyRequestSummary, participants: EegParticipant[]): CheckedMeter[] => {
-  const accepted = new Set((s.accepted ?? []).map(m => m.meteringPoint))
-  return activeMetersInPeriod(participants, new Date(s.from), new Date(s.to))
-    .filter(m => accepted.has(m.meteringPoint))
+// The accepted metering points for the energy data check before billing (platform#148), each over the period the
+// backend requested for it. The direction and the name come from the loaded metering points (the active entry first);
+// a metering point that is not loaded cannot be checked and is listed instead of counting as complete.
+export const acceptedMetersToCheck = (s: EnergyRequestSummary, participants: EegParticipant[]):
+  { toCheck: CheckedMeter[], notCheckable: string[] } => {
+  const byId = new Map<string, { meter: Metering, name: string }>()
+  for (const p of participants) {
+    const name = [p.firstname, p.lastname].filter(n => !!n).join(" ")
+    for (const m of p.meters) {
+      const known = byId.get(m.meteringPoint)
+      if (!known || (known.meter.status !== 'ACTIVE' && m.status === 'ACTIVE')) {
+        byId.set(m.meteringPoint, {meter: m, name})
+      }
+    }
+  }
+  const toCheck: CheckedMeter[] = []
+  const notCheckable: string[] = []
+  for (const a of s.accepted ?? []) {
+    const e = byId.get(a.meteringPoint)
+    if (!e) {
+      notCheckable.push(a.meteringPoint)
+      continue
+    }
+    toCheck.push({
+      participantName: e.name,
+      meteringPoint: a.meteringPoint,
+      equipmentName: e.meter.equipmentName,
+      direction: e.meter.direction,
+      activeSince: moment(a.from).startOf('day').valueOf(),
+      inactiveSince: moment(a.to).startOf('day').valueOf(),
+    })
+  }
+  return {toCheck, notCheckable}
 }
+
+// the name of a metering point, from its active entry if there are several
+export const meterNames = (meters: Metering[]): Map<string, string> => {
+  const names = new Map<string, string>()
+  for (const m of [...meters].sort((x, y) => (x.status === 'ACTIVE' ? 1 : 0) - (y.status === 'ACTIVE' ? 1 : 0))) {
+    if (m.equipmentName && m.equipmentName.length > 0) {
+      names.set(m.meteringPoint, m.equipmentName)
+    }
+  }
+  return names
+}
+
+export const meterCount = (n: number) => n === 1 ? "1 Zählpunkt" : `${n} Zählpunkte`

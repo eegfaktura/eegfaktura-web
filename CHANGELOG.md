@@ -9,11 +9,13 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Added
-- **Messages: summary of an energy data request** (platform#173, needs the backend with the same feature). The new
+- **Messages: summary of an energy data request** (platform#173, with the backend of the same feature). The new
   notification shows the period, how many metering points were requested and accepted, and collapsible groups with
   the metering points (and their equipment names): rejected with reason, no answer, not requested with reason,
-  requested again later. „Datenstand prüfen“ checks the energy data of the accepted metering points with the check
-  before billing (platform#148), so it is always current and lists the metering points with incomplete data.
+  requested again later. „Datenstand prüfen“ checks the energy data of the accepted metering points over the period
+  the backend requested for each, with the check before billing (platform#148), and lists the metering points with
+  incomplete data and those that cannot be checked (not loaded); „Erneut prüfen“ checks again.
+  - **Deploy order:** this web release before the backend; on its own it changes nothing.
 
 ## [1.5.1] – 2026-10-19
 
