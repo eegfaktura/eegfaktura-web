@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.7.2] – 2026-10-20
+
 ### Fixed
 - **Messages showed an old list** (feedback 20.10.2026). The page loaded its notifications only when it was first
   opened; Ionic keeps the page mounted, so switching between Mitglieder and Messages never reloaded it (a new
