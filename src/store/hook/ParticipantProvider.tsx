@@ -193,7 +193,9 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
   }
 
   useEffect(() => {
-    if (activePeriod && allParticipants) {
+    // not while the application (re)loads EEG, tariffs and members (tenant switch, refresh): the store can then
+    // mix the old members with the new tenant; the load ends by setting the period, which fetches once
+    if (activePeriod && allParticipants && !isFechting) {
       const [start, end] = getPeriodDates(activePeriod)
       const _aps = filterActiveParticipantAndMeter(allParticipants, start, end)
       // const identical = objectsSimilar(activeParticipants, _aps, "id", ["participantSince"])
@@ -211,7 +213,7 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
         fetchEnergyReport(_aps)
       // }
     }
-  }, [allParticipants, activePeriod, zvtKey]);
+  }, [allParticipants, activePeriod, zvtKey, isFechting]);
 
   // useEffect(() => {
   //   fetchEnergyReport(activeParticipants)

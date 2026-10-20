@@ -11,10 +11,11 @@ this changelog highlights the changes relevant for overview and operations.
 ### Fixed
 - **ZVT (env/billing): billing failed after a tariff was switched to time-based** (platform#174). The energy report
   was only fetched again when members or the period changed, so after switching a tariff to „Zeitbasiert“ (or
-  editing its windows, or when the tariffs loaded after the members) it had no buckets; billing then got the time
+  editing its windows) it had no buckets; billing then got the time
   windows without buckets and stopped („keine Fenster-Teilsummen (buckets)“). Now:
-  - the report is also fetched again when the time windows of a used tariff change (EEGs without time-based tariffs
-    and edits of unused tariffs fetch as before);
+  - the report is also fetched again when the time windows of a tariff of the EEG's metering points change (EEGs
+    without time-based tariffs and edits of tariffs no metering point has fetch as before); not while the
+    application reloads EEG, tariffs and members (tenant switch, refresh) — that load ends with one fetch;
   - billing gets the time windows the energystore computed the buckets for (echoed in the report), not those of the
     current tariff. Billing started while the new report is still loading stops (missing buckets, a differing
     window, or buckets for a tariff that is no longer time-based) instead of billing buckets of other windows; it
