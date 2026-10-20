@@ -12,7 +12,7 @@ import {isEEGFetching, useTenant} from "./Eeg.provider";
 import {filterActiveParticipantAndMeter} from "../../util/FilterHelper.unit";
 import {getPeriodDates} from "../../util/FilterHelper";
 import participants from "../../pages/Participants";
-import {ratesMapSelector} from "../rate";
+import {ratesLoadedSelector, ratesMapSelector} from "../rate";
 import {zvtTimeWindows, zvtWindowsKey} from "../../util/Helper.util";
 
 
@@ -68,6 +68,7 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
   // const participants = useAppSelector(activeParticipantsSelector1)
   const allParticipants = useAppSelector(allParticipantsSelector)
   const tariffById = useAppSelector(ratesMapSelector)
+  const ratesLoaded = useAppSelector(ratesLoadedSelector)
   // ZVT: fetch the energy report again when time windows change (tariff switched to time-based, windows edited,
   // tariffs loaded after the participants); otherwise billing gets time windows without buckets.
   const zvtKey = useMemo(() => zvtWindowsKey(tariffById,
@@ -193,7 +194,9 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
   }
 
   useEffect(() => {
-    if (activePeriod && allParticipants) {
+    // wait for the tariffs: without them a time-based tariff is unknown and the report would have no buckets
+    // (one energystore calculation on page load instead of a wasted first one)
+    if (activePeriod && allParticipants && ratesLoaded) {
       const [start, end] = getPeriodDates(activePeriod)
       const _aps = filterActiveParticipantAndMeter(allParticipants, start, end)
       // const identical = objectsSimilar(activeParticipants, _aps, "id", ["participantSince"])
@@ -211,7 +214,7 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
         fetchEnergyReport(_aps)
       // }
     }
-  }, [allParticipants, activePeriod, zvtKey]);
+  }, [allParticipants, activePeriod, zvtKey, ratesLoaded]);
 
   // useEffect(() => {
   //   fetchEnergyReport(activeParticipants)
