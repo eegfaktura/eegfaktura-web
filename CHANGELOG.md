@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.6.0] – 2026-10-20
+
 ### Changed
 - **Billing breakdown can be collapsed** (feedback 20.10.2026, platform#169). The table, the margins and the
   explanation take much height in the pane footer, so on small screens only a few metering points stayed visible.
