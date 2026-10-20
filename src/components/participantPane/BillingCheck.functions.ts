@@ -4,7 +4,7 @@ import {EegTariff} from "../../models/eeg.model";
 import {MeterDirectionType} from "../../models/meteringpoint.model";
 import {BillingCheckRequest, BillingCheckResponse, BillingCheckTotals} from "../../models/billingCheck.model";
 
-// Checks before a billing run (platform#148). They only warn; none of them blocks the billing.
+// Checks before a billing run (platform#148). Their results only warn; a check that is still running delays the run.
 
 export type CheckStatus = 'OK' | 'WARNING' | 'NOT_CHECKED'
 

@@ -15,6 +15,9 @@ this changelog highlights the changes relevant for overview and operations.
   point counts once it is active again.
 
 ### Changed
+- **Check before billing: buttons** (pilot feedback 20.10.2026). „Abbrechen“ and „Abrechnen“ were hard to tell apart:
+  „Abbrechen“ is now grey on the left, the run on the right reads „Abrechnung durchführen“ („Trotzdem Abrechnung
+  durchführen“ with warnings). While the check runs, the run button is disabled and reads „Prüfung läuft …“.
 - **Billing breakdown toggle shows only the chevron** (feedback 20.10.2026), without the text „Aufstellung“; the
   label stays as tooltip and for screen readers.
 
