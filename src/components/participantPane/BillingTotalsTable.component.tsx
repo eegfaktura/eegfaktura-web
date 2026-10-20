@@ -1,4 +1,6 @@
 import React, {FC} from "react";
+import {IonButton, IonIcon} from "@ionic/react";
+import {chevronDown, chevronForward} from "ionicons/icons";
 import {AmountSum, BillingTotals, REVERSE_CHARGE_VAT_PERCENT, SalesTaxation} from "./BillingTotals.functions";
 
 // "+ 0" turns -0 into 0, so a total that rounds to zero does not show as "-0,00".
@@ -48,11 +50,12 @@ export const MarginLines: FC<{ totals: BillingTotals, taxation: SalesTaxation }>
   <div style={{padding: "0 16px 8px", fontSize: "12px", textAlign: "right"}}>
     {taxation !== "SMALL_BUSINESS" &&
       <div>Marge bei Regelbesteuerung (netto): <strong>{euro(totals.marginStandard)} €</strong></div>}
+    {/* two lines, so the reverse charge VAT cannot be read as the margin (feedback 21.10.2026) */}
+    {taxation !== "STANDARD" && totals.reverseCharge.vat > 0 &&
+      <div>Rechnerische USt bei Reverse Charge ({REVERSE_CHARGE_VAT_PERCENT} %): {euro(totals.reverseCharge.vat)} €</div>}
     {taxation !== "STANDARD" &&
       <div>
-        Marge bei Kleinunternehmerregelung (brutto
-        {totals.reverseCharge.vat > 0 &&
-          `, abzgl. ${euro(totals.reverseCharge.vat)} € rechnerischer USt bei Reverse Charge (${REVERSE_CHARGE_VAT_PERCENT} %)`}):
+        Marge bei Kleinunternehmerregelung (brutto{totals.reverseCharge.vat > 0 ? ", abzgl. dieser USt" : ""}):
         {" "}<strong>{euro(totals.marginSmallBusiness)} €</strong>
       </div>}
     {taxation === "MIXED" && <div>Verbrauchertarife teils mit, teils ohne USt. Bitte prüfen.</div>}
@@ -66,7 +69,7 @@ export const MarginLines: FC<{ totals: BillingTotals, taxation: SalesTaxation }>
 
 const SHOWN_RECIPIENTS = 10
 
-const PaidOutVatWarning: FC<{ vat: number, recipients: string[] }> = ({vat, recipients}) => {
+export const PaidOutVatWarning: FC<{ vat: number, recipients: string[] }> = ({vat, recipients}) => {
   const shown = recipients.slice(0, SHOWN_RECIPIENTS).join(", ")
   const more = recipients.length - SHOWN_RECIPIENTS
   return (
@@ -81,5 +84,32 @@ const PaidOutVatWarning: FC<{ vat: number, recipients: string[] }> = ({vat, reci
     </div>
   )
 }
+
+// The breakdown takes much height in the pane footer: it can be collapsed, and each viewer's choice is kept in the
+// browser (collapsed by default). Storage can be missing or blocked: then it is just collapsed.
+const TOTALS_OPEN_KEY = "eegfaktura.billingTotalsOpen"
+
+export const readTotalsOpen = (): boolean => {
+  try {
+    return localStorage.getItem(TOTALS_OPEN_KEY) === "1"
+  } catch {
+    return false
+  }
+}
+
+export const writeTotalsOpen = (open: boolean) => {
+  try {
+    localStorage.setItem(TOTALS_OPEN_KEY, open ? "1" : "0")
+  } catch {
+    // not kept, still works for this page
+  }
+}
+
+export const TotalsToggle: FC<{ open: boolean, onToggle: () => void }> = ({open, onToggle}) => (
+  <IonButton slot="start" fill="clear" size="small" onClick={onToggle} aria-expanded={open}>
+    <IonIcon slot="start" icon={open ? chevronDown : chevronForward}/>
+    Aufstellung
+  </IonButton>
+)
 
 export default BillingTotalsTable
