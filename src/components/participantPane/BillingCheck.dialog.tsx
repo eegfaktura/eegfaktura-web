@@ -118,7 +118,7 @@ export const BillingCheckDialog: FC<{
 
   const warned = !!overview && hasWarning(overview)
   const confirmText = mode === 'billing'
-    ? (warned ? "Trotzdem abrechnen" : "Abrechnen")
+    ? (warned ? "Trotzdem Abrechnung durchführen" : "Abrechnung durchführen")
     : (warned ? "Trotzdem Vorschau erstellen" : "Vorschau erstellen")
 
   return (
@@ -185,10 +185,10 @@ export const BillingCheckDialog: FC<{
       </IonContent>
       <IonFooter>
         <IonToolbar>
-          {/* „Zurück“ left and grey, the run right and filled: „Abbrechen“ and „Abrechnen“ were too similar
+          {/* „Abbrechen“ left and grey, „Abrechnung durchführen“ right and filled: „Abbrechen“ and „Abrechnen“ were too similar
               (pilot feedback 20.10.2026); the run is only possible once the check has finished */}
           <IonButtons slot="start">
-            <IonButton color="medium" onClick={() => onDismiss(null, 'cancel')}>Zurück</IonButton>
+            <IonButton color="medium" onClick={() => onDismiss(null, 'cancel')}>Abbrechen</IonButton>
           </IonButtons>
           <IonButtons slot="end">
             <IonButton fill="solid" disabled={!overview} onClick={() => onDismiss(null, 'confirm')}>
