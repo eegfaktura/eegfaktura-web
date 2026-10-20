@@ -9,6 +9,10 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Changed
+- **Billing breakdown toggle shows only the chevron** (feedback 20.10.2026), without the text „Aufstellung“; the
+  label stays as tooltip and for screen readers.
+
+### Changed
 - **Members without an active metering point count as inactive** (platform#165, decision 20.10.2026). The dashboard
   counted every member as active and always showed „0 inaktive“. It now counts, over all members and by the current
   state of their metering points: active (at least one active metering point), inactive (all left, archived or

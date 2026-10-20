@@ -61,7 +61,8 @@ describe("collapsible breakdown", () => {
     }
     render(<Host/>)
     expect(screen.queryByText("offen")).toBeNull()
-    fireEvent.click(screen.getByText("Aufstellung"))
+    expect(screen.queryByText("Aufstellung")).toBeNull()
+    fireEvent.click(screen.getByTitle("Aufstellung aufklappen"))
     expect(screen.getByText("offen")).toBeTruthy()
   })
 })
