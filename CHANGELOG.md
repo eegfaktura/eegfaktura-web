@@ -9,12 +9,13 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Changed
-- **Billing breakdown can be collapsed** (feedback 21.10.2026, platform#169). The table, the margins and the
+- **Billing breakdown can be collapsed** (feedback 20.10.2026, platform#169). The table, the margins and the
   explanation take much height in the pane footer, so on small screens only a few metering points stayed visible.
   „Aufstellung“ collapses them to the line „Saldo Zahlungen (brutto)“; collapsed is the default, each viewer's choice
   is kept in the browser. The note on paid-out VAT to producers with a VAT ID stays visible when collapsed.
-- **Margin wording:** the reverse charge VAT has its own line („Rechnerische USt bei Reverse Charge (20 %): …“), the
-  margin line follows („… brutto, abzgl. dieser USt): …“). In one sentence the first amount read like the margin.
+- **Margin wording:** the reverse charge VAT has its own line („Rechnerische USt bei Reverse Charge (20 %): …“) below
+  the small business margin („… brutto, abzgl. rechnerischer USt bei Reverse Charge): …“). In one sentence the first
+  amount read like the margin.
 
 ### Added
 - **Messages: summary of an energy data request** (platform#173, with the backend of the same feature). The new

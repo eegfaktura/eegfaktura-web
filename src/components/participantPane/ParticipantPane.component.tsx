@@ -89,7 +89,6 @@ import {billingTotals, BillingTotals, salesTaxation} from "./BillingTotals.funct
 import BillingTotalsTable, {
   euro,
   MarginLines,
-  PaidOutVatWarning,
   readTotalsOpen,
   TotalsToggle,
   writeTotalsOpen
@@ -223,10 +222,10 @@ const ParticipantPaneComponent: FC = () => {
   // After a failed preview billing leaves partial documents: no totals for that run until a preview succeeds.
   const [runTotals, setRunTotals] = useState<{ runId: string, totals: BillingTotals } | undefined>(undefined);
   const [totalsOpen, setTotalsOpen] = useState(readTotalsOpen);
-  const toggleTotals = () => setTotalsOpen(open => {
-    writeTotalsOpen(!open)
-    return !open
-  });
+  const toggleTotals = () => {
+    writeTotalsOpen(!totalsOpen)
+    setTotalsOpen(!totalsOpen)
+  };
   const [failedRunId, setFailedRunId] = useState<string | undefined>(undefined);
   useEffect(() => {
     if (!showAmount || !billingRun || !billingRun.id || billingRun.id === failedRunId) {
@@ -897,17 +896,12 @@ const ParticipantPaneComponent: FC = () => {
         <div className={"pane-footer"}>
           {showAmount && (
             <div>
-              {totals && totalsOpen && <BillingTotalsTable totals={totals}/>}
-              {/* the note on paid-out VAT is a warning: shown also when the breakdown is collapsed */}
-              {totals && !totalsOpen && totals.vatIdCreditNotesWithVat.recipients.length > 0 &&
-                <div style={{padding: "8px 16px 0", fontSize: "12px"}}>
-                  <PaidOutVatWarning {...totals.vatIdCreditNotesWithVat}/>
-                </div>}
+              {totals && <BillingTotalsTable totals={totals} open={totalsOpen}/>}
               <IonRow>
                 <IonCol>
                   <IonItem lines="none">
                     {totals && <TotalsToggle open={totalsOpen} onToggle={toggleTotals}/>}
-                    <IonLabel slot="end" style={{textAlign: "right"}}>
+                    <IonLabel slot="end" className="ion-text-wrap" style={{textAlign: "right"}}>
                       Saldo Zahlungen (brutto): {billingSum()} €
                       {(!totals || totalsOpen) &&
                         <div style={{fontSize: "11px", color: "var(--ion-color-medium, #92949c)"}}>
