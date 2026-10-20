@@ -1,9 +1,10 @@
 import {EegParticipant} from "../models/members.model";
 
-// Status of a member derived from its metering points (platform#165, same rule as the backend's master data export):
+// Status of a member derived from its metering points (platform#165, the rule of the backend's master data export):
 // ACTIVE with at least one active metering point; PENDING without one but with one being registered, or with no
 // metering point yet; INACTIVE when all of them have left, were archived or rejected. A member without metering
-// points whose stored status is ACTIVE had some and they were moved away: INACTIVE. Pass the member with all its
+// points whose stored status is ACTIVE had some and they were moved away: INACTIVE (web only; the export has no row
+// for members without metering points). Pass the member with all its
 // metering points (the store entity), not a filtered list entry.
 export type MemberActivity = 'ACTIVE' | 'PENDING' | 'INACTIVE'
 
