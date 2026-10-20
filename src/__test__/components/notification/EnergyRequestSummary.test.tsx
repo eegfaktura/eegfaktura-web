@@ -82,6 +82,12 @@ describe("EnergyRequestSummary (platform#173)", () => {
     expect(notCheckable).toEqual(["AT9"])
   })
 
+  it("never takes a not yet registered entry when another one exists", () => {
+    const {toCheck} = acceptedMetersToCheck(summary({accepted: [{meteringPoint: "AT1", from, to}]}),
+      [participant("p2", "Neu", [{meteringPoint: "AT1", status: "INIT"}]), participant("p0", "Alt", [{meteringPoint: "AT1", status: "INACTIVE"}])])
+    expect(toCheck[0].participantName).toBe("Erika Alt")
+  })
+
   it("counts in singular and plural", () => {
     expect(meterCount(1)).toBe("1 Zählpunkt")
     expect(meterCount(3)).toBe("3 Zählpunkte")

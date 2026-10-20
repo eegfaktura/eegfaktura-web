@@ -73,7 +73,7 @@ export const acceptedMetersToCheck = (s: EnergyRequestSummary, participants: Eeg
     const name = [p.firstname, p.lastname].filter(n => !!n).join(" ")
     for (const m of p.meters) {
       const known = byId.get(m.meteringPoint)
-      if (!known || (known.meter.status !== 'ACTIVE' && m.status === 'ACTIVE')) {
+      if (!known || entryRank(m) > entryRank(known.meter)) {
         byId.set(m.meteringPoint, {meter: m, name})
       }
     }
@@ -98,14 +98,23 @@ export const acceptedMetersToCheck = (s: EnergyRequestSummary, participants: Eeg
   return {toCheck, notCheckable}
 }
 
-// the name of a metering point, from its active entry if there are several
+// Of several entries of a metering point (owner change, new registration) the active one counts, a not yet
+// registered (INIT) one last. Used for the name and the data check, so both show the same entry.
+const entryRank = (m: Metering) => m.status === 'ACTIVE' ? 2 : m.status === 'INIT' ? 0 : 1
+
+// the name of a metering point, from the entry that counts
 export const meterNames = (meters: Metering[]): Map<string, string> => {
-  const names = new Map<string, string>()
-  for (const m of [...meters].sort((x, y) => (x.status === 'ACTIVE' ? 1 : 0) - (y.status === 'ACTIVE' ? 1 : 0))) {
-    if (m.equipmentName && m.equipmentName.length > 0) {
-      names.set(m.meteringPoint, m.equipmentName)
+  const chosen = new Map<string, Metering>()
+  for (const m of meters) {
+    const known = chosen.get(m.meteringPoint)
+    if (!known || entryRank(m) > entryRank(known)) {
+      chosen.set(m.meteringPoint, m)
     }
   }
+  const names = new Map<string, string>()
+  chosen.forEach((m, id) => {
+    if (m.equipmentName && m.equipmentName.length > 0) names.set(id, m.equipmentName)
+  })
   return names
 }
 
