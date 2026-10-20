@@ -317,3 +317,11 @@ export const zvtTimeWindows = (tariff?: EegTariff): TariffTimeWindow[] | undefin
   }
   return windows.length > 0 ? windows : undefined
 }
+
+// Key over the time windows of all time-based tariffs: changes when a tariff becomes time-based or its windows
+// change, so the energy report (it carries the buckets billing needs) is fetched again. Constant for EEGs without
+// time-based tariffs, so other tariff edits do not fetch again.
+export const zvtWindowsKey = (tariffById: Record<string, EegTariff>): string =>
+  JSON.stringify(Object.keys(tariffById).sort()
+    .map(id => [id, zvtTimeWindows(tariffById[id])])
+    .filter(([, windows]) => windows !== undefined))
