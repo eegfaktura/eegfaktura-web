@@ -8,6 +8,11 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **Billing mode info text** (feedback 20.10.2026). It said „OK“ creates the draft invoices; „OK“ only switches to
+  billing mode. The text now names the steps as the buttons do: „Vorschau erstellen“ (drafts, Excel, ZIP),
+  „Vorschau Akt.“, and „Abrechnung durchführen“ (final, not reversible). The cancel button reads „Abbrechen“.
+
 ## [1.7.1] – 2026-10-20
 
 ### Fixed
