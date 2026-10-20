@@ -1,4 +1,4 @@
-import React, {FC} from "react";
+import React, {FC, useEffect} from "react";
 import {IonCard, IonCardContent, IonCol, IonGrid, IonList, IonListHeader, IonRow} from "@ionic/react";
 import InputFormComponent from "./form/InputForm.component";
 import {useFormContext} from "react-hook-form";
@@ -110,8 +110,13 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
     const setTimeWindowActive = (n: 1 | 2, active: boolean) => {
       setValue(n === 1 ? "timeTariff1Active" : "timeTariff2Active", active,
         {shouldValidate: true, shouldDirty: true})
-      trigger("useTimeTariff")
     }
+
+    // the window fields get their rules only on the render after (de)activating a window: validate again then, so
+    // the save button does not stay enabled for a form that cannot be submitted
+    useEffect(() => {
+      trigger()
+    }, [useTimeTariff, tt1Active, tt2Active])
 
     const handleRateType = (type: number) => {
       switch (type) {
@@ -233,7 +238,7 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
       )
     }
 
-    const renderZvtNoActiveWindow = () => !tt1Active && !tt2Active && (
+    const renderZvtNoActiveWindow = () => zvtWithoutActiveWindow(watch()) && (
       <p style={{color: "var(--ion-color-danger)", fontSize: "0.85em", margin: "8px 4px"}}>
         {t("zvt.warn_no_active_window")}
       </p>

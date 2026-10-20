@@ -11,8 +11,10 @@ this changelog highlights the changes relevant for overview and operations.
 ### Fixed
 - **ZVT (env/billing): a time-based tariff without an active window could be saved** (platform#175). web billed
   it as a simple tariff, billing as time-based, and the billing run stopped („keine Fenster-Teilsummen (buckets)“).
-  The tariff form now shows a warning and keeps „Änderungen speichern“ disabled while „Zeitbasiert“ has no active
-  window. Windows are still activated only with the checkbox „Zeitraum aktiv“.
+  The tariff form (producer and consumer tariffs) now shows a warning and keeps „Änderungen speichern“ disabled
+  while „Zeitbasiert“ has no active window with Von and Bis (the same rule web uses for billing). Windows are still
+  activated only with the checkbox „Zeitraum aktiv“. Tariffs already saved in that state still stop billing until
+  they are opened and fixed.
 - **ZVT (env/billing): billing failed after a tariff was switched to time-based** (platform#174). The energy report
   was only fetched again when members or the period changed, so after switching a tariff to „Zeitbasiert“ (or
   editing its windows) it had no buckets; billing then got the time
