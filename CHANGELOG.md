@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.7.1] – 2026-10-20
+
 ### Fixed
 - **Member status: a metering point that left never counts as „in Anmeldung“** (platform#165). The rule after the
   prod query of 20.10.2026 (36 members with only left metering points in a stale registration state) was not part
