@@ -4,15 +4,9 @@ import {adapter, initialState} from "../states";
 
 export const reducer = createReducer(initialState, builder =>
   builder
-    .addCase(fetchRatesModel.pending, (state) => {
-      return {...state, loaded: false}
-    })
     .addCase(fetchRatesModel.fulfilled, (state, action) => {
       const {rates} = action.payload
-      return adapter.setAll({...state, selectedRate: undefined, loaded: true}, rates)
-    })
-    .addCase(fetchRatesModel.rejected, (state) => {
-      return {...state, loaded: true}
+      return adapter.setAll({...state, selectedRate: undefined}, rates)
     })
     .addCase(saveNewRate.fulfilled, (state, action) => {
       return adapter.addOne({...state, selectedRate: action.payload}, action.payload)

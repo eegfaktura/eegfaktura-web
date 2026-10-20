@@ -18,11 +18,6 @@ export const isFetchingSelector = createSelector(
   state => state.isFetching
 );
 
-export const ratesLoadedSelector = createSelector(
-  featureStateSelector,
-  state => state.loaded
-);
-
 // export const rateSelector = createSelector(
 //   featureStateSelector,
 //   selectAll

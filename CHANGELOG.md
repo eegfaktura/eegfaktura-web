@@ -20,10 +20,7 @@ this changelog highlights the changes relevant for overview and operations.
     window, or buckets for a tariff that is no longer time-based) instead of billing buckets of other windows; it
     works once the report is there. billing checks the windows against the tariff, so a mismatch never bills;
   - an older report response that arrives after a newer one, or after the report was cleared, no longer replaces
-    or clears it;
-  - the energy report waits until the tariffs are loaded (or failed to load). Tariffs and members load in parallel;
-    before, a ZVT EEG computed the report twice on page load (first without the time windows, thrown away). Now it
-    is computed once; the wait is at most the rest of the small tariff request.
+    or clears it.
 - **Process history: „Datenfreigabe-Aufhebung“ was always empty** (platform#170). Since 1.2.0 the view asks for three
   protocols at once (`CM_REV_IMP;CM_REV_SP;CM_REV_CUS`). The backend (Go) drops a query parameter with a raw `;`, so
   the protocol arrived empty and no entry matched. The list is now sent encoded (`%3B`); the backend splits it as
