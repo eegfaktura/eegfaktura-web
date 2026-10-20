@@ -109,9 +109,11 @@ export const writeTotalsOpen = (open: boolean) => {
 
 export const TotalsToggle: FC<{ open: boolean, onToggle: () => void }> = ({open, onToggle}) => (
   // ion-button copies aria attributes to its inner button only when it loads: remount it on every change
-  <IonButton key={String(open)} slot="start" fill="clear" size="small" onClick={onToggle} aria-expanded={open}>
-    <IonIcon slot="start" icon={open ? chevronDown : chevronForward}/>
-    Aufstellung
+  // only the chevron (feedback 20.10.2026); the label stays for screen readers and as tooltip
+  <IonButton key={String(open)} slot="start" fill="clear" size="small" onClick={onToggle} aria-expanded={open}
+             aria-label={open ? "Aufstellung zuklappen" : "Aufstellung aufklappen"}
+             title={open ? "Aufstellung zuklappen" : "Aufstellung aufklappen"}>
+    <IonIcon slot="icon-only" icon={open ? chevronDown : chevronForward}/>
   </IonButton>
 )
 
