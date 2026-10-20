@@ -12,6 +12,8 @@ this changelog highlights the changes relevant for overview and operations.
 - **Check before billing: buttons** (pilot feedback 20.10.2026). „Abbrechen“ and „Abrechnen“ were hard to tell apart:
   „Abbrechen“ is now grey on the left, the run on the right reads „Abrechnung durchführen“ („Trotzdem Abrechnung
   durchführen“ with warnings). While the check runs, the run button is disabled and reads „Prüfung läuft …“.
+- **Billing breakdown toggle shows only the chevron** (feedback 20.10.2026), without the text „Aufstellung“; the
+  label stays as tooltip and for screen readers.
 - **Members without an active metering point count as inactive** (platform#165, decision 20.10.2026). The dashboard
   counted every member as active and always showed „0 inaktive“. It now counts, over all members and by the current
   state of their metering points: active (at least one active metering point), inactive (all left, archived or
