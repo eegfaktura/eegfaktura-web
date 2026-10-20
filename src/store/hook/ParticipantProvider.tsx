@@ -70,7 +70,8 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
   const tariffById = useAppSelector(ratesMapSelector)
   // ZVT: fetch the energy report again when time windows change (tariff switched to time-based, windows edited,
   // tariffs loaded after the participants); otherwise billing gets time windows without buckets.
-  const zvtKey = useMemo(() => zvtWindowsKey(tariffById), [tariffById])
+  const zvtKey = useMemo(() => zvtWindowsKey(tariffById,
+    (allParticipants || []).flatMap(p => p.meters.map(m => m.tariff_id).filter(id => !!id))), [tariffById, allParticipants])
 
   const isFechting = isEEGFetching()
 

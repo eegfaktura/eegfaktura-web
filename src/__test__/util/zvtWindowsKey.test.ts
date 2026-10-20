@@ -10,17 +10,21 @@ const timed = (from: string, to: string) => ({
 
 describe("zvtWindowsKey", () => {
   it("is the same without time-based tariffs, also before the tariffs are loaded", () => {
-    expect(zvtWindowsKey({})).toBe(zvtWindowsKey({s: simple}))
+    expect(zvtWindowsKey({}, ["s"])).toBe(zvtWindowsKey({s: simple}, ["s"]))
   })
 
-  it("changes when a tariff becomes time-based (platform: ZVT buckets missing after the switch)", () => {
-    expect(zvtWindowsKey({s: simple, z: {...timed("11:00", "14:00"), useTimeTariff: false} as EegTariff}))
-      .not.toBe(zvtWindowsKey({s: simple, z: timed("11:00", "14:00")}))
+  it("changes when a used tariff becomes time-based (platform#174)", () => {
+    expect(zvtWindowsKey({s: simple, z: {...timed("11:00", "14:00"), useTimeTariff: false} as EegTariff}, ["s", "z"]))
+      .not.toBe(zvtWindowsKey({s: simple, z: timed("11:00", "14:00")}, ["s", "z"]))
   })
 
   it("changes when a window changes, not when only other fields change", () => {
-    const a = zvtWindowsKey({z: timed("11:00", "14:00")})
-    expect(zvtWindowsKey({z: timed("11:00", "15:00")})).not.toBe(a)
-    expect(zvtWindowsKey({z: {...timed("11:00", "14:00"), name: "neu"} as EegTariff})).toBe(a)
+    const a = zvtWindowsKey({z: timed("11:00", "14:00")}, ["z"])
+    expect(zvtWindowsKey({z: timed("11:00", "15:00")}, ["z"])).not.toBe(a)
+    expect(zvtWindowsKey({z: {...timed("11:00", "14:00"), name: "neu"} as EegTariff}, ["z"])).toBe(a)
+  })
+
+  it("ignores time-based tariffs no metering point uses", () => {
+    expect(zvtWindowsKey({s: simple, z: timed("11:00", "14:00")}, ["s"])).toBe(zvtWindowsKey({s: simple}, ["s"]))
   })
 })
