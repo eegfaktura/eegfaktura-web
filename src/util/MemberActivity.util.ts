@@ -8,15 +8,15 @@ import {EegParticipant} from "../models/members.model";
 // metering points (the store entity), not a filtered list entry.
 export type MemberActivity = 'ACTIVE' | 'PENDING' | 'INACTIVE'
 
-// a registration is running, whatever the metering point's status (a re-registration after leaving keeps INACTIVE
-// until it is active again)
+// a registration is running; a metering point with status INACTIVE never counts (stale registration states in prod,
+// 20.10.2026), a re-registered one counts once it is active again
 const REGISTERING: string[] = ['NEW', 'INIT', 'PENDING', 'APPROVED']
 
 export const memberActivity = (p: EegParticipant): MemberActivity => {
   const meters = p.meters ?? []
   if (meters.some(m => m.status === 'ACTIVE')) return 'ACTIVE'
   if (meters.length === 0) return p.status === 'ACTIVE' ? 'INACTIVE' : 'PENDING'
-  if (meters.some(m => REGISTERING.includes(m.processState))) return 'PENDING'
+  if (meters.some(m => m.status !== 'INACTIVE' && REGISTERING.includes(m.processState))) return 'PENDING'
   return 'INACTIVE'
 }
 
