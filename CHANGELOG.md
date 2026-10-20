@@ -9,6 +9,10 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Fixed
+- **Messages showed an old list** (feedback 20.10.2026). The page loaded its notifications only when it was first
+  opened; Ionic keeps the page mounted, so switching between Mitglieder and Messages never reloaded it (a new
+  summary of an energy request was missing until the browser was reloaded), and after switching the community it
+  still showed the previous community's messages. It now loads on every visit and when the community changes.
 - **Billing mode info text** (feedback 20.10.2026). It said „OK“ creates the draft invoices; „OK“ only switches to
   billing mode. The text now names the steps as the buttons do: „Vorschau erstellen“ (drafts, Excel, ZIP),
   „Vorschau Akt.“, and „Abrechnung durchführen“ (final, not reversible). The cancel button reads „Abbrechen“.
