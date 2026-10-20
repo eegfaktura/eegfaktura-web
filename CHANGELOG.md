@@ -8,6 +8,28 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.6.0] – 2026-10-20
+
+### Changed
+- **Billing breakdown can be collapsed** (feedback 20.10.2026, platform#169). The table, the margins and the
+  explanation take much height in the pane footer, so on small screens only a few metering points stayed visible.
+  „Aufstellung“ collapses them to the line „Saldo Zahlungen (brutto)“; collapsed is the default, each viewer's choice
+  is kept in the browser. The note on paid-out VAT to producers with a VAT ID stays visible when collapsed.
+- **Margin wording:** the reverse charge VAT has its own line („Rechnerische USt bei Reverse Charge (20 %): …“) below
+  the small business margin („… brutto, abzgl. rechnerischer USt bei Reverse Charge): …“). In one sentence the first
+  amount read like the margin.
+
+### Added
+- **Messages: summary of an energy data request** (platform#173, with the backend of the same feature). The new
+  notification shows the period, how many metering points were requested and accepted, and collapsible groups with
+  the metering points (and their equipment names): rejected with reason, no answer, not requested with reason,
+  requested again later. „Datenstand prüfen“ checks the energy data of the accepted metering points over the period
+  the backend requested for each, with the check before billing (platform#148), and lists the metering points with
+  incomplete data and those that cannot be checked (not loaded); „Erneut prüfen“ checks again.
+  - **Deploy order:** this web release before the backend; on its own it changes nothing.
+
+## [1.5.1] – 2026-10-19
+
 ### Fixed
 - **ZVT (env/billing): a time-based tariff without an active window could be saved** (platform#175). web billed
   it as a simple tariff, billing as time-based, and the billing run stopped („keine Fenster-Teilsummen (buckets)“).

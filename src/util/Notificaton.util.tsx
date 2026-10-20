@@ -1,5 +1,7 @@
 import {EegNotification} from "../models/eeg.model";
 import {ReactNode} from "react";
+import EnergyRequestSummaryComponent from "../components/notification/EnergyRequestSummary.component";
+import {EnergyRequestSummary} from "../components/notification/EnergyRequestSummary.functions";
 
 
 export function buildNotificationText(type: string, process: string, notification: object): ReactNode {
@@ -28,6 +30,8 @@ export function buildNotificationText(type: string, process: string, notificatio
         case 'ABSCHLUSS_ECON':
           return <p>Die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurden vom Netzbetreiber in <strong><u>deine
             EEG aufgenommen.</u></strong></p>
+        case 'ZUSAMMENFASSUNG_PT':
+          return <EnergyRequestSummaryComponent summary={n.message.properties as EnergyRequestSummary}/>
         case 'ABLEHNUNG_PT':
           return <p>Für die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurde die ENERGIEDATENANFRAGE
             abgelehnt. ({n.message.responseCode})</p>

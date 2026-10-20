@@ -50,7 +50,7 @@ const dateTime = (t: number) => moment(t).format("DD.MM.YYYY HH:mm")
 const meterLabel = (m: CheckedMeter) =>
   `${m.participantName} – ${m.equipmentName ? m.equipmentName + " – " : ""}${m.meteringPoint}`
 
-const incompleteText = (m: IncompleteMeter) => {
+export const incompleteText = (m: IncompleteMeter) => {
   if (m.firstData === null || m.lastData === null) {
     return `${meterLabel(m.meter)}: keine Energiedaten`
   }

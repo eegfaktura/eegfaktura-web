@@ -1,4 +1,6 @@
 import React, {FC} from "react";
+import {IonButton, IonIcon} from "@ionic/react";
+import {chevronDown, chevronForward} from "ionicons/icons";
 import {AmountSum, BillingTotals, REVERSE_CHARGE_VAT_PERCENT, SalesTaxation} from "./BillingTotals.functions";
 
 // "+ 0" turns -0 into 0, so a total that rounds to zero does not show as "-0,00".
@@ -15,10 +17,11 @@ const Row: FC<{ label: string, sum: AmountSum }> = ({label, sum}) => (
   </tr>
 )
 
-// Totals of the billing run per document type (platform#169), the same values as in the Excel export.
-const BillingTotalsTable: FC<{ totals: BillingTotals }> = ({totals}) => (
+// Totals of the billing run per document type (platform#169), the same values as in the Excel export. Collapsed
+// (open = false) only the note on paid-out VAT remains: it is a warning.
+const BillingTotalsTable: FC<{ totals: BillingTotals, open: boolean }> = ({totals, open}) => (
   <div style={{padding: "8px 16px 0", fontSize: "12px"}}>
-    <table style={{width: "100%", borderCollapse: "collapse"}}>
+    {open && <table style={{width: "100%", borderCollapse: "collapse"}}>
       <thead>
       <tr style={{borderBottom: "1px solid var(--ion-border-color, #dcdcdc)"}}>
         <th style={{...cell, textAlign: "left"}}>€</th>
@@ -32,7 +35,7 @@ const BillingTotalsTable: FC<{ totals: BillingTotals }> = ({totals}) => (
       <Row label="Gutschriften" sum={totals.creditNotes}/>
       {totals.infos.count > 0 && <Row label="Info-Belege" sum={totals.infos}/>}
       </tbody>
-    </table>
+    </table>}
     {totals.vatIdCreditNotesWithVat.recipients.length > 0 && <PaidOutVatWarning {...totals.vatIdCreditNotesWithVat}/>}
   </div>
 )
@@ -48,13 +51,15 @@ export const MarginLines: FC<{ totals: BillingTotals, taxation: SalesTaxation }>
   <div style={{padding: "0 16px 8px", fontSize: "12px", textAlign: "right"}}>
     {taxation !== "SMALL_BUSINESS" &&
       <div>Marge bei Regelbesteuerung (netto): <strong>{euro(totals.marginStandard)} €</strong></div>}
+    {/* the reverse charge VAT on its own line, so it cannot be read as the margin (feedback 20.10.2026) */}
     {taxation !== "STANDARD" &&
       <div>
         Marge bei Kleinunternehmerregelung (brutto
-        {totals.reverseCharge.vat > 0 &&
-          `, abzgl. ${euro(totals.reverseCharge.vat)} € rechnerischer USt bei Reverse Charge (${REVERSE_CHARGE_VAT_PERCENT} %)`}):
+        {totals.reverseCharge.vat > 0 ? ", abzgl. rechnerischer USt bei Reverse Charge" : ""}):
         {" "}<strong>{euro(totals.marginSmallBusiness)} €</strong>
       </div>}
+    {taxation !== "STANDARD" && totals.reverseCharge.vat > 0 &&
+      <div>Rechnerische USt bei Reverse Charge ({REVERSE_CHARGE_VAT_PERCENT} %): {euro(totals.reverseCharge.vat)} €</div>}
     {taxation === "MIXED" && <div>Verbrauchertarife teils mit, teils ohne USt. Bitte prüfen.</div>}
     <div style={{color: "var(--ion-color-medium, #92949c)"}}>
       Rechnerische Werte, keine steuerliche Beratung.
@@ -81,5 +86,33 @@ const PaidOutVatWarning: FC<{ vat: number, recipients: string[] }> = ({vat, reci
     </div>
   )
 }
+
+// The breakdown takes much height in the pane footer: it can be collapsed, and each viewer's choice is kept in the
+// browser (collapsed by default). Storage can be missing or blocked: then it is just collapsed.
+const TOTALS_OPEN_KEY = "eegfaktura.billingTotalsOpen"
+
+export const readTotalsOpen = (): boolean => {
+  try {
+    return localStorage.getItem(TOTALS_OPEN_KEY) === "1"
+  } catch {
+    return false
+  }
+}
+
+export const writeTotalsOpen = (open: boolean) => {
+  try {
+    localStorage.setItem(TOTALS_OPEN_KEY, open ? "1" : "0")
+  } catch {
+    // not kept, still works for this page
+  }
+}
+
+export const TotalsToggle: FC<{ open: boolean, onToggle: () => void }> = ({open, onToggle}) => (
+  // ion-button copies aria attributes to its inner button only when it loads: remount it on every change
+  <IonButton key={String(open)} slot="start" fill="clear" size="small" onClick={onToggle} aria-expanded={open}>
+    <IonIcon slot="start" icon={open ? chevronDown : chevronForward}/>
+    Aufstellung
+  </IonButton>
+)
 
 export default BillingTotalsTable
