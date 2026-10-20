@@ -1,6 +1,9 @@
 import React, {FC,  useMemo} from "react";
 import {EegParticipant} from "../../models/members.model";
 import {EegTariff} from "../../models/eeg.model";
+import {useAppSelector} from "../../store";
+import {allParticipantsSelector} from "../../store/participant";
+import {countMemberActivity} from "../../util/MemberActivity.util";
 
 interface EegOverviewComponentProps {
   participants: EegParticipant[]
@@ -15,13 +18,17 @@ const EegOverviewComponent: FC<EegOverviewComponentProps> = ({participants, rate
   // const [tariffUsage, setTariffUssage] = useState<Record<string, number>>({})
 
 
-  const [participantCount, consumerCount, producerCount, tariffUsage] = useMemo(() => {
+  // platform#165: members counted by the current state of their metering points, over all members (not only the
+  // ones of the selected period): active = at least one active metering point
+  const allParticipants = useAppSelector(allParticipantsSelector)
+  const members = useMemo(() => countMemberActivity(allParticipants), [allParticipants])
+
+  const [consumerCount, producerCount, tariffUsage] = useMemo(() => {
       const defaultRateCount: Record<string, number> = Object.keys(rateMap).reduce((o, v) => {
         return {...o, [v]: 0}
       }, {} as Record<string, number>)
 
       const s = participants.reduce((r, p) => {
-        r.p += 1
         p.meters.forEach(m => {
           m.direction === 'CONSUMPTION' ? r.c += 1 : r.pp += 1
           if (m.tariff_id) {
@@ -29,9 +36,9 @@ const EegOverviewComponent: FC<EegOverviewComponentProps> = ({participants, rate
           }
         })
         return r
-      }, {p: 0, c: 0, pp: 0, t: defaultRateCount})
+      }, {c: 0, pp: 0, t: defaultRateCount})
 
-    return [s.p, s.c, s.pp, s.t]
+    return [s.c, s.pp, s.t]
       // setConsumerCount(s.c)
       // setProducerCount(s.pp)
       // setParticipantCount(s.p)
@@ -118,10 +125,10 @@ const EegOverviewComponent: FC<EegOverviewComponentProps> = ({participants, rate
               <div style={{flexBasis: "50%"}}>Mitglieder</div>
               <div style={{display: "flex", flexFlow: "row", flex: "1"}}>
                 <div style={{display: "flex", flex: "1", padding: "0px 16px", gap: "10px", alignItems: "center"}}>
-                  <span>{participantCount} aktive</span>
+                  <span>{members.ACTIVE} aktive</span>
                 </div>
                 <div style={{display: "flex", flex: "1", padding: "0px 16px", gap: "10px", alignItems: "center"}}>
-                  0 inaktive
+                  {members.INACTIVE} inaktive{members.PENDING > 0 ? `, ${members.PENDING} in Anmeldung` : ""}
                 </div>
               </div>
             </div>
