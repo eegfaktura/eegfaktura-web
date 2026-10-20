@@ -8,6 +8,12 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **Member status: a metering point that left never counts as „in Anmeldung“** (platform#165). The rule after the
+  prod query of 20.10.2026 (36 members with only left metering points in a stale registration state) was not part
+  of the merged change: such members showed as „in Anmeldung“. They now count as inactive; a re-registered metering
+  point counts once it is active again.
+
 ### Changed
 - **Billing breakdown toggle shows only the chevron** (feedback 20.10.2026), without the text „Aufstellung“; the
   label stays as tooltip and for screen readers.
