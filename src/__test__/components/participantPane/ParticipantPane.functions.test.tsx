@@ -12,20 +12,22 @@ vi.mock("../../../store/energy", () => ({
     {
       participantId: "1234567890",
       meters: [
-        {meterId: "AT0000000000000000000000000000001", meterDir: "CONSUMPTION", report: {summary: {utilization: 10, production: 0, allocation: 0},
+        // the energystore echoes the time windows it computed the buckets for
+        {meterId: "AT0000000000000000000000000000001", meterDir: "CONSUMPTION", timeWindows: [{key: "T1", from: "06:00", to: "08:00"}],
+          report: {summary: {utilization: 10, production: 0, allocation: 0},
           buckets: [{key: "BASE", kWh: 5}, {key: "T1", kWh: 5}]}},
         {meterId: "AT0000000000000000000000000000002", meterDir: "CONSUMPTION", report: {summary: {utilization: 0, production: 0, allocation: 0}}},
       ],
     },
   ],
 }));
-// ZVT: Tarif-Lookup fuer die Fenster-Weitergabe. "zvt1" ist zeitbasiert -
-// nur Zaehlpunkte mit diesem Tarif bekommen buckets + timeWindows angehaengt.
+// ZVT: the current tariff already has other windows (06:00-09:00) than the report (06:00-08:00), as right after a
+// window edit. The allocation must carry the report's windows, never the tariff's (platform#174).
 vi.mock("../../../store/rate", () => ({
   ratesMapSelector: () => ({
     "zvt1": {
       id: "zvt1", type: "VZP", useTimeTariff: true,
-      timeTariff1Active: true, timeTariff1Name: "Tag", timeTariff1From: "06:00", timeTariff1To: "08:00",
+      timeTariff1Active: true, timeTariff1Name: "Tag", timeTariff1From: "06:00", timeTariff1To: "09:00",
       timeTariff1CentPerKWh: 22.5,
     },
   }),
@@ -71,14 +73,15 @@ describe("<ParticipantPane/> Functions", () => {
 
     // Current behaviour: energy comes from the store; zero-kWh meters are NOT
     // filtered out (the >0 filter is intentionally disabled) and each entry
-    // carries the participantId. Simple tariffs never carry buckets.
+    // carries the participantId. Time windows and buckets come from the report, not from the tariff.
     expect(r).toEqual([
-      {participantId: "1234567890", meteringPoint: "AT0000000000000000000000000000001", allocationKWh: 10},
+      {participantId: "1234567890", meteringPoint: "AT0000000000000000000000000000001", allocationKWh: 10,
+        buckets: [{key: "BASE", kWh: 5}, {key: "T1", kWh: 5}], timeWindows: [{key: "T1", from: "06:00", to: "08:00"}]},
       {participantId: "1234567890", meteringPoint: "AT0000000000000000000000000000002", allocationKWh: 0},
     ])
   });
 
-  it("attaches buckets and timeWindows for time-based tariffs (ZVT)", async () => {
+  it("takes buckets and timeWindows from the report: a stale report without windows sends none (platform#174)", async () => {
     const participants = [{
       id: "1234567890",
       status: 'ACTIVE',
@@ -92,7 +95,7 @@ describe("<ParticipantPane/> Functions", () => {
         meteringPoint: "AT0000000000000000000000000000002",
         direction: 'CONSUMPTION',
         processState: 'ACTIVE',
-        tariff_id: "simple1"
+        tariff_id: "zvt1"
       } as Metering],
     } as EegParticipant]
 

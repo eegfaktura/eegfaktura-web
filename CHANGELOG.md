@@ -9,6 +9,19 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Fixed
+- **ZVT (env/billing): billing failed after a tariff was switched to time-based** (platform#174). The energy report
+  was only fetched again when members or the period changed, so after switching a tariff to „Zeitbasiert“ (or
+  editing its windows) it had no buckets; billing then got the time
+  windows without buckets and stopped („keine Fenster-Teilsummen (buckets)“). Now:
+  - the report is also fetched again when the time windows of a tariff of the EEG's metering points change (EEGs
+    without time-based tariffs and edits of tariffs no metering point has fetch as before); not while the
+    application reloads EEG, tariffs and members (tenant switch, refresh) — that load ends with one fetch;
+  - billing gets the time windows the energystore computed the buckets for (echoed in the report), not those of the
+    current tariff. Billing started while the new report is still loading stops (missing buckets, a differing
+    window, or buckets for a tariff that is no longer time-based) instead of billing buckets of other windows; it
+    works once the report is there. billing checks the windows against the tariff, so a mismatch never bills;
+  - an older report response that arrives after a newer one, or after the report was cleared, no longer replaces
+    or clears it.
 - **Process history: „Datenfreigabe-Aufhebung“ was always empty** (platform#170). Since 1.2.0 the view asks for three
   protocols at once (`CM_REV_IMP;CM_REV_SP;CM_REV_CUS`). The backend (Go) drops a query parameter with a raw `;`, so
   the protocol arrived empty and no entry matched. The list is now sent encoded (`%3B`); the backend splits it as

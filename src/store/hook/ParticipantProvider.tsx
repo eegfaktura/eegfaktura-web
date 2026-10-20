@@ -1,4 +1,4 @@
-import {createContext, FC, ReactNode, useCallback, useContext, useEffect, useState} from "react";
+import {createContext, FC, ReactNode, useCallback, useContext, useEffect, useMemo, useState} from "react";
 import {EegParticipant} from "../../models/members.model";
 import {useAppDispatch, useAppSelector} from "../index";
 import {
@@ -13,7 +13,7 @@ import {filterActiveParticipantAndMeter} from "../../util/FilterHelper.unit";
 import {getPeriodDates} from "../../util/FilterHelper";
 import participants from "../../pages/Participants";
 import {ratesMapSelector} from "../rate";
-import {zvtTimeWindows} from "../../util/Helper.util";
+import {zvtTimeWindows, zvtWindowsKey} from "../../util/Helper.util";
 
 
 export interface ParicipantState {
@@ -68,6 +68,10 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
   // const participants = useAppSelector(activeParticipantsSelector1)
   const allParticipants = useAppSelector(allParticipantsSelector)
   const tariffById = useAppSelector(ratesMapSelector)
+  // ZVT: fetch the energy report again when time windows change (tariff switched to time-based, windows edited,
+  // tariffs loaded after the participants); otherwise billing gets time windows without buckets.
+  const zvtKey = useMemo(() => zvtWindowsKey(tariffById,
+    (allParticipants || []).flatMap(p => p.meters.map(m => m.tariff_id).filter(id => !!id))), [tariffById, allParticipants])
 
   const isFechting = isEEGFetching()
 
@@ -189,7 +193,9 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
   }
 
   useEffect(() => {
-    if (activePeriod && allParticipants) {
+    // not while the application (re)loads EEG, tariffs and members (tenant switch, refresh): the store can then
+    // mix the old members with the new tenant; the load ends by setting the period, which fetches once
+    if (activePeriod && allParticipants && !isFechting) {
       const [start, end] = getPeriodDates(activePeriod)
       const _aps = filterActiveParticipantAndMeter(allParticipants, start, end)
       // const identical = objectsSimilar(activeParticipants, _aps, "id", ["participantSince"])
@@ -207,7 +213,7 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
         fetchEnergyReport(_aps)
       // }
     }
-  }, [allParticipants, activePeriod]);
+  }, [allParticipants, activePeriod, zvtKey, isFechting]);
 
   // useEffect(() => {
   //   fetchEnergyReport(activeParticipants)

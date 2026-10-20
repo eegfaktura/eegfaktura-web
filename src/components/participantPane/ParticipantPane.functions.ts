@@ -1,27 +1,23 @@
 import {Metering, MeteringEnergyGroupType, ParticipantBillType} from "../../models/meteringpoint.model";
 import {EegParticipant} from "../../models/members.model";
 import {meteringEnergyGroup1} from "../../store/energy";
-import {ratesMapSelector} from "../../store/rate";
 import {store} from "../../store";
-import {zvtTimeWindows} from "../../util/Helper.util";
 import {hasOpenProblem} from "../../util/FilterHelper.unit";
 
 export const buildAllocationMapFromSelected = (participants: EegParticipant[], checkedParticipant: Record<string, boolean>): MeteringEnergyGroupType[] => {
   const participantReport = meteringEnergyGroup1(store.getState())
-  const tariffById = ratesMapSelector(store.getState())
   const activeMeters = participants.flatMap(p => p.meters.filter(m=>m.status !== "INIT").map(m => m.meteringPoint))
-  const tariffIdByMeter = participants.flatMap(p => p.meters).reduce(
-    (acc, m) => ({...acc, [m.meteringPoint]: m.tariff_id}), {} as Record<string, string>)
 
   return participantReport
     .filter(p => checkedParticipant[p.participantId] !== undefined && checkedParticipant[p.participantId])
     .flatMap(p => {
       return p.meters.filter(m => activeMeters.includes(m.meterId)).map(m => {
-        // ZVT: bei zeitbasiertem Tarif die Fenster-Teilsummen (buckets) aus dem
-        // energystore-Report plus die verwendeten Fenster-Definitionen als
-        // Konsistenz-Guard mitgeben. billing bricht fail-loud ab, wenn sie
-        // fehlen oder nicht (mehr) zum Tarif passen.
-        const timeWindows = zvtTimeWindows(tariffById[tariffIdByMeter[m.meterId]])
+        // ZVT: die Fenster-Teilsummen (buckets) mit genau den Fenstern mitgeben, fuer die der energystore sie
+        // berechnet hat (er schickt sie im Report zurueck), nicht mit den Fenstern des aktuellen Tarifs: nach
+        // einer Tarifaenderung kann der Report noch der alte sein (platform#174). billing vergleicht die Fenster
+        // mit dem Tarif und bricht fail-loud ab, wenn sie fehlen oder nicht (mehr) passen - nie eine Rechnung
+        // mit Teilsummen zu anderen Fenstern.
+        const timeWindows = m.timeWindows && m.timeWindows.length > 0 ? m.timeWindows : undefined
         return {
           participantId: p.participantId,
           meteringPoint: m.meterId,
