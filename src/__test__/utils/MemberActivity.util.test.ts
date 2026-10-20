@@ -33,7 +33,7 @@ describe("memberActivity without metering points (platform#165)", () => {
     expect(memberActivity({meters: [], status: 'NEW'} as unknown as EegParticipant)).toBe('PENDING')
   })
 
-  it("treats a metering point without status as not yet registered", () => {
-    expect(memberActivity({meters: [{processState: 'ACTIVE'}]} as unknown as EegParticipant)).toBe('PENDING')
+  it("is pending while a metering point that left is registered again (status stays INACTIVE)", () => {
+    expect(memberActivity(member(["INACTIVE", "PENDING"]))).toBe('PENDING')
   })
 })
