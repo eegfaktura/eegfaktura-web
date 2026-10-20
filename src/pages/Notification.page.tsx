@@ -1,5 +1,5 @@
-import React, {FC, useEffect, useState} from "react";
-import {IonContent, IonHeader, IonItem, IonPage, IonToolbar} from "@ionic/react";
+import React, {FC, useCallback, useEffect, useState} from "react";
+import {IonContent, IonHeader, IonItem, IonPage, IonToolbar, useIonViewWillEnter} from "@ionic/react";
 import {EegNotification, Message} from "../models/eeg.model";
 import {useAppSelector} from "../store";
 import {selectedTenant} from "../store/eeg";
@@ -12,14 +12,20 @@ const NotificationPage: FC = () => {
   const {tenant} = useTenant()
   const [notifictions, setNotifications] = useState<{type: string, process: string, date: Date, notification: EegNotification}[]>([])
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    if (!tenant) return
     Api.eegService.getNotifications(tenant, 0).then(r => {
       setNotifications(r.map(x => {
         x.message = new Message(x.message)
         return {type: x.type, process: x.process, date: x.date, notification: x}
       }))
     })
-  }, [])
+  }, [tenant])
+
+  // Ionic keeps the page mounted when switching views: load again on every visit (a new energy request summary
+  // or answers would otherwise only show after a page reload) and when the community changes.
+  useEffect(() => load(), [load])
+  useIonViewWillEnter(() => load(), [load])
 
   return (
     <IonPage>
