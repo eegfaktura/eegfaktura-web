@@ -21,13 +21,13 @@ vi.mock("../../../store/energy", () => ({
     },
   ],
 }));
-// ZVT: Tarif-Lookup fuer die Fenster-Weitergabe. "zvt1" ist zeitbasiert -
-// nur Zaehlpunkte mit diesem Tarif bekommen buckets + timeWindows angehaengt.
+// ZVT: the current tariff already has other windows (06:00-09:00) than the report (06:00-08:00), as right after a
+// window edit. The allocation must carry the report's windows, never the tariff's (platform#174).
 vi.mock("../../../store/rate", () => ({
   ratesMapSelector: () => ({
     "zvt1": {
       id: "zvt1", type: "VZP", useTimeTariff: true,
-      timeTariff1Active: true, timeTariff1Name: "Tag", timeTariff1From: "06:00", timeTariff1To: "08:00",
+      timeTariff1Active: true, timeTariff1Name: "Tag", timeTariff1From: "06:00", timeTariff1To: "09:00",
       timeTariff1CentPerKWh: 22.5,
     },
   }),

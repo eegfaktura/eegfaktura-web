@@ -16,9 +16,11 @@ this changelog highlights the changes relevant for overview and operations.
   - the report is also fetched again when the time windows of a used tariff change (EEGs without time-based tariffs
     and edits of unused tariffs fetch as before);
   - billing gets the time windows the energystore computed the buckets for (echoed in the report), not those of the
-    current tariff. Billing started while the new report is still loading stops with the same message instead of
-    billing buckets of other windows; it works once the report is there;
-  - an older report response that arrives after a newer one no longer replaces or clears it.
+    current tariff. Billing started while the new report is still loading stops (missing buckets, a differing
+    window, or buckets for a tariff that is no longer time-based) instead of billing buckets of other windows; it
+    works once the report is there. billing checks the windows against the tariff, so a mismatch never bills;
+  - an older report response that arrives after a newer one, or after the report was cleared, no longer replaces
+    or clears it.
 - **Process history: „Datenfreigabe-Aufhebung“ was always empty** (platform#170). Since 1.2.0 the view asks for three
   protocols at once (`CM_REV_IMP;CM_REV_SP;CM_REV_CUS`). The backend (Go) drops a query parameter with a raw `;`, so
   the protocol arrived empty and no entry matched. The list is now sent encoded (`%3B`); the backend splits it as

@@ -32,6 +32,8 @@ export const reducer = createReducer(initialState, builder =>
       metaAdapter.removeAll(state.meta)
     })
     .addCase(clearEnergyState, (state, action) => {
+      // a request still running for the previous selection must not fill the cleared store
+      state.reportRequestId = "cleared"
       participantReportAdapter.removeAll(state.participantReports)
       metaAdapter.removeAll(state.meta)
     })
