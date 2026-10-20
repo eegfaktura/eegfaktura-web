@@ -86,7 +86,13 @@ import {billTotal, buildAllocationMapFromSelected, filterSearchQuery} from "./Pa
 import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
 import {withOpenProblems} from "./ParticipantPane.functions";
 import {billingTotals, BillingTotals, salesTaxation} from "./BillingTotals.functions";
-import BillingTotalsTable, {euro, MarginLines} from "./BillingTotalsTable.component";
+import BillingTotalsTable, {
+  euro,
+  MarginLines,
+  readTotalsOpen,
+  TotalsToggle,
+  writeTotalsOpen
+} from "./BillingTotalsTable.component";
 import FilterSegmentComponent from "./FilterSegment.component";
 import {VariableSizeList} from "react-window";
 
@@ -215,6 +221,11 @@ const ParticipantPaneComponent: FC = () => {
   // another run (other period) are not shown.
   // After a failed preview billing leaves partial documents: no totals for that run until a preview succeeds.
   const [runTotals, setRunTotals] = useState<{ runId: string, totals: BillingTotals } | undefined>(undefined);
+  const [totalsOpen, setTotalsOpen] = useState(readTotalsOpen);
+  const toggleTotals = () => {
+    writeTotalsOpen(!totalsOpen)
+    setTotalsOpen(!totalsOpen)
+  };
   const [failedRunId, setFailedRunId] = useState<string | undefined>(undefined);
   useEffect(() => {
     if (!showAmount || !billingRun || !billingRun.id || billingRun.id === failedRunId) {
@@ -885,21 +896,23 @@ const ParticipantPaneComponent: FC = () => {
         <div className={"pane-footer"}>
           {showAmount && (
             <div>
-              {totals && <BillingTotalsTable totals={totals}/>}
+              {totals && <BillingTotalsTable totals={totals} open={totalsOpen}/>}
               <IonRow>
                 <IonCol>
                   <IonItem lines="none">
-                    <IonLabel slot="end" style={{textAlign: "right"}}>
+                    {totals && <TotalsToggle open={totalsOpen} onToggle={toggleTotals}/>}
+                    <IonLabel slot="end" className="ion-text-wrap" style={{textAlign: "right"}}>
                       Saldo Zahlungen (brutto): {billingSum()} €
-                      <div style={{fontSize: "11px", color: "var(--ion-color-medium, #92949c)"}}>
-                        Rechnungen minus Gutschriften{totals && totals.infos.count > 0 ? " und Info-Belege" : ""}, die zu
-                        erwartende Kontobewegung aus dieser Abrechnung
-                      </div>
+                      {(!totals || totalsOpen) &&
+                        <div style={{fontSize: "11px", color: "var(--ion-color-medium, #92949c)"}}>
+                          Rechnungen minus Gutschriften{totals && totals.infos.count > 0 ? " und Info-Belege" : ""}, die zu
+                          erwartende Kontobewegung aus dieser Abrechnung
+                        </div>}
                     </IonLabel>
                   </IonItem>
                 </IonCol>
               </IonRow>
-              {totals && <MarginLines totals={totals} taxation={salesTaxation(billingInfo, allParticipants, rates)}/>}
+              {totals && totalsOpen && <MarginLines totals={totals} taxation={salesTaxation(billingInfo, allParticipants, rates)}/>}
               <IonRow>
                 <IonCol size="12">
                   {billingRunIsFetching ||
