@@ -176,7 +176,8 @@ const ParticipantPaneComponent: FC = () => {
   }
 
   // Checks before a billing run (platform#148): shown before preview and billing.
-  // They only warn; the run starts on confirm. The document date is taken when the button is clicked.
+  // Their results only warn; the run starts on confirm, which is possible once the check has finished. The document
+  // date is taken when the button is clicked.
   const rates = useAppSelector(ratesMapSelector);
   const [billingCheckMode, setBillingCheckMode] = useState<BillingCheckMode>('preview');
   const billingCheckOpen = useRef(false);
