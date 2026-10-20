@@ -9,6 +9,11 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Changed
+- **Check before billing: buttons** (pilot feedback 20.10.2026). „Abbrechen“ and „Abrechnen“ were hard to tell apart:
+  the cancel button is now „Zurück“, grey, on the left; the run stays on the right. While the check runs, the run
+  button is disabled and reads „Prüfung läuft …“.
+
+### Changed
 - **Members without an active metering point count as inactive** (platform#165, decision 20.10.2026). The dashboard
   counted every member as active and always showed „0 inaktive“. It now counts, over all members and by the current
   state of their metering points: active (at least one active metering point), inactive (all left, archived or

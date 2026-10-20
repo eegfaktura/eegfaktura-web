@@ -185,10 +185,14 @@ export const BillingCheckDialog: FC<{
       </IonContent>
       <IonFooter>
         <IonToolbar>
+          {/* „Zurück“ left and grey, the run right and filled: „Abbrechen“ and „Abrechnen“ were too similar
+              (pilot feedback 20.10.2026); the run is only possible once the check has finished */}
+          <IonButtons slot="start">
+            <IonButton color="medium" onClick={() => onDismiss(null, 'cancel')}>Zurück</IonButton>
+          </IonButtons>
           <IonButtons slot="end">
-            <IonButton onClick={() => onDismiss(null, 'cancel')}>Abbrechen</IonButton>
-            <IonButton fill="solid" onClick={() => onDismiss(null, 'confirm')}>
-              {confirmText}
+            <IonButton fill="solid" disabled={!overview} onClick={() => onDismiss(null, 'confirm')}>
+              {overview ? confirmText : "Prüfung läuft …"}
             </IonButton>
           </IonButtons>
         </IonToolbar>
