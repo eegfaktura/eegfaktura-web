@@ -8,6 +8,12 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **Messages: summary of an energy data request** (platform#173, needs the backend with the same feature). The new
+  notification shows the period, how many metering points were requested and how many delivered complete data, and
+  collapsible groups with the metering points (and their equipment names): rejected with reason, no answer, accepted
+  but incomplete data, not requested with reason, requested again later. Without problems it says so in one line.
+
 ## [1.5.1] – 2026-10-19
 
 ### Fixed
