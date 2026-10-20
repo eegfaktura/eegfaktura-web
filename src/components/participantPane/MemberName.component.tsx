@@ -1,4 +1,5 @@
 import React, {FC, useContext} from "react";
+import {memberActivity} from "../../util/MemberActivity.util";
 import {CheckboxCustomEvent, IonButton, IonCheckbox, IonCol, IonIcon, IonItem, IonLabel,} from "@ionic/react";
 import {eegExclamation} from "../../eegIcons";
 import {EegParticipant} from "../../models/members.model";
@@ -72,6 +73,9 @@ const MemberNameComponent: FC<MemberNameComponentProps> =
               <IonLabel style={{margin: "0px", width: "200px"}}>
                 <div style={{display: "flex", justifyContent: "space-between"}}>
                   <span style={{fontSize: "15px", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap"}}>{renderMemberName()}</span>
+                  {/* platform#165: no active and no registering metering point left */}
+                  {memberActivity(participant) === 'INACTIVE' &&
+                    <span style={{fontSize: "11px", color: "var(--ion-color-medium, #92949c)", marginLeft: "6px", whiteSpace: "nowrap"}}>inaktiv</span>}
                   {showAmount && <span>{euroAmount()}</span>}
                 </div>
               </IonLabel>
