@@ -24,7 +24,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PNPM_VERSION: '9.12.1'
+  PNPM_VERSION: '9.12.1'  # = packageManager in package.json
 
 jobs:
   unit:

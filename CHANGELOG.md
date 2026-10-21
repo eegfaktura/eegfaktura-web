@@ -22,6 +22,8 @@ this changelog highlights the changes relevant for overview and operations.
   `--frozen-lockfile` and the check „Lockfile in sync“ fails a PR instead of only warning. The release image
   and the full test suite build with `pnpm run build` (`tsc && vite build`), so a type error stops the release.
   `tsconfig.node.json` (vite.config.ts) uses `moduleResolution: bundler` and is type-checked in „Type check“.
+- **Build: pnpm version in `package.json`** (platform#179). `packageManager: pnpm@9.12.1` records the pnpm
+  version in the project; the release workflow reads it from there instead of its own `version:`.
 
 ## [1.7.2] – 2026-10-20
 

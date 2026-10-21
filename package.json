@@ -78,5 +78,6 @@
       "form-data": "^4.0.4"
     }
   },
-  "description": "An Ionic project"
+  "description": "An Ionic project",
+  "packageManager": "pnpm@9.12.1"
 }

@@ -1,7 +1,7 @@
 # Ersetzt die seit Mai 2026 4x rote rolling-release.yml.
 #
 # Build-Flow:
-#   1. setup-pnpm + setup-node (nvmrc)
+#   1. setup-pnpm (Version aus packageManager in package.json) + setup-node (nvmrc)
 #   2. pnpm install --frozen-lockfile (exakt pnpm-lock.yaml)
 #   3. pnpm run build (tsc && vite build -> dist/)
 #   4. docker/build-push-action -> ghcr.io/vfeeg-development/vfeeg-web
@@ -58,7 +58,6 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9.12.1
           run_install: false
 
       - name: Install Node.js
