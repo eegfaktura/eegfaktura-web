@@ -28,3 +28,6 @@ yarn-error.log*
 # Optional eslint cache
 .eslintcache
 /dist/
+
+# TypeScript build info (tsc -p tsconfig.node.json, composite)
+*.tsbuildinfo

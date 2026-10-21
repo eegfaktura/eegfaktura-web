@@ -13,8 +13,6 @@ this changelog highlights the changes relevant for overview and operations.
   …) now starts expanded and can be collapsed with the arrow; it was collapsed by default. A viewer who collapsed
   it before keeps that choice (stored in the browser). The small business margin reads „nach Abzug der rechnerischen
   USt bei Reverse Charge“ instead of „abzgl. …“: the amount is already deducted.
-
-### Changed
 - **Participation factor: the time window is shown** (platform#176). The grid operator accepts a change only
   between 09:00 and 17:00 (Austrian time) and applies it from the next day; outside it rejects with „Prozessdatum
   falsch“ (ebUtilities EC_PRTFACT_CHANGE 1.09; prod logs 16.09.–20.10.2026: 67 such rejections in 30
@@ -23,6 +21,11 @@ this changelog highlights the changes relevant for overview and operations.
   form was open, the first click shows the warning). The message of a rejected change in Messages now shows the
   reason (it showed none, and an empty metering point because the rejection names none) and, for „Prozessdatum
   falsch“, says when to send it again.
+- **Build: lockfile in sync, release with tsc** (platform#179). `pnpm-lock.yaml` now records the `form-data`
+  override from `package.json` (form-data stays 4.0.6; no package version changes), so every CI install runs with
+  `--frozen-lockfile` and the check „Lockfile in sync“ fails a PR instead of only warning. The release image
+  and the full test suite build with `pnpm run build` (`tsc && vite build`), so a type error stops the release.
+  `tsconfig.node.json` (vite.config.ts) uses `moduleResolution: bundler` and is type-checked in „Type check“.
 
 ## [1.7.2] – 2026-10-20
 
