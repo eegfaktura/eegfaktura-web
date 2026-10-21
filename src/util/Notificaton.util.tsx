@@ -47,8 +47,7 @@ export function buildNotificationText(type: string, process: string, notificatio
           return <p>Für die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurde die Anfrage auf <strong>AUFHEBUNG
             der DATENFREIGABE</strong> abgelehnt.</p>
         case 'ABLEHNUNG_CPF':
-          return <p>Für die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurde die Anfrage auf <strong>ÄNDERUNG
-            TEILNAHMEFAKTOR</strong> abgelehnt.</p>
+          return buildPartFactRejectionText(n.message.meteringPoint, n.message.responseCode)
         case 'ANFORDERUNG_CPF':
           return <p>Für die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurden <strong><u>Änderungen des
             Teilnahmefaktors
@@ -78,4 +77,22 @@ export function buildNotificationText(type: string, process: string, notificatio
     }
   }
   return ""
+}
+
+// The rejection carries no metering point (backend), but the reason; „Prozessdatum falsch“ means the request
+// reached the grid operator outside 09:00–17:00 (see PartFactWindow.util).
+function buildPartFactRejectionText(meteringPoint: string | string[], responseCode: string | string[]): ReactNode {
+  const reason = String(responseCode)
+  const meters = String(meteringPoint)
+  return (
+    <p>
+      {meters !== "-"
+        ? <>Für die Zählpunkte <strong>{meters}</strong> wurde die Anfrage auf <strong>ÄNDERUNG
+          TEILNAHMEFAKTOR</strong> abgelehnt</>
+        : <>Die Anfrage auf <strong>ÄNDERUNG TEILNAHMEFAKTOR</strong> wurde abgelehnt</>}
+      {reason !== "-" ? <> ({reason})</> : null}.
+      {reason.includes("Prozessdatum falsch") && <> Der Netzbetreiber nimmt Änderungen nur zwischen 09:00 und
+        17:00 Uhr an. Bitte fordere die Änderung in dieser Zeit erneut an.</>}
+    </p>
+  )
 }

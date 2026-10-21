@@ -146,7 +146,7 @@
     "partFact": {
       "label": "Teilnehmerfaktor in %",
       "title": "Teilnehmerfaktor ändern",
-      "desc": "Mit diesem Prozess kann der Teilnahmefaktor von aktiven Zählpunkten geändert werden. Zulässig ist eine Änderung pro Tag und je Energiegemeinschaft und Zählpunkt. Diese Änderung liegt in der Verantwortung der Energiegemeinschaft."
+      "desc": "Mit diesem Prozess kann der Teilnahmefaktor von aktiven Zählpunkten geändert werden. Zulässig ist eine Änderung pro Tag und je Energiegemeinschaft und Zählpunkt, zwischen 09:00 und 17:00 Uhr; sie gilt ab dem nächsten Tag. Diese Änderung liegt in der Verantwortung der Energiegemeinschaft."
     },
     "allocationFactor": {
       "label": "Verteilungsfaktor in %",
