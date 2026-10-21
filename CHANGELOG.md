@@ -11,7 +11,8 @@ this changelog highlights the changes relevant for overview and operations.
 ### Changed
 - **Billing breakdown expanded by default** (feedback 21.10.2026). The breakdown under the billing (net, VAT, gross
   …) now starts expanded and can be collapsed with the arrow; it was collapsed by default. A viewer who collapsed
-  it before keeps that choice (stored in the browser).
+  it before keeps that choice (stored in the browser). The small business margin reads „nach Abzug der rechnerischen
+  USt bei Reverse Charge“ instead of „abzgl. …“: the amount is already deducted.
 
 ### Changed
 - **Participation factor: the time window is shown** (platform#176). The grid operator accepts a change only

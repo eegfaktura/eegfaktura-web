@@ -55,7 +55,7 @@ export const MarginLines: FC<{ totals: BillingTotals, taxation: SalesTaxation }>
     {taxation !== "STANDARD" &&
       <div>
         Marge bei Kleinunternehmerregelung (brutto
-        {totals.reverseCharge.vat > 0 ? ", abzgl. rechnerischer USt bei Reverse Charge" : ""}):
+        {totals.reverseCharge.vat > 0 ? ", nach Abzug der rechnerischen USt bei Reverse Charge" : ""}):
         {" "}<strong>{euro(totals.marginSmallBusiness)} €</strong>
       </div>}
     {taxation !== "STANDARD" && totals.reverseCharge.vat > 0 &&
