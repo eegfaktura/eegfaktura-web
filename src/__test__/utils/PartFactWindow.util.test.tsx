@@ -28,14 +28,14 @@ describe("ABLEHNUNG_CPF notification", () => {
       {id: 1, date: new Date(), type: "MESSAGE", process: "EDA_PROCESS", message: new Message(properties)})}</>)
 
   it("shows the reason and the time window hint for Prozessdatum falsch", () => {
-    show({type: "ABLEHNUNG_CPF", meteringPoints: null, responseCodes: ["Prozessdatum falsch"]})
+    show({type: "ABLEHNUNG_CPF", meteringPoints: [], responseCodes: ["Prozessdatum falsch"]})
     expect(screen.getByText(/wurde abgelehnt/).textContent).toContain("(Prozessdatum falsch)")
     expect(screen.getByText(/09:00 und\s+17:00 Uhr/)).toBeTruthy()
     expect(screen.queryByText(/Zählpunkte/)).toBeNull()
   })
 
   it("names the metering points and no hint for other reasons", () => {
-    show({type: "ABLEHNUNG_CPF", meteringPoints: ["AT1"], responseCodes: ["Teilnahmefaktor von 100 % würde überschritten werden"]})
+    show({type: "ABLEHNUNG_CPF", meteringPoints: ["", "AT1"], responseCodes: ["Teilnahmefaktor von 100 % würde überschritten werden"]})
     expect(screen.getByText("AT1")).toBeTruthy()
     expect(screen.queryByText(/09:00/)).toBeNull()
   })

@@ -14,7 +14,7 @@ import {FilterByMeterState, meteringDisplayName, selectedMeters} from "../../uti
 import {Api} from "../../service";
 import {useLocale} from "../../store/hook/useLocale";
 import {JoinStrings} from "../../util/Helper.util";
-import {isInPartFactWindow} from "../../util/PartFactWindow.util";
+import {isInPartFactWindow, PARTFACT_WINDOW_TEXT} from "../../util/PartFactWindow.util";
 
 interface ProcessValues {
   communityId: string | undefined
@@ -34,7 +34,7 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
   const [useableMeters, setUsableMeters] = useState<Metering[]>([])
   const [participant, setParticipant] = useState<EegParticipant>()
   const {t} = useLocale("common")
-  const [inWindow, setInWindow] = useState(isInPartFactWindow())
+  const [inWindow, setInWindow] = useState(isInPartFactWindow)
 
   useEffect(() => {
     // the page stays mounted: re-check the time window every minute
@@ -70,6 +70,11 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
   }, [participantId]);
 
   const onRequest = (data: ProcessValues) => {
+    if (inWindow && !isInPartFactWindow()) {
+      // the window closed since the last check: show the warning first, a second click sends anyway
+      setInWindow(false)
+      return
+    }
     if (data.meteringPoints) {
       const meter =
         selectedMeters(useableMeters, data.meteringPoints)
@@ -106,7 +111,7 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
             <IonItem lines="none">
               <IonIcon slot="start" icon={informationCircleOutline}/>
               <IonLabel className="ion-text-wrap">
-                Der Netzbetreiber nimmt Änderungen des Teilnahmefaktors nur zwischen 09:00 und 17:00 Uhr an. Die
+                Der Netzbetreiber nimmt Änderungen des Teilnahmefaktors nur zwischen {PARTFACT_WINDOW_TEXT} an. Die
                 Änderung gilt ab dem nächsten Tag.
               </IonLabel>
             </IonItem>
@@ -115,7 +120,7 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
                 <IonIcon slot="start" icon={warning}/>
                 <IonLabel className="ion-text-wrap">
                   Es ist gerade außerhalb dieser Zeit. Wenn Du jetzt anforderst, lehnt der Netzbetreiber die Änderung
-                  ab („Prozessdatum falsch“). Bitte fordere sie zwischen 09:00 und 17:00 Uhr an.
+                  ab („Prozessdatum falsch“). Bitte fordere sie zwischen {PARTFACT_WINDOW_TEXT} an.
                 </IonLabel>
               </IonItem>
             )}
