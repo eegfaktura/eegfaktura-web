@@ -8,6 +8,58 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **Time-of-use tariffs (ZVT)**: consumer and producer tariffs gain a
+  "Einfach | Zeitbasiert" mode in the tariff dialog. Time-based tariffs
+  configure a base price plus up to two named time windows (Von/Bis on the
+  15-min raster, midnight crossing allowed, one shared discount, no free
+  kWh). Client-side plausibility checks (raster, Von ≠ Bis, cyclic overlap)
+  mirror the backend validation. During billing the app sends the tariff's
+  generic time windows with the energystore report request, receives the
+  per-window sums (`buckets`) per metering point and forwards them together
+  with the window definitions to the billing service (consistency guard;
+  simple tariffs are completely unchanged and never carry buckets).
+
+- The Info/Impressum footer names the licence (AGPL-3.0) and links the source code of all components
+  (github.com/eegfaktura), as AGPL-3.0 §13 asks for a network service.
+
+### Changed
+- Billing runs are started asynchronously (requires billing service with async billing run):
+  `POST /api/billing` now answers `202`/`409` with the run id and the UI polls
+  `GET /api/billingRuns/{id}` every 2s until the run is `DONE`/`NEW` (preview) or `FAILED`.
+  While a run is `RUNNING` the start buttons disappear and a progress note is shown — an
+  impatient second click can no longer queue a duplicate full run, and proxy timeouts on
+  long runs are gone. Opening the billing panel while a colleague's run is in progress
+  attaches to that run instead of starting a new one. Failures now surface the persisted
+  `errorSummary` from the billing run (the old `abstractText` string-matching is removed)
+  with a retry path via a fresh preview.
+
+### Changed
+- **Billing breakdown expanded by default** (feedback 21.10.2026). The breakdown under the billing (net, VAT, gross
+  …) now starts expanded and can be collapsed with the arrow; it was collapsed by default. A viewer who collapsed
+  it before keeps that choice (stored in the browser). The small business margin reads „nach Abzug der rechnerischen
+  USt bei Reverse Charge“ instead of „abzgl. …“: the amount is already deducted.
+- **Participation factor: the time window is shown** (platform#176). The grid operator accepts a change only
+  between 09:00 and 17:00 (Austrian time) and applies it from the next day; outside it rejects with „Prozessdatum
+  falsch“ (ebUtilities EC_PRTFACT_CHANGE 1.09; prod logs 16.09.–20.10.2026: 67 such rejections in 30
+  communities, mostly 08:00–09:00). The form „Teilnehmerfaktor ändern“ and the process description now say so,
+  and outside the window the form warns before sending (sending stays possible; if the window closed while the
+  form was open, the first click shows the warning). The message of a rejected change in Messages now shows the
+  reason (it showed none, and an empty metering point because the rejection names none) and, for „Prozessdatum
+  falsch“, says when to send it again.
+- **Build: lockfile in sync, release with tsc** (platform#179). `pnpm-lock.yaml` now records the `form-data`
+  override from `package.json` (form-data stays 4.0.6; no package version changes), so every CI install runs with
+  `--frozen-lockfile` and the check „Lockfile in sync“ fails a PR instead of only warning. The release image
+  and the full test suite build with `pnpm run build` (`tsc && vite build`), so a type error stops the release.
+  `tsconfig.node.json` (vite.config.ts) uses `moduleResolution: bundler` and is type-checked in „Type check“.
+- **Build: pnpm version in `package.json`** (platform#179). `packageManager: pnpm@9.12.1` records the pnpm
+  version in the project; the release workflow reads it from there instead of its own `version:`.
+- **Build: Vite plugins for Vite 6** (platform#179). `@vitejs/plugin-legacy` 5.4 → 6.1 and `@vitejs/plugin-react`
+  4.3.2 → 4.7 declare Vite 6 as supported (the old versions expected Vite ≤ 5). The build output has the same
+  files, legacy chunks included; the legacy polyfill chunk is larger (newer core-js).
+
+## [1.7.2] – 2026-10-20
+
 ### Fixed
 - **Messages showed an old list** (feedback 20.10.2026). The page loaded its notifications only when it was first
   opened; Ionic keeps the page mounted, so switching between Mitglieder and Messages never reloaded it (a new
@@ -346,29 +398,6 @@ this changelog highlights the changes relevant for overview and operations.
   (UID/GID 1000) now owns Caddy's XDG directories `/data` and `/config` — without that it
   fails on startup while writing its own state. The served files under `/var/www` stay
   root-owned; Caddy only reads them.
-
-### Added
-- **Time-of-use tariffs (ZVT)**: consumer and producer tariffs gain a
-  "Einfach | Zeitbasiert" mode in the tariff dialog. Time-based tariffs
-  configure a base price plus up to two named time windows (Von/Bis on the
-  15-min raster, midnight crossing allowed, one shared discount, no free
-  kWh). Client-side plausibility checks (raster, Von ≠ Bis, cyclic overlap)
-  mirror the backend validation. During billing the app sends the tariff's
-  generic time windows with the energystore report request, receives the
-  per-window sums (`buckets`) per metering point and forwards them together
-  with the window definitions to the billing service (consistency guard;
-  simple tariffs are completely unchanged and never carry buckets).
-
-### Changed
-- Billing runs are started asynchronously (requires billing service with async billing run):
-  `POST /api/billing` now answers `202`/`409` with the run id and the UI polls
-  `GET /api/billingRuns/{id}` every 2s until the run is `DONE`/`NEW` (preview) or `FAILED`.
-  While a run is `RUNNING` the start buttons disappear and a progress note is shown — an
-  impatient second click can no longer queue a duplicate full run, and proxy timeouts on
-  long runs are gone. Opening the billing panel while a colleague's run is in progress
-  attaches to that run instead of starting a new one. Failures now surface the persisted
-  `errorSummary` from the billing run (the old `abstractText` string-matching is removed)
-  with a retry path via a fresh preview.
 
 ### Added
 - CI builds `env/**` branches and deploys the resulting image into the matching feature

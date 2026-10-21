@@ -1,9 +1,8 @@
 # Ersetzt die seit Mai 2026 4x rote rolling-release.yml.
 #
 # Build-Flow:
-#   1. setup-pnpm + setup-node (nvmrc)
-#   2. pnpm install --no-frozen-lockfile (pnpm-lock.yaml ist out-of-sync,
-#      GH Actions setzt CI=true -> pnpm install defaultet zu --frozen-lockfile)
+#   1. setup-pnpm (Version aus packageManager in package.json) + setup-node (nvmrc)
+#   2. pnpm install --frozen-lockfile (exakt pnpm-lock.yaml)
 #   3. pnpm run build (tsc && vite build -> dist/)
 #   4. docker/build-push-action -> ghcr.io/vfeeg-development/vfeeg-web
 #      (keycloak-config.json ist als Caddy-Env-Template eingecheckt und wird
@@ -59,7 +58,6 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9.12.1
           run_install: false
 
       - name: Install Node.js
@@ -69,19 +67,10 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        # --no-frozen-lockfile: pnpm-lock.yaml ist im Source-Repo out-of-sync
-        # mit package.json. GH Actions setzt CI=true, pnpm install defaultet
-        # damit zu --frozen-lockfile und failt sofort. Long-term-Fix waere
-        # `pnpm install` lokal + commit pnpm-lock.yaml.
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
-      - name: Build SPA (vite build only — skip tsc due to type drift)
-        # package.json "build" ist "tsc && vite build". tsc failt mit ~30
-        # Errors (fehlende Test-Type-Defs, oidc-client-ts nicht gefunden,
-        # Ionic-API-Drift, AuthService-API-Drift). Probe-Workflow:
-        # vite build direkt aufrufen - vite kompiliert TS, ohne strict type-check.
-        # So sehen wir, ob's neben tsc noch weitere Build-Blocker gibt.
-        run: pnpm exec vite build
+      - name: Build SPA (tsc && vite build)
+        run: pnpm run build
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
