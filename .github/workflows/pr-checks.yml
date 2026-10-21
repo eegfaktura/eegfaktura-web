@@ -23,9 +23,6 @@ concurrency:
   group: pr-checks-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  PNPM_VERSION: '9.12.1'
-
 jobs:
   unit:
     name: Unit tests
@@ -44,7 +41,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm install -g "pnpm@${PNPM_VERSION}"
+          npm install -g "$(node -p "require('./package.json').packageManager")"
           pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Unit tests
@@ -78,7 +75,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm install -g "pnpm@${PNPM_VERSION}"
+          npm install -g "$(node -p "require('./package.json').packageManager")"
           pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Tests
@@ -114,7 +111,8 @@ jobs:
           node-version-file: .nvmrc
 
       - name: Install pnpm
-        run: npm install -g "pnpm@${PNPM_VERSION}"
+        run: |
+          npm install -g "$(node -p "require('./package.json').packageManager")"
 
       - name: Install exactly the lockfile
         run: |
@@ -148,7 +146,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm install -g "pnpm@${PNPM_VERSION}"
+          npm install -g "$(node -p "require('./package.json').packageManager")"
           pnpm install --frozen-lockfile --ignore-scripts
 
       - name: tsc
