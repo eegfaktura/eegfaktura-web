@@ -8,6 +8,16 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **Participation factor: the time window is shown** (platform#176). The grid operator accepts a change only
+  between 09:00 and 17:00 (Austrian time) and applies it from the next day; outside it rejects with „Prozessdatum
+  falsch“ (ebUtilities EC_PRTFACT_CHANGE 1.09; prod logs 16.09.–20.10.2026: 67 such rejections in 30
+  communities, mostly 08:00–09:00). The form „Teilnehmerfaktor ändern“ and the process description now say so,
+  and outside the window the form warns before sending (sending stays possible; if the window closed while the
+  form was open, the first click shows the warning). The message of a rejected change in Messages now shows the
+  reason (it showed none, and an empty metering point because the rejection names none) and, for „Prozessdatum
+  falsch“, says when to send it again.
+
 ## [1.7.2] – 2026-10-20
 
 ### Fixed

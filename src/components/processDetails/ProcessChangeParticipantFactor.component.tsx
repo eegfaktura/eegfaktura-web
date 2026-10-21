@@ -4,7 +4,8 @@ import ProcessContentComponent from "./ProcessContent.component";
 import CorePageTemplate from "../core/CorePage.template";
 import InputForm from "../form/InputForm.component";
 import {BasicSelectComponent} from "../form/BasicSelect.component";
-import {IonButton, IonItem} from "@ionic/react";
+import {IonButton, IonIcon, IonItem, IonLabel} from "@ionic/react";
+import {informationCircleOutline, warning} from "ionicons/icons";
 import {EdaProcess, Eeg} from "../../models/eeg.model";
 import {Metering, MeteringProcessStateType} from "../../models/meteringpoint.model";
 import {EegParticipant} from "../../models/members.model";
@@ -13,6 +14,7 @@ import {FilterByMeterState, meteringDisplayName, selectedMeters} from "../../uti
 import {Api} from "../../service";
 import {useLocale} from "../../store/hook/useLocale";
 import {JoinStrings} from "../../util/Helper.util";
+import {isInPartFactWindow, PARTFACT_WINDOW_TEXT} from "../../util/PartFactWindow.util";
 
 interface ProcessValues {
   communityId: string | undefined
@@ -32,6 +34,13 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
   const [useableMeters, setUsableMeters] = useState<Metering[]>([])
   const [participant, setParticipant] = useState<EegParticipant>()
   const {t} = useLocale("common")
+  const [inWindow, setInWindow] = useState(isInPartFactWindow)
+
+  useEffect(() => {
+    // the page stays mounted: re-check the time window every minute
+    const timer = setInterval(() => setInWindow(isInPartFactWindow()), 60_000)
+    return () => clearInterval(timer)
+  }, []);
 
   const processValues = {
     communityId: eeg.communityId,
@@ -61,6 +70,11 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
   }, [participantId]);
 
   const onRequest = (data: ProcessValues) => {
+    if (inWindow && !isInPartFactWindow()) {
+      // the window closed since the last check: show the warning first, a second click sends anyway
+      setInWindow(false)
+      return
+    }
     if (data.meteringPoints) {
       const meter =
         selectedMeters(useableMeters, data.meteringPoints)
@@ -94,6 +108,22 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
                                   })} label={t("metering")} multiple={true} rules={{required: true}}/>
             <InputForm name="partFact" label={t("process.partFact.label")}
                        control={control} rules={{required: true}} type={"number"} pattern={"^([0-9]|[1-9][0-9]|100)$"} maxlength={3} isNumber={true}/>
+            <IonItem lines="none">
+              <IonIcon slot="start" icon={informationCircleOutline}/>
+              <IonLabel className="ion-text-wrap">
+                Der Netzbetreiber nimmt Änderungen des Teilnahmefaktors nur zwischen {PARTFACT_WINDOW_TEXT} an. Die
+                Änderung gilt ab dem nächsten Tag.
+              </IonLabel>
+            </IonItem>
+            {!inWindow && (
+              <IonItem color="warning" lines="none">
+                <IonIcon slot="start" icon={warning}/>
+                <IonLabel className="ion-text-wrap">
+                  Es ist gerade außerhalb dieser Zeit. Wenn Du jetzt anforderst, lehnt der Netzbetreiber die Änderung
+                  ab („Prozessdatum falsch“). Bitte fordere sie zwischen {PARTFACT_WINDOW_TEXT} an.
+                </IonLabel>
+              </IonItem>
+            )}
             <IonItem lines="none" style={{zIndex: "0"}}>
               <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={(!formState.isValid)}>
                 Anfordern
