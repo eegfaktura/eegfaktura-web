@@ -23,8 +23,6 @@ concurrency:
   group: pr-checks-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-
 jobs:
   unit:
     name: Unit tests
