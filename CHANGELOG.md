@@ -17,6 +17,11 @@ this changelog highlights the changes relevant for overview and operations.
   form was open, the first click shows the warning). The message of a rejected change in Messages now shows the
   reason (it showed none, and an empty metering point because the rejection names none) and, for „Prozessdatum
   falsch“, says when to send it again.
+- **Build: lockfile in sync, release with tsc** (platform#179). `pnpm-lock.yaml` now records the `form-data`
+  override from `package.json` (form-data stays 4.0.6; no package version changes), so every CI install runs with
+  `--frozen-lockfile` and the check „Lockfile in sync“ fails a PR instead of only warning. The release image
+  and the full test suite build with `pnpm run build` (`tsc && vite build`), so a type error stops the release.
+  `tsconfig.node.json` (vite.config.ts) uses `moduleResolution: bundler` and is type-checked in „Type check“.
 
 ## [1.7.2] – 2026-10-20
 
