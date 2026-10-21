@@ -304,7 +304,14 @@ const Menu: FC = () => {
           </IonContent>
           <IonFooter color="eeg">
             <IonItem lines="none" style={{fontSize: "12px", textAlign: "center"}}>
-              <IonLabel>eegFaktura ist eine freie und quelloffene Software und steht unter der AGPL</IonLabel>
+              <IonLabel className="ion-text-wrap">
+                eegFaktura ist freie, quelloffene Software unter der{" "}
+                <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank"
+                   rel="noopener noreferrer">AGPL-3.0</a>.{" "}
+                Quelltext (alle Komponenten):{" "}
+                <a href="https://github.com/eegfaktura" target="_blank"
+                   rel="noopener noreferrer">github.com/eegfaktura</a>
+              </IonLabel>
             </IonItem>
           </IonFooter>
         </IonModal>

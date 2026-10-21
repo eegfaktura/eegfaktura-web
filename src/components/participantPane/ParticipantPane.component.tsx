@@ -38,7 +38,9 @@ import {
   fetchEnergyBills,
   fetchParticipantAmounts,
   resetParticipantAmounts,
+  resumeEnergyBillsPolling,
   selectBillFetchingSelector,
+  selectBillPollingSelector,
 } from "../../store/billing";
 import {selectMetaRecord, setSelectedPeriod,} from "../../store/energy";
 import ButtonGroup from "../ButtonGroup.component";
@@ -115,6 +117,7 @@ const ParticipantPaneComponent: FC = () => {
   const billingRunStatus = useAppSelector(billingRunStatusSelector);
   const billingRunIsFetching = useAppSelector(billingRunIsFetchingSelector);
   const selectBillIsFetching = useAppSelector(selectBillFetchingSelector);
+  const billPolling = useAppSelector(selectBillPollingSelector);
   const billingRunErrorMessage = useAppSelector(billingRunErrorSelector);
 
   const {eeg} = useContext(EegContext)
@@ -227,9 +230,8 @@ const ParticipantPaneComponent: FC = () => {
     writeTotalsOpen(!totalsOpen)
     setTotalsOpen(!totalsOpen)
   };
-  const [failedRunId, setFailedRunId] = useState<string | undefined>(undefined);
   useEffect(() => {
-    if (!showAmount || !billingRun || !billingRun.id || billingRun.id === failedRunId) {
+    if (!showAmount || !billingRun || !billingRun.id) {
       setRunTotals(undefined);
       return;
     }
@@ -243,7 +245,7 @@ const ParticipantPaneComponent: FC = () => {
         errorToast("Die Summen der Abrechnung konnten nicht geladen werden.");
       });
     return () => { current = false };
-  }, [tenant, billingRun?.id, billingInfo, showAmount, failedRunId]);
+  }, [tenant, billingRun?.id, billingInfo, showAmount]);
 
   useEffect(() => {
     if (checkedParticipant) {
@@ -261,6 +263,35 @@ const ParticipantPaneComponent: FC = () => {
       errorToast(billingRunErrorMessage)
     }
   }, [billingRunErrorMessage])
+
+  // Läuft für die aktive Periode bereits ein Abrechnungslauf (z.B. von einem
+  // Kollegen gestartet oder Seite neu geladen), an den laufenden Lauf anhängen
+  // statt neu zu starten (konzept-async-billing-run.md). billPolling
+  // verhindert einen Doppel-Poll, wenn fetchEnergyBills bereits selbst pollt
+  // (nicht isFetching: das setzt auch fetchParticipantAmounts zurück, web#175 review).
+  useEffect(() => {
+    if (billingRunStatus === "RUNNING" && billingRun && billingRun.id && !billPolling) {
+      dispatcher(resumeEnergyBillsPolling({tenant, billingRunId: billingRun.id}))
+        .then((returnValue: any) => {
+          if (resumeEnergyBillsPolling.rejected.match(returnValue)) {
+            errorToast((returnValue.payload as string) || "Abrechnung fehlgeschlagen.");
+          }
+          if (activePeriod) {
+            dispatcher(
+              fetchBillingRun({
+                tenant: tenant,
+                clearingPeriodType: activePeriod.type,
+                clearingPeriodIdentifier: createPeriodIdentifier(
+                  activePeriod.type,
+                  activePeriod.year,
+                  activePeriod.segment
+                ),
+              })
+            );
+          }
+        });
+    }
+  }, [billingRunStatus, billingRun])
 
   // list only: metering points with an open problem stay visible in every period, sorted with them
   const listParticipants = useMemo(() => withOpenProblems(participants, allParticipants), [participants, allParticipants])
@@ -513,8 +544,10 @@ const ParticipantPaneComponent: FC = () => {
   };
 
   const [previewValid, setPreviewValid] = useState(true);
-  // Only the totals of the shown run.
-  const totals = runTotals && billingRun && runTotals.runId === billingRun.id ? runTotals.totals : undefined;
+  // Only the totals of the shown run; none while an asynchronous run is running or after it failed (env/billing:
+  // the run reports FAILED instead of an error text, its documents can be partial).
+  const totals = runTotals && billingRun && runTotals.runId === billingRun.id
+    && billingRun.runStatus !== "RUNNING" && billingRun.runStatus !== "FAILED" ? runTotals.totals : undefined;
   const onDoBilling =(preview: boolean, documentDate: Date) => {
     if (activePeriod) {
       documentDate?.setHours(12);
@@ -532,46 +565,36 @@ const ParticipantPaneComponent: FC = () => {
           ? documentDate.toISOString().substring(0, 10)
           : documentDate,
       } as ClearingPreviewRequest;
+      // Asynchroner Lauf (konzept-async-billing-run.md): der Thunk startet den
+      // Lauf (202/409) und pollt bis zum terminalen Status. Fehler kommen als
+      // rejected mit Meldung (FAILED.errorSummary bzw. 400/503-Text) — kein
+      // abstractText-String-Matching mehr.
       dispatcher(fetchEnergyBills({tenant, invoiceRequest})).then((returnValue: any) => {
-        if (
-          returnValue.payload.billing.abstractText
-            .toString()
-            .includes("Abrechnung fehlgeschlagen")
-          //"erfolgreich abgeschlossen."
-          //Abrechnung fehlgeschlagen
-        ) {
+        if (fetchEnergyBills.rejected.match(returnValue)) {
           setPreviewValid(false);
-          // Partial documents only when billing failed after replacing them: not for a closed run or a run it
-          // did not reach (no billingRunId).
-          const failedRun = returnValue.payload?.billing?.billingRunId;
-          if (failedRun && !returnValue.payload.billing.abstractText.includes("bereits abgeschlossen")) {
-            setFailedRunId(failedRun);
-          }
+          // env/billing: a failed asynchronous run shows as runStatus FAILED, the totals hide then (see `totals`)
           presentAlert({
-            subHeader: "Fehler bei der Vorschauerstellung",
+            subHeader: "Fehler beim Abrechnungslauf",
             message:
-              "Bei der Erstellung der Vorschau ist ein Fehler aufgetreten. Bitte prüfen Sie die Stammdaten und achten Sie vor allem darauf, bei allen Nutzern & Zählpunkten einen Tarif zu setzen. Wiederholen Sie den Vorgang, wenn alle Daten korrigiert wurden.",
+              (returnValue.payload as string) ||
+              "Bei der Erstellung ist ein Fehler aufgetreten. Bitte prüfen Sie die Stammdaten und achten Sie vor allem darauf, bei allen Nutzern & Zählpunkten einen Tarif zu setzen. Wiederholen Sie den Vorgang, wenn alle Daten korrigiert wurden.",
             buttons: ["OK"],
           });
         } else {
           setPreviewValid(true);
-          setFailedRunId(undefined);
-          dispatcher(
-            fetchBillingRun({
-              tenant: tenant,
-              clearingPeriodType: activePeriod.type,
-              clearingPeriodIdentifier: createPeriodIdentifier(
-                activePeriod.type,
-                activePeriod.year,
-                activePeriod.segment
-              ),
-            })
-          );
         }
-        // console.log("Valid 2 : ", previewValid);
-        // var temp = activePeriod === undefined || !previewValid;
-        //
-        // console.log("res : ", temp);
+        // Run-Status der Periode aktualisieren (NEW/DONE/FAILED sichtbar machen)
+        dispatcher(
+          fetchBillingRun({
+            tenant: tenant,
+            clearingPeriodType: activePeriod.type,
+            clearingPeriodIdentifier: createPeriodIdentifier(
+              activePeriod.type,
+              activePeriod.year,
+              activePeriod.segment
+            ),
+          })
+        );
       });
     }
   };
@@ -920,6 +943,33 @@ const ParticipantPaneComponent: FC = () => {
                     (selectBillIsFetching && (
                       <IonSpinner name="dots"></IonSpinner>
                     ))}
+                  {billingRunStatus === "RUNNING" && (
+                    <div>
+                      {"Abrechnung wird erstellt … Dies kann bei großen Gemeinschaften einige Minuten dauern."}
+                    </div>
+                  )}
+                  {!billingRunIsFetching && billingRunStatus === "FAILED" && (
+                    <>
+                      <div>
+                        {"Abrechnung fehlgeschlagen (" +
+                          reformatDateTimeStamp(billingRun.runStatusDateTime) +
+                          "): " +
+                          (billingRun.errorSummary || "unbekannter Fehler")}
+                      </div>
+                      <DatePickerCoreElement
+                        initialValue={documentDatePreview.current}
+                        name={"documentDatePreview"}
+                        label="Rechnungsdatum"
+                        placeholder={"Datum"}
+                        onChange={onUpdateDocumentDate}
+                      />
+                      <IonButton
+                        expand="block"
+                        disabled={activePeriod === undefined}
+                        onClick={() => openBillingCheck('preview', documentDatePreview.current)}
+                      >{`VORSCHAU ERSTELLEN`}</IonButton>
+                    </>
+                  )}
                   {!billingRunIsFetching && !billingRun && (
                     <>
                       <DatePickerCoreElement

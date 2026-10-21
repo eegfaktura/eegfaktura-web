@@ -1,7 +1,7 @@
 import {EegParticipant} from "../models/members.model";
-import {ReportType, SelectedPeriod} from "../models/energy.model";
+import {ReportType, SelectedPeriod, TariffTimeWindow} from "../models/energy.model";
 import {CpPeriodType} from "../models/reports.model";
-import {MONTHNAME} from "../models/eeg.model";
+import {EegTariff, MONTHNAME} from "../models/eeg.model";
 
 
 export const formatedName = (participant: EegParticipant) => {
@@ -303,3 +303,32 @@ export function JoinStrings(sep: string, missing?: string, ...items: string[]): 
   }
   return items.filter(i => i.length > 0).join(sep)
 }
+// ZVT (zeitvariabler Tarif): liefert die generischen Zeitfenster eines
+// zeitbasierten Tarifs fuer den energystore-Report-Request und den
+// billing-Konsistenz-Guard. undefined fuer Einfach-Tarife.
+export const zvtTimeWindows = (tariff?: EegTariff): TariffTimeWindow[] | undefined => {
+  if (!tariff || !tariff.useTimeTariff) return undefined
+  const windows: TariffTimeWindow[] = []
+  if (tariff.timeTariff1Active && tariff.timeTariff1From && tariff.timeTariff1To) {
+    windows.push({key: "T1", from: tariff.timeTariff1From, to: tariff.timeTariff1To})
+  }
+  if (tariff.timeTariff2Active && tariff.timeTariff2From && tariff.timeTariff2To) {
+    windows.push({key: "T2", from: tariff.timeTariff2From, to: tariff.timeTariff2To})
+  }
+  return windows.length > 0 ? windows : undefined
+}
+
+// A time-based producer/consumer tariff without a complete active window must not be saved: web would bill it as a
+// simple tariff (zvtTimeWindows gives no windows, so no buckets), billing as time-based, and the billing run stops
+// (platform#175). Same rule as the billing path, so both agree.
+export const zvtWithoutActiveWindow = (tariff?: Partial<EegTariff>): boolean =>
+  !!tariff && !!tariff.useTimeTariff && (tariff.type === "EZP" || tariff.type === "VZP")
+  && zvtTimeWindows(tariff as EegTariff) === undefined
+
+// Key over the time windows of the time-based tariffs that metering points use: changes when such a tariff becomes
+// time-based or its windows change, so the energy report (it carries the buckets billing needs) is fetched again.
+// Constant for EEGs without time-based tariffs and for unused tariffs, so other tariff edits do not fetch again.
+export const zvtWindowsKey = (tariffById: Record<string, EegTariff>, usedTariffIds: Iterable<string>): string =>
+  JSON.stringify(Array.from(new Set(usedTariffIds)).sort()
+    .map(id => [id, zvtTimeWindows(tariffById[id])])
+    .filter(([, windows]) => windows !== undefined))

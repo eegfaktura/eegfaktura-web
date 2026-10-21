@@ -11,6 +11,8 @@ export interface EnergyEntitieState {
   selectedPeriod: SelectedPeriod | undefined
   totalProduction: number
   totalConsumption: number
+  // requestId of the latest fetchEnergyReportV2: an older response that arrives later is ignored (platform#174)
+  reportRequestId?: string
 }
 
 export interface EnergyMetaState extends EntityState<EnergyMeta, string> {

@@ -8,7 +8,31 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **Time-of-use tariffs (ZVT)**: consumer and producer tariffs gain a
+  "Einfach | Zeitbasiert" mode in the tariff dialog. Time-based tariffs
+  configure a base price plus up to two named time windows (Von/Bis on the
+  15-min raster, midnight crossing allowed, one shared discount, no free
+  kWh). Client-side plausibility checks (raster, Von ≠ Bis, cyclic overlap)
+  mirror the backend validation. During billing the app sends the tariff's
+  generic time windows with the energystore report request, receives the
+  per-window sums (`buckets`) per metering point and forwards them together
+  with the window definitions to the billing service (consistency guard;
+  simple tariffs are completely unchanged and never carry buckets).
+
+- The Info/Impressum footer names the licence (AGPL-3.0) and links the source code of all components
+  (github.com/eegfaktura), as AGPL-3.0 §13 asks for a network service.
+
 ### Changed
+- Billing runs are started asynchronously (requires billing service with async billing run):
+  `POST /api/billing` now answers `202`/`409` with the run id and the UI polls
+  `GET /api/billingRuns/{id}` every 2s until the run is `DONE`/`NEW` (preview) or `FAILED`.
+  While a run is `RUNNING` the start buttons disappear and a progress note is shown — an
+  impatient second click can no longer queue a duplicate full run, and proxy timeouts on
+  long runs are gone. Opening the billing panel while a colleague's run is in progress
+  attaches to that run instead of starting a new one. Failures now surface the persisted
+  `errorSummary` from the billing run (the old `abstractText` string-matching is removed)
+  with a retry path via a fresh preview.
 - **Billing breakdown expanded by default** (feedback 21.10.2026). The breakdown under the billing (net, VAT, gross
   …) now starts expanded and can be collapsed with the arrow; it was collapsed by default. A viewer who collapsed
   it before keeps that choice (stored in the browser). The small business margin reads „nach Abzug der rechnerischen
@@ -31,6 +55,40 @@ this changelog highlights the changes relevant for overview and operations.
 - **Build: Vite plugins for Vite 6** (platform#179). `@vitejs/plugin-legacy` 5.4 → 6.1 and `@vitejs/plugin-react`
   4.3.2 → 4.7 declare Vite 6 as supported (the old versions expected Vite ≤ 5). The build output has the same
   files, legacy chunks included; the legacy polyfill chunk is larger (newer core-js).
+
+### Fixed
+- **ZVT (env/billing): a time-based tariff without an active window could be saved** (platform#175). web billed
+  it as a simple tariff, billing as time-based, and the billing run stopped („keine Fenster-Teilsummen (buckets)“).
+  The tariff form (producer and consumer tariffs) now shows a warning and keeps „Änderungen speichern“ disabled
+  while „Zeitbasiert“ has no active window with Von and Bis (the same rule web uses for billing). Windows are still
+  activated only with the checkbox „Zeitraum aktiv“. Tariffs already saved in that state still stop billing until
+  they are opened and fixed.
+- **ZVT (env/billing): billing failed after a tariff was switched to time-based** (platform#174). The energy report
+  was only fetched again when members or the period changed, so after switching a tariff to „Zeitbasiert“ (or
+  editing its windows) it had no buckets; billing then got the time
+  windows without buckets and stopped („keine Fenster-Teilsummen (buckets)“). Now:
+  - the report is also fetched again when the time windows of a tariff of the EEG's metering points change (EEGs
+    without time-based tariffs and edits of tariffs no metering point has fetch as before); not while the
+    application reloads EEG, tariffs and members (tenant switch, refresh) — that load ends with one fetch;
+  - billing gets the time windows the energystore computed the buckets for (echoed in the report), not those of the
+    current tariff. Billing started while the new report is still loading stops (missing buckets, a differing
+    window, or buckets for a tariff that is no longer time-based) instead of billing buckets of other windows; it
+    works once the report is there. billing checks the windows against the tariff, so a mismatch never bills;
+  - an older report response that arrives after a newer one, or after the report was cleared, no longer replaces
+    or clears it.
+- Tariff card showed `Umsatzsteuer 0 %` for tariffs that actually carry a VAT rate. The backend
+  serializes `vatInPercent` as `IntOrString`, so it can arrive as a JSON number; the card guarded
+  it with `vatInPercent.length > 0`, which is `undefined` for a number and fell back to `0`. The
+  card now coerces via `String(...)`, rendering the real rate for both number and string. Display
+  only — the stored value was always correct.
+- **Billing: retry after a failed run skipped the check before billing** (web#175 review). „Vorschau erstellen“
+  after a failed run started the preview directly; like every other start button it now opens the check before
+  billing (platform#148/#163) first.
+- **Billing: a second poller for the same run** (web#175 review). With the member amounts shown, every status poll
+  of a running run reloaded the amounts, and that reload cleared the flag the panel uses to see that a poller is
+  already active; on the next poll the panel attached a second poller to the run (and so on), each polling
+  `GET /api/billingRuns/{id}` every 2s. A separate polling flag, set only by the two pollers, now guards it.
+  Internal: the unused state `failedRunId` is removed (no behaviour change).
 
 ## [1.7.2] – 2026-10-20
 

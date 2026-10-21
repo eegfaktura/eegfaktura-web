@@ -1,18 +1,33 @@
 import {createReducer} from "@reduxjs/toolkit";
 import {adapter, initialState} from "../states";
-import {fetchEnergyBills, fetchParticipantAmounts, resetParticipantAmounts} from "../actions";
+import {
+  fetchEnergyBills,
+  fetchParticipantAmounts,
+  resetParticipantAmounts,
+  resumeEnergyBillsPolling
+} from "../actions";
 
 export const reducer = createReducer(initialState, builder =>
   builder
     .addCase(fetchEnergyBills.pending, state => {
-      return {...state, isFetching: true};
+      return {...state, isFetching: true, isPolling: true};
     })
     .addCase(fetchEnergyBills.fulfilled, (state, action) => {
       const {billing} = action.payload
-      return adapter.setAll({...state, isFetching: false}, billing.participantAmounts)
+      return adapter.setAll({...state, isFetching: false, isPolling: false}, billing.participantAmounts)
     })
     .addCase(fetchEnergyBills.rejected, state => {
-      return {...state, isFetching: false};
+      return {...state, isFetching: false, isPolling: false};
+    })
+    .addCase(resumeEnergyBillsPolling.pending, state => {
+      return {...state, isFetching: true, isPolling: true};
+    })
+    .addCase(resumeEnergyBillsPolling.fulfilled, (state, action) => {
+      const {billing} = action.payload
+      return adapter.setAll({...state, isFetching: false, isPolling: false}, billing.participantAmounts)
+    })
+    .addCase(resumeEnergyBillsPolling.rejected, state => {
+      return {...state, isFetching: false, isPolling: false};
     })
     .addCase(fetchParticipantAmounts.pending, state => {
       return {...state, isFetching: true};
@@ -24,7 +39,7 @@ export const reducer = createReducer(initialState, builder =>
     .addCase(fetchParticipantAmounts.rejected, state => {
       return {...state, isFetching: false};
     })
-    .addCase(resetParticipantAmounts, () => {
-      return initialState;
+    .addCase(resetParticipantAmounts, state => {
+      return {...initialState, isPolling: state.isPolling};
     })
 );

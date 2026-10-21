@@ -12,12 +12,19 @@ export const buildAllocationMapFromSelected = (participants: EegParticipant[], c
     .filter(p => checkedParticipant[p.participantId] !== undefined && checkedParticipant[p.participantId])
     .flatMap(p => {
       return p.meters.filter(m => activeMeters.includes(m.meterId)).map(m => {
+        // ZVT: die Fenster-Teilsummen (buckets) mit genau den Fenstern mitgeben, fuer die der energystore sie
+        // berechnet hat (er schickt sie im Report zurueck), nicht mit den Fenstern des aktuellen Tarifs: nach
+        // einer Tarifaenderung kann der Report noch der alte sein (platform#174). billing vergleicht die Fenster
+        // mit dem Tarif und bricht fail-loud ab, wenn sie fehlen oder nicht (mehr) passen - nie eine Rechnung
+        // mit Teilsummen zu anderen Fenstern.
+        const timeWindows = m.timeWindows && m.timeWindows.length > 0 ? m.timeWindows : undefined
         return {
           participantId: p.participantId,
           meteringPoint: m.meterId,
           allocationKWh: m.meterDir === "GENERATION"
             ? m.report.summary.production - m.report.summary.allocation
-            : m.report.summary.utilization
+            : m.report.summary.utilization,
+          ...(timeWindows ? {timeWindows: timeWindows, buckets: m.report.buckets} : {})
         } as MeteringEnergyGroupType
       })//.filter(e => e.allocationKWh > 0)
     })

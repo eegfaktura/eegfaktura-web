@@ -1,3 +1,5 @@
+import {EnergyBucket, TariffTimeWindow} from "./energy.model";
+
 export interface ParticipantState {
   activeSince: Date
   inactiveSince: Date
@@ -71,14 +73,24 @@ export interface ClearingPreviewResponse {
   participantAmounts: ParticipantBillType[];
 }
 
+// Antwort des asynchronen Abrechnungsstarts (POST /api/billing):
+// 202 = gestartet, 409 = läuft bereits (billingRunId des laufenden Laufs),
+// 400/503 = abgelehnt (abstractText = Meldung). Siehe konzept-async-billing-run.md.
+export interface ClearingStartResponse {
+  status: number;
+  billingRunId?: string;
+  abstractText?: string;
+}
+
 //@TODO: Refactor diesen Type --> billing.model.ts (o.ä.)
 export interface BillingRun {
   id: string;
   clearingPeriodType: string;
   clearingPeriodIdentifier: string;
   tenantId: string;
-  runStatus: "NEW" | "DONE" | "CANCELLED";
+  runStatus: "NEW" | "DONE" | "CANCELLED" | "RUNNING" | "FAILED";
   runStatusDateTime: string;
+  errorSummary?: string;
   mailStatus: string;
   mailStatusDateTime: string;
   sepaStatus: string;
@@ -114,6 +126,11 @@ export interface MeteringEnergyGroupType {
   participantId: string;
   meteringPoint: string;
   allocationKWh: number;
+  // ZVT: Fenster-Teilsummen aus dem energystore-Report + verwendete
+  // Fenster-Definitionen (Konsistenz-Guard in billing). Nur bei
+  // zeitbasierten Tarifen gesetzt.
+  buckets?: EnergyBucket[];
+  timeWindows?: TariffTimeWindow[];
 }
 
 export interface MeteringBillType {
