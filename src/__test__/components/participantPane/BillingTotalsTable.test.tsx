@@ -22,7 +22,7 @@ afterEach(() => localStorage.clear())
 describe("MarginLines (feedback 20.10.2026)", () => {
   it("shows the reverse charge VAT on its own line, so it cannot be read as the margin", () => {
     render(<MarginLines totals={totals(114.51)} taxation="SMALL_BUSINESS"/>)
-    expect(screen.getByText(/Marge bei Kleinunternehmerregelung \(brutto, abzgl. rechnerischer USt bei Reverse Charge\):/)).toBeTruthy()
+    expect(screen.getByText(/Marge bei Kleinunternehmerregelung \(brutto, nach Abzug der rechnerischen USt bei Reverse Charge\):/)).toBeTruthy()
     expect(screen.getByText("163,22 €")).toBeTruthy()
     expect(screen.getByText("Rechnerische USt bei Reverse Charge (20 %): 114,51 €")).toBeTruthy()
   })
