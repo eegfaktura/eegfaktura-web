@@ -228,9 +228,8 @@ const ParticipantPaneComponent: FC = () => {
     writeTotalsOpen(!totalsOpen)
     setTotalsOpen(!totalsOpen)
   };
-  const [failedRunId, setFailedRunId] = useState<string | undefined>(undefined);
   useEffect(() => {
-    if (!showAmount || !billingRun || !billingRun.id || billingRun.id === failedRunId) {
+    if (!showAmount || !billingRun || !billingRun.id) {
       setRunTotals(undefined);
       return;
     }
@@ -244,7 +243,7 @@ const ParticipantPaneComponent: FC = () => {
         errorToast("Die Summen der Abrechnung konnten nicht geladen werden.");
       });
     return () => { current = false };
-  }, [tenant, billingRun?.id, billingInfo, showAmount, failedRunId]);
+  }, [tenant, billingRun?.id, billingInfo, showAmount]);
 
   useEffect(() => {
     if (checkedParticipant) {
@@ -580,7 +579,6 @@ const ParticipantPaneComponent: FC = () => {
           });
         } else {
           setPreviewValid(true);
-          setFailedRunId(undefined);
         }
         // Run-Status der Periode aktualisieren (NEW/DONE/FAILED sichtbar machen)
         dispatcher(
