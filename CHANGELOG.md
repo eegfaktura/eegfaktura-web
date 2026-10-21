@@ -9,6 +9,11 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Changed
+- **Billing breakdown expanded by default** (feedback 21.10.2026). The breakdown under the billing (net, VAT, gross
+  …) now starts expanded and can be collapsed with the arrow; it was collapsed by default. A viewer who collapsed
+  it before keeps that choice (stored in the browser).
+
+### Changed
 - **Participation factor: the time window is shown** (platform#176). The grid operator accepts a change only
   between 09:00 and 17:00 (Austrian time) and applies it from the next day; outside it rejects with „Prozessdatum
   falsch“ (ebUtilities EC_PRTFACT_CHANGE 1.09; prod logs 16.09.–20.10.2026: 67 such rejections in 30

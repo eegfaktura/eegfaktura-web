@@ -88,14 +88,14 @@ const PaidOutVatWarning: FC<{ vat: number, recipients: string[] }> = ({vat, reci
 }
 
 // The breakdown takes much height in the pane footer: it can be collapsed, and each viewer's choice is kept in the
-// browser (collapsed by default). Storage can be missing or blocked: then it is just collapsed.
+// browser (expanded by default). Storage can be missing or blocked: then it is just expanded.
 const TOTALS_OPEN_KEY = "eegfaktura.billingTotalsOpen"
 
 export const readTotalsOpen = (): boolean => {
   try {
-    return localStorage.getItem(TOTALS_OPEN_KEY) === "1"
+    return localStorage.getItem(TOTALS_OPEN_KEY) !== "0"
   } catch {
-    return false
+    return true
   }
 }
 

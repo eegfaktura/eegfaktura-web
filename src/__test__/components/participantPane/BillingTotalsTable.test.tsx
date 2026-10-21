@@ -35,12 +35,13 @@ describe("MarginLines (feedback 20.10.2026)", () => {
 })
 
 describe("collapsible breakdown", () => {
-  it("is collapsed by default and keeps the viewer's choice", () => {
-    expect(readTotalsOpen()).toBe(false)
-    writeTotalsOpen(true)
+  it("is expanded by default and keeps the viewer's choice", () => {
+    localStorage.removeItem("eegfaktura.billingTotalsOpen")
     expect(readTotalsOpen()).toBe(true)
     writeTotalsOpen(false)
     expect(readTotalsOpen()).toBe(false)
+    writeTotalsOpen(true)
+    expect(readTotalsOpen()).toBe(true)
   })
 
   it("keeps the note on paid-out VAT when collapsed, without the table", () => {
