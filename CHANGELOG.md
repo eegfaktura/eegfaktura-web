@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.8.0] – 2026-10-21
+
 ### Added
 - **Time-of-use tariffs (ZVT)**: consumer and producer tariffs gain a
   "Einfach | Zeitbasiert" mode in the tariff dialog. Time-based tariffs
@@ -19,7 +21,6 @@ this changelog highlights the changes relevant for overview and operations.
   per-window sums (`buckets`) per metering point and forwards them together
   with the window definitions to the billing service (consistency guard;
   simple tariffs are completely unchanged and never carry buckets).
-
 - The Info/Impressum footer names the licence (AGPL-3.0) and links the source code of all components
   (github.com/eegfaktura), as AGPL-3.0 §13 asks for a network service.
 
