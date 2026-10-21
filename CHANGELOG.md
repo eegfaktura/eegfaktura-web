@@ -24,6 +24,9 @@ this changelog highlights the changes relevant for overview and operations.
   `tsconfig.node.json` (vite.config.ts) uses `moduleResolution: bundler` and is type-checked in „Type check“.
 - **Build: pnpm version in `package.json`** (platform#179). `packageManager: pnpm@9.12.1` records the pnpm
   version in the project; the release workflow reads it from there instead of its own `version:`.
+- **Build: Vite plugins for Vite 6** (platform#179). `@vitejs/plugin-legacy` 5.4 → 6.1 and `@vitejs/plugin-react`
+  4.3.2 → 4.7 declare Vite 6 as supported (the old versions expected Vite ≤ 5). The build output has the same
+  files, legacy chunks included; the legacy polyfill chunk is larger (newer core-js).
 
 ## [1.7.2] – 2026-10-20
 
