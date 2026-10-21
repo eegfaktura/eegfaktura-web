@@ -40,6 +40,7 @@ import {
   resetParticipantAmounts,
   resumeEnergyBillsPolling,
   selectBillFetchingSelector,
+  selectBillPollingSelector,
 } from "../../store/billing";
 import {selectMetaRecord, setSelectedPeriod,} from "../../store/energy";
 import ButtonGroup from "../ButtonGroup.component";
@@ -116,6 +117,7 @@ const ParticipantPaneComponent: FC = () => {
   const billingRunStatus = useAppSelector(billingRunStatusSelector);
   const billingRunIsFetching = useAppSelector(billingRunIsFetchingSelector);
   const selectBillIsFetching = useAppSelector(selectBillFetchingSelector);
+  const billPolling = useAppSelector(selectBillPollingSelector);
   const billingRunErrorMessage = useAppSelector(billingRunErrorSelector);
 
   const {eeg} = useContext(EegContext)
@@ -264,10 +266,11 @@ const ParticipantPaneComponent: FC = () => {
 
   // Läuft für die aktive Periode bereits ein Abrechnungslauf (z.B. von einem
   // Kollegen gestartet oder Seite neu geladen), an den laufenden Lauf anhängen
-  // statt neu zu starten (konzept-async-billing-run.md). selectBillIsFetching
-  // verhindert einen Doppel-Poll, wenn fetchEnergyBills bereits selbst pollt.
+  // statt neu zu starten (konzept-async-billing-run.md). billPolling
+  // verhindert einen Doppel-Poll, wenn fetchEnergyBills bereits selbst pollt
+  // (nicht isFetching: das setzt auch fetchParticipantAmounts zurück, web#175 review).
   useEffect(() => {
-    if (billingRunStatus === "RUNNING" && billingRun && billingRun.id && !selectBillIsFetching) {
+    if (billingRunStatus === "RUNNING" && billingRun && billingRun.id && !billPolling) {
       dispatcher(resumeEnergyBillsPolling({tenant, billingRunId: billingRun.id}))
         .then((returnValue: any) => {
           if (resumeEnergyBillsPolling.rejected.match(returnValue)) {

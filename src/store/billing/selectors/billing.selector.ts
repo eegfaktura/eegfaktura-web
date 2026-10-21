@@ -17,6 +17,10 @@ export const selectBillFetchingSelector = createSelector(
     featureStateSelector, billingState => billingState.isFetching
 );
 
+export const selectBillPollingSelector = createSelector(
+    featureStateSelector, billingState => billingState.isPolling
+);
+
 export const selectBillById = (id: string | undefined) =>
   createSelector(
     featureStateSelector,
