@@ -1,4 +1,4 @@
-import {Extensions, mergeAttributes, Node} from "@tiptap/core";
+import {Editor, Extensions, Node} from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
@@ -123,6 +123,11 @@ export const mailEditorExtensions = (resolveImage: (id: string) => Promise<strin
   PlaceholderInline,
   PlaceholderBlock,
 ]
+
+// Loads content (stored version, default, reload) without an undo step, so undo cannot go back
+// to an empty editor or to the text before a reload.
+export const setContentWithoutHistory = (editor: Editor, html: string) =>
+  editor.chain().setMeta("addToHistory", false).setContent(html, {emitUpdate: false}).run()
 
 const ALLOWED: Record<string, string[]> = {
   p: ["style"], br: [], strong: [], b: [], em: [], i: [], u: [],

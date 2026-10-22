@@ -1,6 +1,6 @@
 import {afterEach, describe, expect, it} from "vitest";
 import {Editor} from "@tiptap/core";
-import {mailEditorExtensions, mailFileId, toMailHtml} from "../../../components/mailtemplate/mailEditor.extensions";
+import {mailEditorExtensions, mailFileId, setContentWithoutHistory, toMailHtml} from "../../../components/mailtemplate/mailEditor.extensions";
 
 const editors: Editor[] = []
 const editor = (content: string, resolve = (id: string) => Promise.resolve(`blob:test/${id}`)) => {
@@ -63,6 +63,19 @@ describe("mail editor serialization", () => {
       '<p><strong>b</strong> <em>i</em> <u>u</u><br>x</p><ul><li><p>a</p></li></ul><ol><li><p>b</p></li></ol>' +
       '<blockquote><p>q</p></blockquote>'
     expect(toMailHtml(editor(html).getHTML())).toBe(html)
+  })
+})
+
+describe("setContentWithoutHistory", () => {
+  it("loads content that undo does not take back, while edits stay undoable", () => {
+    const e = editor("")
+    setContentWithoutHistory(e, "<p>Gespeichert</p>")
+    expect(e.can().undo()).toBe(false)
+    e.chain().focus("end").insertContent("!").run()
+    expect(e.can().undo()).toBe(true)
+    setContentWithoutHistory(e, "<p>Neu geladen</p>")
+    e.commands.undo()
+    expect(e.getHTML()).toBe("<p>Neu geladen</p>")
   })
 })
 

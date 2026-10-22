@@ -26,7 +26,7 @@ import {
   MailTemplateSource,
   MailTestRecipient
 } from "../../models/mailtemplate.model";
-import {MAILFILE_PREFIX, mailEditorExtensions, toMailHtml} from "./mailEditor.extensions";
+import {MAILFILE_PREFIX, mailEditorExtensions, setContentWithoutHistory, toMailHtml} from "./mailEditor.extensions";
 import {downscaleImage} from "../../util/ImageScale.util";
 import {useLocale} from "../../store/hook/useLocale";
 
@@ -154,7 +154,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
     setTemplate(tpl)
     setSubject(tpl.subject)
     setFiles(tpl.files || [])
-    editor?.commands.setContent(tpl.bodyHtml || "", {emitUpdate: false})
+    if (editor) setContentWithoutHistory(editor, tpl.bodyHtml || "")
     setDirty(false)
     setConflict(false)
   }
@@ -240,7 +240,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
   const onApplyDefault = () => {
     if (!template) return
     setSubject(template.defaultSubject)
-    editor?.commands.setContent(template.defaultBodyHtml || "", {emitUpdate: false})
+    if (editor) setContentWithoutHistory(editor, template.defaultBodyHtml || "")
     setDirty(true)
   }
 
