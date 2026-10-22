@@ -29,6 +29,7 @@ import {
 import {
   applyLink,
   insertPlaceholder,
+  replaceContent,
   MAILFILE_PREFIX,
   mailEditorExtensions,
   mailFileId,
@@ -296,7 +297,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
   const onApplyDefault = () => {
     if (!template) return
     setSubject(template.defaultSubject)
-    if (editor) setContentWithoutHistory(editor, template.defaultBodyHtml || "")
+    if (editor) replaceContent(editor, template.defaultBodyHtml || "")
     setDirty(true)
   }
 

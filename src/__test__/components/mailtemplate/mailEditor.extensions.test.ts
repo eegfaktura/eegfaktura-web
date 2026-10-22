@@ -1,6 +1,6 @@
 import {afterEach, describe, expect, it, vi} from "vitest";
 import {Editor} from "@tiptap/core";
-import {applyLink, insertPlaceholder, mailEditorExtensions, mailFileId, setContentWithoutHistory, toMailHtml} from "../../../components/mailtemplate/mailEditor.extensions";
+import {applyLink, insertPlaceholder, mailEditorExtensions, mailFileId, replaceContent, setContentWithoutHistory, toMailHtml} from "../../../components/mailtemplate/mailEditor.extensions";
 
 const editors: Editor[] = []
 const editor = (content: string, resolve = (id: string) => Promise.resolve(`blob:test/${id}`)) => {
@@ -135,6 +135,17 @@ describe("setContentWithoutHistory", () => {
     setContentWithoutHistory(e, "<p>Neu geladen</p>")
     e.commands.undo()
     expect(e.getHTML()).toBe("<p>Neu geladen</p>")
+  })
+})
+
+describe("replaceContent", () => {
+  it("is one undo step (taking over the new default can be undone)", () => {
+    const e = editor("")
+    setContentWithoutHistory(e, "<p>Eigene Fassung</p>")
+    replaceContent(e, "<p>Neuer Standard</p>")
+    expect(e.getHTML()).toBe("<p>Neuer Standard</p>")
+    e.commands.undo()
+    expect(e.getHTML()).toBe("<p>Eigene Fassung</p>")
   })
 })
 

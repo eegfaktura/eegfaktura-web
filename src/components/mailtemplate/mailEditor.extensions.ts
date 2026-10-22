@@ -186,6 +186,10 @@ export const removeMailImages = (editor: Editor, id: string) => {
   return true
 }
 
+// Replaces the text as a user edit (e.g. "Neuen Standard übernehmen"): one undo step brings the old text back.
+export const replaceContent = (editor: Editor, html: string) =>
+  editor.chain().setContent(html).run()
+
 const ALLOWED: Record<string, string[]> = {
   p: ["style"], br: [], strong: [], b: [], em: [], i: [], u: [],
   h1: ["style"], h2: ["style"], h3: ["style"],
