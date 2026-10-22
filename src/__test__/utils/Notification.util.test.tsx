@@ -21,4 +21,12 @@ describe("buildNotificationText — Mail", () => {
   it("keeps the failed-mail text for other mail errors", () => {
     expect(text(mail("ERROR", "E_MAIL", "invalid address", "AT001"))).toBe("Mailversand fehlgeschlagen: AT001 — invalid address")
   })
+
+  it("shows template notices and other mail errors of the same notification", () => {
+    const n = {message: new Message({type: "Mail", messages: [
+      {kind: "INFO", metering_point: "zp-active", message_code: "I_MAIL_TEMPLATE_DEFAULT", message: "Neuer Standard."},
+      {kind: "ERROR", metering_point: "AT001", message_code: "E_MAIL", message: "invalid address"},
+    ]})}
+    expect(text(n)).toBe("E-Mail-Texte: Neuer Standard.Mailversand fehlgeschlagen: AT001 — invalid address")
+  })
 })
