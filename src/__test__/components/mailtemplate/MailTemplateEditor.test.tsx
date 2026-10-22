@@ -227,6 +227,31 @@ describe("MailTemplateEditor reload/reset errors", () => {
     await waitFor(() => expect(screen.getByText(/Die Mail konnte nicht geladen werden \(Keine Berechtigung\)/)).toBeTruthy())
     expect(screen.getByText("Zählpunkt aktiv")).toBeTruthy()
   })
+
+  it("asks before a reload from the error banner discards unsaved edits", async () => {
+    const fetchTemplate = vi.fn()
+      .mockResolvedValueOnce(template(3, "Alt"))
+      .mockRejectedValueOnce(new MailTemplateError("down", 503))
+      .mockResolvedValue(template(4, "Neu"))
+    Api.mailTemplateService = {
+      fetchTemplate, fetchFile: vi.fn(), saveTemplate: vi.fn().mockRejectedValue(new MailTemplateError("conflict", 409)),
+    } as unknown as typeof Api.mailTemplateService
+    render(<MailTemplateEditor tenant="RC100100" source="backend" templateKey="zp-active"
+                               onClose={vi.fn()} onChanged={vi.fn()}/>)
+    await waitFor(() => expect(screen.getByText("Zählpunkt aktiv")).toBeTruthy())
+    fireEvent.click(screen.getByText("Speichern"))
+    await waitFor(() => expect(screen.getByText("Neu laden")).toBeTruthy())
+    fireEvent.click(screen.getByText("Neu laden"))
+    await waitFor(() => expect(screen.getByText(/Die Mail konnte nicht geladen werden/)).toBeTruthy())
+
+    // unsaved edit: the banner's reload waits for the confirmation instead of loading
+    fireEvent(screen.getByText("Speichern").closest("ion-card")!.querySelector("ion-input")!,
+      new CustomEvent("ionInput", {detail: {value: "Geändert"}}))
+    const banner = screen.getByText(/Die Mail konnte nicht geladen werden/).closest("div")!
+    fireEvent.click(banner.querySelector("ion-button")!)
+    await new Promise(r => setTimeout(r, 0))
+    expect(fetchTemplate).toHaveBeenCalledTimes(2)
+  })
 })
 
 describe("createBlobUrlCache", () => {

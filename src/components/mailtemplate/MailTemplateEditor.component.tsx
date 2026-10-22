@@ -275,20 +275,27 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
     ],
   })
 
-  const onClickClose = () => {
+  // runs the action directly, or after confirming that unsaved edits are discarded
+  const confirmDiscard = (messageKey: string, action: () => void) => {
     if (!dirty) {
-      onClose()
+      action()
       return
     }
     presentAlert({
       header: t("mailtemplates.unsaved_header"),
-      message: t("mailtemplates.unsaved_message"),
+      message: t(messageKey),
       buttons: [
         {text: t("mailtemplates.cancel"), role: "cancel"},
-        {text: t("mailtemplates.unsaved_leave"), role: "destructive", handler: () => onClose()},
+        {text: t("mailtemplates.unsaved_leave"), role: "destructive", handler: () => action()},
       ],
     })
   }
+
+  const onClickClose = () => confirmDiscard("mailtemplates.unsaved_message", onClose)
+
+  const onReloadAfterError = () => confirmDiscard("mailtemplates.unsaved_reload_message", () => run(async () => {
+    await load()
+  }))
 
   const onPreview = (d: MailTemplateDraft) => run(async () => {
     setPreview(await service.preview(source, tenant, templateKey, d))
@@ -499,7 +506,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
         {loadError && (
           <div className="mail-template-notice" role="alert">
             <IonText color="danger"><p>{t("mailtemplates.load_failed", {message: loadError})}</p></IonText>
-            <IonButton size="small" disabled={busy} onClick={() => load()}>{t("mailtemplates.reload")}</IonButton>
+            <IonButton size="small" disabled={busy} onClick={onReloadAfterError}>{t("mailtemplates.reload")}</IonButton>
           </div>
         )}
         {conflict && (

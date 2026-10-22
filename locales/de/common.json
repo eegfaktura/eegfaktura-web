@@ -284,6 +284,7 @@
     "unsaved_header": "Ungespeicherte Änderungen",
     "unsaved_message": "Die Änderungen sind noch nicht gespeichert. Trotzdem zurück zur Liste?",
     "unsaved_leave": "Verwerfen",
+    "unsaved_reload_message": "Die Änderungen sind noch nicht gespeichert und gehen beim Neuladen verloren. Trotzdem neu laden?",
     "preview": "Vorschau",
     "preview_title": "Vorschau mit Beispieldaten",
     "preview_close": "Vorschau schließen",
