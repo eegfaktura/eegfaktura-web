@@ -1,4 +1,4 @@
-import React, {FC, useEffect, useState} from "react";
+import React, {FC, useEffect, useRef, useState} from "react";
 import {IonCard, IonContent, IonItem, IonLabel, IonList, IonPage, IonText} from "@ionic/react";
 import {useAccessGroups, useTenant} from "../store/hook/Eeg.provider";
 import {useAppSelector} from "../store";
@@ -23,12 +23,17 @@ const MailTemplatesPage: FC = () => {
   const [failed, setFailed] = useState<MailTemplateSource[]>([])
   const [selected, setSelected] = useState<MailTemplateListItem>()
 
+  // only the latest request may set the list: a slow answer for the previous community is dropped
+  const request = useRef(0)
   const loadList = () => {
     if (!tenant || !admin) return
+    const current = ++request.current
     Api.mailTemplateService.fetchList(tenant).then(r => {
+      if (current !== request.current) return
       setItems(r.items)
       setFailed(r.failed)
     }).catch(() => {
+      if (current !== request.current) return
       setItems([])
       setFailed(["backend", "billing"])
     })
