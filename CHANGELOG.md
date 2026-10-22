@@ -19,6 +19,7 @@ this changelog highlights the changes relevant for overview and operations.
 - `flatted` 3.3.1 → 3.4.4 (eslint cache) through `pnpm.overrides`: GHSA-rf6f-7fwh-wjgh, GHSA-25h7-pfq9-p65f (HIGH) (platform#179).
 - `picomatch` 2.3.1 → 2.3.2 (build tooling) through `pnpm.overrides`: GHSA-c2c7-rcm5-vvqj (HIGH) and GHSA-3v7f-55p6-f55p (platform#179).
 - `source-map-js` 1.2.1 → 1.2.2 (via postcss/vite, build only) through `pnpm.overrides`: GHSA-68fv-2mgg-jv7q (HIGH) (platform#179).
+- `ws` 8.18.0 → 8.22.0 (via jsdom, tests only) through `pnpm.overrides`: GHSA-96hv-2xvq-fx4p (HIGH) and GHSA-58qx-3vcg-4xpx (platform#179).
 
 ## [1.8.0] – 2026-10-21
 
