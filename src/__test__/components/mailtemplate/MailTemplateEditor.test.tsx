@@ -32,7 +32,7 @@ describe("MailTemplateEditor", () => {
     fireEvent.click(screen.getByText("Speichern"))
     await waitFor(() => expect(screen.getByRole("alert").textContent).toContain("wurde inzwischen geändert"))
     expect(saveTemplate).toHaveBeenCalledWith("backend", "RC100100", "zp-active",
-      {subject: "Alt", bodyHtml: '<p>Hallo <span data-ph="member.firstName">Vorname</span></p>'}, 3, null)
+      {subject: "Alt", bodyHtml: '<p>Hallo <span data-ph="member.firstName">Vorname</span></p>', attachmentFileId: null}, 3, null)
     expect((screen.getByText("Speichern").closest("ion-button") as any).disabled).toBe(true)
 
     fireEvent.click(screen.getByText("Neu laden"))

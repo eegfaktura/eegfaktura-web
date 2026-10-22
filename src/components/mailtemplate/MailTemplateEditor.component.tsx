@@ -221,7 +221,8 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
     }
   }, [editor, tenant, source, templateKey])
 
-  const draft = (): MailTemplateDraft => ({subject, bodyHtml: toMailHtml(editor ? editor.getHTML() : "")})
+  const draft = (): MailTemplateDraft =>
+    ({subject, bodyHtml: toMailHtml(editor ? editor.getHTML() : ""), attachmentFileId: attachmentId})
 
   const run = async (action: () => Promise<void>) => {
     setBusy(true)

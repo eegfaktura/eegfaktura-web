@@ -68,6 +68,8 @@ export interface MailTemplate {
 export interface MailTemplateDraft {
   subject: string
   bodyHtml: string
+  // PDF chosen in the editor; preview and test mail use it (null/absent = no PDF)
+  attachmentFileId?: string | null
 }
 
 export interface MailPreview {

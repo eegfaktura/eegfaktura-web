@@ -86,6 +86,16 @@ describe("MailTemplateService", () => {
     })
   })
 
+  it("sends the preview with the chosen PDF, null without one", async () => {
+    fetchMock.mockResolvedValue(reply({subject: "S", html: "<html></html>"}))
+    const svc = new MailTemplateService(authService)
+    await svc.preview("billing", "RC100100", "billing-document", {subject: "S", bodyHtml: "<p>x</p>", attachmentFileId: "pdf-1"})
+    await svc.preview("billing", "RC100100", "billing-document", {subject: "S", bodyHtml: "<p>x</p>"})
+    expect(url(0)).toMatch(/\/api\/mailtemplates\/billing-document\/preview$/)
+    expect(JSON.parse(init(0).body as string)).toEqual({subject: "S", bodyHtml: "<p>x</p>", attachmentFileId: "pdf-1"})
+    expect(JSON.parse(init(1).body as string)).toEqual({subject: "S", bodyHtml: "<p>x</p>", attachmentFileId: null})
+  })
+
   it("uploads a file as multipart with field kind", async () => {
     fetchMock.mockResolvedValueOnce(reply({id: "f1", kind: "image", filename: "logo.png", mimeType: "image/png", size: 1}, 201))
     const f = await new MailTemplateService(authService)
@@ -100,9 +110,9 @@ describe("MailTemplateService", () => {
   it("sends the test mail with recipient and returns the address", async () => {
     fetchMock.mockResolvedValueOnce(reply({sentTo: "eeg@example.at"}))
     const to = await new MailTemplateService(authService)
-      .sendTest("backend", "RC100100", "zp-active", "eeg", {subject: "S", bodyHtml: "<p>x</p>"})
+      .sendTest("backend", "RC100100", "zp-active", "eeg", {subject: "S", bodyHtml: "<p>x</p>", attachmentFileId: "pdf-1"})
     expect(to).toBe("eeg@example.at")
     expect(url(0)).toMatch(/\/eeg\/mailtemplates\/zp-active\/test$/)
-    expect(JSON.parse(init(0).body as string)).toEqual({recipient: "eeg", subject: "S", bodyHtml: "<p>x</p>"})
+    expect(JSON.parse(init(0).body as string)).toEqual({recipient: "eeg", subject: "S", bodyHtml: "<p>x</p>", attachmentFileId: "pdf-1"})
   })
 })
