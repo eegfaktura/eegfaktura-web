@@ -32,7 +32,7 @@ describe("MailTemplateEditor", () => {
     fireEvent.click(screen.getByText("Speichern"))
     await waitFor(() => expect(screen.getByRole("alert").textContent).toContain("wurde inzwischen geändert"))
     expect(saveTemplate).toHaveBeenCalledWith("backend", "RC100100", "zp-active",
-      {subject: "Alt", bodyHtml: '<p>Hallo <span data-ph="member.firstName">Vorname</span></p>'}, 3)
+      {subject: "Alt", bodyHtml: '<p>Hallo <span data-ph="member.firstName">Vorname</span></p>'}, 3, null)
     expect((screen.getByText("Speichern").closest("ion-button") as any).disabled).toBe(true)
 
     fireEvent.click(screen.getByText("Neu laden"))
@@ -52,6 +52,67 @@ describe("MailTemplateEditor", () => {
     expect((screen.getByText("Testmail an mich").closest("ion-button") as any).disabled).toBe(false)
     expect(screen.queryByText("PDF anhängen")).toBeNull()
     expect(screen.getByText("Das Rechnungs-PDF wird immer angehängt.")).toBeTruthy()
+  })
+})
+
+describe("MailTemplateEditor files", () => {
+  const IMG_SAVED = "11111111-1111-4111-8111-111111111111"
+  const IMG_DRAFT = "22222222-2222-4222-8222-222222222222"
+  const PDF_SAVED = "33333333-3333-4333-8333-333333333333"
+  const withFiles = (): MailTemplate => ({
+    ...template(3, "S"),
+    bodyHtml: `<p>Logo <img src="mailfile:${IMG_SAVED}" alt="logo.png"></p>`,
+    attachmentFileId: PDF_SAVED,
+    files: [
+      {id: IMG_SAVED, kind: "image", filename: "logo.png", mimeType: "image/png", size: 2048, committed: true},
+      {id: IMG_DRAFT, kind: "image", filename: "neu.png", mimeType: "image/png", size: 2048, committed: false},
+      {id: PDF_SAVED, kind: "attachment", filename: "info.pdf", mimeType: "application/pdf", size: 4096, committed: true},
+    ],
+  })
+  const setup = (deleteFile = vi.fn().mockResolvedValue(undefined)) => {
+    const saveTemplate = vi.fn().mockResolvedValue(withFiles())
+    Api.mailTemplateService = {
+      fetchTemplate: vi.fn().mockResolvedValue(withFiles()), saveTemplate, deleteFile,
+      fetchFile: vi.fn().mockResolvedValue(new Blob(["x"])),
+    } as unknown as typeof Api.mailTemplateService
+    render(<MailTemplateEditor tenant="RC100100" source="backend" templateKey="zp-active"
+                               onClose={vi.fn()} onChanged={vi.fn()}/>)
+    return {saveTemplate, deleteFile}
+  }
+
+  it("lists images and the PDF with draft/saved state and sends attachmentFileId on save", async () => {
+    const {saveTemplate} = setup()
+    await waitFor(() => expect(screen.getByText(/logo\.png/)).toBeTruthy())
+    expect(screen.getByText(/logo\.png/).textContent).toContain("gespeichert")
+    expect(screen.getByText(/neu\.png/).textContent).toContain("Entwurf")
+    expect(screen.getByText(/neu\.png/).textContent).toContain("nicht im Text")
+    fireEvent.click(screen.getByText("Speichern"))
+    await waitFor(() => expect(saveTemplate).toHaveBeenCalled())
+    expect(saveTemplate.mock.calls[0][5]).toBe(PDF_SAVED)
+  })
+
+  it("deletes a draft on the service, drops saved files with the next save", async () => {
+    const {saveTemplate, deleteFile} = setup()
+    await waitFor(() => expect(screen.getByText(/neu\.png/)).toBeTruthy())
+    fireEvent.click(screen.getByLabelText("neu.png entfernen"))
+    await waitFor(() => expect(screen.queryByText(/neu\.png/)).toBeNull())
+    expect(deleteFile).toHaveBeenCalledWith("backend", "RC100100", "zp-active", IMG_DRAFT)
+
+    fireEvent.click(screen.getByLabelText("logo.png entfernen"))
+    fireEvent.click(screen.getByLabelText("info.pdf entfernen"))
+    await waitFor(() => expect(screen.queryByText(/info\.pdf/)).toBeNull())
+    expect(deleteFile).toHaveBeenCalledTimes(1)
+    fireEvent.click(screen.getByText("Speichern"))
+    await waitFor(() => expect(saveTemplate).toHaveBeenCalled())
+    expect(saveTemplate.mock.calls[0][3].bodyHtml).toBe("<p>Logo </p>")
+    expect(saveTemplate.mock.calls[0][5]).toBeNull()
+  })
+
+  it("keeps a draft the service reports as in use (409) until the next save", async () => {
+    setup(vi.fn().mockRejectedValue(new MailTemplateError("in use", 409)))
+    await waitFor(() => expect(screen.getByText(/neu\.png/)).toBeTruthy())
+    fireEvent.click(screen.getByLabelText("neu.png entfernen"))
+    await waitFor(() => expect(screen.queryByText(/neu\.png/)).toBeNull())
   })
 })
 

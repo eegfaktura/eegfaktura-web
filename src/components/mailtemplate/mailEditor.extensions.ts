@@ -129,6 +129,19 @@ export const mailEditorExtensions = (resolveImage: (id: string) => Promise<strin
 export const setContentWithoutHistory = (editor: Editor, html: string) =>
   editor.chain().setMeta("addToHistory", false).setContent(html, {emitUpdate: false}).run()
 
+// Removes every image of the given file from the text; returns whether there was one.
+export const removeMailImages = (editor: Editor, id: string) => {
+  const positions: number[] = []
+  editor.state.doc.descendants((node, pos) => {
+    if (node.type.name === "image" && mailFileId(node.attrs.src) === id) positions.push(pos)
+  })
+  if (positions.length === 0) return false
+  const tr = editor.state.tr
+  positions.reverse().forEach(pos => tr.delete(pos, pos + 1))
+  editor.view.dispatch(tr)
+  return true
+}
+
 const ALLOWED: Record<string, string[]> = {
   p: ["style"], br: [], strong: [], b: [], em: [], i: [], u: [],
   h1: ["style"], h2: ["style"], h3: ["style"],

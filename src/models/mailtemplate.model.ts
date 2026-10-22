@@ -31,6 +31,8 @@ export interface MailFile {
   filename: string
   mimeType: string
   size: number
+  // false: draft upload, not sent until a PUT makes it part of the version
+  committed?: boolean
 }
 
 export interface MailTemplateLimits {
@@ -57,6 +59,9 @@ export interface MailTemplate {
   updatedBy?: string | null
   placeholders: MailPlaceholder[]
   files: MailFile[]
+  attachmentFileId?: string | null
+  // backend: a hand-made template on the volume applies and nothing is stored yet
+  legacyTemplateActive?: boolean
   limits: MailTemplateLimits
 }
 

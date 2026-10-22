@@ -26,7 +26,14 @@ import {
   MailTemplateSource,
   MailTestRecipient
 } from "../../models/mailtemplate.model";
-import {MAILFILE_PREFIX, mailEditorExtensions, setContentWithoutHistory, toMailHtml} from "./mailEditor.extensions";
+import {
+  MAILFILE_PREFIX,
+  mailEditorExtensions,
+  mailFileId,
+  removeMailImages,
+  setContentWithoutHistory,
+  toMailHtml
+} from "./mailEditor.extensions";
 import {downscaleImage} from "../../util/ImageScale.util";
 import {useLocale} from "../../store/hook/useLocale";
 
@@ -115,6 +122,10 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
   const [template, setTemplate] = useState<MailTemplate>()
   const [subject, setSubject] = useState("")
   const [files, setFiles] = useState<MailFile[]>([])
+  // PDF sent with the next save (PUT attachmentFileId)
+  const [attachmentId, setAttachmentId] = useState<string | null>(null)
+  // saved files the user removed; the next save drops them (DELETE of a file in use → 409)
+  const [removedIds, setRemovedIds] = useState<string[]>([])
   const [dirty, setDirty] = useState(false)
   const [busy, setBusy] = useState(false)
   const [loadError, setLoadError] = useState<string>()
@@ -154,6 +165,8 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
     setTemplate(tpl)
     setSubject(tpl.subject)
     setFiles(tpl.files || [])
+    setAttachmentId(tpl.attachmentFileId ?? null)
+    setRemovedIds([])
     if (editor) setContentWithoutHistory(editor, tpl.bodyHtml || "")
     setDirty(false)
     setConflict(false)
@@ -195,7 +208,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
   const onSave = () => run(async () => {
     if (!template) return
     try {
-      apply(await service.saveTemplate(source, tenant, templateKey, draft(), template.version))
+      apply(await service.saveTemplate(source, tenant, templateKey, draft(), template.version, attachmentId))
       toast(t("mailtemplates.saved"), "success")
       onChanged()
     } catch (e) {
@@ -304,9 +317,21 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
     })
   }
 
-  const images = files.filter(f => f.kind === "image")
-  const attachments = files.filter(f => f.kind === "attachment")
-  const totalBytes = files.reduce((s, f) => s + (f.size || 0), 0)
+  const usedImageIds = useEditorState({
+    editor,
+    selector: ({editor: e}) => {
+      const ids: string[] = []
+      e?.state.doc.descendants(n => {
+        const id = n.type.name === "image" ? mailFileId(n.attrs.src) : undefined
+        if (id) ids.push(id)
+      })
+      return ids
+    }
+  }) || []
+  const visibleFiles = files.filter(f => !removedIds.includes(f.id))
+  const images = visibleFiles.filter(f => f.kind === "image")
+  const attachments = visibleFiles.filter(f => f.kind === "attachment")
+  const totalBytes = visibleFiles.reduce((s, f) => s + (f.size || 0), 0)
   const limits = template?.limits
 
   const checkTotal = (size: number) => {
@@ -346,13 +371,54 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
       checkTotal(file.size)
       const uploaded = await service.uploadFile(source, tenant, templateKey, file, file.name, "attachment")
       setFiles(fs => [...fs, uploaded])
+      setAttachmentId(uploaded.id)
+      setDirty(true)
     })
   }
 
-  const onRemoveAttachment = (f: MailFile) => run(async () => {
-    await service.deleteFile(source, tenant, templateKey, f.id)
-    setFiles(fs => fs.filter(x => x.id !== f.id))
+  // Removes an image or PDF from the text and the attachment at once. A draft is deleted on the
+  // service; a saved file (or one the service reports as in use, 409) goes with the next save.
+  const onRemoveFile = (f: MailFile) => run(async () => {
+    if (editor && removeMailImages(editor, f.id)) setDirty(true)
+    if (attachmentId === f.id) {
+      setAttachmentId(null)
+      setDirty(true)
+    }
+    const dropOnSave = () => {
+      setRemovedIds(ids => [...ids, f.id])
+      setDirty(true)
+    }
+    if (f.committed) {
+      dropOnSave()
+      return
+    }
+    try {
+      await service.deleteFile(source, tenant, templateKey, f.id)
+      setFiles(fs => fs.filter(x => x.id !== f.id))
+    } catch (e) {
+      if (e instanceof MailTemplateError && e.isConflict) {
+        dropOnSave()
+        toast(t("mailtemplates.file_in_use"), "danger")
+        return
+      }
+      throw e
+    }
   })
+
+  const fileState = (f: MailFile) => [
+    t(f.committed ? "mailtemplates.file_saved" : "mailtemplates.file_draft"),
+    f.kind === "image" && !usedImageIds.includes(f.id) ? t("mailtemplates.file_not_in_text") : undefined,
+    f.kind === "attachment" && attachmentId !== f.id ? t("mailtemplates.file_not_attached") : undefined,
+  ].filter(Boolean).join(", ")
+
+  const fileChip = (f: MailFile) => (
+    <IonChip key={f.id}>
+      <IonIcon icon={f.kind === "image" ? imageOutline : documentOutline}/>
+      <IonLabel>{f.filename} ({formatBytes(f.size)}) – {fileState(f)}</IonLabel>
+      <IonIcon icon={closeCircleOutline} aria-label={t("mailtemplates.file_remove", {name: f.filename})}
+               onClick={() => onRemoveFile(f)}/>
+    </IonChip>
+  )
 
   if (loadError && !template) {
     return (
@@ -453,17 +519,17 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
           </IonText>
         </div>}
 
+        {images.length > 0 && (
+          <div className="mail-template-attachments">
+            <IonLabel>{t("mailtemplates.images")}</IonLabel>
+            {images.map(fileChip)}
+          </div>
+        )}
+
         {limits && limits.maxAttachments > 0 && (
           <div className="mail-template-attachments">
             <IonLabel>{t("mailtemplates.attachment")}</IonLabel>
-            {attachments.map(f => (
-              <IonChip key={f.id}>
-                <IonIcon icon={documentOutline}/>
-                <IonLabel>{f.filename} ({formatBytes(f.size)})</IonLabel>
-                <IonIcon icon={closeCircleOutline} aria-label={t("mailtemplates.attachment_remove")}
-                         onClick={() => onRemoveAttachment(f)}/>
-              </IonChip>
-            ))}
+            {attachments.map(fileChip)}
             <IonButton size="small" fill="outline" disabled={busy || attachments.length >= limits.maxAttachments}
                        onClick={() => pdfInput.current?.click()}>{t("mailtemplates.attachment_add")}</IonButton>
           </div>
