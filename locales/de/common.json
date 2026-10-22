@@ -278,6 +278,7 @@
     "cancel": "Abbrechen",
     "conflict": "Diese Mail wurde inzwischen geändert (von jemand anderem gespeichert). Zum Weiterarbeiten neu laden; ungespeicherte Änderungen gehen dabei verloren.",
     "reload": "Neu laden",
+    "load_failed": "Die Mail konnte nicht geladen werden ({{message}}). Angezeigt wird der zuletzt geladene Stand.",
     "unsaved_header": "Ungespeicherte Änderungen",
     "unsaved_message": "Die Änderungen sind noch nicht gespeichert. Trotzdem zurück zur Liste?",
     "unsaved_leave": "Verwerfen",

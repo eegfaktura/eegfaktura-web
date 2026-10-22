@@ -159,11 +159,18 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
     setConflict(false)
   }
 
-  const load = () => {
+  // Resolves to false when loading failed; the error stays visible, also above an already loaded version.
+  const load = (): Promise<boolean> => {
     setLoadError(undefined)
     return service.fetchTemplate(source, tenant, templateKey)
-      .then(apply)
-      .catch(e => setLoadError(errorMessage(e)))
+      .then(tpl => {
+        apply(tpl)
+        return true
+      })
+      .catch(e => {
+        setLoadError(errorMessage(e))
+        return false
+      })
   }
 
   useEffect(() => {
@@ -209,9 +216,10 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
         text: t("mailtemplates.reset"), role: "destructive", handler: () => {
           run(async () => {
             await service.resetTemplate(source, tenant, templateKey)
-            await load()
-            toast(t("mailtemplates.reset_done"), "success")
             onChanged()
+            if (await load()) {
+              toast(t("mailtemplates.reset_done"), "success")
+            }
           })
         }
       },
@@ -377,6 +385,12 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
               {t("mailtemplates.default_view")}
             </IonButton>
             <IonButton size="small" fill="outline" onClick={onApplyDefault}>{t("mailtemplates.default_apply")}</IonButton>
+          </div>
+        )}
+        {loadError && (
+          <div className="mail-template-notice" role="alert">
+            <IonText color="danger"><p>{t("mailtemplates.load_failed", {message: loadError})}</p></IonText>
+            <IonButton size="small" disabled={busy} onClick={() => load()}>{t("mailtemplates.reload")}</IonButton>
           </div>
         )}
         {conflict && (

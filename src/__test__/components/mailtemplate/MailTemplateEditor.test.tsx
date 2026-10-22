@@ -55,6 +55,24 @@ describe("MailTemplateEditor", () => {
   })
 })
 
+describe("MailTemplateEditor reload/reset errors", () => {
+  it("shows a failed reload above the loaded version", async () => {
+    const fetchTemplate = vi.fn()
+      .mockResolvedValueOnce(template(3, "Alt"))
+      .mockRejectedValueOnce(new MailTemplateError("Keine Berechtigung", 403))
+    const saveTemplate = vi.fn().mockRejectedValue(new MailTemplateError("conflict", 409, [], 4))
+    Api.mailTemplateService = {fetchTemplate, saveTemplate, fetchFile: vi.fn()} as unknown as typeof Api.mailTemplateService
+    render(<MailTemplateEditor tenant="RC100100" source="backend" templateKey="zp-active"
+                               onClose={vi.fn()} onChanged={vi.fn()}/>)
+    await waitFor(() => expect(screen.getByText("Zählpunkt aktiv")).toBeTruthy())
+    fireEvent.click(screen.getByText("Speichern"))
+    await waitFor(() => expect(screen.getByText("Neu laden")).toBeTruthy())
+    fireEvent.click(screen.getByText("Neu laden"))
+    await waitFor(() => expect(screen.getByText(/Die Mail konnte nicht geladen werden \(Keine Berechtigung\)/)).toBeTruthy())
+    expect(screen.getByText("Zählpunkt aktiv")).toBeTruthy()
+  })
+})
+
 describe("insertAtCursor (subject placeholders)", () => {
   it("inserts {key} at the cursor, replaces a selection, appends without cursor", () => {
     expect(insertAtCursor("Rechnung  - EEG", "{document.period}", 9, 9))
