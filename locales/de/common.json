@@ -250,8 +250,6 @@
   },
   "mailtemplates": {
     "header": "E-Mail-Texte",
-    "card_text": "Betreff und Text der automatischen Mails an Mitglieder anpassen.",
-    "card_button": "E-Mail-Texte bearbeiten",
     "admin_only": "Nur für EEG-Admins.",
     "loading": "Wird geladen …",
     "load_failed_backend": "Die Mitglieder-Mails konnten nicht geladen werden.",

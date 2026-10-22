@@ -10,7 +10,7 @@ this changelog highlights the changes relevant for overview and operations.
 
 ### Added
 - **„E-Mail-Texte“: EEG admins edit the member mails themselves** (konzept-mail-texte-editierbar.md). New page
-  `/page/mailtemplates`, reached from a card on the EEG page (admins only). One list of the four mails —
+  `/page/mailtemplates`, reached from the entry „E-Mail-Texte“ in the left menu below „Prozesse“ (admins only). One list of the four mails —
   `consent-request`, `zp-active`, `zp-inactive` from backend (`/eeg/mailtemplates`) and `billing-document` from
   billing (`/api/mailtemplates`) — with status „Standard“ / „Angepasst“ and a hint when the default text changed.
   Editor (TipTap 3.32.0) for subject and text: bold, italic, underline, H1–H3, lists, https/mailto links,
