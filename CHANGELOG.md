@@ -8,6 +8,11 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **Wording: „Teilnahmefaktor“ instead of „Teilnehmerfaktor“** (pilot feedback 22.10.2026). The title and the
+  field label of „Teilnahmefaktor ändern“ and the warning for a missing factor said „Teilnehmerfaktor“, the info
+  text and the other places already „Teilnahmefaktor“.
+
 ## [1.8.0] – 2026-10-21
 
 ### Added
