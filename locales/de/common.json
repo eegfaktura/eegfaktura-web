@@ -297,6 +297,7 @@
     "attachment": "PDF-Anhang",
     "attachment_add": "PDF anhängen",
     "file_remove": "{{name}} entfernen",
+    "file_attach": "{{name}} anhängen",
     "file_draft": "Entwurf, wird erst mit dem Speichern verwendet",
     "file_saved": "gespeichert",
     "file_not_in_text": "nicht im Text",

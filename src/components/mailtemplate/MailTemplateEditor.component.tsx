@@ -12,7 +12,7 @@ import {
   useIonAlert,
   useIonToast
 } from "@ionic/react";
-import {closeCircleOutline, documentOutline, imageOutline, linkOutline, listOutline} from "ionicons/icons";
+import {attachOutline, closeCircleOutline, documentOutline, imageOutline, linkOutline, listOutline} from "ionicons/icons";
 import {Editor, EditorContent, useEditor, useEditorState} from "@tiptap/react";
 import moment from "moment";
 import {Api} from "../../service";
@@ -453,6 +453,14 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
     <IonChip key={f.id}>
       <IonIcon icon={f.kind === "image" ? imageOutline : documentOutline}/>
       <IonLabel>{f.filename} ({formatBytes(f.size)}) – {fileState(f)}</IonLabel>
+      {f.kind === "attachment" && attachmentId !== f.id &&
+        // e.g. a fresh draft of another session: attach it instead of deleting it
+        <IonIcon icon={attachOutline} aria-label={t("mailtemplates.file_attach", {name: f.filename})}
+                 title={t("mailtemplates.file_attach", {name: f.filename})}
+                 onClick={() => {
+                   setAttachmentId(f.id)
+                   setDirty(true)
+                 }}/>}
       <IonIcon icon={closeCircleOutline} aria-label={t("mailtemplates.file_remove", {name: f.filename})}
                onClick={() => onRemoveFile(f)}/>
     </IonChip>

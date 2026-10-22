@@ -108,6 +108,26 @@ describe("MailTemplateEditor files", () => {
     expect(saveTemplate.mock.calls[0][5]).toBeNull()
   })
 
+  it("attaches a leftover draft PDF instead of the saved one", async () => {
+    const PDF_DRAFT = "44444444-4444-4444-8444-444444444444"
+    const tpl = withFiles()
+    tpl.files.push({id: PDF_DRAFT, kind: "attachment", filename: "neu.pdf", mimeType: "application/pdf", size: 1024, committed: false})
+    const saveTemplate = vi.fn().mockResolvedValue(tpl)
+    Api.mailTemplateService = {
+      fetchTemplate: vi.fn().mockResolvedValue(tpl), saveTemplate, deleteFile: vi.fn(),
+      fetchFile: vi.fn().mockResolvedValue(new Blob(["x"])),
+    } as unknown as typeof Api.mailTemplateService
+    render(<MailTemplateEditor tenant="RC100100" source="backend" templateKey="zp-active"
+                               onClose={vi.fn()} onChanged={vi.fn()}/>)
+    await waitFor(() => expect(screen.getByText(/neu\.pdf/).textContent).toContain("nicht angehängt"))
+    expect(screen.queryByLabelText("info.pdf anhängen")).toBeNull()
+    fireEvent.click(screen.getByLabelText("neu.pdf anhängen"))
+    await waitFor(() => expect(screen.getByText(/info\.pdf/).textContent).toContain("nicht angehängt"))
+    fireEvent.click(screen.getByText("Speichern"))
+    await waitFor(() => expect(saveTemplate).toHaveBeenCalled())
+    expect(saveTemplate.mock.calls[0][5]).toBe(PDF_DRAFT)
+  })
+
   it("keeps a draft the service reports as in use (409) until the next save", async () => {
     setup(vi.fn().mockRejectedValue(new MailTemplateError("in use", 409)))
     await waitFor(() => expect(screen.getByText(/neu\.png/)).toBeTruthy())
