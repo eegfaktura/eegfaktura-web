@@ -468,6 +468,8 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
         <p className="mail-template-description">{template.description}</p>
         <p className="mail-template-status">{statusText(t, template)}</p>
         {source === "billing" && <IonText color="medium"><p>{t("mailtemplates.billing_pdf_hint")}</p></IonText>}
+        {template.legacyTemplateActive &&
+          <IonText color="warning"><p className="mail-template-notice">{t("mailtemplates.legacy_active")}</p></IonText>}
         {template.defaultChanged && (
           <div className="mail-template-notice">
             <IonText color="warning"><p>{t("mailtemplates.default_changed")}</p></IonText>

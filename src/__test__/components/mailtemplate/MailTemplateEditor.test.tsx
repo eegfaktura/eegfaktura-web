@@ -164,6 +164,18 @@ describe("MailTemplateEditor subject placeholder", () => {
   })
 })
 
+describe("MailTemplateEditor legacy template", () => {
+  it("shows the hint for a hand-made template and keeps saving possible", async () => {
+    Api.mailTemplateService = {
+      fetchTemplate: vi.fn().mockResolvedValue({...template(0, "S"), legacyTemplateActive: true}), fetchFile: vi.fn(),
+    } as unknown as typeof Api.mailTemplateService
+    render(<MailTemplateEditor tenant="RC100100" source="backend" templateKey="consent-request"
+                               onClose={vi.fn()} onChanged={vi.fn()}/>)
+    await waitFor(() => expect(screen.getByText(/gilt derzeit eine individuell eingerichtete Vorlage/)).toBeTruthy())
+    expect((screen.getByText("Speichern").closest("ion-button") as any).disabled).toBe(false)
+  })
+})
+
 describe("MailTemplateEditor reload/reset errors", () => {
   it("shows a failed reload above the loaded version", async () => {
     const fetchTemplate = vi.fn()
