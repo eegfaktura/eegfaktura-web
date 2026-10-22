@@ -1,4 +1,4 @@
-import {afterEach, describe, expect, it} from "vitest";
+import {afterEach, describe, expect, it, vi} from "vitest";
 import {Editor} from "@tiptap/core";
 import {applyLink, insertPlaceholder, mailEditorExtensions, mailFileId, setContentWithoutHistory, toMailHtml} from "../../../components/mailtemplate/mailEditor.extensions";
 
@@ -37,10 +37,10 @@ describe("mail editor serialization", () => {
   })
 
   it("shows mailfile images through a blob URL but saves mailfile:{id}", async () => {
-    const e = editor('<p style="text-align: center"><img src="mailfile:0b5e" alt="Logo"></p>')
+    const e = editor('<p style="text-align: center"><img src="mailfile:0b5e0b5e-0b5e-4b5e-8b5e-0b5e0b5e0b5e" alt="Logo"></p>')
     await flush()
-    expect((e.view.dom.querySelector("img:not(.ProseMirror-separator)") as HTMLImageElement).getAttribute("src")).toBe("blob:test/0b5e")
-    expect(toMailHtml(e.getHTML())).toBe('<p style="text-align: center"><img src="mailfile:0b5e" alt="Logo"></p>')
+    expect((e.view.dom.querySelector("img:not(.ProseMirror-separator)") as HTMLImageElement).getAttribute("src")).toBe("blob:test/0b5e0b5e-0b5e-4b5e-8b5e-0b5e0b5e0b5e")
+    expect(toMailHtml(e.getHTML())).toBe('<p style="text-align: center"><img src="mailfile:0b5e0b5e-0b5e-4b5e-8b5e-0b5e0b5e0b5e" alt="Logo"></p>')
   })
 
   it("keeps the built-in logo reference (not a UUID) and shows it through the same fetch", async () => {
@@ -49,6 +49,13 @@ describe("mail editor serialization", () => {
     expect((e.view.dom.querySelector("img:not(.ProseMirror-separator)") as HTMLImageElement).getAttribute("src"))
       .toBe("blob:test/eegfaktura-logo")
     expect(toMailHtml(e.getHTML())).toBe('<p><img src="mailfile:eegfaktura-logo" width="335"></p>')
+  })
+
+  it("drops images whose mailfile id is neither a UUID nor the built-in logo", () => {
+    const resolve = vi.fn((id: string) => Promise.resolve(`blob:test/${id}`))
+    const e = editor('<p><img src="mailfile:../../x"><img src="mailfile:abc"></p>', resolve)
+    expect(toMailHtml(e.getHTML())).toBe("<p></p>")
+    expect(resolve).not.toHaveBeenCalled()
   })
 
   it("drops external images and links that are not https/mailto", () => {
@@ -141,11 +148,15 @@ describe("toMailHtml", () => {
     expect(toMailHtml('<a href="javascript:alert(1)">x</a>')).toBe("x")
     expect(toMailHtml('<span>a</span><div>b</div><code>c</code>')).toBe("abc")
     expect(toMailHtml('<img src="data:image/png;base64,AAAA">')).toBe("")
-    expect(toMailHtml('<img src="mailfile:1" width="300" height="20" title="t">')).toBe('<img src="mailfile:1" width="300">')
+    expect(toMailHtml('<img src="mailfile:0b5e0b5e-0b5e-4b5e-8b5e-0b5e0b5e0b5e" width="300" height="20" title="t">')).toBe('<img src="mailfile:0b5e0b5e-0b5e-4b5e-8b5e-0b5e0b5e0b5e" width="300">')
   })
 
   it("extracts the file id from a mailfile reference", () => {
-    expect(mailFileId("mailfile:abc")).toBe("abc")
+    expect(mailFileId("mailfile:0B5E0B5E-0B5E-4B5E-8B5E-0B5E0B5E0B5E")).toBe("0B5E0B5E-0B5E-4B5E-8B5E-0B5E0B5E0B5E")
+    expect(mailFileId("mailfile:eegfaktura-logo")).toBe("eegfaktura-logo")
+    expect(mailFileId("mailfile:abc")).toBeUndefined()
+    expect(mailFileId("mailfile:../files/x")).toBeUndefined()
+    expect(mailFileId("mailfile:0b5e0b5e-0b5e-4b5e-8b5e-0b5e0b5e0b5e?x=1")).toBeUndefined()
     expect(mailFileId("blob:abc")).toBeUndefined()
     expect(mailFileId(null)).toBeUndefined()
   })

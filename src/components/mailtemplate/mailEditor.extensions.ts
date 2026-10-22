@@ -15,8 +15,13 @@ import Image from "@tiptap/extension-image";
 
 export const MAILFILE_PREFIX = "mailfile:"
 
-export const mailFileId = (src: string | null | undefined): string | undefined =>
-  src && src.startsWith(MAILFILE_PREFIX) ? src.substring(MAILFILE_PREFIX.length) : undefined
+// A file id is a UUID or the built-in logo of the default texts; anything else is not a mail file.
+const MAIL_FILE_ID = /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|eegfaktura-logo)$/i
+
+export const mailFileId = (src: string | null | undefined): string | undefined => {
+  const id = src && src.startsWith(MAILFILE_PREFIX) ? src.substring(MAILFILE_PREFIX.length) : undefined
+  return id && MAIL_FILE_ID.test(id) ? id : undefined
+}
 
 const placeholderAttributes = () => ({
   key: {
@@ -91,7 +96,10 @@ export const PlaceholderBlock = Node.create({
 // blob URL (authenticated fetch), so getHTML() always returns the mailfile: reference.
 export const createMailImage = (resolveImage: (id: string) => Promise<string>) => Image.extend({
   parseHTML() {
-    return [{tag: `img[src^="${MAILFILE_PREFIX}"]`}]
+    return [{
+      tag: `img[src^="${MAILFILE_PREFIX}"]`,
+      getAttrs: el => mailFileId(el.getAttribute("src")) ? null : false,
+    }]
   },
   addNodeView() {
     return ({node}) => {
