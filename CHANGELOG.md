@@ -17,6 +17,7 @@ this changelog highlights the changes relevant for overview and operations.
 - `minimatch` 3.1.2 → 3.1.5 (eslint/test tooling) through `pnpm.overrides`: GHSA-23c5-xmqv-rm74, GHSA-3ppc-4f35-3m26, GHSA-7r86-cg39-jmmj (HIGH) (platform#179).
 - `cross-spawn` 7.0.3 → 7.0.6 (eslint tooling) through `pnpm.overrides`: GHSA-3xgq-45jj-v275 (HIGH) (platform#179).
 - `flatted` 3.3.1 → 3.4.4 (eslint cache) through `pnpm.overrides`: GHSA-rf6f-7fwh-wjgh, GHSA-25h7-pfq9-p65f (HIGH) (platform#179).
+- `picomatch` 2.3.1 → 2.3.2 (build tooling) through `pnpm.overrides`: GHSA-c2c7-rcm5-vvqj (HIGH) and GHSA-3v7f-55p6-f55p (platform#179).
 
 ## [1.8.0] – 2026-10-21
 
