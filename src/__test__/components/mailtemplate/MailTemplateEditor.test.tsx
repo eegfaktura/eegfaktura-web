@@ -1,7 +1,7 @@
 import {describe, expect, it, vi} from "vitest";
 import {fireEvent, render, screen, waitFor} from "@testing-library/react";
 import "../../../util/I18n";
-import MailTemplateEditor, {insertAtCursor} from "../../../components/mailtemplate/MailTemplateEditor.component";
+import MailTemplateEditor, {createBlobUrlCache, insertAtCursor} from "../../../components/mailtemplate/MailTemplateEditor.component";
 import {Api} from "../../../service";
 import {MailTemplateError} from "../../../service/mailtemplate.service";
 import {MailTemplate} from "../../../models/mailtemplate.model";
@@ -153,6 +153,25 @@ describe("MailTemplateEditor reload/reset errors", () => {
     fireEvent.click(screen.getByText("Neu laden"))
     await waitFor(() => expect(screen.getByText(/Die Mail konnte nicht geladen werden \(Keine Berechtigung\)/)).toBeTruthy())
     expect(screen.getByText("Zählpunkt aktiv")).toBeTruthy()
+  })
+})
+
+describe("createBlobUrlCache", () => {
+  it("caches fetched images but not failed fetches", async () => {
+    const createObjectURL = vi.fn(() => "blob:1")
+    vi.stubGlobal("URL", Object.assign(Object.create(URL), {createObjectURL, revokeObjectURL: vi.fn()}))
+    try {
+      const fetchBlob = vi.fn()
+        .mockRejectedValueOnce(new Error("down"))
+        .mockResolvedValue(new Blob(["x"]))
+      const cache = createBlobUrlCache(fetchBlob)
+      await expect(cache.resolve("a")).rejects.toThrow("down")
+      await expect(cache.resolve("a")).resolves.toBe("blob:1")
+      await expect(cache.resolve("a")).resolves.toBe("blob:1")
+      expect(fetchBlob).toHaveBeenCalledTimes(2)
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 })
 

@@ -53,6 +53,32 @@ export const insertAtCursor = (text: string, insert: string, start?: number | nu
   return {value: text.substring(0, from) + insert + text.substring(to), cursor: from + insert.length}
 }
 
+// Blob URLs for the images in the editor. A failed fetch is not cached, so the next display tries again.
+export const createBlobUrlCache = (fetchBlob: (id: string) => Promise<Blob>) => {
+  const urls = new Map<string, Promise<string>>()
+  return {
+    resolve: (id: string): Promise<string> => {
+      let url = urls.get(id)
+      if (!url) {
+        url = fetchBlob(id).then(b => URL.createObjectURL(b))
+        urls.set(id, url)
+        const pending = url
+        url.catch(() => {
+          if (urls.get(id) === pending) urls.delete(id)
+        })
+      }
+      return url
+    },
+    put: (id: string, blob: Blob) => {
+      urls.set(id, Promise.resolve(URL.createObjectURL(blob)))
+    },
+    clear: () => {
+      urls.forEach(p => p.then(u => URL.revokeObjectURL(u)).catch(() => undefined))
+      urls.clear()
+    },
+  }
+}
+
 const errorMessage = (e: unknown) => e instanceof Error ? e.message : String(e)
 
 interface ToolbarProps {
@@ -140,21 +166,10 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
   const subjectInput = useRef<HTMLIonInputElement>(null)
 
   // blob URLs of the images shown in the editor, fetched with the bearer token
-  const blobUrls = useRef(new Map<string, Promise<string>>())
-  const resolveImage = (id: string) => {
-    let url = blobUrls.current.get(id)
-    if (!url) {
-      url = service.fetchFile(source, tenant, templateKey, id).then(b => URL.createObjectURL(b))
-      blobUrls.current.set(id, url)
-    }
-    return url
-  }
-  useEffect(() => () => {
-    blobUrls.current.forEach(p => p.then(u => URL.revokeObjectURL(u)).catch(() => undefined))
-    blobUrls.current.clear()
-  }, [])
+  const blobUrls = useMemo(() => createBlobUrlCache(id => service.fetchFile(source, tenant, templateKey, id)), [])
+  useEffect(() => () => blobUrls.clear(), [])
 
-  const extensions = useMemo(() => mailEditorExtensions(resolveImage), [])
+  const extensions = useMemo(() => mailEditorExtensions(blobUrls.resolve), [])
   const editor = useEditor({
     extensions,
     content: "",
@@ -357,7 +372,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
       }
       checkTotal(scaled.size)
       const uploaded = await service.uploadFile(source, tenant, templateKey, scaled, file.name, "image")
-      blobUrls.current.set(uploaded.id, Promise.resolve(URL.createObjectURL(scaled)))
+      blobUrls.put(uploaded.id, scaled)
       setFiles(fs => [...fs, uploaded])
       editor?.chain().focus().setImage({src: `${MAILFILE_PREFIX}${uploaded.id}`, alt: file.name}).run()
     })
