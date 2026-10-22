@@ -115,10 +115,11 @@ export class MailTemplateService extends EegBaseService {
       .then(r => r.json())
   }
 
-  async saveTemplate(source: MailTemplateSource, tenant: string, key: string, draft: MailTemplateDraft, version: number,
-                     attachmentFileId: string | null): Promise<MailTemplate> {
+  async saveTemplate(source: MailTemplateSource, tenant: string, key: string, draft: MailTemplateDraft, version: number): Promise<MailTemplate> {
     return this.request(source, tenant, this.keyPath(key), {
-      method: "PUT", ...this.json({subject: draft.subject, bodyHtml: draft.bodyHtml, version, attachmentFileId})
+      method: "PUT", ...this.json({
+        subject: draft.subject, bodyHtml: draft.bodyHtml, version, attachmentFileId: draft.attachmentFileId ?? null
+      })
     }).then(r => r.json())
   }
 

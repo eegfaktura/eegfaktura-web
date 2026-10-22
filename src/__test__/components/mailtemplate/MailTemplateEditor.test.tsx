@@ -32,7 +32,7 @@ describe("MailTemplateEditor", () => {
     fireEvent.click(screen.getByText("Speichern"))
     await waitFor(() => expect(screen.getByRole("alert").textContent).toContain("wurde inzwischen geändert"))
     expect(saveTemplate).toHaveBeenCalledWith("backend", "RC100100", "zp-active",
-      {subject: "Alt", bodyHtml: '<p>Hallo <span data-ph="member.firstName">Vorname</span></p>', attachmentFileId: null}, 3, null)
+      {subject: "Alt", bodyHtml: '<p>Hallo <span data-ph="member.firstName">Vorname</span></p>', attachmentFileId: null}, 3)
     expect((screen.getByText("Speichern").closest("ion-button") as any).disabled).toBe(true)
 
     fireEvent.click(screen.getByText("Neu laden"))
@@ -88,7 +88,7 @@ describe("MailTemplateEditor files", () => {
     expect(screen.getByText(/neu\.png/).textContent).toContain("nicht im Text")
     fireEvent.click(screen.getByText("Speichern"))
     await waitFor(() => expect(saveTemplate).toHaveBeenCalled())
-    expect(saveTemplate.mock.calls[0][5]).toBe(PDF_SAVED)
+    expect(saveTemplate.mock.calls[0][3].attachmentFileId).toBe(PDF_SAVED)
   })
 
   it("deletes a draft on the service, drops saved files with the next save", async () => {
@@ -105,7 +105,7 @@ describe("MailTemplateEditor files", () => {
     fireEvent.click(screen.getByText("Speichern"))
     await waitFor(() => expect(saveTemplate).toHaveBeenCalled())
     expect(saveTemplate.mock.calls[0][3].bodyHtml).toBe("<p>Logo </p>")
-    expect(saveTemplate.mock.calls[0][5]).toBeNull()
+    expect(saveTemplate.mock.calls[0][3].attachmentFileId).toBeNull()
   })
 
   it("attaches a leftover draft PDF instead of the saved one", async () => {
@@ -125,7 +125,7 @@ describe("MailTemplateEditor files", () => {
     await waitFor(() => expect(screen.getByText(/info\.pdf/).textContent).toContain("nicht angehängt"))
     fireEvent.click(screen.getByText("Speichern"))
     await waitFor(() => expect(saveTemplate).toHaveBeenCalled())
-    expect(saveTemplate.mock.calls[0][5]).toBe(PDF_DRAFT)
+    expect(saveTemplate.mock.calls[0][3].attachmentFileId).toBe(PDF_DRAFT)
   })
 
   it("keeps a draft the service reports as in use (409) until the next save", async () => {

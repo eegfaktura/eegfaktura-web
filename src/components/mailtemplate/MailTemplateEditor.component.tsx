@@ -240,7 +240,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
     if (!template) return
     setSaveErrors([])
     try {
-      apply(await service.saveTemplate(source, tenant, templateKey, draft(), template.version, attachmentId))
+      apply(await service.saveTemplate(source, tenant, templateKey, draft(), template.version))
       toast(t("mailtemplates.saved"), "success")
       onChanged()
     } catch (e) {

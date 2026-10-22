@@ -58,7 +58,7 @@ describe("MailTemplateService", () => {
 
     it("sends subject, bodyHtml and version with PUT to the service of the mail", async () => {
       fetchMock.mockResolvedValueOnce(reply({key: "billing-document", version: 4}))
-      const r = await new MailTemplateService(authService).saveTemplate("billing", "RC100100", "billing-document", draft, 3, null)
+      const r = await new MailTemplateService(authService).saveTemplate("billing", "RC100100", "billing-document", draft, 3)
       expect(r.version).toBe(4)
       expect(url(0)).toMatch(/\/api\/mailtemplates\/billing-document$/)
       expect(init(0).method).toBe("PUT")
@@ -68,7 +68,7 @@ describe("MailTemplateService", () => {
     it("rejects a 409 as conflict with the current version", async () => {
       fetchMock.mockResolvedValueOnce(reply({message: "version conflict", currentVersion: 7}, 409))
       const err = await new MailTemplateService(authService)
-        .saveTemplate("backend", "RC100100", "zp-active", draft, 3, "pdf-1").catch(e => e)
+        .saveTemplate("backend", "RC100100", "zp-active", {...draft, attachmentFileId: "pdf-1"}, 3).catch(e => e)
       expect(err).toBeInstanceOf(MailTemplateError)
       expect(err.isConflict).toBe(true)
       expect(err.currentVersion).toBe(7)
@@ -78,7 +78,7 @@ describe("MailTemplateService", () => {
     it("rejects a 400 with the messages of the service", async () => {
       fetchMock.mockResolvedValueOnce(reply({errors: [{field: "bodyHtml", message: "Unbekannter Platzhalter: foo"}, {field: "subject", message: "Betreff zu lang"}]}, 400))
       const err = await new MailTemplateService(authService)
-        .saveTemplate("backend", "RC100100", "zp-active", draft, 0, null).catch(e => e)
+        .saveTemplate("backend", "RC100100", "zp-active", draft, 0).catch(e => e)
       expect(err.isConflict).toBe(false)
       expect(err.status).toBe(400)
       expect(err.message).toBe("Unbekannter Platzhalter: foo\nBetreff zu lang")
