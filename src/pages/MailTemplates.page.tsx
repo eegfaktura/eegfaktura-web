@@ -6,7 +6,7 @@ import {eegSelector} from "../store/eeg";
 import {useLocale} from "../store/hook/useLocale";
 import {Api} from "../service";
 import {MailTemplateListItem, MailTemplateSource} from "../models/mailtemplate.model";
-import MailTemplateEditor, {formatUpdated} from "../components/mailtemplate/MailTemplateEditor.component";
+import MailTemplateEditor, {statusText} from "../components/mailtemplate/MailTemplateEditor.component";
 
 import "./Eeg.page.scss"
 
@@ -45,11 +45,6 @@ const MailTemplatesPage: FC = () => {
     loadList()
   }, [tenant, admin])
 
-  const status = (item: MailTemplateListItem) => item.customized
-    ? t(item.updatedBy ? "mailtemplates.status_customized" : "mailtemplates.status_customized_nouser",
-      {date: formatUpdated(item.updatedAt), user: item.updatedBy})
-    : t("mailtemplates.status_default")
-
   return (
     <IonPage>
       <IonContent fullscreen>
@@ -74,7 +69,7 @@ const MailTemplatesPage: FC = () => {
                       <IonLabel className="ion-text-wrap">
                         <h2>{item.name}</h2>
                         <p>{item.description}</p>
-                        <p>{status(item)}</p>
+                        <p>{statusText(t, item)}</p>
                         {item.defaultChanged &&
                           <IonText color="warning"><p>{t("mailtemplates.default_changed")}</p></IonText>}
                       </IonLabel>

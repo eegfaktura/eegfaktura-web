@@ -45,7 +45,13 @@ export const formatBytes = (bytes: number) =>
     ? `${(bytes / (1024 * 1024)).toLocaleString("de-AT", {maximumFractionDigits: 1})} MB`
     : `${Math.round(bytes / 1024).toLocaleString("de-AT")} KB`
 
-export const formatUpdated = (date?: string | null) => date ? moment(date).format("DD.MM.YYYY HH:mm") : ""
+// "Standard" or "Angepasst (am … von …)", for the list and the editor
+export const statusText = (t: (key: string, options?: Record<string, unknown>) => string,
+                           s: { customized: boolean, updatedAt?: string | null, updatedBy?: string | null }) =>
+  s.customized
+    ? t(s.updatedBy ? "mailtemplates.status_customized" : "mailtemplates.status_customized_nouser",
+      {date: s.updatedAt ? moment(s.updatedAt).format("DD.MM.YYYY HH:mm") : "", user: s.updatedBy})
+    : t("mailtemplates.status_default")
 
 const MAX_SUBJECT_CHARS = 200
 
@@ -460,12 +466,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
       {template && <>
         <div className="header">{template.name}</div>
         <p className="mail-template-description">{template.description}</p>
-        <p className="mail-template-status">
-          {template.customized
-            ? t(template.updatedBy ? "mailtemplates.status_customized" : "mailtemplates.status_customized_nouser",
-              {date: formatUpdated(template.updatedAt), user: template.updatedBy})
-            : t("mailtemplates.status_default")}
-        </p>
+        <p className="mail-template-status">{statusText(t, template)}</p>
         {source === "billing" && <IonText color="medium"><p>{t("mailtemplates.billing_pdf_hint")}</p></IonText>}
         {template.defaultChanged && (
           <div className="mail-template-notice">
