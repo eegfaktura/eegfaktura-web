@@ -45,7 +45,7 @@ describe("ProcessChangeParticipantFactor time window", () => {
   const props = {
     eeg: {id: "rc100001", communityId: "AT00000000000RC100001000000000000"} as never,
     meters: [], participants: [],
-    edaProcess: {name: "Teilnehmerfaktor ändern", type: "EC_PRTFACT_CHANGE"} as never,
+    edaProcess: {name: "Teilnahmefaktor ändern", type: "EC_PRTFACT_CHANGE"} as never,
   }
   afterEach(() => vi.useRealTimers())
 
