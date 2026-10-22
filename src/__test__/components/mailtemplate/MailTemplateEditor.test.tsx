@@ -116,6 +116,28 @@ describe("MailTemplateEditor files", () => {
   })
 })
 
+describe("MailTemplateEditor placeholder pickers", () => {
+  it("inserts the same placeholder twice into the body", async () => {
+    const saveTemplate = vi.fn().mockResolvedValue(template(4, "S"))
+    Api.mailTemplateService = {
+      fetchTemplate: vi.fn().mockResolvedValue({...template(3, "S"), bodyHtml: "<p>Hallo</p>"}), saveTemplate, fetchFile: vi.fn(),
+    } as unknown as typeof Api.mailTemplateService
+    render(<MailTemplateEditor tenant="RC100100" source="backend" templateKey="zp-active"
+                               onClose={vi.fn()} onChanged={vi.fn()}/>)
+    await waitFor(() => expect(screen.getByText("Zählpunkt aktiv")).toBeTruthy())
+    const choose = () => fireEvent(screen.getByTestId("body-placeholder"),
+      new CustomEvent("ionChange", {detail: {value: "member.firstName"}}))
+    const first = screen.getByTestId("body-placeholder")
+    choose()
+    // the picker is a new element (value reset), so choosing the same entry fires again
+    expect(screen.getByTestId("body-placeholder")).not.toBe(first)
+    choose()
+    fireEvent.click(screen.getByText("Speichern"))
+    await waitFor(() => expect(saveTemplate).toHaveBeenCalled())
+    expect(saveTemplate.mock.calls[0][3].bodyHtml.match(/data-ph="member\.firstName"/g)).toHaveLength(2)
+  })
+})
+
 describe("MailTemplateEditor reload/reset errors", () => {
   it("shows a failed reload above the loaded version", async () => {
     const fetchTemplate = vi.fn()

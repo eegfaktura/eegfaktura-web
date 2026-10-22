@@ -132,6 +132,8 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
   const [conflict, setConflict] = useState(false)
   const [preview, setPreview] = useState<MailPreview>()
   const [sentTo, setSentTo] = useState<string>()
+  // remounts the placeholder pickers after each insert, so the same placeholder can be chosen again
+  const [pickerRound, setPickerRound] = useState(0)
   const imageInput = useRef<HTMLInputElement>(null)
   const pdfInput = useRef<HTMLInputElement>(null)
   const subjectInput = useRef<HTMLIonInputElement>(null)
@@ -272,6 +274,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
   })
 
   const onInsertPlaceholder = (ph: MailPlaceholder) => {
+    setPickerRound(r => r + 1)
     editor?.chain().focus()
       .insertContent({type: ph.block ? "placeholderBlock" : "placeholderInline", attrs: {key: ph.key, label: ph.label}})
       .run()
@@ -279,6 +282,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
 
   // Subject placeholders are plain text "{key}", inline keys only (section H).
   const onInsertSubjectPlaceholder = async (key: string) => {
+    setPickerRound(r => r + 1)
     const input = await subjectInput.current?.getInputElement()
     const r = insertAtCursor(subject, `{${key}}`, input?.selectionStart, input?.selectionEnd)
     setSubject(r.value)
@@ -476,7 +480,8 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
             setDirty(true)
           }}/>
           {template && template.placeholders.some(p => !p.block) && (
-            <IonSelect interface="popover" placeholder={t("mailtemplates.placeholder_insert_subject")} value={null}
+            <IonSelect key={`subject-${pickerRound}`} interface="popover" data-testid="subject-placeholder"
+                       placeholder={t("mailtemplates.placeholder_insert_subject")} value={null}
                        aria-label={t("mailtemplates.placeholder_insert_subject")}
                        onIonChange={e => {
                          if (e.detail.value) onInsertSubjectPlaceholder(e.detail.value)
@@ -492,7 +497,8 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
                                         onImage={() => imageInput.current?.click()}
                                         imageDisabled={busy || !limits || images.length >= limits.maxImages}/>}
           {template && template.placeholders.length > 0 && (
-            <IonSelect interface="popover" placeholder={t("mailtemplates.placeholder_insert")} value={null}
+            <IonSelect key={`body-${pickerRound}`} interface="popover" data-testid="body-placeholder"
+                       placeholder={t("mailtemplates.placeholder_insert")} value={null}
                        aria-label={t("mailtemplates.placeholder_insert")}
                        onIonChange={e => {
                          const ph = template.placeholders.find(p => p.key === e.detail.value)
