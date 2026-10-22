@@ -43,6 +43,7 @@ import {ErrorBoundary} from "react-error-boundary";
 setupIonicReact();
 
 const DashbaordPage = React.lazy(() => import("./pages/Dashbaord.page"))
+const MailTemplatesPage = React.lazy(() => import("./pages/MailTemplates.page"))
 
 // const PublicSection: React.FC = () => {
 //   return (
@@ -66,6 +67,9 @@ const SecureSection: React.FC = () => {
                 <Suspense fallback = { <div> Dashboard loading ... </div> }> <DashbaordPage/></Suspense>
               </Route>
               <Route path="/page/eeg" component={EegPage} exact={true}/>
+              <Route path="/page/mailtemplates" exact={true}>
+                <Suspense fallback={<div>Loading ...</div>}><MailTemplatesPage/></Suspense>
+              </Route>
               <MemberViewProvider>
                 <Route path="/page/participants" exact={true} component={Participants} />
                 <RateProvider>

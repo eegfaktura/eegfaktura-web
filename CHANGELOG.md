@@ -8,6 +8,19 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **„E-Mail-Texte“: EEG admins edit the member mails themselves** (konzept-mail-texte-editierbar.md). New page
+  `/page/mailtemplates`, reached from a card on the EEG page (admins only). One list of the four mails —
+  `consent-request`, `zp-active`, `zp-inactive` from backend (`/eeg/mailtemplates`) and `billing-document` from
+  billing (`/api/mailtemplates`) — with status „Standard“ / „Angepasst“ and a hint when the default text changed.
+  Editor (TipTap 3.32.0) for subject and text: bold, italic, underline, H1–H3, lists, https/mailto links,
+  alignment, images; placeholders from the mail's catalogue as non-editable chips (`<span|div data-ph>`).
+  Images are reduced to at most 1200 px width in the browser before the upload and stored as
+  `mailfile:{id}`; one PDF attachment where the service allows it. Preview in a sandboxed iframe, test mail to
+  the own login or to the community address, save with version check (409 → „wurde inzwischen geändert“,
+  reload), reset to the default. The page and the editor load as a separate chunk (~138 kB gzip), the main
+  bundle grows by ~2 kB gzip. Needs backend and billing with the mail template API.
+
 ### Fixed
 - **Wording: „Teilnahmefaktor“ instead of „Teilnehmerfaktor“** (pilot feedback 22.10.2026). The title and the
   field label of „Teilnahmefaktor ändern“ and the warning for a missing factor said „Teilnehmerfaktor“, the info
