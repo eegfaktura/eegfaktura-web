@@ -13,6 +13,7 @@ this changelog highlights the changes relevant for overview and operations.
 - `lodash` 4.17.21 → 4.18.1 (via recharts) through `pnpm.overrides`: GHSA-r5fr-rjxr-66jc (CVE-2026-4800, HIGH) and two moderate advisories (platform#179).
 - `vite` 6.4.3 → 6.4.5 (dev server/build): GHSA-587h-7wmj-h5pm (HIGH) and four moderate/low dev-server advisories; replaces Dependabot PR #173 (platform#179).
 - `immutable` 4.3.7 → 4.3.9 (via sass, build only) through `pnpm.overrides`: GHSA-wf6x-7x77-mvgw (CRITICAL), GHSA-v56q-mh7h-f735 and GHSA-xvcm-6775-5m9r (HIGH) (platform#179).
+- `brace-expansion` 1.1.11 → 1.1.21 (via minimatch, dev tooling) through `pnpm.overrides`: GHSA-3jxr-9vmj-r5cp, GHSA-6j4f-fj2g-mc7p, GHSA-mh99-v99m-4gvg, GHSA-qhr7-859c-m2p7, GHSA-rgw5-rvv9-x895 (HIGH) and three moderate/low advisories (platform#179).
 
 ## [1.8.0] – 2026-10-21
 
