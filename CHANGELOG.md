@@ -17,10 +17,13 @@ this changelog highlights the changes relevant for overview and operations.
   alignment, images; placeholders from the mail's catalogue as non-editable chips (`<span|div data-ph>`);
   in the subject as plain text `{key}` (inline keys only), inserted at the cursor from a picker.
   Images are reduced to at most 1200 px width in the browser before the upload and stored as
-  `mailfile:{id}`; one PDF attachment where the service allows it. Preview in a sandboxed iframe, test mail to
+  `mailfile:{id}` (also the built-in `mailfile:eegfaktura-logo` of the default texts); one PDF attachment where the service allows it. Preview in a sandboxed iframe, test mail to
   the own login or to the community address, save with version check (409 → „wurde inzwischen geändert“,
   reload), reset to the default. The page and the editor load as a separate chunk (~138 kB gzip), the main
   bundle grows by ~2 kB gzip. Needs backend and billing with the mail template API.
+- Messages: the backend's notices about customised mails (`Mail` with message code `I_MAIL_TEMPLATE_DEFAULT` — new
+  default available — or `E_MAIL_TEMPLATE` — default sent instead) show their own text under „E-Mail-Texte:“
+  instead of „Mailversand fehlgeschlagen“.
 
 ### Fixed
 - **Wording: „Teilnahmefaktor“ instead of „Teilnehmerfaktor“** (pilot feedback 22.10.2026). The title and the
