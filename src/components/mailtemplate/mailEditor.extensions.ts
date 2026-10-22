@@ -61,10 +61,18 @@ export const PlaceholderInline = Node.create({
   },
 })
 
+// The document allows block placeholders only at the top level (section H: not inside a paragraph,
+// list or quote; the services answer 400 otherwise).
+const MailDocument = Node.create({
+  name: "doc",
+  topNode: true,
+  content: "(block | mailBlock)+",
+})
+
 // <div data-ph="eeg.contactBlock">Kontaktblock</div> — a block the service fills (lists, contact lines).
 export const PlaceholderBlock = Node.create({
   name: "placeholderBlock",
-  group: "block",
+  group: "mailBlock",
   atom: true,
   selectable: true,
   addAttributes: placeholderAttributes,
@@ -103,6 +111,7 @@ export const createMailImage = (resolveImage: (id: string) => Promise<string>) =
 
 export const mailEditorExtensions = (resolveImage: (id: string) => Promise<string>): Extensions => [
   StarterKit.configure({
+    document: false,
     heading: {levels: [1, 2, 3]},
     code: false,
     codeBlock: false,
@@ -120,9 +129,22 @@ export const mailEditorExtensions = (resolveImage: (id: string) => Promise<strin
   }),
   TextAlign.configure({types: ["heading", "paragraph"], alignments: ["left", "center", "right"]}),
   createMailImage(resolveImage),
+  MailDocument,
   PlaceholderInline,
   PlaceholderBlock,
 ]
+
+// Inline placeholders go to the cursor; a block placeholder goes after the top-level block that
+// holds the cursor (never into a paragraph, list or quote).
+export const insertPlaceholder = (editor: Editor, ph: { key: string, label: string, block: boolean }) => {
+  const attrs = {key: ph.key, label: ph.label}
+  if (!ph.block) {
+    return editor.chain().focus().insertContent({type: "placeholderInline", attrs}).run()
+  }
+  const {$from} = editor.state.selection
+  const pos = $from.depth === 0 ? $from.pos : $from.after(1)
+  return editor.chain().focus().insertContentAt(pos, {type: "placeholderBlock", attrs}).run()
+}
 
 // Loads content (stored version, default, reload) without an undo step, so undo cannot go back
 // to an empty editor or to the text before a reload.

@@ -176,6 +176,21 @@ describe("MailTemplateEditor legacy template", () => {
   })
 })
 
+describe("MailTemplateEditor save errors", () => {
+  it("shows the 400 messages of the service next to the form", async () => {
+    Api.mailTemplateService = {
+      fetchTemplate: vi.fn().mockResolvedValue(template(3, "S")), fetchFile: vi.fn(),
+      saveTemplate: vi.fn().mockRejectedValue(new MailTemplateError("x", 400,
+        [{field: "bodyHtml", message: "Baustein „Kontakt“ nur auf oberster Ebene"}])),
+    } as unknown as typeof Api.mailTemplateService
+    render(<MailTemplateEditor tenant="RC100100" source="backend" templateKey="zp-active"
+                               onClose={vi.fn()} onChanged={vi.fn()}/>)
+    await waitFor(() => expect(screen.getByText("Zählpunkt aktiv")).toBeTruthy())
+    fireEvent.click(screen.getByText("Speichern"))
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toContain("nur auf oberster Ebene"))
+  })
+})
+
 describe("MailTemplateEditor reload/reset errors", () => {
   it("shows a failed reload above the loaded version", async () => {
     const fetchTemplate = vi.fn()

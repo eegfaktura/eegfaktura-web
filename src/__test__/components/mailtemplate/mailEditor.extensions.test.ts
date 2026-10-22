@@ -1,6 +1,6 @@
 import {afterEach, describe, expect, it} from "vitest";
 import {Editor} from "@tiptap/core";
-import {applyLink, mailEditorExtensions, mailFileId, setContentWithoutHistory, toMailHtml} from "../../../components/mailtemplate/mailEditor.extensions";
+import {applyLink, insertPlaceholder, mailEditorExtensions, mailFileId, setContentWithoutHistory, toMailHtml} from "../../../components/mailtemplate/mailEditor.extensions";
 
 const editors: Editor[] = []
 const editor = (content: string, resolve = (id: string) => Promise.resolve(`blob:test/${id}`)) => {
@@ -63,6 +63,37 @@ describe("mail editor serialization", () => {
       '<p><strong>b</strong> <em>i</em> <u>u</u><br>x</p><ul><li><p>a</p></li></ul><ol><li><p>b</p></li></ol>' +
       '<blockquote><p>q</p></blockquote>'
     expect(toMailHtml(editor(html).getHTML())).toBe(html)
+  })
+})
+
+describe("block placeholders", () => {
+  const block = {key: "eeg.contactBlock", label: "Kontakt", block: true}
+
+  it("are inserted after the paragraph, list or quote that holds the cursor", () => {
+    const e = editor("<p>Hallo Welt</p><ul><li><p>Punkt</p></li></ul><blockquote><p>Zitat</p></blockquote>")
+    e.commands.setTextSelection(4)
+    insertPlaceholder(e, block)
+    let punkt = 0
+    e.state.doc.descendants((n, pos) => {
+      if (n.isText && n.text === "Punkt") punkt = pos
+    })
+    e.commands.setTextSelection(punkt + 2)
+    expect(e.isActive("listItem")).toBe(true)
+    insertPlaceholder(e, block)
+    expect(toMailHtml(e.getHTML())).toBe('<p>Hallo Welt</p><div data-ph="eeg.contactBlock">Kontakt</div>' +
+      '<ul><li><p>Punkt</p></li></ul><div data-ph="eeg.contactBlock">Kontakt</div><blockquote><p>Zitat</p></blockquote><p></p>')
+  })
+
+  it("never end up inside a list, also not from loaded HTML", () => {
+    const html = toMailHtml(editor('<ul><li><div data-ph="meteringPoints">Zählpunkte</div></li></ul>').getHTML())
+    expect(html).not.toMatch(/<li>[^]*data-ph="meteringPoints"[^]*<\/li>/)
+  })
+
+  it("inline placeholders still go to the cursor", () => {
+    const e = editor("<p>Hallo Welt</p>")
+    e.commands.setTextSelection(7)
+    insertPlaceholder(e, {key: "member.firstName", label: "Vorname", block: false})
+    expect(toMailHtml(e.getHTML())).toBe('<p>Hallo <span data-ph="member.firstName">Vorname</span>Welt</p>')
   })
 })
 

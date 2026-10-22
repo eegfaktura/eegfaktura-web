@@ -272,6 +272,7 @@
     "legacy_active": "Für eure Gemeinschaft gilt derzeit eine individuell eingerichtete Vorlage. Wenn ihr hier speichert, ersetzt ihr sie.",
     "save": "Speichern",
     "saved": "Gespeichert",
+    "save_rejected": "Nicht gespeichert:",
     "reset": "Auf Standard zurücksetzen",
     "reset_confirm_header": "Auf Standard zurücksetzen?",
     "reset_confirm_message": "Die Anpassung dieser Mail wird gelöscht, mit allen Bildern und dem PDF-Anhang. Danach wird wieder der Standardtext verschickt.",

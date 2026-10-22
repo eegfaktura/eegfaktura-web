@@ -28,6 +28,7 @@ import {
 } from "../../models/mailtemplate.model";
 import {
   applyLink,
+  insertPlaceholder,
   MAILFILE_PREFIX,
   mailEditorExtensions,
   mailFileId,
@@ -167,6 +168,8 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
   const [conflict, setConflict] = useState(false)
   const [preview, setPreview] = useState<MailPreview>()
   const [sentTo, setSentTo] = useState<string>()
+  // 400 answers of the last save, shown until the next save
+  const [saveErrors, setSaveErrors] = useState<string[]>([])
   // remounts the placeholder pickers after each insert, so the same placeholder can be chosen again
   const [pickerRound, setPickerRound] = useState(0)
   const imageInput = useRef<HTMLInputElement>(null)
@@ -233,6 +236,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
 
   const onSave = () => run(async () => {
     if (!template) return
+    setSaveErrors([])
     try {
       apply(await service.saveTemplate(source, tenant, templateKey, draft(), template.version, attachmentId))
       toast(t("mailtemplates.saved"), "success")
@@ -240,6 +244,10 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
     } catch (e) {
       if (e instanceof MailTemplateError && e.isConflict) {
         setConflict(true)
+        return
+      }
+      if (e instanceof MailTemplateError && e.status === 400) {
+        setSaveErrors(e.fieldErrors.length > 0 ? e.fieldErrors.map(f => f.message) : [e.message])
         return
       }
       throw e
@@ -299,9 +307,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
 
   const onInsertPlaceholder = (ph: MailPlaceholder) => {
     setPickerRound(r => r + 1)
-    editor?.chain().focus()
-      .insertContent({type: ph.block ? "placeholderBlock" : "placeholderInline", attrs: {key: ph.key, label: ph.label}})
-      .run()
+    if (editor) insertPlaceholder(editor, ph)
   }
 
   // Subject placeholders are plain text "{key}", inline keys only (section H).
@@ -575,6 +581,14 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
           </IonButton>
         </div>
         {!eegEmail && <IonText color="medium"><p>{t("mailtemplates.test_eeg_missing")}</p></IonText>}
+        {saveErrors.length > 0 && (
+          <div role="alert">
+            <IonText color="danger">
+              <p>{t("mailtemplates.save_rejected")}</p>
+              <ul>{saveErrors.map((m, i) => <li key={i}>{m}</li>)}</ul>
+            </IonText>
+          </div>
+        )}
         {sentTo && <IonText color="success"><p>{t("mailtemplates.test_sent", {address: sentTo})}</p></IonText>}
       </IonCard>
 
