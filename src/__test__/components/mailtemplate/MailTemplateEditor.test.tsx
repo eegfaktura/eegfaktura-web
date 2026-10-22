@@ -211,6 +211,45 @@ describe("MailTemplateEditor save errors", () => {
   })
 })
 
+describe("MailTemplateEditor useDefault", () => {
+  const setup = (customized: boolean) => {
+    const preview = vi.fn().mockResolvedValue({subject: "S", html: "<p>x</p>"})
+    const sendTest = vi.fn().mockResolvedValue("admin@example.at")
+    Api.mailTemplateService = {
+      fetchTemplate: vi.fn().mockResolvedValue({...template(customized ? 3 : 0, "S"), legacyTemplateActive: !customized}),
+      fetchFile: vi.fn(), preview, sendTest,
+    } as unknown as typeof Api.mailTemplateService
+    render(<MailTemplateEditor tenant="RC100100" source="backend" templateKey="consent-request"
+                               onClose={vi.fn()} onChanged={vi.fn()}/>)
+    return {preview, sendTest}
+  }
+
+  it("is sent for the unchanged default without stored version, not after an edit", async () => {
+    const {preview, sendTest} = setup(false)
+    await waitFor(() => expect(screen.getByText("Standard")).toBeTruthy())
+    fireEvent.click(screen.getByText("Vorschau"))
+    await waitFor(() => expect(preview).toHaveBeenCalledTimes(1))
+    expect(preview.mock.calls[0][3].useDefault).toBe(true)
+    fireEvent.click(screen.getByText("Testmail an mich"))
+    await waitFor(() => expect(sendTest).toHaveBeenCalledTimes(1))
+    expect(sendTest.mock.calls[0][4].useDefault).toBe(true)
+
+    fireEvent(screen.getByText("Speichern").closest("ion-card")!.querySelector("ion-input")!,
+      new CustomEvent("ionInput", {detail: {value: "Geändert"}}))
+    fireEvent.click(screen.getByText("Vorschau"))
+    await waitFor(() => expect(preview).toHaveBeenCalledTimes(2))
+    expect(preview.mock.calls[1][3].useDefault).toBeUndefined()
+  })
+
+  it("is not sent for a stored version", async () => {
+    const {preview} = setup(true)
+    await waitFor(() => expect(screen.getByText(/Angepasst/)).toBeTruthy())
+    fireEvent.click(screen.getByText("Vorschau"))
+    await waitFor(() => expect(preview).toHaveBeenCalledTimes(1))
+    expect(preview.mock.calls[0][3].useDefault).toBeUndefined()
+  })
+})
+
 describe("MailTemplateEditor reload/reset errors", () => {
   it("shows a failed reload above the loaded version", async () => {
     const fetchTemplate = vi.fn()

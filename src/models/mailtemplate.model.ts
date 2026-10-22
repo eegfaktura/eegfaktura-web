@@ -70,6 +70,9 @@ export interface MailTemplateDraft {
   bodyHtml: string
   // PDF chosen in the editor; preview and test mail use it (null/absent = no PDF)
   attachmentFileId?: string | null
+  // preview/test only: the unchanged default of a mail without stored version; the backend then uses what
+  // members actually get (a hand-made template while legacyTemplateActive). billing ignores it.
+  useDefault?: boolean
 }
 
 export interface MailPreview {

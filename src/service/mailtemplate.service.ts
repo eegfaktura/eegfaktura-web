@@ -146,13 +146,19 @@ export class MailTemplateService extends EegBaseService {
 
   async preview(source: MailTemplateSource, tenant: string, key: string, draft: MailTemplateDraft): Promise<MailPreview> {
     return this.request(source, tenant, `${this.keyPath(key)}/preview`, {
-      method: "POST", ...this.json({subject: draft.subject, bodyHtml: draft.bodyHtml, attachmentFileId: draft.attachmentFileId ?? null})
+      method: "POST", ...this.json({
+        subject: draft.subject, bodyHtml: draft.bodyHtml, attachmentFileId: draft.attachmentFileId ?? null,
+        ...(draft.useDefault ? {useDefault: true} : {})
+      })
     }).then(r => r.json())
   }
 
   async sendTest(source: MailTemplateSource, tenant: string, key: string, recipient: MailTestRecipient, draft: MailTemplateDraft): Promise<string> {
     return this.request(source, tenant, `${this.keyPath(key)}/test`, {
-      method: "POST", ...this.json({recipient, subject: draft.subject, bodyHtml: draft.bodyHtml, attachmentFileId: draft.attachmentFileId ?? null})
+      method: "POST", ...this.json({
+        recipient, subject: draft.subject, bodyHtml: draft.bodyHtml, attachmentFileId: draft.attachmentFileId ?? null,
+        ...(draft.useDefault ? {useDefault: true} : {})
+      })
     }).then(r => r.json()).then(r => r.sentTo)
   }
 }

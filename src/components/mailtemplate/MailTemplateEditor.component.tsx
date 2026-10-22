@@ -226,6 +226,11 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
   const draft = (): MailTemplateDraft =>
     ({subject, bodyHtml: toMailHtml(editor ? editor.getHTML() : ""), attachmentFileId: attachmentId})
 
+  // preview/test of the unchanged default of a mail without stored version: let the backend show what
+  // members actually get (hand-made template while legacyTemplateActive)
+  const previewDraft = (): MailTemplateDraft =>
+    template && !template.customized && !dirty ? {...draft(), useDefault: true} : draft()
+
   const run = async (action: () => Promise<void>) => {
     setBusy(true)
     try {
@@ -310,7 +315,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
   }
 
   const onTest = (recipient: MailTestRecipient) => run(async () => {
-    const address = await service.sendTest(source, tenant, templateKey, recipient, draft())
+    const address = await service.sendTest(source, tenant, templateKey, recipient, previewDraft())
     setSentTo(address)
     toast(t("mailtemplates.test_sent", {address}), "success")
   })
@@ -590,7 +595,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
 
         <div className="mail-template-actions">
           <IonButton disabled={busy || conflict} onClick={onSave}>{t("mailtemplates.save")}</IonButton>
-          <IonButton fill="outline" disabled={busy} onClick={() => onPreview(draft())}>{t("mailtemplates.preview")}</IonButton>
+          <IonButton fill="outline" disabled={busy} onClick={() => onPreview(previewDraft())}>{t("mailtemplates.preview")}</IonButton>
           <IonButton fill="outline" disabled={busy} onClick={() => onTest("me")}>{t("mailtemplates.test_me")}</IonButton>
           <IonButton fill="outline" disabled={busy || !eegEmail} title={eegEmail ? undefined : t("mailtemplates.test_eeg_missing")}
                      onClick={() => onTest("eeg")}>{t("mailtemplates.test_eeg")}</IonButton>
