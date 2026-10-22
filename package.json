@@ -69,13 +69,24 @@
     "sass": "^1.69.5",
     "terser": "^5.4.0",
     "typescript": "^5.1.6",
-    "vite": "^6.4.3",
+    "vite": "^6.4.4",
     "vite-plugin-i18next-loader": "^2.0.12",
     "vitest": "^3.2.6"
   },
   "pnpm": {
     "overrides": {
-      "form-data": "^4.0.4"
+      "form-data": "^4.0.4",
+      "js-yaml@^3": "^3.15.2",
+      "js-yaml@^4": "^4.3.2",
+      "lodash@^4": "^4.18.1",
+      "immutable@^4": "^4.3.9",
+      "brace-expansion@^1": "^1.1.21",
+      "minimatch@^3": "^3.1.5",
+      "cross-spawn@^7": "^7.0.6",
+      "flatted@^3": "^3.4.4",
+      "picomatch@^2": "^2.3.2",
+      "source-map-js@^1": "^1.2.2",
+      "ws@^8": "^8.22.0"
     }
   },
   "description": "An Ionic project",
