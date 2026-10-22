@@ -80,6 +80,7 @@ export const createBlobUrlCache = (fetchBlob: (id: string) => Promise<Blob>) => 
       return url
     },
     put: (id: string, blob: Blob) => {
+      urls.get(id)?.then(u => URL.revokeObjectURL(u)).catch(() => undefined)
       urls.set(id, Promise.resolve(URL.createObjectURL(blob)))
     },
     clear: () => {

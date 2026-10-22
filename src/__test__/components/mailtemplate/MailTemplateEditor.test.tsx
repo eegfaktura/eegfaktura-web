@@ -273,6 +273,24 @@ describe("createBlobUrlCache", () => {
   })
 })
 
+describe("createBlobUrlCache.put", () => {
+  it("revokes the URL it replaces", async () => {
+    let n = 0
+    const revokeObjectURL = vi.fn()
+    vi.stubGlobal("URL", Object.assign(Object.create(URL), {createObjectURL: vi.fn(() => `blob:${++n}`), revokeObjectURL}))
+    try {
+      const cache = createBlobUrlCache(vi.fn())
+      cache.put("a", new Blob(["1"]))
+      cache.put("a", new Blob(["2"]))
+      await expect(cache.resolve("a")).resolves.toBe("blob:2")
+      await new Promise(r => setTimeout(r, 0))
+      expect(revokeObjectURL).toHaveBeenCalledWith("blob:1")
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+})
+
 describe("insertAtCursor (subject placeholders)", () => {
   it("inserts {key} at the cursor, replaces a selection, appends without cursor", () => {
     expect(insertAtCursor("Rechnung  - EEG", "{document.period}", 9, 9))
