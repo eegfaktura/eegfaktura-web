@@ -82,7 +82,8 @@
       "immutable@^4": "^4.3.9",
       "brace-expansion@^1": "^1.1.21",
       "minimatch@^3": "^3.1.5",
-      "cross-spawn@^7": "^7.0.6"
+      "cross-spawn@^7": "^7.0.6",
+      "flatted@^3": "^3.4.4"
     }
   },
   "description": "An Ionic project",

@@ -16,6 +16,7 @@ this changelog highlights the changes relevant for overview and operations.
 - `brace-expansion` 1.1.11 → 1.1.21 (via minimatch, dev tooling) through `pnpm.overrides`: GHSA-3jxr-9vmj-r5cp, GHSA-6j4f-fj2g-mc7p, GHSA-mh99-v99m-4gvg, GHSA-qhr7-859c-m2p7, GHSA-rgw5-rvv9-x895 (HIGH) and three moderate/low advisories (platform#179).
 - `minimatch` 3.1.2 → 3.1.5 (eslint/test tooling) through `pnpm.overrides`: GHSA-23c5-xmqv-rm74, GHSA-3ppc-4f35-3m26, GHSA-7r86-cg39-jmmj (HIGH) (platform#179).
 - `cross-spawn` 7.0.3 → 7.0.6 (eslint tooling) through `pnpm.overrides`: GHSA-3xgq-45jj-v275 (HIGH) (platform#179).
+- `flatted` 3.3.1 → 3.4.4 (eslint cache) through `pnpm.overrides`: GHSA-rf6f-7fwh-wjgh, GHSA-25h7-pfq9-p65f (HIGH) (platform#179).
 
 ## [1.8.0] – 2026-10-21
 
