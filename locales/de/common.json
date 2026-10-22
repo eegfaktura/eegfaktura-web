@@ -266,6 +266,7 @@
     "subject": "Betreff",
     "body": "Text",
     "placeholder_insert": "Platzhalter einfügen",
+    "placeholder_insert_subject": "Platzhalter in den Betreff",
     "placeholder_block": "Baustein",
     "billing_pdf_hint": "Das Rechnungs-PDF wird immer angehängt.",
     "save": "Speichern",

@@ -39,6 +39,12 @@ export const formatBytes = (bytes: number) =>
 
 export const formatUpdated = (date?: string | null) => date ? moment(date).format("DD.MM.YYYY HH:mm") : ""
 
+export const insertAtCursor = (text: string, insert: string, start?: number | null, end?: number | null) => {
+  const from = start ?? text.length
+  const to = end ?? from
+  return {value: text.substring(0, from) + insert + text.substring(to), cursor: from + insert.length}
+}
+
 const errorMessage = (e: unknown) => e instanceof Error ? e.message : String(e)
 
 interface ToolbarProps {
@@ -117,6 +123,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
   const [sentTo, setSentTo] = useState<string>()
   const imageInput = useRef<HTMLInputElement>(null)
   const pdfInput = useRef<HTMLInputElement>(null)
+  const subjectInput = useRef<HTMLIonInputElement>(null)
 
   // blob URLs of the images shown in the editor, fetched with the bearer token
   const blobUrls = useRef(new Map<string, Promise<string>>())
@@ -249,6 +256,20 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
       .run()
   }
 
+  // Subject placeholders are plain text "{key}", inline keys only (section H).
+  const onInsertSubjectPlaceholder = async (key: string) => {
+    const input = await subjectInput.current?.getInputElement()
+    const r = insertAtCursor(subject, `{${key}}`, input?.selectionStart, input?.selectionEnd)
+    setSubject(r.value)
+    setDirty(true)
+    if (input) {
+      requestAnimationFrame(() => {
+        input.focus()
+        input.setSelectionRange(r.cursor, r.cursor)
+      })
+    }
+  }
+
   const onLink = () => {
     if (!editor) return
     const current = editor.getAttributes("link").href || ""
@@ -367,11 +388,25 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
       </>}
 
       <IonCard color="eeglight" className={template ? "" : "ion-hide"}>
-        <IonInput label={t("mailtemplates.subject")} labelPlacement="floating" fill="outline" maxlength={200}
-                  value={subject} onIonInput={e => {
-          setSubject(String(e.detail.value ?? ""));
-          setDirty(true)
-        }}/>
+        <div className="mail-editor-row">
+          <IonInput ref={subjectInput} label={t("mailtemplates.subject")} labelPlacement="floating" fill="outline"
+                    maxlength={200} className="mail-subject"
+                    value={subject} onIonInput={e => {
+            setSubject(String(e.detail.value ?? ""));
+            setDirty(true)
+          }}/>
+          {template && template.placeholders.some(p => !p.block) && (
+            <IonSelect interface="popover" placeholder={t("mailtemplates.placeholder_insert_subject")} value={null}
+                       aria-label={t("mailtemplates.placeholder_insert_subject")}
+                       onIonChange={e => {
+                         if (e.detail.value) onInsertSubjectPlaceholder(e.detail.value)
+                       }}>
+              {template.placeholders.filter(p => !p.block).map(p => (
+                <IonSelectOption key={p.key} value={p.key}>{p.label}</IonSelectOption>
+              ))}
+            </IonSelect>
+          )}
+        </div>
         <div className="mail-editor-row">
           {editor && <MailEditorToolbar editor={editor} onLink={onLink}
                                         onImage={() => imageInput.current?.click()}

@@ -14,7 +14,8 @@ this changelog highlights the changes relevant for overview and operations.
   `consent-request`, `zp-active`, `zp-inactive` from backend (`/eeg/mailtemplates`) and `billing-document` from
   billing (`/api/mailtemplates`) — with status „Standard“ / „Angepasst“ and a hint when the default text changed.
   Editor (TipTap 3.32.0) for subject and text: bold, italic, underline, H1–H3, lists, https/mailto links,
-  alignment, images; placeholders from the mail's catalogue as non-editable chips (`<span|div data-ph>`).
+  alignment, images; placeholders from the mail's catalogue as non-editable chips (`<span|div data-ph>`);
+  in the subject as plain text `{key}` (inline keys only), inserted at the cursor from a picker.
   Images are reduced to at most 1200 px width in the browser before the upload and stored as
   `mailfile:{id}`; one PDF attachment where the service allows it. Preview in a sandboxed iframe, test mail to
   the own login or to the community address, save with version check (409 → „wurde inzwischen geändert“,

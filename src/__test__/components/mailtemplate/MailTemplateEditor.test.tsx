@@ -1,7 +1,7 @@
 import {describe, expect, it, vi} from "vitest";
 import {fireEvent, render, screen, waitFor} from "@testing-library/react";
 import "../../../util/I18n";
-import MailTemplateEditor from "../../../components/mailtemplate/MailTemplateEditor.component";
+import MailTemplateEditor, {insertAtCursor} from "../../../components/mailtemplate/MailTemplateEditor.component";
 import {Api} from "../../../service";
 import {MailTemplateError} from "../../../service/mailtemplate.service";
 import {MailTemplate} from "../../../models/mailtemplate.model";
@@ -52,5 +52,15 @@ describe("MailTemplateEditor", () => {
     expect((screen.getByText("Testmail an mich").closest("ion-button") as any).disabled).toBe(false)
     expect(screen.queryByText("PDF anhängen")).toBeNull()
     expect(screen.getByText("Das Rechnungs-PDF wird immer angehängt.")).toBeTruthy()
+  })
+})
+
+describe("insertAtCursor (subject placeholders)", () => {
+  it("inserts {key} at the cursor, replaces a selection, appends without cursor", () => {
+    expect(insertAtCursor("Rechnung  - EEG", "{document.period}", 9, 9))
+      .toEqual({value: "Rechnung {document.period} - EEG", cursor: 26})
+    expect(insertAtCursor("Hallo XX!", "{member.firstName}", 6, 8))
+      .toEqual({value: "Hallo {member.firstName}!", cursor: 24})
+    expect(insertAtCursor("Betreff ", "{eeg.name}")).toEqual({value: "Betreff {eeg.name}", cursor: 18})
   })
 })
