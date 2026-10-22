@@ -80,7 +80,8 @@
       "js-yaml@^4": "^4.3.2",
       "lodash": "^4.18.1",
       "immutable@^4": "^4.3.9",
-      "brace-expansion@^1": "^1.1.21"
+      "brace-expansion@^1": "^1.1.21",
+      "minimatch@^3": "^3.1.5"
     }
   },
   "description": "An Ionic project",
