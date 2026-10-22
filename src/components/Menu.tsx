@@ -14,7 +14,7 @@ import {
 
 import {useLocation} from 'react-router-dom';
 import {
-  informationCircle, logOutOutline, mailOutline, newspaper,
+  informationCircle, logOutOutline, newspaper,
   people, personCircle, refreshOutline, wallet, walletSharp
 } from 'ionicons/icons';
 import './Menu.css';
@@ -162,12 +162,6 @@ const Menu: FC = () => {
       iosIcon: eegProcess,
       mdIcon: eegProcess,
       forOnline: true,
-    },
-    {
-      title: t("mailtemplates.header"),
-      url: '/page/mailtemplates',
-      iosIcon: mailOutline,
-      mdIcon: mailOutline,
     },
   ];
 
