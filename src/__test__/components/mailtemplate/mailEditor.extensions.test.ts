@@ -43,6 +43,14 @@ describe("mail editor serialization", () => {
     expect(toMailHtml(e.getHTML())).toBe('<p style="text-align: center"><img src="mailfile:0b5e" alt="Logo"></p>')
   })
 
+  it("keeps the built-in logo reference (not a UUID) and shows it through the same fetch", async () => {
+    const e = editor('<p><img src="mailfile:eegfaktura-logo" width="335"></p>')
+    await flush()
+    expect((e.view.dom.querySelector("img:not(.ProseMirror-separator)") as HTMLImageElement).getAttribute("src"))
+      .toBe("blob:test/eegfaktura-logo")
+    expect(toMailHtml(e.getHTML())).toBe('<p><img src="mailfile:eegfaktura-logo" width="335"></p>')
+  })
+
   it("drops external images and links that are not https/mailto", () => {
     const e = editor('<p><img src="https://evil.example/x.png"><a href="http://x.example">http</a> ' +
       '<a href="https://ok.example">https</a> <a href="mailto:a@b.at">mail</a></p>')
