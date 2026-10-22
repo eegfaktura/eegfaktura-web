@@ -1,6 +1,6 @@
 import {afterEach, describe, expect, it} from "vitest";
 import {Editor} from "@tiptap/core";
-import {mailEditorExtensions, mailFileId, setContentWithoutHistory, toMailHtml} from "../../../components/mailtemplate/mailEditor.extensions";
+import {applyLink, mailEditorExtensions, mailFileId, setContentWithoutHistory, toMailHtml} from "../../../components/mailtemplate/mailEditor.extensions";
 
 const editors: Editor[] = []
 const editor = (content: string, resolve = (id: string) => Promise.resolve(`blob:test/${id}`)) => {
@@ -63,6 +63,27 @@ describe("mail editor serialization", () => {
       '<p><strong>b</strong> <em>i</em> <u>u</u><br>x</p><ul><li><p>a</p></li></ul><ol><li><p>b</p></li></ol>' +
       '<blockquote><p>q</p></blockquote>'
     expect(toMailHtml(editor(html).getHTML())).toBe(html)
+  })
+})
+
+describe("applyLink", () => {
+  it("inserts the address as linked text when nothing is selected", () => {
+    const e = editor("<p>Info: </p>")
+    e.commands.focus("end")
+    applyLink(e, "https://eeg.example.at")
+    applyLink(e, "mailto:office@eeg.example.at")
+    expect(toMailHtml(e.getHTML())).toBe('<p>Info:<a href="https://eeg.example.at">https://eeg.example.at</a>' +
+      '<a href="mailto:office@eeg.example.at">office@eeg.example.at</a></p>')
+  })
+
+  it("links the selected text and removes the link with an empty address", () => {
+    const e = editor("<p>Webseite</p>")
+    e.commands.selectAll()
+    applyLink(e, "https://eeg.example.at")
+    expect(toMailHtml(e.getHTML())).toBe('<p><a href="https://eeg.example.at">Webseite</a></p>')
+    e.commands.setTextSelection(3)
+    applyLink(e, "")
+    expect(toMailHtml(e.getHTML())).toBe("<p>Webseite</p>")
   })
 })
 

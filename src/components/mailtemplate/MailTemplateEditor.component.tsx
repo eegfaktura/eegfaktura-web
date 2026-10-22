@@ -27,6 +27,7 @@ import {
   MailTestRecipient
 } from "../../models/mailtemplate.model";
 import {
+  applyLink,
   MAILFILE_PREFIX,
   mailEditorExtensions,
   mailFileId,
@@ -307,10 +308,8 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
         {
           text: t("mailtemplates.link_apply"), handler: (values: { href: string }) => {
             const href = (values.href || "").trim()
-            if (!href) {
-              editor.chain().focus().extendMarkRange("link").unsetLink().run()
-            } else if (/^(https:|mailto:)/i.test(href)) {
-              editor.chain().focus().extendMarkRange("link").setLink({href}).run()
+            if (!href || /^(https:|mailto:)/i.test(href)) {
+              applyLink(editor, href)
             } else {
               toast(t("mailtemplates.link_invalid"), "danger")
               return false

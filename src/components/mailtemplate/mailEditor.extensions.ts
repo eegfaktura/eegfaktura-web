@@ -129,6 +129,20 @@ export const mailEditorExtensions = (resolveImage: (id: string) => Promise<strin
 export const setContentWithoutHistory = (editor: Editor, html: string) =>
   editor.chain().setMeta("addToHistory", false).setContent(html, {emitUpdate: false}).run()
 
+// Sets, changes or (empty href) removes the link at the selection. Without a selection and outside a
+// link the address itself is inserted as linked text, so the click always has a visible result.
+export const applyLink = (editor: Editor, href: string) => {
+  const chain = editor.chain().focus()
+  if (!href) {
+    return chain.extendMarkRange("link").unsetLink().run()
+  }
+  if (editor.state.selection.empty && !editor.isActive("link")) {
+    const text = href.replace(/^mailto:/i, "")
+    return chain.insertContent({type: "text", text, marks: [{type: "link", attrs: {href}}]}).run()
+  }
+  return chain.extendMarkRange("link").setLink({href}).run()
+}
+
 // Removes every image of the given file from the text; returns whether there was one.
 export const removeMailImages = (editor: Editor, id: string) => {
   const positions: number[] = []
