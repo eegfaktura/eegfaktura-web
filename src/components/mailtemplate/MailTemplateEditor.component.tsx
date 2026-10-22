@@ -47,6 +47,8 @@ export const formatBytes = (bytes: number) =>
 
 export const formatUpdated = (date?: string | null) => date ? moment(date).format("DD.MM.YYYY HH:mm") : ""
 
+const MAX_SUBJECT_CHARS = 200
+
 export const insertAtCursor = (text: string, insert: string, start?: number | null, end?: number | null) => {
   const from = start ?? text.length
   const to = end ?? from
@@ -301,6 +303,10 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
     setPickerRound(r => r + 1)
     const input = await subjectInput.current?.getInputElement()
     const r = insertAtCursor(subject, `{${key}}`, input?.selectionStart, input?.selectionEnd)
+    if (r.value.length > MAX_SUBJECT_CHARS) {
+      toast(t("mailtemplates.subject_too_long", {max: MAX_SUBJECT_CHARS}), "danger")
+      return
+    }
     setSubject(r.value)
     setDirty(true)
     if (input) {
@@ -488,7 +494,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
       <IonCard color="eeglight" className={template ? "" : "ion-hide"}>
         <div className="mail-editor-row">
           <IonInput ref={subjectInput} label={t("mailtemplates.subject")} labelPlacement="floating" fill="outline"
-                    maxlength={200} className="mail-subject"
+                    maxlength={MAX_SUBJECT_CHARS} className="mail-subject"
                     value={subject} onIonInput={e => {
             setSubject(String(e.detail.value ?? ""));
             setDirty(true)

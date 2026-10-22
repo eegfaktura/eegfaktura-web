@@ -138,6 +138,32 @@ describe("MailTemplateEditor placeholder pickers", () => {
   })
 })
 
+describe("MailTemplateEditor subject placeholder", () => {
+  const insertInto = async (subject: string) => {
+    const saveTemplate = vi.fn().mockResolvedValue(template(4, subject))
+    Api.mailTemplateService = {
+      fetchTemplate: vi.fn().mockResolvedValue(template(3, subject)), saveTemplate, fetchFile: vi.fn(),
+    } as unknown as typeof Api.mailTemplateService
+    render(<MailTemplateEditor tenant="RC100100" source="backend" templateKey="zp-active"
+                               onClose={vi.fn()} onChanged={vi.fn()}/>)
+    await waitFor(() => expect(screen.getByText("Zählpunkt aktiv")).toBeTruthy())
+    fireEvent(screen.getByTestId("subject-placeholder"), new CustomEvent("ionChange", {detail: {value: "member.firstName"}}))
+    await new Promise(r => setTimeout(r, 0))
+    fireEvent.click(screen.getByText("Speichern"))
+    await waitFor(() => expect(saveTemplate).toHaveBeenCalled())
+    return saveTemplate.mock.calls[0][3].subject
+  }
+
+  it("inserts {key} into the subject", async () => {
+    expect(await insertInto("Hallo ")).toBe("Hallo {member.firstName}")
+  })
+
+  it("does not insert a placeholder beyond 200 characters", async () => {
+    const long = "x".repeat(195)
+    expect(await insertInto(long)).toBe(long)
+  })
+})
+
 describe("MailTemplateEditor reload/reset errors", () => {
   it("shows a failed reload above the loaded version", async () => {
     const fetchTemplate = vi.fn()
