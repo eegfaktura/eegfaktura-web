@@ -8,6 +8,32 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **New member: „Mandatsdatum fehlt!“ stayed after picking a date** (support 23.10.2026). Switching the debit type
+  to CORE/B2B checks the still empty mandate date; the form validates on blur, but the date picker's input never
+  passes the blur on, so picking a date did not re-check the field and the red message stayed — the member could
+  not be saved. Picking a date now re-validates the field. Workaround until release: after picking the date, switch
+  to „Kein SEPA“ and back to CORE/B2B.
+- **Wording: „Teilnahmefaktor“ instead of „Teilnehmerfaktor“** (pilot feedback 22.10.2026). The title and the
+  field label of „Teilnahmefaktor ändern“ and the warning for a missing factor said „Teilnehmerfaktor“, the info
+  text and the other places already „Teilnahmefaktor“.
+
+### Security
+- `js-yaml` 3.14.1 → 3.15.2 (via xmlbuilder2) and 4.1.0 → 4.3.2 (build/lint tooling) through `pnpm.overrides`: GHSA-2883-xcg3-v3hh, GHSA-52cp-r559-cp3m, GHSA-5p4m-2wfm-xmqj (CVE-2026-59869, CVE-2026-84375) and two moderate advisories (platform#179).
+- `lodash` 4.17.21 → 4.18.1 (via recharts) through `pnpm.overrides`: GHSA-r5fr-rjxr-66jc (CVE-2026-4800, HIGH) and two moderate advisories (platform#179).
+- `vite` 6.4.3 → 6.4.4 (dev server/build): GHSA-587h-7wmj-h5pm (HIGH) and four moderate/low dev-server advisories; replaces Dependabot PR #173. 6.4.5 follows once it is 7 days old (platform#179).
+- `immutable` 4.3.7 → 4.3.9 (via sass, build only) through `pnpm.overrides`: GHSA-wf6x-7x77-mvgw (CRITICAL per CVSS 9.8 (Trivy/NVD); GitHub rates it high), GHSA-v56q-mh7h-f735 and GHSA-xvcm-6775-5m9r (HIGH) (platform#179).
+- `brace-expansion` 1.1.11 → 1.1.21 (via minimatch, dev tooling) through `pnpm.overrides`: GHSA-3jxr-9vmj-r5cp, GHSA-6j4f-fj2g-mc7p, GHSA-mh99-v99m-4gvg, GHSA-qhr7-859c-m2p7, GHSA-rgw5-rvv9-x895 (HIGH) and three moderate/low advisories (platform#179).
+- `minimatch` 3.1.2 → 3.1.5 (eslint/test tooling) through `pnpm.overrides`: GHSA-23c5-xmqv-rm74, GHSA-3ppc-4f35-3m26, GHSA-7r86-cg39-jmmj (HIGH) (platform#179).
+- `cross-spawn` 7.0.3 → 7.0.6 (eslint tooling) through `pnpm.overrides`: GHSA-3xgq-45jj-v275 (HIGH) (platform#179).
+- `flatted` 3.3.1 → 3.4.4 (eslint cache) through `pnpm.overrides`: GHSA-rf6f-7fwh-wjgh, GHSA-25h7-pfq9-p65f (HIGH) (platform#179).
+- `picomatch` 2.3.1 → 2.3.2 (build tooling) through `pnpm.overrides`: GHSA-c2c7-rcm5-vvqj (HIGH) and GHSA-3v7f-55p6-f55p (platform#179).
+- `source-map-js` 1.2.1 → 1.2.2 (via postcss/vite, build only) through `pnpm.overrides`: GHSA-68fv-2mgg-jv7q (HIGH) (platform#179).
+- `ws` 8.18.0 → 8.22.0 (via jsdom, tests only) through `pnpm.overrides`: GHSA-96hv-2xvq-fx4p (HIGH) and GHSA-58qx-3vcg-4xpx (platform#179).
+
+### CI
+- `rolling-release.yml`: no image build on a draft pull request — it runs when the pull request is marked ready for review (`ready_for_review`) and on every later push to it; `pr-checks.yml` still checks drafts. Pushes, tags and the deploy dispatch are unchanged.
+
 ## [1.8.0] – 2026-10-21
 
 ### Added
@@ -90,9 +116,6 @@ this changelog highlights the changes relevant for overview and operations.
   already active; on the next poll the panel attached a second poller to the run (and so on), each polling
   `GET /api/billingRuns/{id}` every 2s. A separate polling flag, set only by the two pollers, now guards it.
   Internal: the unused state `failedRunId` is removed (no behaviour change).
-
-### CI
-- `rolling-release.yml`: no image build on a draft pull request — it runs when the pull request is marked ready for review (`ready_for_review`) and on every later push to it; `pr-checks.yml` still checks drafts. Pushes, tags and the deploy dispatch are unchanged.
 
 ## [1.7.2] – 2026-10-20
 
