@@ -115,6 +115,15 @@ const customHeader = ({
 // DatePicker ausgewaehlt hat, ohne Uhrzeit und ohne Zeitzonen-Umrechnung.
 export const toFormDateValue = (date: Date): string => moment(date).format("YYYY-MM-DD")
 
+// Neues Mitglied (kein Teilspeichern): Wert setzen und das Feld gleich pruefen. Das Formular
+// validiert im Modus "onBlur"; der Kalender liegt in einem Portal, das Feld verliert den Fokus
+// also schon vor der Auswahl. Ohne erneute Pruefung bliebe ein vorher gesetzter Fehler
+// ("Mandatsdatum fehlt") trotz gewaehltem Datum stehen.
+export const commitFormDate = (field: { onChange: (value: string) => void, onBlur: () => void }, date: Date) => {
+  field.onChange(toFormDateValue(date))
+  field.onBlur()
+}
+
 // Define the props for the DatePickerInput component
 interface DatePickerInputProps<TFieldValues extends FieldValues> {
   name: Path<TFieldValues>; // Use Path<TFieldValues> here
@@ -142,7 +151,7 @@ const DatePickerInput = <TFieldValues extends FieldValues>({
                                                              ...rest
                                                            }: DatePickerInputProps<TFieldValues>) => {
 
-  const onDateChange = (change: (...event: any[]) => void) => (date: Date | null) => {
+  const onDateChange = (field: { onChange: (value: string) => void, onBlur: () => void }) => (date: Date | null) => {
     if (date) {
       const localDate = new LocalDate(moment(date).format("YYYY-MM-DD"))
       // Ins Formular als String "YYYY-MM-DD", nicht als LocalDate: react-hook-form klont
@@ -150,7 +159,7 @@ const DatePickerInput = <TFieldValues extends FieldValues>({
       // gewoehnliches Date. Das serialisiert als UTC - lokale Mitternacht wird so zum
       // Vortag ("2026-06-03T22:00:00.000Z"), und das Backend speichert diesen Tag.
       // Ein String uebersteht das Klonen unveraendert.
-      onChangePartial ? onChangePartial(localDate) : change(toFormDateValue(date))
+      onChangePartial ? onChangePartial(localDate) : commitFormDate(field, date)
     }
   }
 
@@ -184,7 +193,7 @@ const DatePickerInput = <TFieldValues extends FieldValues>({
               // id={String(name)} // id expects a string
               renderCustomHeader={customHeader}
               selected={showDate(field.value)?.toDate()} // Cast to Date | null
-              onChange={onDateChange(field.onChange)}
+              onChange={onDateChange(field)}
               onBlur={field.onBlur}
               dateFormat="MMMM d, yyyy"
               customInput={
