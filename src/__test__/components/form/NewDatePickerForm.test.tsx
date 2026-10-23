@@ -1,8 +1,8 @@
 import {describe, expect, it} from "vitest";
-import {act, renderHook} from "@testing-library/react";
-import {useForm} from "react-hook-form";
+import {act, renderHook, waitFor} from "@testing-library/react";
+import {useController, useForm} from "react-hook-form";
 import {LocalDate} from "local-date";
-import {toFormDateValue} from "../../../components/form/NewDatePickerForm.component";
+import {commitFormDate, toFormDateValue} from "../../../components/form/NewDatePickerForm.component";
 
 // Fehlerbild: Beim Anlegen eines Mitglieds wurde das SEPA-Mandatsdatum aus dem DatePicker
 // um einen Tag zu frueh gespeichert. react-hook-form klont die Werte in handleSubmit und
@@ -33,5 +33,26 @@ describe("DatePickerInput - Datum uebersteht das Speichern", () => {
 
   it("ein LocalDate verliert beim Klonen sein Datumsformat - deshalb kein LocalDate im Formular", async () => {
     expect(await submit(new LocalDate("2026-06-04"))).not.toBe('"2026-06-04"');
+  });
+});
+
+// Fehlerbild (Support 23.10.2026): Neues Mitglied, Einzugsart CORE/B2B. Das Umschalten prueft das
+// noch leere Mandatsdatum ("Mandatsdatum fehlt!"); nach der Auswahl im Kalender blieb die Meldung
+// stehen, weil das Formular im Modus "onBlur" eine Aenderung allein nicht neu prueft.
+describe("DatePickerInput - Pflichtmeldung verschwindet nach der Auswahl", () => {
+
+  it("ein gewaehltes Datum loescht den vorher gesetzten Fehler", async () => {
+    const {result} = renderHook(() => {
+      const form = useForm<{ d: string }>({mode: "onBlur", reValidateMode: "onChange"})
+      const ctrl = useController({name: "d", control: form.control, rules: {required: "fehlt"}})
+      return {form, ctrl}
+    });
+    await act(() => result.current.form.trigger("d"));
+    expect(result.current.ctrl.fieldState.error?.message).toBe("fehlt");
+
+    act(() => commitFormDate(result.current.ctrl.field, new Date(2026, 9, 23)));
+
+    await waitFor(() => expect(result.current.ctrl.fieldState.error).toBeUndefined());
+    expect(result.current.form.getValues("d")).toBe("2026-10-23");
   });
 });
