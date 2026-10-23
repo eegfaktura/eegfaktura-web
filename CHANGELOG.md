@@ -9,6 +9,11 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Fixed
+- **New member: „Mandatsdatum fehlt!“ stayed after picking a date** (support 23.10.2026). Switching the debit type
+  to CORE/B2B checks the still empty mandate date; the form validates on blur, but the date picker's input never
+  passes the blur on, so picking a date did not re-check the field and the red message stayed — the member could
+  not be saved. Picking a date now re-validates the field. Workaround until release: after picking the date, switch
+  to „Kein SEPA“ and back to CORE/B2B.
 - **Wording: „Teilnahmefaktor“ instead of „Teilnehmerfaktor“** (pilot feedback 22.10.2026). The title and the
   field label of „Teilnahmefaktor ändern“ and the warning for a missing factor said „Teilnehmerfaktor“, the info
   text and the other places already „Teilnahmefaktor“.
