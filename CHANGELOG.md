@@ -8,6 +8,11 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- Dependabot (Docker base images): no more major updates (legacy system, replaced by v3 in the medium term; majors
+  only for security reasons, decision 23.10.2026), patch and minor updates come in one weekly grouped PR, new versions
+  only after a 7-day cooldown. Security updates for the language ecosystems are unaffected.
+
 ### Fixed
 - **Wording: „Teilnahmefaktor“ instead of „Teilnehmerfaktor“** (pilot feedback 22.10.2026). The title and the
   field label of „Teilnahmefaktor ändern“ and the warning for a missing factor said „Teilnehmerfaktor“, the info
