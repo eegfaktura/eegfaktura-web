@@ -31,6 +31,9 @@ this changelog highlights the changes relevant for overview and operations.
 - `source-map-js` 1.2.1 → 1.2.2 (via postcss/vite, build only) through `pnpm.overrides`: GHSA-68fv-2mgg-jv7q (HIGH) (platform#179).
 - `ws` 8.18.0 → 8.22.0 (via jsdom, tests only) through `pnpm.overrides`: GHSA-96hv-2xvq-fx4p (HIGH) and GHSA-58qx-3vcg-4xpx (platform#179).
 
+### CI
+- `rolling-release.yml`: no image build on a draft pull request — it runs when the pull request is marked ready for review (`ready_for_review`) and on every later push to it; `pr-checks.yml` still checks drafts. Pushes, tags and the deploy dispatch are unchanged.
+
 ## [1.8.0] – 2026-10-21
 
 ### Added
