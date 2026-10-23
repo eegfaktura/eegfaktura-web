@@ -116,9 +116,9 @@ const customHeader = ({
 export const toFormDateValue = (date: Date): string => moment(date).format("YYYY-MM-DD")
 
 // Neues Mitglied (kein Teilspeichern): Wert setzen und das Feld gleich pruefen. Das Formular
-// validiert im Modus "onBlur"; der Kalender liegt in einem Portal, das Feld verliert den Fokus
-// also schon vor der Auswahl. Ohne erneute Pruefung bliebe ein vorher gesetzter Fehler
-// ("Mandatsdatum fehlt") trotz gewaehltem Datum stehen.
+// validiert im Modus "onBlur", aber CustomIonInput reicht onBlur von react-datepicker nicht weiter -
+// react-hook-form sieht fuer dieses Feld also nie ein Verlassen. Ohne erneute Pruefung bliebe ein
+// vorher gesetzter Fehler ("Mandatsdatum fehlt") trotz gewaehltem Datum stehen.
 export const commitFormDate = (field: { onChange: (value: string) => void, onBlur: () => void }, date: Date) => {
   field.onChange(toFormDateValue(date))
   field.onBlur()
