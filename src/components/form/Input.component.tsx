@@ -3,6 +3,7 @@ import {InputChangeEventDetail, IonInput} from "@ionic/react";
 import {ControllerRenderProps} from "react-hook-form/dist/types/controller";
 import {IonInputCustomEvent} from "@ionic/core/dist/types/components";
 import {RefCallBack} from "react-hook-form";
+import {parseDecimal} from "../../util/Number.util";
 
 // export interface InputProps {
 //   name: string;
@@ -79,7 +80,7 @@ function Input<TValue, IsNumber extends boolean = false>(props: Omit<ControllerR
     if (Number.isInteger(value)) {
       return parseInt(value, 10)
     }
-    return parseFloat(value.replace(",", "."))
+    return parseDecimal(value)
   }
 
   const handleChange = async (e: IonInputCustomEvent<InputChangeEventDetail>) => {
