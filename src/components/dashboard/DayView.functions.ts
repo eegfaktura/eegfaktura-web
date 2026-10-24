@@ -1,6 +1,6 @@
-import {ReportNamedData} from "../../models/energy.model";
+import {ReportNamedData, SelectedPeriod} from "../../models/energy.model";
 import {CpPeriodType} from "../../models/reports.model";
-import {splitDate} from "../../util/Helper.util";
+import {dateToDayOfYear, dayOfYearToDate, splitDate} from "../../util/Helper.util";
 
 // One quarter hour of the whole community (sums over all metering points of a stored line).
 export type QuarterHourValues = {
@@ -135,3 +135,9 @@ export const clampDay = (day: Date | undefined, bounds: DayBounds | undefined): 
 // The state to show for `day`: an answer for another day (paging, request still running) counts as loading.
 export const stateForDay = (state: DayReportState, day: Date | undefined): DayReportState =>
   day && state.day === startOfDay(day).getTime() ? state : {status: "loading", day: day ? startOfDay(day).getTime() : undefined}
+
+// A card in day mode keeps its day as period "D" (day of year), like the popover returns it.
+export const dayToPeriod = (day: Date): SelectedPeriod => ({type: 'D', year: day.getFullYear(), segment: dateToDayOfYear(day)})
+
+export const periodToDay = (period: SelectedPeriod, bounds: DayBounds): Date =>
+  clampDay(dayOfYearToDate(period.year, period.segment), bounds)!

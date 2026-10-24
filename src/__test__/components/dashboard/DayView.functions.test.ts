@@ -3,7 +3,7 @@ process.env.TZ = 'Europe/Vienna'
 
 import {describe, expect, it} from "vitest"
 import {
-  clampDay, dayBounds, dayRequestRange, daySums, formatDay, hasEnergy, shiftDay, stateForDay, toHours, toQuarterHours
+  clampDay, dayBounds, dayRequestRange, dayToPeriod, periodToDay, daySums, formatDay, hasEnergy, shiftDay, stateForDay, toHours, toQuarterHours
 } from "../../../components/dashboard/DayView.functions"
 import {DayReportState} from "../../../components/dashboard/DayView.functions"
 import {ReportNamedData} from "../../../models/energy.model"
@@ -171,5 +171,30 @@ describe("stateForDay", () => {
 
   it("no day: loading", () => {
     expect(stateForDay(ok, undefined).status).toBe("loading")
+  })
+})
+
+describe("a DAYRAW row as energystore sends it (10.10.2026 on dev)", () => {
+  // store.ReportNamedData{*ReportData, Name}: the embedded ReportData is flattened in the JSON.
+  const json = '[{"consumed":1.234,"allocated":0.15,"distributed":0.098,"produced":0.15,"unused":0.052,' +
+    '"qoVConsumer":1,"qoVProducer":1,"cntProducer":1,"cntConsumer":12,"name":"R:1791626400:48:10"}]'
+
+  it("maps producer G.01 to Produktion and keeps Eigendeckung ≤ Produktion", () => {
+    const [q] = toQuarterHours(JSON.parse(json))
+    expect(q).toEqual({ts: 1791626400000, label: "12:00", produced: 0.15, consumed: 1.234, distributed: 0.098, unused: 0.052})
+    expect(q.produced).toBeCloseTo(q.distributed + q.unused, 9)
+  })
+})
+
+describe("dayToPeriod / periodToDay", () => {
+  const bounds = {first: new Date(2026, 0, 1), last: new Date(2026, 9, 23)}
+
+  it("round-trips a day as period D, also on a DST day", () => {
+    expect(dayToPeriod(new Date(2026, 2, 29))).toEqual({type: "D", year: 2026, segment: 88})
+    expect(periodToDay(dayToPeriod(new Date(2026, 9, 10)), bounds)).toEqual(new Date(2026, 9, 10))
+  })
+
+  it("a day outside the range is moved to its edge", () => {
+    expect(periodToDay({type: "D", year: 2026, segment: 300}, bounds)).toEqual(new Date(2026, 9, 23))
   })
 })

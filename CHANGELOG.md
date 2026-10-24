@@ -9,6 +9,11 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Added
+- **Dashboard day view per card** (platform#210, feedback from dev). "Tag" in a card's period popover switches only
+  that card (Lastverlauf or Tagesverlauf) to the day view; the other card keeps its period. Each card in day mode has
+  its own gear, arrows and day sums. The day Lastverlauf lines follow the day chart of a metering point (MeterChart:
+  monotone, width 2, no dots, grid); Produktion is drawn on top, so it is no longer hidden under Eigendeckung when the
+  community uses all of its production.
 - **Dashboard day view in the period menu** (platform#210, user feedback). The day view is chosen in the period
   popover (gear) as a new row "Tag" with a date field, limited to the energy data range and yesterday; any other row
   returns to the period view with that period. The separate switch "Zeitraum | Tag" is gone; the day view keeps its
