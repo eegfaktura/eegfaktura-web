@@ -175,6 +175,14 @@ const EegPage: FC = () => {
                                       readonly={false}/>
                 </IonCard>
               </div>
+              {isAdmin() &&
+                <div className={"eeg-property-card"}>
+                  <div className={"header"}>{t("mailtemplates.header")}</div>
+                  <IonCard color="eeglight">
+                    <p style={{padding: "0 16px"}}>{t("mailtemplates.card_text")}</p>
+                    <IonButton routerLink="/page/mailtemplates">{t("mailtemplates.card_button")}</IonButton>
+                  </IonCard>
+                </div>}
             </div>
             <div style={{display: "flex", flexDirection: "column", flexGrow: "1"}}>
               <div className={"eeg-property-card"}>

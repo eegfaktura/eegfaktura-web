@@ -57,12 +57,23 @@ export function buildNotificationText(type: string, process: string, notificatio
           return <p>Für die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurden <strong><u>die Änderungen des
             Teilnahmefaktors
             angenommen.</u></strong></p>
-        case 'Mail':
-          // Fehlgeschlagener Mailversand (z. B. ungültige Empfänger-Adresse) —
-          // ohne diesen Zweig erschien die Notification als leere Zeile.
-          return <p><strong><u>Mailversand fehlgeschlagen:</u></strong> {
-            (n.message.logMessages ?? []).map(m => `${m.metering_point} — ${m.message}`).join("; ")
-          }</p>
+        case 'Mail': {
+          // Notices about the community's customised mails (E_MAIL_TEMPLATE: default sent instead,
+          // I_MAIL_TEMPLATE_DEFAULT: new default available) carry a complete text; the mail was sent.
+          // Other entries are failed mails (z. B. ungültige Empfänger-Adresse). A notification may hold both.
+          const all = n.message.logMessages ?? []
+          const isTemplateNotice = (m: { message_code: string }) => (m.message_code ?? "").includes("_MAIL_TEMPLATE")
+          const notices = all.filter(isTemplateNotice)
+          const failures = all.filter(m => !isTemplateNotice(m))
+          return <>
+            {notices.length > 0 &&
+              <p><strong><u>E-Mail-Texte:</u></strong> {notices.map(m => m.message).join(" ")}</p>}
+            {(failures.length > 0 || notices.length === 0) &&
+              <p><strong><u>Mailversand fehlgeschlagen:</u></strong> {
+                failures.map(m => `${m.metering_point} — ${m.message}`).join("; ")
+              }</p>}
+          </>
+        }
       }
       break
     }
