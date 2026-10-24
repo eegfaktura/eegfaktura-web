@@ -108,7 +108,9 @@ const FilterSegmentComponent: FC<FilterSegmentProps> = ({selectedOption, setSele
         </IonItem>
       </div>
       <div className="sort" onClick={onClickSort} title={sortLabel}>
-        <IonIcon icon={swapVertical} aria-label={sortLabel} color={memberSort === 'standard' ? undefined : 'primary'}></IonIcon>
+        <IonItem lines="none">
+          <IonIcon icon={swapVertical} aria-label={sortLabel}></IonIcon>
+        </IonItem>
       </div>
     </div>
   )
