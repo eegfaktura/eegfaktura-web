@@ -159,6 +159,35 @@ describe("billing run poller on a community switch (261024-ca13)", () => {
     expect(store.getState().billing.isPolling).toBe(false)
   })
 
+  it("ends quietly when the community is switched while a tick is in flight", async () => {
+    fakeBackend()
+    let answer: (run: any) => void = () => {}
+    ;(Api as any).eegService.fetchBillingRunById = vi.fn().mockImplementation(() => new Promise(r => { answer = r }))
+    const store = newStore("RC100100")
+    const poll = store.dispatch(resumeEnergyBillsPolling({tenant: "RC100100", billingRunId: "r1"}))
+    await vi.advanceTimersByTimeAsync(0)
+
+    store.dispatch(selectTenant("RC100200"))
+    answer({id: "r1", runStatus: "FAILED", errorSummary: "of the previous community"})
+
+    expect((await poll).payload).toBe(BILLING_POLL_STOPPED)
+  })
+
+  it("ends quietly when the community is switched while the amounts load", async () => {
+    fakeBackend()
+    let amounts: (a: any[]) => void = () => {}
+    ;(Api as any).eegService.fetchBillingRunById = vi.fn().mockResolvedValue({id: "r1", runStatus: "DONE"})
+    ;(Api as any).eegService.fetchParticipantAmounts = vi.fn().mockImplementation(() => new Promise(r => { amounts = r }))
+    const store = newStore("RC100100")
+    const poll = store.dispatch(resumeEnergyBillsPolling({tenant: "RC100100", billingRunId: "r1"}))
+    await vi.advanceTimersByTimeAsync(0)
+
+    store.dispatch(selectTenant("RC100200"))
+    amounts([])
+
+    expect((await poll).payload).toBe(BILLING_POLL_STOPPED)
+  })
+
   it("keeps one poller per run when switching back before the old one noticed", async () => {
     const calls = fakeBackend()
     const store = newStore("RC100100")

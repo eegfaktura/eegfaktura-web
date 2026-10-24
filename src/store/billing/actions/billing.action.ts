@@ -26,38 +26,62 @@ const pollBillingRunUntilTerminal = async (
 
   const self = {};
   currentPoller[billingRunId] = self;
+  // checked after every await too: a switch during a tick must not end with the old community's result or error
   const stopped = () => {
     const selected = getState().eeg?.selectedTenant;
     return currentPoller[billingRunId] !== self || (!!selected && selected.toUpperCase() !== tenant.toUpperCase());
   };
 
-  let consecutiveErrors = 0;
-  for (;;) {
+  try {
+    let consecutiveErrors = 0;
+    for (;;) {
+      if (stopped()) {
+        return rejectWithValue(BILLING_POLL_STOPPED);
+      }
+      try {
+        const result = await dispatch(fetchBillingRunById({tenant, billingRunId})).unwrap();
+        if (stopped()) {
+          return rejectWithValue(BILLING_POLL_STOPPED);
+        }
+        const run = result.billingRun;
+        consecutiveErrors = 0;
+        if (run.runStatus === "FAILED") {
+          return rejectWithValue(run.errorSummary || "Abrechnung fehlgeschlagen.");
+        }
+        if (run.runStatus !== "RUNNING") {
+          break; // DONE (final) oder NEW (Preview-Ende)
+        }
+      } catch (e) {
+        if (stopped()) {
+          return rejectWithValue(BILLING_POLL_STOPPED);
+        }
+        if (++consecutiveErrors >= MAX_CONSECUTIVE_POLL_ERRORS) {
+          return rejectWithValue(
+            "Der Status des Abrechnungslaufs ist derzeit nicht abrufbar. " +
+            "Der Lauf läuft am Server weiter — bitte Seite später neu laden.");
+        }
+      }
+      await delay(POLL_INTERVAL_MS);
+    }
+
+    let participantAmounts;
+    try {
+      participantAmounts = await Api.eegService.fetchParticipantAmounts(tenant, billingRunId);
+    } catch (e) {
+      if (stopped()) {
+        return rejectWithValue(BILLING_POLL_STOPPED);
+      }
+      throw e;
+    }
     if (stopped()) {
       return rejectWithValue(BILLING_POLL_STOPPED);
     }
-    try {
-      const result = await dispatch(fetchBillingRunById({tenant, billingRunId})).unwrap();
-      const run = result.billingRun;
-      consecutiveErrors = 0;
-      if (run.runStatus === "FAILED") {
-        return rejectWithValue(run.errorSummary || "Abrechnung fehlgeschlagen.");
-      }
-      if (run.runStatus !== "RUNNING") {
-        break; // DONE (final) oder NEW (Preview-Ende)
-      }
-    } catch (e) {
-      if (++consecutiveErrors >= MAX_CONSECUTIVE_POLL_ERRORS) {
-        return rejectWithValue(
-          "Der Status des Abrechnungslaufs ist derzeit nicht abrufbar. " +
-          "Der Lauf läuft am Server weiter — bitte Seite später neu laden.");
-      }
+    return {billing: {abstractText: "", billingRunId, participantAmounts}};
+  } finally {
+    if (currentPoller[billingRunId] === self) {
+      delete currentPoller[billingRunId];
     }
-    await delay(POLL_INTERVAL_MS);
   }
-
-  const participantAmounts = await Api.eegService.fetchParticipantAmounts(tenant, billingRunId);
-  return {billing: {abstractText: "", billingRunId, participantAmounts}};
 };
 
 export const fetchEnergyBills = createAsyncThunk(
