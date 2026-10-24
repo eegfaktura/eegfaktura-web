@@ -4,6 +4,8 @@ import {adapter, ErrorState, initialState} from "../states/eeg.state";
 import i18next from '../../../util/I18n'
 import {saveNewRate} from "../../rate";
 
+const withReason = (text: string, reason: string | undefined) => reason ? `${text} (${reason})` : text
+
 export const reducer = createReducer(initialState, builder =>
   builder
     .addCase(fetchEegModel.pending, state => {
@@ -15,14 +17,17 @@ export const reducer = createReducer(initialState, builder =>
       return adapter.setOne({ ...state, isFetching: false }, eeg)
     })
     .addCase(fetchEegModel.rejected, (state, action) => {
-      return adapter.removeAll({ ...state, eeg: undefined, isFetching: false, hasError: true, error: {message: i18next.t(`${action.error.message}_eeg_load`, { ns: 'error' })} as ErrorState  })
+      return adapter.removeAll({ ...state, eeg: undefined, isFetching: false, hasError: true, error: {message: i18next.t(`${action.error.message}_eeg_load`,
+          { ns: 'error', defaultValue: withReason("Die EEG-Daten konnten nicht geladen werden.", action.error.message) })} as ErrorState  })
     })
     .addCase(updateEegModel.fulfilled, (state, action) => {
       const { tenant, eeg } = action.payload;
       return adapter.updateOne(state, {id: tenant, changes: eeg})
     })
     .addCase(updateEegModel.rejected, (state, action) => {
-      return { ...state, isFetching: false, hasError: true, error: {message: i18next.t(`${action.error.message}_eeg_load`, { ns: 'error' })} as ErrorState };
+      // a failed save is not a failed load: its own text, with the reason
+      return { ...state, isFetching: false, hasError: true,
+        error: {message: withReason("Die Änderung der EEG-Daten konnte nicht gespeichert werden.", action.error.message)} as ErrorState };
     })
     .addCase(selectTenant, (state, action) => {
       return { ...state, selectedTenant: action.payload }

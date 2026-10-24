@@ -34,6 +34,11 @@ this changelog highlights the changes relevant for overview and operations.
     (with "frei ab") and "Daten vollständig (nicht angefordert)".
 
 ### Fixed
+- **GUI defects, second bundle (eegfaktura-dev tracking):**
+  - **A failed save of the EEG settings showed the load text (261024-ca7):** "Fehler beim Laden der
+    EEG-Basisdaten!" or a raw key such as `Bad Gateway_eeg_load`. It now shows "Die Änderung der EEG-Daten konnte
+    nicht gespeichert werden." with the reason. An unknown load error shows "Die EEG-Daten konnten nicht geladen
+    werden." with the reason instead of the raw key; the known load texts stay.
 - **Dashboard "Energiemengen – Eingekauft/Verkauft" wrong after an owner change** (support 6611112, 6611148).
   A metering point with two participations in the period (old and new member) counted the value of one of them
   twice, e.g. 160 or 10 kWh instead of 5 + 80 = 85 kWh. Each participation now adds its own value once.
