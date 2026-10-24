@@ -1,4 +1,4 @@
-import React, {createContext, FC, ReactNode, useCallback, useContext, useEffect, useState} from "react";
+import React, {createContext, FC, ReactNode, useCallback, useContext, useEffect, useRef, useState} from "react";
 import {store, useAppDispatch, useAppSelector} from "../index";
 import {clearErrorState, eegSelector, fetchEegModel, selectError, selectTenant} from "../eeg";
 import {useGroups, useRoles1, useTenants} from "./AuthProvider";
@@ -57,6 +57,9 @@ export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
 
   const [activeTenant, setActiveTenant] = useState<string>()
   const [fetching, setFetching] = useState<boolean>(false)
+  // only the load started last ends the loading state: an earlier one (previous community, A→B→A, a second
+  // refresh) must not end it or set the period
+  const loadSeq = useRef(0)
 
   const errorToast = (message: string | undefined) => {
     toaster({
@@ -171,6 +174,7 @@ export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
   const initApplication = useCallback(async () => {
     setFetching(true)
     if (activeTenant && activeTenant.length > 0) {
+      const seq = ++loadSeq.current;
       (await Promise.all([
         getUser(),
         dispatch(fetchEegModel({tenant: activeTenant})),
@@ -180,6 +184,7 @@ export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
         const eeg = eegSelector(store.getState())
         return getCurrentPeriod(eeg)
       }).then((a) => {
+        if (seq !== loadSeq.current) return
         dispatch(setSelectedPeriod(a))
         setFetching(false)
       }))
@@ -234,11 +239,6 @@ export const useEegArea = () => {
 export const useEegAllocation = () => {
   const {eeg} = useContext(EegContext)
   return eeg?.allocationMode
-}
-
-export const useGridOperator = () => {
-  const {eeg} = useContext(EegContext)
-  return {gridOperatorId: eeg?.gridOperator, gridOperatorName: eeg?.operatorName}
 }
 
 export const useTenantSwitch = () => {

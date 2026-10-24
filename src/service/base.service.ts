@@ -45,6 +45,23 @@ function createLoc<T>() {
   };
 };
 const Lock = createLoc<string>()
+
+export const SESSION_EXPIRED = "Deine Sitzung ist abgelaufen. Bitte melde Dich neu an."
+export const NO_PERMISSION = "Dafür fehlt Dir die Berechtigung."
+// Several calls can fail with 401 at once, and a 401 that is not about the session (a misconfigured service)
+// would come back right after the login: at most one redirect per minute, also across the reload.
+const LOGIN_REDIRECT_KEY = "eegfaktura.loginRedirectAt"
+const LOGIN_REDIRECT_PAUSE_MS = 60_000
+export const mayRedirectToLogin = (now: number = Date.now()): boolean => {
+  try {
+    const last = Number(sessionStorage.getItem(LOGIN_REDIRECT_KEY) || 0)
+    if (now - last < LOGIN_REDIRECT_PAUSE_MS) return false
+    sessionStorage.setItem(LOGIN_REDIRECT_KEY, String(now))
+    return true
+  } catch {
+    return false  // no storage: show the error, do not risk a loop
+  }
+}
 const mutex = new Mutex();
 
 class EegBaseService {
@@ -91,7 +108,8 @@ class EegBaseService {
     return {'Authorization': `Bearer ${token}`, "X-Tenant": tenant}
   }
 
-  protected async handleErrors(response: Response):Promise<Response> {
+  // arrow property: most callers pass it unbound (`.then(this.handleErrors)`), and the 401 branch needs `this`
+  protected handleErrors = async (response: Response): Promise<Response> => {
 
     const isErrorResponse = (err: any): err is IErrorResponse => {
       return err.error !== undefined
@@ -99,12 +117,28 @@ class EegBaseService {
 
     if (!response.ok) {
       switch (response.status) {
-        case 401:
-          // await this.authService.logout()
-          break
+        case 401: {
+          // used to pass as success. The backend also answers 401 for a missing access group: only an expired or
+          // missing session goes to the login, a valid token gets "no permission" (no redirect loop)
+          const user = await this.authService.getUser().catch(() => null)
+          if (user && !user.expired) {
+            throw new Error(NO_PERMISSION)
+          }
+          if (mayRedirectToLogin()) {
+            this.authService.login().catch(() => {})
+          }
+          throw new Error(SESSION_EXPIRED)
+        }
         default:
-          const errorBody = await response.json().catch(e => response.text())
-          if (isErrorResponse(errorBody)) {
+          // read the body once: a second read after a failed json() throws and hides the real error
+          const errorText = await response.text()
+          let errorBody: unknown = errorText
+          try { errorBody = JSON.parse(errorText) } catch { /* not JSON, keep the text */ }
+          if (isErrorResponse(errorBody) && typeof errorBody.error === "string") {
+            // energystore ({"error": "<text>"}) and Spring ({"error": "<reason phrase>", ...}): the text itself,
+            // not the code lookup, which made "E_undefined_undefined" of it
+            throw new Error(errorBody.error || response.statusText || "Error while fetching data!");
+          } else if (isErrorResponse(errorBody)) {
             throw new Error(determineErrTxt(new ErrorResponse(errorBody.error)));
           } else {
             if (!response || !response.statusText) {
@@ -115,14 +149,6 @@ class EegBaseService {
       }
     }
     return response;
-  }
-
-  protected async handleFilestoreResponse(response: Response) {
-    const data = await response.json()
-    if (data && data.data && data.data.deleteFile && data.data.deleteFile.message) {
-      throw new Error(data.data.deleteFile.message)
-    }
-    return data
   }
 
   protected async handleGQLResponse(response: Response) {

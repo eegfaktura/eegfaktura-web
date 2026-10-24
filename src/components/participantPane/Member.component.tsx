@@ -14,6 +14,7 @@ import {eegSumSign} from "../../eegIcons";
 import MemberNameComponent from "./MemberName.component";
 import {useAppSelector} from "../../store";
 import {selectBillById} from "../../store/billing";
+import {billTotal} from "./ParticipantPane.functions";
 
 interface MemberProps {
   participant: EegParticipant;
@@ -47,7 +48,7 @@ const MemberComponent: FC<MemberProps> = ( {participant,
 
   const memberSum = () => {
     if (memberBill) {
-      const sum = memberBill.meteringPoints.reduce((i,s) => i + s.amount, memberBill.participantFee);
+      const sum = billTotal(memberBill);
       return (Math.round(sum * 100) / 100).toFixed(2);
     }
     return 0;

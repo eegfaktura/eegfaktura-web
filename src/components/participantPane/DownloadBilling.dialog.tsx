@@ -20,12 +20,45 @@ import {Eeg} from "../../models/eeg.model";
 import {downloadOutline, settingsSharp} from "ionicons/icons";
 import {useLocale} from "../../store/hook/useLocale";
 
+const TRANSFER_DAYS_AFTER_DEBIT = 5
+// debit date + 5 days, moved from a weekend to the following Monday (banks execute on business days)
+const defaultTransferDate = (debit: Date) => {
+  const d = moment(debit).add(TRANSFER_DAYS_AFTER_DEBIT, 'days')
+  if (d.isoWeekday() === 6) d.add(2, 'days')
+  if (d.isoWeekday() === 7) d.add(1, 'days')
+  return d.toDate()
+}
+
 export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg: Eeg, period: SelectedPeriod, onDismiss: (data?: string | null | undefined | number, role?: string) => void}> = ({billingRunId, tenant, eeg, period, onDismiss})=>  {
   const inputRef = useRef<HTMLIonInputElement>(null);
 
   const [files, setFiles] = useState<{ blob: Blob, name: string }[] | null>(null)
   const [collectionDate, setCollectionDate] = useState<Date | null>(moment().toDate())
+  // Credit transfers some days after the direct debits, so the community's account is covered (platform#167).
+  // Follows the debit date until it is changed by hand.
+  const [transferDate, setTransferDate] = useState<Date | null>(defaultTransferDate(new Date()))
+  const [transferTouched, setTransferTouched] = useState(false)
+  const onCollectionDate = (value: Date | null) => {
+    setFiles(null)   // files generated with the old date must not be downloaded
+    setCollectionDate(value)
+    if (!transferTouched && value) {
+      setTransferDate(defaultTransferDate(value))
+    }
+  }
+  const onTransferDate = (value: Date | null) => {
+    // the picker reports its date on every close: only a different day counts as a manual change
+    if (value && transferDate && moment(value).isSame(transferDate, 'day')) return
+    setFiles(null)
+    setTransferTouched(true)
+    setTransferDate(value)
+  }
+  const transferBeforeDebit = !!collectionDate && !!transferDate &&
+    moment(transferDate).startOf('day').isBefore(moment(collectionDate).startOf('day'))
   const [error, setError] = useState<string | null>(null)
+  const [skippedDebit, setSkippedDebit] = useState<string[]>([])
+  const [unsetDebit, setUnsetDebit] = useState<string[]>([])
+  const [withoutIban, setWithoutIban] = useState<string[]>([])
+  const [missingCreditorId, setMissingCreditorId] = useState<boolean>(false)
   const [batch, setBatch] = useState<boolean>(true)
   const [summarize, setSummarize] = useState<boolean>(true)
 
@@ -36,12 +69,13 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
   }, []);
 
   const prepareSepaFilesForDownload = async (): Promise<{ blob: Blob, name: string }[]> => {
-    const files = await ConvertExcelToXML(tenant, billingRunId, eeg, collectionDate!, period, batch, summarize)
+    const files = await ConvertExcelToXML(tenant, billingRunId, eeg, collectionDate!, period, batch, summarize, transferDate!)
     if (files) {
-      return [
-        { blob: new Blob([files.debit.content], { type: 'application/xml' }), name: files.debit.name },
-        { blob: new Blob([files.transfer.content], { type: 'application/xml' }), name: files.transfer.name },
-      ];
+      setSkippedDebit(files.skippedDebit)
+      setUnsetDebit(files.unsetDebit)
+      setWithoutIban(files.withoutIban)
+      setMissingCreditorId(files.missingCreditorId)
+      return files.files.map(f => ({ blob: new Blob([f.content], { type: 'application/xml' }), name: f.name }));
     }
     return Promise.reject(new Error(`No file found`));
   }
@@ -56,7 +90,6 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
         switch (err.message) {
           case "E_BIC_MISSING":
           case "E_IBAN_MISSING":
-          case "E_NO_CREDITOR_ID":
             setError(t_err(err.message))
         }
       }
@@ -92,7 +125,14 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
-        <DatePickerCoreElement label={"Fälligkeitsdatum"} name={"collectionDate"} initialValue={collectionDate} placeholder={"fällig am ..."} onChange={(name, value) => setCollectionDate(value)} />
+        <DatePickerCoreElement label={"Einzug am (Lastschriften)"} name={"collectionDate"} initialValue={collectionDate} placeholder={"fällig am ..."} onChange={(name, value) => onCollectionDate(value)} />
+        <DatePickerCoreElement label={"Überweisung am (Gutschriften)"} name={"transferDate"} initialValue={transferDate} placeholder={"überweisen am ..."}
+                               onChange={(name, value) => onTransferDate(value)} />
+        {transferBeforeDebit && (
+          <IonItem lines="none" color="warning">
+            <IonLabel className="ion-text-wrap">Die Überweisung liegt vor dem Einzug — das Konto ist dann womöglich nicht gedeckt.</IonLabel>
+          </IonItem>
+        )}
 
         <IonList>
           <IonItem>
@@ -102,13 +142,38 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
             <IonCheckbox checked={summarize} onIonChange={() => setSummarize(!summarize)}>Mitglieder zusammenfassen</IonCheckbox>
           </IonItem>
         </IonList>
-        <IonButton className="ion-back" onClick={onCreate} disabled={!collectionDate}>
+        <IonButton className="ion-back" onClick={onCreate} disabled={!collectionDate || !transferDate}>
           Generieren
         </IonButton>
         {!!error && (
           <IonLabel>{error}</IonLabel>
         )}
+        {missingCreditorId && (
+          <IonLabel>
+            <p>Keine Lastschrift-Datei: Dafür braucht die EEG eine Gläubiger-ID (Creditor-ID) in den EEG-Stammdaten.</p>
+          </IonLabel>
+        )}
+        {skippedDebit.length > 0 && (
+          <IonLabel>
+            <p>Nicht in der Lastschrift (Einzugsart „Kein SEPA“): {skippedDebit.join(", ")}</p>
+          </IonLabel>
+        )}
+        {unsetDebit.length > 0 && (
+          <IonLabel>
+            <p>Nicht in der Lastschrift, weil keine Einzugsart gewählt ist: {unsetDebit.join(", ")}. Die Einzugsart beim Mitglied wählen; sie gilt für neu erstellte Abrechnungsläufe, dieser Lauf übernimmt sie erst, wenn er neu erstellt wird.</p>
+          </IonLabel>
+        )}
+        {withoutIban.length > 0 && (
+          <IonLabel>
+            <p>Ohne IBAN, bitte manuell abwickeln: {withoutIban.join(", ")}</p>
+          </IonLabel>
+        )}
 
+        {files && files.length === 0 && !missingCreditorId && (
+          <IonLabel>
+            <p>Dieser Abrechnungslauf enthält keine Lastschriften und keine Gutschriften für SEPA.</p>
+          </IonLabel>
+        )}
         {files && files.map((file, i) =>
             <div key={i}>
               <IonCard>

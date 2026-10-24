@@ -6,6 +6,18 @@ export function FilterByMeterState(meters: Metering[], status: MeteringProcessSt
   return meters.filter(m => status.includes(m.processState))
 }
 
+// The meters an EDA process is sent for: one entry per selected metering point number, taken only from
+// the meters the form offered. After an owner change the same number exists twice in a community (the
+// old member's INACTIVE entry and the new ACTIVE one); looking it up in all meters sent both and the
+// grid operator rejected the request (support ticket 66110076). The ACTIVE entry wins.
+export const selectedMeters = (offered: Metering[], ids: string[] | undefined): Metering[] =>
+  Array.from(new Set(ids ?? []))
+    .map(id => {
+      const candidates = offered.filter(m => m.meteringPoint === id)
+      return candidates.find(m => m.processState === 'ACTIVE') ?? candidates[0]
+    })
+    .filter((m): m is Metering => !!m)
+
 export const meteringDisplayName = (m: Metering): string => {
   if (m.equipmentName && m.equipmentName.length > 0) {
     return `${m.equipmentName} - ${m.meteringPoint}`

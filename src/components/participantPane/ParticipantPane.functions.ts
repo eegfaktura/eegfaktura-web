@@ -1,7 +1,8 @@
-import {Metering, MeteringEnergyGroupType} from "../../models/meteringpoint.model";
+import {Metering, MeteringEnergyGroupType, ParticipantBillType} from "../../models/meteringpoint.model";
 import {EegParticipant} from "../../models/members.model";
 import {meteringEnergyGroup1} from "../../store/energy";
 import {store} from "../../store";
+import {hasOpenProblem} from "../../util/FilterHelper.unit";
 
 export const buildAllocationMapFromSelected = (participants: EegParticipant[], checkedParticipant: Record<string, boolean>): MeteringEnergyGroupType[] => {
   const participantReport = meteringEnergyGroup1(store.getState())
@@ -11,16 +12,44 @@ export const buildAllocationMapFromSelected = (participants: EegParticipant[], c
     .filter(p => checkedParticipant[p.participantId] !== undefined && checkedParticipant[p.participantId])
     .flatMap(p => {
       return p.meters.filter(m => activeMeters.includes(m.meterId)).map(m => {
+        // ZVT: die Fenster-Teilsummen (buckets) mit genau den Fenstern mitgeben, fuer die der energystore sie
+        // berechnet hat (er schickt sie im Report zurueck), nicht mit den Fenstern des aktuellen Tarifs: nach
+        // einer Tarifaenderung kann der Report noch der alte sein (platform#174). billing vergleicht die Fenster
+        // mit dem Tarif und bricht fail-loud ab, wenn sie fehlen oder nicht (mehr) passen - nie eine Rechnung
+        // mit Teilsummen zu anderen Fenstern.
+        const timeWindows = m.timeWindows && m.timeWindows.length > 0 ? m.timeWindows : undefined
         return {
           participantId: p.participantId,
           meteringPoint: m.meterId,
           allocationKWh: m.meterDir === "GENERATION"
             ? m.report.summary.production - m.report.summary.allocation
-            : m.report.summary.utilization
+            : m.report.summary.utilization,
+          ...(timeWindows ? {timeWindows: timeWindows, buckets: m.report.buckets} : {})
         } as MeteringEnergyGroupType
       })//.filter(e => e.allocationKWh > 0)
     })
 };
+
+const inRegistration = (m: Metering) =>
+  m.processState === 'NEW' || m.processState === 'INIT' || m.processState === 'PENDING' || m.processState === 'APPROVED'
+
+/**
+ * List view only: adds the metering points with an open problem (rejected, invalid, revoked registration) or a
+ * registration in progress that the period filter dropped, e.g. a re-registration after leaving (it keeps the old
+ * inactive date until the grid operator completes it). Billing, reports and counts keep
+ * using the period-filtered participants, so these metering points are never billed outside their period.
+ */
+export const withOpenProblems = (periodParticipants: EegParticipant[], allParticipants: EegParticipant[]) =>
+  periodParticipants.map(p => {
+    const extra = (allParticipants.find(a => a.id === p.id)?.meters ?? [])
+      .filter(m => (hasOpenProblem(m) || inRegistration(m)) && !p.meters.some(x => x.meteringPoint === m.meteringPoint))
+    return extra.length > 0 ? {...p, meters: [...p.meters, ...extra]} : p
+  })
+
+// Gross amount of a member in a billing run: positive is paid by the member, negative is paid to the member.
+// The same items as on the documents and in the Excel export, metering point fees included.
+export const billTotal = (bill: ParticipantBillType) =>
+  bill.meteringPoints.reduce((sum, m) => sum + m.amount, bill.participantFee + (bill.meteringPointFeeSum ?? 0))
 
 export const filterMeters = (p: EegParticipant[], hideProducers: boolean, hideConsumers: boolean, showEmptyMembers: boolean = true) => {
   return p
@@ -73,5 +102,34 @@ export const filterSearchQuery = (entities: EegParticipant[], query: string | un
     }, [] as EegParticipant[]);
   } else {
     return entities;
+  }
+}
+
+// Uploads the documents chosen when a member is activated. A failed upload must not stop the
+// activation: resolves with a warning text for the user instead, undefined when all went well.
+export const uploadActivationDocuments = (upload: (files: File[]) => Promise<unknown>, files: File[]): Promise<string | undefined> => {
+  if (files.length === 0) {
+    return Promise.resolve(undefined)
+  }
+  return upload(files).then(
+    () => undefined,
+    (e) => `Nicht hochgeladen: ${e instanceof Error ? e.message : String(e)}. Die Dokumente können später im Bereich Verträge hochgeladen werden.`)
+}
+
+// A download with a busy overlay (no second click while it runs) and an error toast with the reason (261024-ca14).
+export const downloadWithFeedback = async (
+  download: () => Promise<unknown>,
+  busy: {show: (message: string) => Promise<unknown>, hide: () => Promise<unknown>},
+  failed: (message: string) => void,
+  what: string,
+) => {
+  await busy.show(`${what} wird erstellt ...`)
+  try {
+    await download()
+    await busy.hide()
+  } catch (e) {
+    await busy.hide()
+    const reason = e instanceof Error && e.message ? ` (${e.message})` : ""
+    failed(`Die ${what} konnte nicht erstellt werden.${reason}`)
   }
 }

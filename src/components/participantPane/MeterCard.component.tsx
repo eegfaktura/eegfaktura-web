@@ -4,6 +4,7 @@ import {eegExclamation, eegPlug, eegSolar} from "../../eegIcons";
 import {EegParticipant} from "../../models/members.model";
 import {Metering} from "../../models/meteringpoint.model";
 import cn from "classnames"
+import moment from "moment";
 
 import "./Member.component.css";
 import {useAppSelector} from "../../store";
@@ -61,9 +62,13 @@ const MeterCardComponent: FC<MeterCardComponentProps> = ({participant, meter, hi
   const isPending = () => participant.status === 'PENDING';
   const isGenerator = (m: Metering) => m.direction === 'GENERATION';
   const isMeterPending = () => isPending() || meter.processState === 'NEW' || meter.processState === 'PENDING';
-  const isMeterRejected = () => meter.processState === "REVOKED" || meter.processState === "REJECTED"
+  const isMeterRejected = () => meter.processState === "REVOKED" || meter.processState === "REJECTED" || meter.processState === "INVALID"
   const isMeterActive = () => meter.processState === "ACTIVE" || meter.processState === "INACTIVE"
   const isMeterInactive = () => meter.processState === "INACTIVE"
+  // true once the last day of participation (inactiveSince, inclusive, local day) is over; a deregistration
+  // confirmed with an end date still ahead keeps the normal colour
+  const hasLeft = () => !!meter.participantState?.inactiveSince &&
+    moment(meter.participantState.inactiveSince).endOf('day').isBefore(moment())
 
   const meterValue = () => {
     if (report && !isNaN(report.allocated)) {
@@ -110,7 +115,8 @@ const MeterCardComponent: FC<MeterCardComponentProps> = ({participant, meter, hi
       <IonGrid fixed={true} style={{paddingTop: "12px"}}>
         <IonRow style={meterColorStyle()}>
           <IonCol size={"1"}>
-            <IonIcon icon={isMeterRejected() || isMeterInactive() ? eegExclamation : isGenerator(meter) ? eegSolar : eegPlug} size="small"></IonIcon>
+            <IonIcon icon={isMeterRejected() || isMeterInactive() ? eegExclamation : isGenerator(meter) ? eegSolar : eegPlug} size="small"
+                     style={isMeterInactive() && hasLeft() ? {color: "#dc1e1e"} : undefined}></IonIcon>
           </IonCol>
           <IonCol size={isMeterPending() ? "11" : "7"}>
             {/*<IonLabel style={{textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap"}}>{participant.participant.meters[0].meteringPoint}</IonLabel>*/}

@@ -5,7 +5,8 @@
   "grid-operator": {
     "header": "Netzbetreiber",
     "id": "Netzbetreiber-ID",
-    "name": "Netzbetreiber-Name"
+    "name": "Netzbetreiber-Name",
+    "derived_hint": "Wird beim Speichern aus der Zählpunktnummer ermittelt."
   },
   "participant": "Mitglied",
   "participant-nr": "Mitglieds-Nr",
@@ -38,6 +39,25 @@
   "centPerKWh_card": "Cent pro kWh",
   "freeKWh": "Kostenlose Energie in kWh (je Abrechnungsintervall)",
   "freeKWh_card": "Inklusive kWh",
+  "zvt": {
+    "simple": "Einfach",
+    "timeBased": "Zeitbasiert",
+    "basePrice": "Basispreis in ct/kWh (netto)",
+    "basePrice_card": "Basispreis",
+    "window_legend": "Zeitraum {{n}}",
+    "window1_active": "Zeitraum 1 aktiv",
+    "window2_active": "Zeitraum 2 aktiv",
+    "windowName": "Tarifname Zeitraum {{n}}",
+    "windowFrom": "Von",
+    "windowTo": "Bis",
+    "windowPrice": "Preis Zeitraum {{n}} in ct/kWh (netto)",
+    "warn_time_missing": "Von und Bis sind erforderlich",
+    "warn_raster": "Nur 15-Minuten-Raster (00/15/30/45)",
+    "warn_equal": "Von und Bis dürfen nicht gleich sein",
+    "warn_overlap": "Die beiden Zeiträume dürfen sich nicht überschneiden",
+    "warn_price_missing": "Preis ist erforderlich",
+    "warn_no_active_window": "Bei einem zeitbasierten Tarif muss mindestens ein Zeitraum aktiv sein (Häkchen „Zeitraum aktiv“) und Von und Bis haben. Sonst kann der Tarif nicht gespeichert werden."
+  },
   "useMeteringPointFee": "Zählpunktgebühr einheben?",
   "meteringPointFee": "Zählpunktgebühr in €",
   "meteringPointVat": "USt. für Zählpunktgebühr in %",
@@ -80,7 +100,10 @@
     "sepaDirectDebit": "Einzugsart",
     "sepaDebitOption_none": "Kein SEPA",
     "sepaDebitOption_b2b": "B2B",
-    "sepaDebitOption_core": "CORE"
+    "sepaDebitOption_core": "CORE",
+    "mandate-hint": "Für CORE und B2B muss ein unterschriebenes SEPA-Lastschriftmandat vorliegen. Ohne Mandat „Kein SEPA“ wählen.",
+    "debit-type-hint": "Keine Einzugsart gewählt: Das Mitglied wird nicht per Lastschrift eingezogen.",
+    "debit-type-hint-mandate": "Es ist eine Mandatsreferenz ({{ref}}) gespeichert: Liegt ein unterschriebenes Mandat vor, CORE oder B2B wählen."
   },
   "common-info": {
     "header": "Allgemeines",
@@ -112,10 +135,9 @@
     "account-owner_missing": "Kontoinhaber fehlt!",
     "account-name_missing": "Bankverbindung fehlt!",
     "account-mandate_reference_missing": "Mandatsreferenz fehlt!",
-    "gridoperator-id_missing": "Netzbetreiber-ID fehlt!",
-    "gridoperator-id_length": "Netzbetreiber-ID besteht aus 8 Zeichen",
-    "gridoperator-name_missing": "Netzbetreiber-Name fehlt!",
-    "partition-factor_missing": "Teilnehmerfaktor fehlt!",
+    "account-mandate_date_missing": "Mandatsdatum fehlt!",
+    "account-debit_type_missing": "Einzugsart fehlt!",
+    "partition-factor_missing": "Teilnahmefaktor fehlt!",
     "allocation-factor_missing": "Verteilungsfaktor fehlt!",
     "metering_missing_msg": "Zählpunktnummer fehlt!",
     "fee_missing": "Gebühr fehlt!",
@@ -141,9 +163,9 @@
       "selectEntire": "Zählpunkte für die gesamte EEG nachfordern"
     },
     "partFact": {
-      "label": "Teilnehmerfaktor in %",
-      "title": "Teilnehmerfaktor ändern",
-      "desc": "Mit diesem Prozess kann der Teilnahmefaktor von aktiven Zählpunkten geändert werden. Zulässig ist eine Änderung pro Tag und je Energiegemeinschaft und Zählpunkt. Diese Änderung liegt in der Verantwortung der Energiegemeinschaft."
+      "label": "Teilnahmefaktor in %",
+      "title": "Teilnahmefaktor ändern",
+      "desc": "Mit diesem Prozess kann der Teilnahmefaktor von aktiven Zählpunkten geändert werden. Zulässig ist eine Änderung pro Tag und je Energiegemeinschaft und Zählpunkt, zwischen 09:00 und 17:00 Uhr; sie gilt ab dem nächsten Tag. Diese Änderung liegt in der Verantwortung der Energiegemeinschaft."
     },
     "allocationFactor": {
       "label": "Verteilungsfaktor in %",

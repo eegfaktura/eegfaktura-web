@@ -1,7 +1,5 @@
 {
   "name": "test-app",
-  "integrations": {
-    "capacitor": {}
-  },
+  "integrations": {},
   "type": "react-vite"
 }

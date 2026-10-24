@@ -1,4 +1,4 @@
-import {createContext, FC, ReactNode, useCallback, useContext, useEffect, useState} from "react";
+import {createContext, FC, ReactNode, useCallback, useContext, useEffect, useMemo, useState} from "react";
 import {EegParticipant} from "../../models/members.model";
 import {useAppDispatch, useAppSelector} from "../index";
 import {
@@ -12,6 +12,8 @@ import {isEEGFetching, useTenant} from "./Eeg.provider";
 import {filterActiveParticipantAndMeter} from "../../util/FilterHelper.unit";
 import {getPeriodDates} from "../../util/FilterHelper";
 import participants from "../../pages/Participants";
+import {ratesMapSelector} from "../rate";
+import {zvtTimeWindows, zvtWindowsKey} from "../../util/Helper.util";
 
 
 export interface ParicipantState {
@@ -34,6 +36,8 @@ export interface ParicipantState {
   setShowAddMeterPane: (show: boolean) => void
   checkedParticipant: Record<string, boolean>
   setCheckedParticipant: (participantId: string, checked: boolean) => void
+  // loads the energy report of the shown period again, e.g. after a failed load (261024-ca26)
+  reloadEnergyReport: () => void
 }
 
 const initialState: ParicipantState = {
@@ -53,7 +57,8 @@ const initialState: ParicipantState = {
   showAddMeterPane: false,
   setShowAddMeterPane: (show: boolean) => {},
   checkedParticipant: {},
-  setCheckedParticipant: (participantId: string, checked: boolean) => {}
+  setCheckedParticipant: (participantId: string, checked: boolean) => {},
+  reloadEnergyReport: () => {},
 }
 
 export const ParticipantContext = createContext(initialState)
@@ -65,6 +70,11 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
   const activePeriod = useAppSelector(selectedPeriodSelector)
   // const participants = useAppSelector(activeParticipantsSelector1)
   const allParticipants = useAppSelector(allParticipantsSelector)
+  const tariffById = useAppSelector(ratesMapSelector)
+  // ZVT: fetch the energy report again when time windows change (tariff switched to time-based, windows edited,
+  // tariffs loaded after the participants); otherwise billing gets time windows without buckets.
+  const zvtKey = useMemo(() => zvtWindowsKey(tariffById,
+    (allParticipants || []).flatMap(p => p.meters.map(m => m.tariff_id).filter(id => !!id))), [tariffById, allParticipants])
 
   const isFechting = isEEGFetching()
 
@@ -73,7 +83,12 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
   const [enableBilling, setEnableBilling] = useState<boolean>(false)
   const [showAddMeterPane, setShowAddMeterPane] = useState<boolean>(false)
   const [checkedParticipants, setCheckedParticipants] = useState<Record<string, boolean>>({})
-  const [activeParticipants, setActiveParticipants] = useState<EegParticipant[]>([])
+  // the members active in the selected period, derived from the store (empty after a community switch, 261024-ca13)
+  const activeParticipants = useMemo(() => {
+    if (!activePeriod || !allParticipants) return []
+    const [start, end] = getPeriodDates(activePeriod)
+    return filterActiveParticipantAndMeter(allParticipants, start, end)
+  }, [allParticipants, activePeriod])
 
 // Helper function for deep equality check (especially for objects/arrays)
 // This is a common utility you might have or need to implement
@@ -185,26 +200,20 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
     setEnableBilling(state);
   }
 
+  // another community (261024-ca13): nothing of the previous one stays checked or open
   useEffect(() => {
-    if (activePeriod && allParticipants) {
-      const [start, end] = getPeriodDates(activePeriod)
-      const _aps = filterActiveParticipantAndMeter(allParticipants, start, end)
-      // const identical = objectsSimilar(activeParticipants, _aps, "id", ["participantSince"])
+    setCheckedParticipants({})
+    setDetailOpen(false)
+    setShowAddMeterPane(false)
+  }, [tenant.tenant?.toUpperCase()]);
 
-      setActiveParticipants(prevState => _aps.map(s => {
-        // I have no glue why this code is included
-        // const e = prevState.find(n => n.id === s.id)
-        // if (e) {
-        //   return e
-        // }
-        return s
-      }))
-
-      // if (!identical) {
-        fetchEnergyReport(_aps)
-      // }
+  useEffect(() => {
+    // not while the application (re)loads EEG, tariffs and members (tenant switch, refresh): the store can then
+    // mix the old members with the new tenant; the load ends by setting the period, which fetches once
+    if (activePeriod && allParticipants && !isFechting) {
+      fetchEnergyReport(activeParticipants)
     }
-  }, [allParticipants, activePeriod]);
+  }, [activeParticipants, zvtKey, isFechting]);
 
   // useEffect(() => {
   //   fetchEnergyReport(activeParticipants)
@@ -225,6 +234,7 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
     checkedParticipant: checkedParticipants,
     showAddMeterPane: showAddMeterPane,
     setShowAddMeterPane: setShowAddMeterPane,
+    reloadEnergyReport: () => fetchEnergyReport(activeParticipants),
     setCheckedParticipant: (participantId: string, checked: boolean) => { setCheckedParticipants((s) => {
       const newS = {...s}
       if (!checked) {
@@ -239,13 +249,17 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
 
   const fetchEnergyReport = (aps: EegParticipant[]) => {
     if (tenant && activePeriod && aps && aps.length > 0) {
+      // ZVT: je Zaehlpunkt mit zeitbasiertem Tarif die generischen
+      // Zeitfenster mitschicken - energystore liefert dann buckets zurueck.
       const participantsReport = aps.map(p => {
         return {
           participantId: p.id,
           meters: p.meters.filter(m => !!m.participantState).map(m => {
+            const timeWindows = zvtTimeWindows(tariffById[m.tariff_id])
             return {meterId: m.meteringPoint, meterDir: m.direction,
               from: new Date(m.participantState.activeSince).getTime(),
-              until: new Date(m.participantState.inactiveSince).getTime()} as MeterReport})
+              until: new Date(m.participantState.inactiveSince).getTime(),
+              ...(timeWindows ? {timeWindows} : {})} as MeterReport})
         } as ParticipantReport
       })
       dispatch(fetchEnergyReportV2({tenant: tenant, year: activePeriod.year, segment: activePeriod.segment, type: activePeriod.type, participants: participantsReport.filter(p => p.meters.length > 0)}))

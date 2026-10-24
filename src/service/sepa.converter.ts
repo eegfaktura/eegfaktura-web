@@ -4,6 +4,10 @@ import {Eeg} from "../models/eeg.model";
 import moment from "moment";
 import {SelectedPeriod} from "../models/energy.model";
 import {Api} from "./index";
+import {debitInstrument} from "../util/MandateReference.util";
+import {toLocalISODate} from "../util/Helper.util";
+
+export {debitInstrument}
 
 interface SepaModelItem {
   Amount: number,
@@ -13,6 +17,7 @@ interface SepaModelItem {
   Name: string,
   EndToEndId: string,
   InvoiceIds: string[],
+  DebitType?: string,
 }
 
 interface SepaModel {
@@ -35,13 +40,57 @@ const replaceUmlaute = (str: string)=>  {
     '\u00df': 'ss',
   }
   return str
-    .replace(/[\u00dc|\u00c4|\u00d6][a-z]/g, (a: string) => {
+    .replace(/[\u00dc\u00c4\u00d6][a-z]/g, (a: string) => {
       const big = umlautMap[a.slice(0, 1)];
       return big.charAt(0) + big.charAt(1).toLowerCase() + a.slice(1);
     })
-    .replace(new RegExp('['+Object.keys(umlautMap).join('|')+']',"g"),
+    .replace(new RegExp('['+Object.keys(umlautMap).join('')+']',"g"),
       (a) => umlautMap[a]
     );
+}
+
+// Zeichen, die Banken in SEPA-Texten (Namen, Verwendungszweck) annehmen: EPC-Basiszeichensatz plus
+// Umlaute/ß (in AT/DE akzeptiert, bisher ohne Probleme exportiert). Andere Akzente werden abgelegt
+// (René -> Rene), & wird zu +, alles Uebrige wird zu einem Leerzeichen.
+const SEPA_TRANSLIT: { [key: string]: string } = {
+  'ł': 'l', 'Ł': 'L', 'ø': 'o', 'Ø': 'O', 'đ': 'd', 'Đ': 'D', 'æ': 'ae', 'Æ': 'AE', 'œ': 'oe', 'Œ': 'OE',
+}
+
+export const toSepaText = (str: string | undefined | null, maxLength = 70): string =>
+  Array.from((str ?? '').replace(/&/g, '+'))
+    .map(c => (c.charCodeAt(0) < 128 || /[ÄÖÜäöüß]/.test(c))
+      ? c
+      : (SEPA_TRANSLIT[c] ?? c.normalize('NFD').replace(/[\u0300-\u036f]/g, '')))
+    .join('')
+    .replace(/[^A-Za-z0-9ÄÖÜäöüß/\-?:().,'+ ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxLength)
+    .trim()
+
+// Einzugsart je Mitglied (platform#143): "Kein SEPA" (NONE) zahlt ohne Lastschrift. Eine leere Einzugsart
+// wird ebenfalls nicht eingezogen (unset), weil niemand sie bewusst gewaehlt hat; diese Mitglieder werden
+// im Dialog aufgelistet. CORE und B2B kommen in getrennte Lastschrift-Dateien, weil eine Firmenlastschrift
+// mit B2B-Mandat nicht als CORE eingereicht werden darf. Gutschriften (Ueberweisung) sind davon nicht
+// betroffen.
+export const splitDebitByType = (debit: SepaModelItem[]) => ({
+  core: debit.filter(item => debitInstrument(item.DebitType) === 'CORE'),
+  b2b: debit.filter(item => debitInstrument(item.DebitType) === 'B2B'),
+  skipped: debit.filter(item => debitInstrument(item.DebitType) === 'NONE'),
+  unset: debit.filter(item => debitInstrument(item.DebitType) === 'UNSET'),
+})
+
+// Zeilen ohne IBAN (z.B. Mitglieder ohne Bankkonto, die auf Rechnung zahlen) koennen weder in die
+// Lastschrift noch in die Ueberweisung: Sie werden aus beiden Dateien genommen und im Dialog zur
+// manuellen Abwicklung aufgelistet. Angezeigt wird wie bei "Kein SEPA" der Kontoeigner, ohne Bankkonto
+// ersatzweise der Empfänger-Name.
+export const splitRowsByIban = (records: any[]) => {
+  const hasIban = (item: any) => String(item['Empfänger Konto IBAN'] ?? '').replace(/\s/g, '').length > 0
+  const name = (item: any) => item['Empfänger Kontoeigner'] || item['Empfänger Name'] || item['Nummer']
+  return {
+    withIban: records.filter(hasIban),
+    withoutIban: Array.from(new Set(records.filter(item => !hasIban(item)).map(name))) as string[],
+  }
 }
 
 const buildFileName = (fileName: string, tenant: string, activePeriod: SelectedPeriod) => {
@@ -61,13 +110,14 @@ const summerizeSepaModel = async (rows: Record<string, Array<any>>) => {
             Name: item['Empfänger Kontoeigner'],
             EndToEndId: item['Abrechnung'],
             InvoiceIds: [],
+            DebitType: item['Empfänger Einzugsart'],
           } as SepaModelItem
         }
 
         if (item['Dokumenttyp'] === 'Rechnung') {
           result.Amount += Number(item['Rechnungsbetrag Brutto'])
         } else {
-          result.Amount -= Number(item['Rechnungsbetrag Netto'])
+          result.Amount -= Number(item['Rechnungsbetrag Brutto'])
         }
         result.InvoiceIds.push(item['Nummer'])
 
@@ -100,6 +150,7 @@ const createSepaModel = async (rows: Record<string, Array<any>>) => {
         Name: item['Empfänger Kontoeigner'],
         EndToEndId: item['Abrechnung'],
         InvoiceIds: [item['Nummer']],
+        DebitType: item['Empfänger Einzugsart'],
       } as SepaModelItem
 
       if (item['Dokumenttyp'] === 'Rechnung') {
@@ -115,28 +166,32 @@ const createSepaModel = async (rows: Record<string, Array<any>>) => {
 export const ConvertExcelToXML = async (tenant: string, billingRunId: string,
                                         eeg: Eeg, collectionDate: Date,
                                         activePeriod: SelectedPeriod,
-                                        batch: boolean, summerize: boolean) => {
+                                        batch: boolean, summerize: boolean,
+                                        transferDate: Date = collectionDate) => {
 
   if (!eeg.accountInfo.bic) {
     throw new Error("E_BIC_MISSING")
   }
 
-  if (eeg.accountInfo.iban.length === 0) {
+  if (!eeg.accountInfo.iban) {
     throw new Error("E_IBAN_MISSING")
   }
 
-  if (!eeg.accountInfo.creditorId) {
-    throw new Error("E_NO_CREDITOR_ID");
-  }
-
   try {
+    let withoutIban: string[] = []
     const invoiceFile = await Api.eegService.exportBillingExcelForSepa(tenant, billingRunId)
       .then((response) => response.arrayBuffer())
       .then(buffer => XLSX.read(buffer, {type: 'binary', cellText: false, cellDates: true}))
       .then(workbook => workbook.Sheets[workbook.SheetNames[0]])
       .then(sheet => XLSX.utils.sheet_to_json(sheet, {raw: false, dateNF: 'yyyy-mm-dd'}) as any[])
+      .then(records => {
+        const split = splitRowsByIban(records)
+        withoutIban = split.withoutIban
+        return split.withIban
+      })
       .then(records => records.reduce((result, item) => {
-        (result[item['Empfänger Konto IBAN']] = result[item['Empfänger Konto IBAN']] || []).push(item);
+        const key = `${item['Empfänger Konto IBAN']}|${debitInstrument(item['Empfänger Einzugsart'])}|${item['Empfänger Mandatsreferenz'] ?? ''}`;
+        (result[key] = result[key] || []).push(item);
         return result;
       }, {} as Record<string, Array<any>>))
       .then((rows: Record<string, Array<any>>) => (summerize ? summerizeSepaModel(rows) : createSepaModel(rows)))
@@ -177,9 +232,26 @@ export const ConvertExcelToXML = async (tenant: string, billingRunId: string,
       //   return result;
       // }, {Transfer: [], Debit: []} as SepaModel))
 
+    const {core, b2b, skipped, unset} = splitDebitByType(invoiceFile.Debit)
+    // Ohne Gläubiger-ID gibt es keine Lastschrift-Datei, die Gutschrift-Datei schon (platform#143).
+    // Eine Datei ohne Buchung entfällt: pain.008/pain.001 verlangen mindestens eine Transaktion.
+    const creditorId = !!eeg.accountInfo.creditorId
+    const files: {content: string, name: string}[] = []
+    if (creditorId && core.length > 0) {
+      files.push({content: await createSepaDirectDebit(core, eeg, activePeriod, collectionDate, batch, 'CORE'), name: buildFileName("SEPA_Direct_Debit", tenant, activePeriod)})
+    }
+    if (creditorId && b2b.length > 0) {
+      files.push({content: await createSepaDirectDebit(b2b, eeg, activePeriod, collectionDate, batch, 'B2B'), name: buildFileName("SEPA_Direct_Debit_B2B", tenant, activePeriod)})
+    }
+    if (invoiceFile.Transfer.length > 0) {
+      files.push({content: await createSepaCreditTransfer(invoiceFile.Transfer, eeg, activePeriod, transferDate, batch), name: buildFileName("SEPA_Credit_Transfer", tenant, activePeriod)})
+    }
     return {
-      debit: {content: await createSepaDirectDebit(invoiceFile.Debit, eeg, activePeriod, collectionDate, batch), name: buildFileName("SEPA_Direct_Debit", tenant, activePeriod)},
-      transfer: {content: await createSepaCreditTransfer(invoiceFile.Transfer, eeg, activePeriod, collectionDate, batch), name: buildFileName("SEPA_Credit_Transfer", tenant, activePeriod)}
+      files,
+      skippedDebit: skipped.map(item => item.Name),
+      unsetDebit: Array.from(new Set(unset.map(item => item.Name).filter(n => !!n))),
+      withoutIban,
+      missingCreditorId: !creditorId && core.length + b2b.length > 0,
     }
   } catch (error) {
     console.log(error);
@@ -187,7 +259,9 @@ export const ConvertExcelToXML = async (tenant: string, billingRunId: string,
   }
 }
 
-const createMsgId = (num: number) => `MSG-${moment().format('YYYYMMDD')}-${zeroPad(num, 5)}`
+// unique per export (second precision, UTC: no repeated hour when the clocks go back) and per file kind,
+// within the first 16 characters: banks refuse a reused MsgId
+const createMsgId = (kind: PmtInfKind) => `M${kind}${moment.utc().format('YYYYMMDDHHmmss')}`
 const zeroPad = (num: number, places: number) => String(num).padStart(places, '0')
 
 const buildEndToEndId = (endToEndId: string, collectionDate: Date, activePeriod: SelectedPeriod) => {
@@ -195,28 +269,76 @@ const buildEndToEndId = (endToEndId: string, collectionDate: Date, activePeriod:
 }
 
 
-const getIdFromSettlementInterval = (settlementInterval: 'MONTHLY' | "ANNUAL" | "BIANNUAL" | "QUARTER") => {
-  switch (settlementInterval) {
-    case 'ANNUAL': return 'Y'
-    case 'BIANNUAL': return 'HY'
-    case 'QUARTER': return 'QY'
-    case 'MONTHLY': return 'MY'
+// G = credit transfer (Gutschriften), C = direct debit CORE, B = direct debit B2B
+export type PmtInfKind = 'G' | 'C' | 'B'
+
+// Payment information id, at most 35 characters. Austrian banks take its first 16 characters as the
+// "Bestandskontrollnummer" and refuse a file whose first 16 characters were used before. These are
+// file kind, year, period type and segment of the billed period, then the name: every file kind of every
+// period is unique, and a file uploaded a second time (same kind and period) is refused by a bank that
+// checks this, which protects the members from being debited twice. Before, the id started with the name and year
+// ("EEGSTRASSH-2026-…"), and the bank took only the first file of a year.
+export const createPmtInfId = (eeg: Eeg, period: SelectedPeriod, kind: PmtInfKind) => {
+  // only A-Z and 0-9 from the name (accents dropped), so no character outside the SEPA set gets in
+  const nameId = replaceUmlaute((eeg.name ?? '').normalize('NFC')).normalize('NFD').toUpperCase()
+    .replace(/[^A-Z0-9]/g, '').slice(0, 10)
+
+  // year of the billed period: an annual run in January belongs to the previous year
+  const id = `${kind}${period.year}${period.type}${zeroPad(period.segment, 3)}`
+  return nameId ? `${id}-${nameId}` : id
+}
+
+// Remittance text (Ustrd, max 140 characters). With "Mitglieder zusammenfassen" one booking can carry
+// many documents; the full list "Rechnung202600135 / Rechnung202600136 / …" then exceeded 140 characters
+// and was cut off silently (support ticket 6610818).
+// - If the full list fits, it is used unchanged.
+// - Otherwise numbers of the same document type and length are written once with their common prefix
+//   (at least three digits stay): "Rechnung202600135/136/138 / Gutschrift202600070/082". A number of
+//   another length is written in full with its type, so a short form is never ambiguous.
+// - If that still does not fit, the longest groups give up their last numbers first (every document
+//   type keeps at least its first one) and the rest is counted: "… (+3 weitere)".
+// Only a single document number longer than the limit is cut.
+export const compactReference = (invoiceIds: string[], maxLength = 140): string => {
+  const ids = Array.from(new Set(invoiceIds.map(i => String(i ?? '').trim()).filter(i => i !== '')))
+  const plain = toSepaText(ids.join(' / '), 1000)
+  if (plain.length <= maxLength) return plain
+
+  // groups in order of first appearance: one per document type and number length
+  const groups = new Map<string, { type: string, numbers: string[] }>()
+  const other: string[] = []
+  for (const id of ids) {
+    const m = id.match(/^(\D*)(\d+)$/)
+    if (!m) { other.push(id); continue }
+    const key = `${m[1]}#${m[2].length}`
+    if (!groups.has(key)) groups.set(key, {type: m[1], numbers: []})
+    groups.get(key)!.numbers.push(m[2])
   }
+  const parts = [...groups.values()].map(g => {
+    let common = 0
+    while (common < g.numbers[0].length - 1 && g.numbers.every(n => n[common] === g.numbers[0][common])) common++
+    const cut = Math.max(0, Math.min(common, g.numbers[0].length - 3))
+    return g.numbers.map((n, i) => i === 0 ? `${g.type}${n}` : n.slice(cut))
+  })
+  other.forEach(o => parts.push([o]))
+
+  const render = (list: string[][], dropped: number) => toSepaText(
+    list.map(tokens => tokens.join('/')).join(' / ') + (dropped > 0 ? ` (+${dropped} weitere)` : ''), 1000)
+
+  let dropped = 0
+  let text = render(parts, 0)
+  while (text.length > maxLength) {
+    const longest = parts.reduce((best, tokens, i) => tokens.length > parts[best].length ? i : best, 0)
+    if (parts[longest].length <= 1) break
+    parts[longest].pop()
+    dropped++
+    text = render(parts, dropped)
+  }
+  return text.length <= maxLength ? text : toSepaText(text, maxLength)
 }
 
-const createPmtInfId = (eeg: Eeg, period: SelectedPeriod) => {
-  const year = new Date().getFullYear()
-  const paymentInterval = getIdFromSettlementInterval(eeg.settlementInterval).toString() + zeroPad(period.segment, 3);
-  const nameId = replaceUmlaute(eeg.name).replaceAll(' ', '').toUpperCase().slice(0,10)
+const createRef = (item: SepaModelItem): string => compactReference(item.InvoiceIds, 140)
 
-  return `${nameId}-${year}-${paymentInterval}`
-}
-
-const createRef = (item: SepaModelItem): string => {
-  return `${item.InvoiceIds.join(' / ')}`
-}
-
-const createSepaCreditTransfer = async (model: SepaModelItem[], eeg: Eeg, period: SelectedPeriod, collectionDate: Date, batch: boolean) => {
+export const createSepaCreditTransfer = async (model: SepaModelItem[], eeg: Eeg, period: SelectedPeriod, collectionDate: Date, batch: boolean) => {
 
   const sum = model.reduce((sum, r) => sum + r.Amount, 0)
 
@@ -224,16 +346,16 @@ const createSepaCreditTransfer = async (model: SepaModelItem[], eeg: Eeg, period
     .ele('Document', { xmlns: 'urn:iso:std:iso:20022:tech:xsd:pain.001.001.03' })
       .ele('CstmrCdtTrfInitn')
         .ele('GrpHdr')
-          .ele('MsgId').txt(createMsgId(1)).up()
+          .ele('MsgId').txt(createMsgId('G')).up()
           .ele('CreDtTm').txt(new Date().toISOString()).up()
           .ele('NbOfTxs').txt(model.length.toString()).up()
           .ele('CtrlSum').txt(sum.toFixed(2)).up()
           .ele('InitgPty')
-            .ele('Nm').txt(eeg.name).up()
+            .ele('Nm').txt(toSepaText(eeg.name)).up()
           .up()
         .up()
         .ele('PmtInf')
-          .ele('PmtInfId').txt(createPmtInfId(eeg, period)).up()
+          .ele('PmtInfId').txt(createPmtInfId(eeg, period, 'G')).up()
           .ele('PmtMtd').txt('TRF').up()
           .ele('BtchBookg').txt((batch ? "true" : "false")).up()
           .ele('NbOfTxs').txt(model.length.toString()).up()
@@ -243,9 +365,9 @@ const createSepaCreditTransfer = async (model: SepaModelItem[], eeg: Eeg, period
               .ele('Cd').txt('SEPA').up()
             .up()
           .up()
-          .ele('ReqdExctnDt').txt(collectionDate.toISOString().slice(0, 10)).up()
+          .ele('ReqdExctnDt').txt(toLocalISODate(collectionDate)).up()
           .ele('Dbtr')
-            .ele('Nm').txt(eeg.accountInfo.owner).up()
+            .ele('Nm').txt(toSepaText(eeg.accountInfo.owner)).up()
           .up()
           .ele('DbtrAcct')
             .ele('Id')
@@ -271,7 +393,7 @@ const createSepaCreditTransfer = async (model: SepaModelItem[], eeg: Eeg, period
           .ele('InstdAmt', { Ccy: 'EUR' }).txt((r.Amount).toFixed(2)).up()
         .up()
       .ele('Cdtr')
-        .ele('Nm').txt(r.Name).up()
+        .ele('Nm').txt(toSepaText(r.Name)).up()
       .up()
       .ele('CdtrAcct')
         .ele('Id')
@@ -296,7 +418,8 @@ const createSepaCreditTransfer = async (model: SepaModelItem[], eeg: Eeg, period
   return doc.end({ prettyPrint: true });
 }
 
-const createSepaDirectDebit = async (model: SepaModelItem[], eeg: Eeg, period: SelectedPeriod, collectionDate: Date, batch: boolean) => {
+export const createSepaDirectDebit = async (model: SepaModelItem[], eeg: Eeg, period: SelectedPeriod, collectionDate: Date, batch: boolean,
+                                     instrument: 'CORE' | 'B2B') => {
 
   const sum = model.reduce((sum, r) => sum + r.Amount, 0)
 
@@ -304,29 +427,29 @@ const createSepaDirectDebit = async (model: SepaModelItem[], eeg: Eeg, period: S
     .ele('Document', { xmlns: 'urn:iso:std:iso:20022:tech:xsd:pain.008.001.02' })
       .ele('CstmrDrctDbtInitn')
         .ele('GrpHdr')
-          .ele('MsgId').txt(createMsgId(2)).up()
+          .ele('MsgId').txt(createMsgId(instrument === 'B2B' ? 'B' : 'C')).up()
           .ele('CreDtTm').txt(new Date().toISOString()).up()
           .ele('NbOfTxs').txt(model.length.toString()).up()
           .ele('CtrlSum').txt(sum.toFixed(2)).up()
           .ele('InitgPty')
-            .ele('Nm').txt(eeg.name).up()
+            .ele('Nm').txt(toSepaText(eeg.name)).up()
           .up()
         .up()
         .ele('PmtInf')
-          .ele('PmtInfId').txt(createPmtInfId(eeg, period)).up()
+          .ele('PmtInfId').txt(createPmtInfId(eeg, period, instrument === 'B2B' ? 'B' : 'C')).up()
           .ele('PmtMtd').txt('DD').up()
           .ele('BtchBookg').txt((batch ? "true" : "false")).up()
           .ele('NbOfTxs').txt(model.length.toString()).up()
           .ele('CtrlSum').txt(sum.toFixed(2)).up()
           .ele('PmtTpInf')
             .ele('LclInstrm')
-              .ele('Cd').txt('CORE').up()
+              .ele('Cd').txt(instrument).up()
             .up()
             .ele('SeqTp').txt('RCUR').up()
           .up()
-          .ele('ReqdColltnDt').txt(collectionDate.toISOString().slice(0, 10)).up()
+          .ele('ReqdColltnDt').txt(toLocalISODate(collectionDate)).up()
           .ele('Cdtr')
-            .ele('Nm').txt(eeg.accountInfo.owner).up()
+            .ele('Nm').txt(toSepaText(eeg.accountInfo.owner)).up()
           .up()
           .ele('CdtrAcct')
             .ele('Id')
@@ -372,7 +495,7 @@ const createSepaDirectDebit = async (model: SepaModelItem[], eeg: Eeg, period: S
           .up()
         .up()
         .ele('Dbtr')
-          .ele('Nm').txt(r.Name).up()
+          .ele('Nm').txt(toSepaText(r.Name)).up()
         .up()
         .ele('DbtrAcct')
           .ele('Id')

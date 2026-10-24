@@ -12,10 +12,12 @@ import ProcessHeaderComponent from "./ProcessHeader.component";
 import ProcessContentComponent from "./ProcessContent.component";
 import {BasicSelectComponent, SelectOptions} from "../form/BasicSelect.component";
 import {Api} from "../../service";
-import {meteringDisplayName} from "../../util/FilterHelper";
+import {meteringDisplayName, selectedMeters} from "../../util/FilterHelper";
 import {useLocale} from "../../store/hook/useLocale";
 import {JoinStrings} from "../../util/Helper.util";
 import moment from "moment";
+import {useProcessFeedback} from "./useProcessFeedback";
+import {useConfirm} from "../core/useConfirm";
 
 interface ProcessValues {
   communityId: string | undefined
@@ -39,6 +41,7 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
   }
 
   const {t} = useLocale("common")
+  const {sent, failed} = useProcessFeedback()
   const {t: errorT} = useLocale("error")
 
   const {handleSubmit, reset,
@@ -50,6 +53,8 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
   const [meteringPoints, participantId] = watch(['meteringPoints', 'participantId'])
 
   const [toaster] = useIonToast();
+  const confirm = useConfirm()
+  const [sending, setSending] = useState(false)  // the request runs after the dialog, outside isSubmitting
 
   const infoToast = (message: string) => {
     toaster({
@@ -83,16 +88,26 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
   const onRequest = (data: ProcessValues) => {
     if (data.participantId && data.meteringPoints && consentEndDate) {
 
-      const meter = meters.filter((m) => data.meteringPoints?.find((s:string) => s === m.meteringPoint))
-      if (meter) {
+      const meter = selectedMeters(useableMeters, data.meteringPoints)
+      if (meter.length > 0) {  // empty: the selection does not belong to the chosen participant
         if (meter.filter(m => !(m.consentId && m.consentId.length > 0)).length === 0) {
-          Api.eegService.revokeMeteringPoint(
-            eeg.id.toUpperCase(), data.participantId,
-            meter.map(m => {return {meter: m.meteringPoint, direction: m.direction, consentId: m.consentId}}),
-            consentEndDate.getTime(), reason)
-            .finally(() => {
-              reset()
-              setConsentEndDate(null)
+          // revoking ends the data consent at the grid operator: ask first
+          const participantId = data.participantId, endDate = consentEndDate
+          confirm("Datenfreigabe aufheben",
+            `Soll die Datenfreigabe für ${meter.length === 1 ? "den Zählpunkt " + meter[0].meteringPoint : meter.length + " Zählpunkte"} beim Netzbetreiber aufgehoben werden?`,
+            "Aufheben", () => {
+              setSending(true)
+              Api.eegService.revokeMeteringPoint(
+                eeg.id.toUpperCase(), participantId,
+                meter.map(m => {return {meter: m.meteringPoint, direction: m.direction, consentId: m.consentId}}),
+                endDate.getTime(), reason)
+                .then(() => {
+                  sent()
+                  reset()
+                  setConsentEndDate(null)
+                })
+                .catch(failed)  // keep the input on failure
+                .finally(() => setSending(false))
             })
         } else {
           errorToast(errorT("process.revoke_consentIdEmpty"))
@@ -144,7 +159,7 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
               />
             </div>
             <IonItem lines="none" style={{zIndex: "0"}}>
-              <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={(!formState.isValid || !consentEndDate)}>
+              <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={(!formState.isValid || !consentEndDate || sending)}>
                 {t("process.submit")}
               </IonButton>
             </IonItem>

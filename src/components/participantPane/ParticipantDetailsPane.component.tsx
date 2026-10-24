@@ -40,11 +40,13 @@ import {ratesSelector} from "../../store/rate";
 import {meteringInterReportSelectorV2, selectedPeriodSelector} from "../../store/energy";
 import MeterChartComponent from "./MeterChart.component";
 import {Api} from "../../service";
+import {uploadActivationDocuments} from "./ParticipantPane.functions";
 import {useLocale} from "../../store/hook/useLocale";
 import {useAccessGroups, useTenant} from "../../store/hook/Eeg.provider";
 import {useMoveMeteringPointHook} from "../../store/hook/MoveMeteringPoint.hook";
 import moment from "moment";
 import {useDeleteParticipantMutation} from "../../store/participant/api";
+import {useConfirm} from "../core/useConfirm";
 
 type DynamicComponentKey = "memberForm" | "meterForm" | "documentForm" | "invoiceForm" | "participantDocumentForm"
 
@@ -106,6 +108,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
 
   const [toaster] = useIonToast();
   const [participantAlert] = useIonAlert();
+  const confirm = useConfirm()
 
   const isMeterNew = () => selectedMeter?.processState === 'NEW';
   const isMeterActive = () => selectedMeter?.processState === "ACTIVE" || selectedMeter?.processState === "INACTIVE"
@@ -127,25 +130,28 @@ const ParticipantDetailsPaneComponent: FC = () => {
 
   const onUpdateParticipantPartial = (participantId: string, value: Record<string, any>) => {
     console.log("Participant Update Participant Partial", value)
-    dispatcher(updateParticipantPartial({
+    return dispatcher(updateParticipantPartial({
       tenant: tenant!.tenant,
       participantId: participantId,
       value: {path: Object.keys(value)[0], value: Object.values(value)[0]}
     })).unwrap()
-      // .then(() => console.log("Participant Updated"))
-      .catch((e) => console.error("Error by updating participant: ", e))
+      .then(() => true)
+      .catch((e) => {
+        console.error("Error by updating participant: ", e)
+        return false
+      })
   }
 
   const dynamicComponent = (componentKey: DynamicComponentKey) => {
 
     switch (componentKey) {
       case "memberForm":
-        return selectedParticipant ? <MemberFormComponent participant={selectedParticipant} rates={rates} formId={""}
+        return selectedParticipant ? <MemberFormComponent key={selectedParticipant.id} participant={selectedParticipant} rates={rates} formId={""}
                                                           onSubmit={onUpdateParticipant}
                                                           onSubmitPartial={onUpdateParticipantPartial}
                                                           changeable={false}/> : <></>
       case "meterForm":
-        return selectedMeter ? <MeterFormComponent meteringPoint={selectedMeter}/> : <></>
+        return selectedMeter ? <MeterFormComponent key={selectedMeter.meteringPoint} meteringPoint={selectedMeter}/> : <></>
       case "invoiceForm":
         return selectedParticipant ?
           <InvoiceDocumentComponent tenant={tenant!.tenant} participant={selectedParticipant}/> : <></>
@@ -167,26 +173,19 @@ const ParticipantDetailsPaneComponent: FC = () => {
 
   function onWillDismiss(participant: EegParticipant, meters: Metering[], ev: CustomEvent<OverlayEventDetail<FormData>>) {
 
-    const uploadFiles = async (tenant: string, participantId: string, data?: FormData) => {
-      if (data) {
-        const files = data.getAll("docfiles").map(e => e as File)
-        if (files.length > 0) {
-          return Api.fileService.uploadContractDocuments(tenant, participantId, files)
-        }
-      }
-      return new Promise<any>((resolve) => resolve(true))
-    }
-
     if (ev.detail.role === 'confirm') {
-      uploadFiles(tenant!.tenant, participant.id, ev.detail.data)
-        .then(() => {
-          return participant
+      const files = ev.detail.data ? ev.detail.data.getAll("docfiles").map(e => e as File) : []
+      uploadActivationDocuments(f => Api.fileService.uploadContractDocuments(tenant!.tenant, participant.id, f), files)
+        .then((uploadWarning) => {
+          if (uploadWarning) {
+            toaster({message: uploadWarning, duration: 8000, position: 'top', color: "warning"})
+          }
+          return dispatcher(confirmParticipant(
+            {tenant: tenant!.tenant,
+              participantId: participant.id,
+              meters: meters.filter(m=>m.enabled)
+            })).unwrap()
         })
-        .then(() => dispatcher(confirmParticipant(
-          {tenant: tenant!.tenant,
-            participantId: participant.id,
-            meters: meters.filter(m=>m.enabled)
-          })).unwrap())
         .then((value) => presentToast(`${value.firstname} ist nun Mitglied deiner EEG. Ein Infomail wurde an ${value.contact.email} gesendet.`))
         .catch(() => presentToast('Mitglied konnte nicht aktiviert werden.'))
     }
@@ -225,12 +224,24 @@ const ParticipantDetailsPaneComponent: FC = () => {
     )
   }
 
+  const failedToast = (message: string) => toaster({message, duration: 4500, color: "danger"})
+
   const onRemoveMeteringPoint = () => {
     if (selectedMeter && selectedParticipant) {
-      dispatcher(removeMeteringPoint(
-        {tenant: tenant!.tenant, participantId: selectedParticipant.id, meter: selectedMeter}))
+      const meter = selectedMeter, participantId = selectedParticipant.id
+      confirm("Zählpunkt löschen", `Soll der Zählpunkt ${meter.meteringPoint} gelöscht werden?`, "Löschen", () =>
+        dispatcher(removeMeteringPoint({tenant: tenant!.tenant, participantId, meter}))
+          .unwrap()
+          .catch(() => failedToast("Der Zählpunkt konnte nicht gelöscht werden.")))
     }
   }
+
+  const onDeleteParticipant = (sp: EegParticipant) =>
+    confirm("Mitglied löschen",
+      `Soll ${sp.firstname} ${sp.lastname} mit allen Zählpunkten gelöscht werden? Das lässt sich nicht rückgängig machen.`,
+      "Löschen", () => deleteParticipant({tenant: tenant.tenant, participantId: sp.id})
+        .unwrap()
+        .catch(() => failedToast("Das Mitglied konnte nicht gelöscht werden.")))
 
   const archive = (sp: EegParticipant) => {
     participantAlert({
@@ -331,7 +342,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
                       <IonLabel>Möchtest du {selectedParticipant.lastname} in deine EEG aufnehmen?</IonLabel>
                     </IonItem>
                     <IonItem lines="none" color="warning-light" className="ion-align-items-baseline">
-                      <IonButton slot="end" color="warning-light" onClick={() => deleteParticipant({participantId: selectedParticipant.id})}
+                      <IonButton slot="end" color="warning-light" onClick={() => onDeleteParticipant(selectedParticipant)}
                                  size="small">Nein, Löschen</IonButton>
                       <IonButton id="open-participant-allow-dialog" slot="end" color="warning"
                                  size="default">Ja, Zulassen</IonButton>

@@ -12,7 +12,7 @@ import DatePickerCoreElement from "./elements/DatePickerCore.element";
 import {IbanInputForm} from "../form/IbanInputForm";
 import {PhoneInputForm} from "../form/PhoneInputForm";
 import {useLocale} from "../../store/hook/useLocale";
-import {useAccessGroups} from "../../store/hook/Eeg.provider";
+import {useAccessGroups, useTenant} from "../../store/hook/Eeg.provider";
 import {usePersistBusinessTypeMutation} from "../../store/participant/api";
 import DatePickerFormElement from "../form/DatePickerForm.element";
 import {DebitExtensionComponent} from "./DebitExtensionComponent";
@@ -20,13 +20,14 @@ import DatePickerInput from "../form/NewDatePickerForm.component";
 import {Moment} from "moment";
 import {LocalDate} from "local-date";
 import {isValidEmailList} from "../../util/EmailAddress.util";
+import {isDirectDebit} from "../../util/MandateReference.util";
 
 interface MemberFormComponentProps {
   participant: EegParticipant
   rates: EegTariff[]
   formId: string
   onSubmit: (data: EegParticipant) => void
-  onSubmitPartial: (participantId: string, value: Record<string, any>) => void
+  onSubmitPartial: (participantId: string, value: Record<string, any>) => void | Promise<unknown>
   changeable?: boolean
 }
 
@@ -39,6 +40,7 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
   const [selectedBusinessType, setSelectedBusinessType] = useState(0)
 
   const [persistBusinessType] = usePersistBusinessTypeMutation()
+  const {tenant} = useTenant()
 
   const formMethods = useForm({
     defaultValues: participant, mode: "all"})
@@ -60,7 +62,7 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
   useEffect(() => {
     if (participant) {
       participant.businessRole === 'EEG_PRIVATE' ? setSelectedBusinessType(0) : setSelectedBusinessType(1)
-      reset(participant)
+      reset(participant, {keepDirtyValues: true})  // saving one field must not overwrite unsaved input elsewhere
     }
   }, [participant])
 
@@ -78,7 +80,7 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
   const sepaMode = watch ? watch("accountInfo.sepaDirectDebit") : "NONE"
 
   const onUpdateBaseData = (name: string, value: any) => {
-    onSubmitPartial(participant.id, {[name]: value})
+    return onSubmitPartial(participant.id, {[name]: value})
   }
 
   if (!participant) {
@@ -108,7 +110,7 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
                         askFor(t("alerts.changeBusinessType", { context: ''+selectedBusinessType }),
                           () => {
                             onChangeBusinessType(selectedBusinessType === 0 ? 1 : 0)
-                            persistBusinessType({participantId: participant.id, value: {path: 'businessRole',
+                            persistBusinessType({tenant: tenant!, participantId: participant.id, value: {path: 'businessRole',
                                 value: selectedBusinessType === 0 ? "EEG_BUSINESS" : "EEG_PRIVATE"}})
                           });
                       }}>
@@ -157,7 +159,8 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
       {/*</form>*/}
         <IonList>
           <IonListHeader>Bankdaten</IonListHeader>
-          <IbanInputForm name={"accountInfo.iban"} control={control} onChangePartial={onUpdateBaseData} error={errors.accountInfo?.iban}/>
+          <IbanInputForm name={"accountInfo.iban"} control={control} onChangePartial={onUpdateBaseData} error={errors.accountInfo?.iban}
+                         required={isDirectDebit(sepaMode)}/>
           <InputForm name={"accountInfo.owner"} label={t("account.owner")} control={control} type="text" onChangePartial={onUpdateBaseData}/>
 
           <DebitExtensionComponent onUpdateBaseData={onUpdateBaseData}/>

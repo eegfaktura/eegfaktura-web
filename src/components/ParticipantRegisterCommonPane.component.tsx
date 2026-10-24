@@ -14,6 +14,7 @@ import DatePickerCoreElement from "./core/elements/DatePickerCore.element";
 import SelectForm from "./form/SelectForm.component";
 import {DebitExtensionComponent} from "./core/DebitExtensionComponent";
 import {isValidEmailList} from "../util/EmailAddress.util";
+import {isDirectDebit} from "../util/MandateReference.util";
 
 interface ParticipantRegisterCommonPaneComponentProps {
   participant: EegParticipant;
@@ -26,7 +27,9 @@ const ParticipantRegisterCommonPaneComponent: FC<ParticipantRegisterCommonPaneCo
                                                                                                  }) => {
 
   const [selectedBusinessType, setSelectedBusinessType] = useState(0)
-  const {control, setValue, formState: {errors}} = useFormContext<EegParticipant>();
+  const {control, setValue, watch, formState: {errors}} = useFormContext<EegParticipant>();
+  // "Kein SEPA": IBAN and owner optional (cash payment, platform#143)
+  const debit = isDirectDebit(watch("accountInfo.sepaDirectDebit"))
   const {t} = useLocale("common")
 
   const onChangeBusinessType = (s: number) => {
@@ -107,9 +110,11 @@ const ParticipantRegisterCommonPaneComponent: FC<ParticipantRegisterCommonPaneCo
         <div style={{flexGrow: "1", height: "100%", width: "50%"}}>
           <IonList>
             <IonListHeader>{t("account.header")}</IonListHeader>
-            <IbanInputForm name={"accountInfo.iban"} control={control} error={errors.accountInfo?.iban}/>
+            <IbanInputForm name={"accountInfo.iban"} control={control} error={errors.accountInfo?.iban} required={debit}/>
             <InputForm name={"accountInfo.owner"} label={t("account.owner")} control={control}
-                       rules={{required: t("warnings.account-owner_missing")}} type="text" error={errors.accountInfo?.owner}/>
+                       rules={{validate: (v: string | undefined, values: EegParticipant) =>
+                         (!debit && !values.accountInfo?.iban?.trim()) || !!v?.trim() || t("warnings.account-owner_missing")}}
+                       type="text" error={errors.accountInfo?.owner}/>
 
             <DebitExtensionComponent />
 

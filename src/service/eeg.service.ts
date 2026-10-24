@@ -1,9 +1,10 @@
 import {BillingConfig, EdaHistories, Eeg, EegNotification, EegTariff} from "../models/eeg.model";
 import {EegParticipant} from "../models/members.model";
 import {
+  BillingDocumentAmounts,
   BillingRun,
   ClearingPreviewRequest,
-  ClearingPreviewResponse,
+  ClearingStartResponse,
   InvoiceDocumentResponse, MeterDirectionType,
   Metering,
   ParticipantBillType
@@ -15,6 +16,33 @@ import {AuthService} from "./auth.service";
 import EegBaseService from "./base.service";
 
 const BILLING_API_SERVER = import.meta.env.VITE_BILLING_SERVER_URL;
+
+// POST /meteringpoint/syncenergy (smart re-request)
+export interface SyncEnergyMeter {
+  meter: string
+  direction: string
+  from?: number
+  to?: number
+}
+
+export interface SyncEnergySkipped {
+  meteringPoint: string
+  reason: string
+  until?: number  // ALREADY_REQUESTED: when the metering point is free again (ms)
+}
+
+// requested is unknown from an older backend (204, no body) or for a community that is not online
+export interface SyncEnergyResult {
+  requested?: number
+  skipped: SyncEnergySkipped[]
+}
+
+export const parseSyncEnergyResult = async (res: Response): Promise<SyncEnergyResult> => {
+  const text = res.status === 204 ? "" : await res.text()
+  if (!text) return {skipped: []}
+  const body = JSON.parse(text)
+  return {requested: body.requested, skipped: body.skipped ?? []}
+}
 
 export class EegService extends EegBaseService {
   
@@ -173,9 +201,12 @@ export class EegService extends EegBaseService {
     }).then(this.handleErrors).then(res => res.json());
   }
 
-  async fetchBilling(tenant: string, invoiceRequest: ClearingPreviewRequest): Promise<ClearingPreviewResponse> {
+  // Startet den asynchronen Abrechnungslauf. Bewusst OHNE handleErrors:
+  // 409 (läuft bereits) trägt die billingRunId im Body, 400/503 die Meldung
+  // in abstractText — beides würde handleErrors verwerfen.
+  async startBilling(tenant: string, invoiceRequest: ClearingPreviewRequest): Promise<ClearingStartResponse> {
     const token = await this.lookupToken()
-    return await fetch(`${BILLING_API_SERVER}/api/billing`, {
+    const response = await fetch(`${BILLING_API_SERVER}/api/billing`, {
       method: 'POST',
       headers: {
         ...this.getSecureHeaders(token, tenant),
@@ -183,12 +214,26 @@ export class EegService extends EegBaseService {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(invoiceRequest)
-    }).then(this.handleErrors).then(res => res.json());
+    });
+    const body = await response.json().catch(() => ({}));
+    return {status: response.status, billingRunId: body.billingRunId, abstractText: body.abstractText};
   }
 
   async fetchParticipantAmounts(tenant : string, billingRunId : string) : Promise<ParticipantBillType[]> {
     const token = await this.lookupToken()
     return await fetch(`${BILLING_API_SERVER}/api/billingRuns/${billingRunId}/participantAmounts`, {
+      method: 'GET',
+      headers: {
+        ...this.getSecureHeaders(token, tenant),
+        'Accept': 'application/json',
+        "Content-Type": "application/json",
+      },
+    }).then(this.handleErrors).then(res => res.json())
+  }
+
+  async fetchBillingDocuments(tenant : string, billingRunId : string) : Promise<BillingDocumentAmounts[]> {
+    const token = await this.lookupToken()
+    return await fetch(`${BILLING_API_SERVER}/api/billingRuns/${billingRunId}/billingDocuments`, {
       method: 'GET',
       headers: {
         ...this.getSecureHeaders(token, tenant),
@@ -394,10 +439,12 @@ export class EegService extends EegBaseService {
     }).then(this.handleErrors).then(res => new Promise<void>((resolve) => resolve()));
   }
 
-  async syncMeteringPoint(tenant: string, meters: {meter: string, direction: string}[], from: number, to: number): Promise<any> {
+  // from/to of a metering point (ms) are optional, the request period applies without them; complete are the
+  // metering points found complete, recorded by the backend as skipped (COMPLETE) and not requested
+  async syncMeteringPoint(tenant: string, meters: SyncEnergyMeter[], from: number, to: number, complete?: string[]): Promise<SyncEnergyResult> {
     const token = await this.lookupToken()
 
-    const body = {meteringPoints: meters, from: from, to: to}
+    const body = {meteringPoints: meters, from: from, to: to, ...(complete && complete.length > 0 ? {complete} : {})}
     return await fetch(`${API_API_SERVER}/meteringpoint/syncenergy`, {
       method: 'POST',
       headers: {
@@ -405,7 +452,7 @@ export class EegService extends EegBaseService {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
-    }).then(this.handleErrors); // Response with 201 - no Content
+    }).then(this.handleErrors).then(parseSyncEnergyResult);
   }
 
   async revokeMeteringPoint(tenant: string, participantId: string, meters: {meter: string, direction: string, consentId: string}[], from: number, reason?: string): Promise<any> {
@@ -426,6 +473,7 @@ export class EegService extends EegBaseService {
     const token = await this.lookupToken()
 
     const body = {meteringPoints: meters}
+    // the backend answers 204 No Content: no body to parse
     return await fetch(`${API_API_SERVER}/meteringpoint/changepartitionfactor`, {
       method: 'POST',
       headers: {
@@ -433,7 +481,7 @@ export class EegService extends EegBaseService {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
-    }).then(this.handleErrors).then(res => res.json());
+    }).then(this.handleErrors).then(() => undefined);
   }
 
   async registerMeteringPoint(tenant: string, participantId: string, meter: string, direction: string, mode: 'ONLINE' | 'OFFLINE', code?: string): Promise<EegEnergyReport> {
@@ -500,7 +548,8 @@ export class EegService extends EegBaseService {
 
   async getHistories1(tenant: string, protocols: Array<string>, beginTimestamp: number, endTimestamp: number): Promise<EdaHistories> {
     const token = await this.lookupToken()
-    return await fetch(`${API_API_SERVER}/process/history?start=${beginTimestamp}&end=${endTimestamp}&protocol=${protocols.join(';')}&ps=0`, {
+    // encoded: Go (backend) drops a query parameter with a raw ";", the list arrived empty (platform#170)
+    return await fetch(`${API_API_SERVER}/process/history?start=${beginTimestamp}&end=${endTimestamp}&protocol=${encodeURIComponent(protocols.join(';'))}&ps=0`, {
       method: 'GET',
       headers: {
         ...this.getSecureHeaders(token, tenant),

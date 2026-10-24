@@ -4,6 +4,13 @@ import {Metering} from "../models/meteringpoint.model";
 import moment from "moment";
 
 /**
+ * A rejected, invalid or revoked registration needs action (register again or archive). The member list shows such a
+ * metering point in every period (see withOpenProblems); the period filter below stays unchanged for billing.
+ */
+export const hasOpenProblem = (m: Metering) =>
+  m.processState === 'REJECTED' || m.processState === 'INVALID' || m.processState === 'REVOKED'
+
+/**
  * filter active participant for a particular period (start to end). A active Participants has metering points with status ACTIVE or INACTIVE.
  * INACTIVE meteringpoint has been revoked by netoperators or by customer itself.
  * ACTIVE meteringpoints are still participate

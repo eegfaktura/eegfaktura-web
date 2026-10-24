@@ -14,6 +14,7 @@ import {JoinStrings} from "../../util/Helper.util";
 import {meteringDisplayName} from "../../util/FilterHelper";
 import {useLocale} from "../../store/hook/useLocale";
 import CheckboxComponent from "../form/Checkbox.component";
+import {useProcessFeedback} from "./useProcessFeedback";
 
 interface ProcessValues {
   communityId: string | undefined
@@ -45,6 +46,7 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
   }
 
   const {t} = useLocale("common")
+  const {sent, failed} = useProcessFeedback()
   const {
     handleSubmit, reset,
     control, watch,
@@ -79,10 +81,12 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
       const p = participants.find(p => p.meters.find(m => m.meteringPoint === data.meteringPoint))
       const meter = p?.meters.find(m => m.meteringPoint === data.meteringPoint)
       if (p && meter) {
-        Api.eegService.registerMeteringPoint(eeg.id.toUpperCase(), p.id, data.meteringPoint, meter.direction, offline ? 'OFFLINE' : 'ONLINE', data.activationCode)
-          .finally(() => {
+        return Api.eegService.registerMeteringPoint(eeg.id.toUpperCase(), p.id, data.meteringPoint, meter.direction, offline ? 'OFFLINE' : 'ONLINE', data.activationCode)
+          .then(() => {
+            sent()
             reset()
           })
+          .catch(failed)  // keep the input on failure
       }
     }
   }
@@ -137,7 +141,7 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
               <InputForm name="activationCode" control={control} label={"Aktivierungs-Code"} counter={true} maxlength={35}/>
             }
             <IonItem lines="none" style={{zIndex: "0"}}>
-              <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={!formState.isValid}>
+              <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={!formState.isValid || formState.isSubmitting}>
                 {t("process.submit")}
               </IonButton>
             </IonItem>

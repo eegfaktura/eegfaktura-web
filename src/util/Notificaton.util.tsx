@@ -1,5 +1,8 @@
 import {EegNotification} from "../models/eeg.model";
 import {ReactNode} from "react";
+import EnergyRequestSummaryComponent from "../components/notification/EnergyRequestSummary.component";
+import {DATA_DELAY_HINT, EnergyRequestSummary} from "../components/notification/EnergyRequestSummary.functions";
+import {PARTFACT_WINDOW_TEXT} from "./PartFactWindow.util";
 
 
 export function buildNotificationText(type: string, process: string, notification: object): ReactNode {
@@ -22,12 +25,14 @@ export function buildNotificationText(type: string, process: string, notificatio
         case 'ANTWORT_PT':
           return <p>Die <strong><u>ENERGIEDATENANFRAGE</u></strong> für die
             Zählpunkte <strong>{n.message.meteringPoint}</strong> wurde
-            angenommen.</p>
+            angenommen.<br/><small>{DATA_DELAY_HINT}</small></p>
         case 'ABLEHNUNG_ECON':
           return <p>Für die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurde die <strong><u>Online-Registrierung</u></strong> abgelehnt. ({n.message.responseCode})</p>
         case 'ABSCHLUSS_ECON':
           return <p>Die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurden vom Netzbetreiber in <strong><u>deine
             EEG aufgenommen.</u></strong></p>
+        case 'ZUSAMMENFASSUNG_PT':
+          return <EnergyRequestSummaryComponent summary={n.message.properties as EnergyRequestSummary}/>
         case 'ABLEHNUNG_PT':
           return <p>Für die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurde die ENERGIEDATENANFRAGE
             abgelehnt. ({n.message.responseCode})</p>
@@ -43,8 +48,7 @@ export function buildNotificationText(type: string, process: string, notificatio
           return <p>Für die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurde die Anfrage auf <strong>AUFHEBUNG
             der DATENFREIGABE</strong> abgelehnt.</p>
         case 'ABLEHNUNG_CPF':
-          return <p>Für die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurde die Anfrage auf <strong>ÄNDERUNG
-            TEILNAHMEFAKTOR</strong> abgelehnt.</p>
+          return buildPartFactRejectionText(n.message.meteringPoint, n.message.responseCode)
         case 'ANFORDERUNG_CPF':
           return <p>Für die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurden <strong><u>Änderungen des
             Teilnahmefaktors
@@ -74,4 +78,23 @@ export function buildNotificationText(type: string, process: string, notificatio
     }
   }
   return ""
+}
+
+// The backend stores the rejection without metering points ([]; for a list it adds empty entries) but with the
+// reason as text; „Prozessdatum falsch“ (code 82) means the request reached the grid operator outside the time
+// window (see PartFactWindow.util).
+function buildPartFactRejectionText(meteringPoint: string | string[], responseCode: string | string[]): ReactNode {
+  const reason = String(responseCode)
+  const meters = String(meteringPoint).split(",").map(m => m.trim()).filter(m => m && m !== "-").join(", ")
+  return (
+    <p>
+      {meters
+        ? <>Für die Zählpunkte <strong>{meters}</strong> wurde die Anfrage auf <strong>ÄNDERUNG
+          TEILNAHMEFAKTOR</strong> abgelehnt</>
+        : <>Die Anfrage auf <strong>ÄNDERUNG TEILNAHMEFAKTOR</strong> wurde abgelehnt</>}
+      {reason !== "-" ? <> ({reason})</> : null}.
+      {reason.includes("Prozessdatum falsch") && <> Der Netzbetreiber nimmt Änderungen nur zwischen
+        {PARTFACT_WINDOW_TEXT} an. Bitte fordere die Änderung in dieser Zeit erneut an.</>}
+    </p>
+  )
 }

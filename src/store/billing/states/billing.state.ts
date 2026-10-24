@@ -5,6 +5,8 @@ export const featureKey = 'billing';
 
 export interface BillingState extends EntityState<ParticipantBillType, string> {
   isFetching: boolean;
+  // a billing run poller (fetchEnergyBills/resumeEnergyBillsPolling) is active; fetchParticipantAmounts leaves it alone
+  isPolling: boolean;
 }
 export const adapter = createEntityAdapter<ParticipantBillType>();
 
@@ -14,4 +16,5 @@ export const adapter = createEntityAdapter<ParticipantBillType>();
 
 export const initialState: BillingState = adapter.getInitialState({
   isFetching: false,
+  isPolling: false,
 });

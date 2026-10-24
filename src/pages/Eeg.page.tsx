@@ -3,14 +3,13 @@ import {
   IonButton,
   IonCard,
   IonContent,
-  IonItem,
   IonPage, IonSelect, IonSelectOption,
-  IonToggle, SelectChangeEventDetail, SelectCustomEvent
+  SelectChangeEventDetail, SelectCustomEvent
 } from "@ionic/react";
 import InputFormComponent from "../components/form/InputForm.component";
 import {useAppDispatch, useAppSelector} from "../store";
 import {eegSelector, selectedTenant, selectTenant, updateEegModel} from "../store/eeg";
-import {Controller, useForm} from "react-hook-form";
+import {useForm} from "react-hook-form";
 import SelectForm from "../components/form/SelectForm.component";
 
 import "./Eeg.page.scss"
@@ -23,6 +22,7 @@ import {IbanInputForm} from "../components/form/IbanInputForm";
 import {PhoneInputForm} from "../components/form/PhoneInputForm";
 import {useLocale} from "../store/hook/useLocale";
 import {isValidEmailList} from "../util/EmailAddress.util";
+import EegLoadStateComponent from "../components/EegLoadState.component";
 
 
 const EMPTY_EEG_ENTITY = {
@@ -85,7 +85,7 @@ const EegPage: FC = () => {
   }
 
   if (!eeg) {
-    return <></>
+    return <EegLoadStateComponent/>
   }
 
   return (
@@ -120,26 +120,6 @@ const EegPage: FC = () => {
                     {key: "BIANNUAL", value: "Halbjährlich"},
                     {key: "ANNUAL", value: "Jährlich"},
                   ]} onIonChange={onChangeValue("settlementInterval")} disabled={true}></SelectForm>
-                  <IonItem lines="none" style={{marginRight: "16px"}}>
-                    {/*<IonLabel slot="start">SEPA aktiv</IonLabel>*/}
-                    <Controller
-                      name={"accountInfo.sepa"}
-                      control={control}
-                      render={({field}) => {
-                        const {onChange, value} = field;
-                        return (<IonToggle
-                          style={{width: "100%"}}
-                          slot="start"
-                          labelPlacement="start"
-                          checked={value}
-                          disabled={false}
-                          onIonChange={(e) => {
-                            onChangeField("sepa")("sepa", e.detail.checked)
-                          }}>SEPA aktiv</IonToggle>)
-                      }
-                      }
-                    />
-                  </IonItem>
                   {/*</form>*/}
                 </IonCard>
               </div>

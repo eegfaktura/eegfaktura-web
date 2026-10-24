@@ -1,0 +1,170 @@
+# Tests on every pull request: the unit tests (Vitest) and the full suite (Vitest, then the
+# production build as rolling-release.yml makes it). Two checks report build defects on their own,
+# so the test jobs keep a clean signal: "Lockfile in sync" (pnpm-lock.yaml matches package.json)
+# and "Type check" (tsc for src and for vite.config.ts).
+#
+# Every job installs with --frozen-lockfile: exactly the lockfile, nothing resolves at run time.
+# --ignore-scripts keeps install scripts from running.
+# Versions fixed, each release older than 7 days (checked 2026-10-09): Node 20.18.0 (.nvmrc),
+# pnpm 9.12.1. Actions pinned by commit SHA.
+# Every job keeps its output as an artifact for 30 days (test-results-<job>, known-errors-<job>),
+# for the CI report collector (vfeeg-development/eegfaktura-dev).
+
+name: PR Checks
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install dependencies
+        run: |
+          npm install -g "$(node -p "require('./package.json').packageManager")"
+          pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Unit tests
+        run: |
+          mkdir -p "$RUNNER_TEMP/results"
+          pnpm exec vitest run --reporter=default --reporter=junit --outputFile.junit="$RUNNER_TEMP/results/unit.xml"
+
+      - name: Keep the test results
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-results-unit
+          path: ${{ runner.temp }}/results
+          if-no-files-found: ignore
+          retention-days: 30
+
+  full:
+    name: Full test suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install dependencies
+        run: |
+          npm install -g "$(node -p "require('./package.json').packageManager")"
+          pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Tests
+        run: |
+          mkdir -p "$RUNNER_TEMP/results"
+          pnpm exec vitest run --reporter=default --reporter=junit --outputFile.junit="$RUNNER_TEMP/results/full.xml"
+
+      - name: Production build
+        run: pnpm run build
+
+      - name: Keep the test results
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-results-full
+          path: ${{ runner.temp }}/results
+          if-no-files-found: ignore
+          retention-days: 30
+
+  lockfile:
+    name: Lockfile in sync
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install pnpm
+        run: |
+          npm install -g "$(node -p "require('./package.json').packageManager")"
+
+      - name: Install exactly the lockfile
+        run: |
+          set -o pipefail
+          mkdir -p "$RUNNER_TEMP/results"
+          pnpm install --frozen-lockfile --ignore-scripts 2>&1 | tee "$RUNNER_TEMP/results/lockfile.log"
+
+      - name: Keep the check output
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: known-errors-lockfile
+          path: ${{ runner.temp }}/results
+          if-no-files-found: ignore
+          retention-days: 30
+
+  typecheck:
+    name: Type check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install dependencies
+        run: |
+          npm install -g "$(node -p "require('./package.json').packageManager")"
+          pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: tsc
+        run: |
+          set -o pipefail
+          mkdir -p "$RUNNER_TEMP/results"
+          pnpm exec tsc --noEmit 2>&1 | tee "$RUNNER_TEMP/results/tsc.log"
+
+      - name: tsc (vite.config.ts)
+        run: |
+          set -o pipefail
+          pnpm exec tsc --noEmit -p tsconfig.node.json 2>&1 | tee "$RUNNER_TEMP/results/tsc-node.log"
+
+      - name: Keep the check output
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-results-typecheck
+          path: ${{ runner.temp }}/results
+          if-no-files-found: ignore
+          retention-days: 30
