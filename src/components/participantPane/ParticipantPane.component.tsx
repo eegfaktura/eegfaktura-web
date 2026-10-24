@@ -34,6 +34,7 @@ import "./ParticipantPane.component.scss";
 import SlideButtonComponent from "../SlideButton.component";
 import {store, useAppDispatch, useAppSelector} from "../../store";
 import {
+  BILLING_POLL_STOPPED,
   billingSelector,
   fetchEnergyBills,
   fetchParticipantAmounts,
@@ -273,6 +274,8 @@ const ParticipantPaneComponent: FC = () => {
     if (billingRunStatus === "RUNNING" && billingRun && billingRun.id && !billPolling) {
       dispatcher(resumeEnergyBillsPolling({tenant, billingRunId: billingRun.id}))
         .then((returnValue: any) => {
+          // stopped on a community switch or replaced by a newer poller: nothing to show (261024-ca13)
+          if (returnValue.payload === BILLING_POLL_STOPPED) return
           if (resumeEnergyBillsPolling.rejected.match(returnValue)) {
             errorToast((returnValue.payload as string) || "Abrechnung fehlgeschlagen.");
           }
@@ -570,6 +573,7 @@ const ParticipantPaneComponent: FC = () => {
       // rejected mit Meldung (FAILED.errorSummary bzw. 400/503-Text) — kein
       // abstractText-String-Matching mehr.
       dispatcher(fetchEnergyBills({tenant, invoiceRequest})).then((returnValue: any) => {
+        if (returnValue.payload === BILLING_POLL_STOPPED) return
         if (fetchEnergyBills.rejected.match(returnValue)) {
           setPreviewValid(false);
           // env/billing: a failed asynchronous run shows as runStatus FAILED, the totals hide then (see `totals`)

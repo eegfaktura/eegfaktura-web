@@ -22,11 +22,13 @@ import {fetchRatesModel, saveNewRate} from "./rate";
 import {userApi} from "./user/userApi";
 import {participantApi} from "./participant/api";
 import {withReason} from "../service/error.text";
+import {isOtherCommunityRequest, tenantScoped} from "./tenantScope";
 
 /**
  * Reducer
  */
-export const reducer = combineReducers({
+// a community switch clears the community's data; late answers of the previous community are ignored (261024-ca13)
+export const reducer = tenantScoped(combineReducers({
   [eeg.featureKey]: eeg.reducer,
   [participant.featureKey]: participant.reducer,
   [rate.featureKey]: rate.reducer,
@@ -37,7 +39,7 @@ export const reducer = combineReducers({
   [userApi.reducerPath]: userApi.reducer,
   [participantApi.reducerPath]: participantApi.reducer,
   user,
-});
+}));
 
 // Thunks whose failure no caller shows: report them through the global error toast (Eeg.provider).
 // Thunks with their own error handling in the component (confirm, delete, create member) are not listed.
@@ -53,6 +55,8 @@ const silentFailures: [{ match: (a: any) => boolean }, string][] = [
 
 export const errorMiddleware: Middleware = store => next => action => {
   try {
+    // a failure of the previous community is no longer relevant after a switch (261024-ca13)
+    if (isOtherCommunityRequest(store.getState(), action)) return next(action)
 
     const result = next(action)
 

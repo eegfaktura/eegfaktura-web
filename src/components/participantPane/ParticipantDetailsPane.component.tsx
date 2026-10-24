@@ -239,7 +239,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
   const onDeleteParticipant = (sp: EegParticipant) =>
     confirm("Mitglied löschen",
       `Soll ${sp.firstname} ${sp.lastname} mit allen Zählpunkten gelöscht werden? Das lässt sich nicht rückgängig machen.`,
-      "Löschen", () => deleteParticipant({participantId: sp.id})
+      "Löschen", () => deleteParticipant({tenant: tenant.tenant, participantId: sp.id})
         .unwrap()
         .catch(() => failedToast("Das Mitglied konnte nicht gelöscht werden.")))
 

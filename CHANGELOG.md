@@ -34,6 +34,11 @@ this changelog highlights the changes relevant for overview and operations.
     (with "frei ab") and "Daten vollständig (nicht angefordert)".
 
 ### Fixed
+- **Community switch** (261024-ca13): after switching the community, the members, metering points, selected member,
+  checked members (billing selection), tariffs, energy and billing data of the previous community are cleared at
+  once; until the new community is loaded the lists stay empty instead of showing the old community's entries.
+  Answers to requests of the previous community that arrive after the switch are ignored, and a load of the previous
+  community no longer ends the new community's loading state or sets its period.
 - **GUI defects, second bundle (eegfaktura-dev tracking):**
   - **A failed save of the EEG settings showed the load text (261024-ca7):** "Fehler beim Laden der
     EEG-Basisdaten!" or a raw key such as `Bad Gateway_eeg_load`. It now shows "Die Änderung der EEG-Daten konnte
