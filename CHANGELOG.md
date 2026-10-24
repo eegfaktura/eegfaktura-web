@@ -9,6 +9,30 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Fixed
+- **UX defects from Karl's analysis (23.10.2026), ids UX-1 … UX-8:**
+  - **Participation factor 0 % was sent as 100 % (UX-4):** "Teilnahmefaktor ändern" sent `partFact || 100`, so
+    an entered 0 reached the grid operator as 100 %. The field now accepts 1–100 only (like the meter form) and
+    sends the entered value.
+  - **"1.234,56" was saved as 1.234 (UX-8):** number fields replaced only the first comma. With a comma
+    present, dots now count as thousand separators. Dot-only input keeps its meaning ("1.5" stays 1.5).
+  - **Expired session (UX-5):** a 401 counted as success. It now fails the call with "Deine Sitzung ist
+    abgelaufen. Bitte melde Dich neu an." and starts the login once.
+  - **EDA process forms (UX-2):** Change participation factor, register metering point, revoke and request energy
+    data now confirm "Die Anforderung wurde an den Netzbetreiber gesendet.". On failure the input stays and an
+    error stays until it is closed. Before, the form was cleared either way and, except for the energy request,
+    showed nothing.
+  - **Confirmations (UX-3):** revoking a data consent ("Anfordern" in the revoke form), deleting a new member
+    ("Nein, Löschen") and deleting a metering point now ask first. A failed delete shows an error.
+  - **New member (UX-1):** a failed registration no longer loses the form. The page leaves only after the
+    member was saved; on failure an error names the reason.
+  - **Silent failures (UX-6):** failed loads of members and tariffs and failed saves of member, metering
+    point, participation factor, moving a metering point and a new metering point now show an error. A
+    failed partial member update showed the raw key "Rejected_participant_update"; it now shows readable
+    text.
+  - **Auto-saved fields (UX-7):** an invalid value no longer resets the whole form, a store update no longer
+    overwrites unsaved input in other fields, and a metering point field counts as saved only after the save
+    worked. Saving the participation factor no longer clears the other fields of the form.
+  - Not in this change: navigation below 992 px and the member screen on phones (UX-9, deferred).
 - **New member: „Mandatsdatum fehlt!“ stayed after picking a date** (support 23.10.2026). Switching the debit type
   to CORE/B2B checks the still empty mandate date; the form validates on blur, but the date picker's input never
   passes the blur on, so picking a date did not re-check the field and the red message stayed — the member could
