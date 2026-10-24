@@ -34,6 +34,9 @@ this changelog highlights the changes relevant for overview and operations.
     (with "frei ab") and "Daten vollständig (nicht angefordert)".
 
 ### Fixed
+- **Error messages showed "body stream already read" instead of the real error** (pre-existing). When a server
+  error had no JSON body (e.g. 502 from the ingress), the error handler read the body a second time and the
+  browser's read error replaced the status text. The body is now read once; the toast names e.g. "Bad Gateway".
 - **Messages: a card's data check moved to another card after a reload.** The list keyed its cards by position, so
   when a newer notification came first, the result of "Datenstand prüfen" showed on the wrong summary. Cards are
   now keyed by the notification id. More likely since the list reloads every minute while a request runs.

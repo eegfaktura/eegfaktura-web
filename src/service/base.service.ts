@@ -130,7 +130,10 @@ class EegBaseService {
           throw new Error(SESSION_EXPIRED)
         }
         default:
-          const errorBody = await response.json().catch(e => response.text())
+          // read the body once: a second read after a failed json() throws and hides the real error
+          const errorText = await response.text()
+          let errorBody: unknown = errorText
+          try { errorBody = JSON.parse(errorText) } catch { /* not JSON, keep the text */ }
           if (isErrorResponse(errorBody)) {
             throw new Error(determineErrTxt(new ErrorResponse(errorBody.error)));
           } else {
