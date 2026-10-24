@@ -123,7 +123,8 @@ export const smartConfirmation = (p: SmartPlan, cappedTo?: Date): SmartConfirmat
   const m = p.missing.length
   const n = p.notChecked.length
   if (m === 0 && n === 0) return undefined
-  const parts: string[] = cappedTo ? [cappedNote(cappedTo)] : []
+  // the cut at yesterday leads only when something was checked; otherwise it is part of the warning below
+  const parts: string[] = cappedTo && p.checked > 0 ? [cappedNote(cappedTo)] : []
   if (p.checked > 0) {
     parts.push(m > 0
       ? `Von ${metersDative(p.checked)} fehlen bei ${count(m)} Daten (zusammen ${days(p.missingDays)}).`
@@ -135,8 +136,9 @@ export const smartConfirmation = (p: SmartPlan, cappedTo?: Date): SmartConfirmat
   }
   if (p.checked === 0) {
     // nothing could be checked (energystore failed or timed out): the expensive path, every metering point in full
+    const until = cappedTo ? ` bis gestern (${moment(cappedTo).format("DD.MM.YYYY")})` : ""
     parts.push(`Der Datenstand konnte nicht geprüft werden – es ${n === 1 ? "würde 1 Zählpunkt" : `würden alle ${meterCount(n)}`} `
-      + "für den ganzen Zeitraum angefordert. Trotzdem anfordern?")
+      + `für den ganzen Zeitraum${until} angefordert. Trotzdem anfordern?`)
   } else {
     parts.push(`Bei ${metersDative(n)} konnte der Datenstand nicht geprüft werden. `
       + `${n === 1 ? "Soll er" : "Sollen sie"} für den ganzen Zeitraum angefordert werden?`)

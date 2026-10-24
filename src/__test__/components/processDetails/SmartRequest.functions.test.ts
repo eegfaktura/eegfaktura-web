@@ -257,6 +257,12 @@ describe("smartPeriod: energy data of today cannot exist yet", () => {
     expect(smartPeriod(new Date(2026, 9, 24), new Date(2026, 9, 31), now)).toBeUndefined()
   })
 
+  it("puts the cut into the warning when nothing could be checked", () => {
+    expect(smartConfirmation(plan({notChecked: [sync("AT1"), sync("AT2")]}), new Date(2026, 9, 23))!.message)
+      .toBe("Der Datenstand konnte nicht geprüft werden – es würden alle 2 Zählpunkte für den ganzen Zeitraum "
+        + "bis gestern (23.10.2026) angefordert. Trotzdem anfordern?")
+  })
+
   it("names the cut in the question", () => {
     const c = smartConfirmation(plan({checked: 1, missing: [sync("AT1")], missingDays: 1}), new Date(2026, 9, 23))!
     expect(c.message).toBe("Geprüft wird bis gestern (23.10.2026), für heute gibt es noch keine Energiedaten. "
