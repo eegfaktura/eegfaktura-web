@@ -17,6 +17,7 @@ import {useLocale} from "../../store/hook/useLocale";
 import {JoinStrings} from "../../util/Helper.util";
 import moment from "moment";
 import {useProcessFeedback} from "./useProcessFeedback";
+import {useConfirm} from "../core/useConfirm";
 
 interface ProcessValues {
   communityId: string | undefined
@@ -52,6 +53,7 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
   const [meteringPoints, participantId] = watch(['meteringPoints', 'participantId'])
 
   const [toaster] = useIonToast();
+  const confirm = useConfirm()
 
   const infoToast = (message: string) => {
     toaster({
@@ -88,16 +90,21 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
       const meter = selectedMeters(useableMeters, data.meteringPoints)
       if (meter.length > 0) {  // empty: the selection does not belong to the chosen participant
         if (meter.filter(m => !(m.consentId && m.consentId.length > 0)).length === 0) {
-          Api.eegService.revokeMeteringPoint(
-            eeg.id.toUpperCase(), data.participantId,
-            meter.map(m => {return {meter: m.meteringPoint, direction: m.direction, consentId: m.consentId}}),
-            consentEndDate.getTime(), reason)
-            .then(() => {
-              sent()
-              reset()
-              setConsentEndDate(null)
-            })
-            .catch(failed)  // keep the input on failure
+          // revoking ends the data consent at the grid operator: ask first
+          const participantId = data.participantId, endDate = consentEndDate
+          confirm("Datenfreigabe aufheben",
+            `Soll die Datenfreigabe für ${meter.length === 1 ? "den Zählpunkt " + meter[0].meteringPoint : meter.length + " Zählpunkte"} beim Netzbetreiber aufgehoben werden?`,
+            "Aufheben", () =>
+              Api.eegService.revokeMeteringPoint(
+                eeg.id.toUpperCase(), participantId,
+                meter.map(m => {return {meter: m.meteringPoint, direction: m.direction, consentId: m.consentId}}),
+                endDate.getTime(), reason)
+                .then(() => {
+                  sent()
+                  reset()
+                  setConsentEndDate(null)
+                })
+                .catch(failed))  // keep the input on failure
         } else {
           errorToast(errorT("process.revoke_consentIdEmpty"))
         }
