@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import EegBaseService, {mayRedirectToLogin, SESSION_EXPIRED} from "../../service/base.service";
+import EegBaseService, {mayRedirectToLogin, NO_PERMISSION, SESSION_EXPIRED} from "../../service/base.service";
 import {AuthService} from "../../service/auth.service";
 
 class TestService extends EegBaseService {
@@ -12,13 +12,21 @@ class TestService extends EegBaseService {
 describe("handleErrors", () => {
   beforeEach(() => sessionStorage.clear())
 
-  it("fails a 401 passed unbound and starts the login once", async () => {
+  it("fails a 401 passed unbound and starts the login once when the session expired", async () => {
     const login = vi.fn().mockResolvedValue(undefined)
-    const svc = new TestService({login} as unknown as AuthService)
+    const getUser = vi.fn().mockResolvedValue({expired: true})
+    const svc = new TestService({login, getUser} as unknown as AuthService)
 
     await expect(svc.check(new Response("", {status: 401}))).rejects.toThrow(SESSION_EXPIRED)
     await expect(svc.check(new Response("", {status: 401}))).rejects.toThrow(SESSION_EXPIRED)
     expect(login).toHaveBeenCalledTimes(1)
+  })
+
+  it("reports a 401 with a valid session as missing permission, without a login redirect", async () => {
+    const login = vi.fn()
+    const svc = new TestService({login, getUser: vi.fn().mockResolvedValue({expired: false})} as unknown as AuthService)
+    await expect(svc.check(new Response("", {status: 401}))).rejects.toThrow(NO_PERMISSION)
+    expect(login).not.toHaveBeenCalled()
   })
 
   it("passes an ok response through", async () => {

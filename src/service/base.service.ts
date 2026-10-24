@@ -47,6 +47,7 @@ function createLoc<T>() {
 const Lock = createLoc<string>()
 
 export const SESSION_EXPIRED = "Deine Sitzung ist abgelaufen. Bitte melde Dich neu an."
+export const NO_PERMISSION = "Dafür fehlt Dir die Berechtigung."
 // Several calls can fail with 401 at once, and a 401 that is not about the session (a misconfigured service)
 // would come back right after the login: at most one redirect per minute, also across the reload.
 const LOGIN_REDIRECT_KEY = "eegfaktura.loginRedirectAt"
@@ -116,12 +117,18 @@ class EegBaseService {
 
     if (!response.ok) {
       switch (response.status) {
-        case 401:
-          // the session is gone: fail the call (it used to pass as success) and send the user to the login once
+        case 401: {
+          // used to pass as success. The backend also answers 401 for a missing access group: only an expired or
+          // missing session goes to the login, a valid token gets "no permission" (no redirect loop)
+          const user = await this.authService.getUser().catch(() => null)
+          if (user && !user.expired) {
+            throw new Error(NO_PERMISSION)
+          }
           if (mayRedirectToLogin()) {
             this.authService.login().catch(() => {})
           }
           throw new Error(SESSION_EXPIRED)
+        }
         default:
           const errorBody = await response.json().catch(e => response.text())
           if (isErrorResponse(errorBody)) {
