@@ -100,6 +100,36 @@ describe("Messages page: a running energy request refreshes", () => {
     expect(error().message).toBe("Die Nachrichten konnten nicht geladen werden. (wieder)")
   })
 
+  it("never shows the old community's list when the new community's load fails", async () => {
+    const get = mockNotifications([summary()])
+    const page = renderWithProviders(<NotificationPage/>)
+    await flush()
+    expect(page.container.textContent).toContain("Zusammenfassung Energiedaten-Anforderung")
+
+    tenant = "TE100200"
+    get.mockRejectedValueOnce(new Error("neu"))
+    page.rerender(<NotificationPage/>)
+    await flush()
+    expect(page.container.textContent).not.toContain("Zusammenfassung Energiedaten-Anforderung")
+    expect((page.store.getState() as any).eeg.error.message).toBe("Die Nachrichten konnten nicht geladen werden. (neu)")
+  })
+
+  it("reports the new community's first failure although the old community's load failed", async () => {
+    const get = mockNotifications([summary()])
+    get.mockRejectedValueOnce(new Error("alt"))
+    const page = renderWithProviders(<NotificationPage/>)
+    await flush()
+    const error = () => (page.store.getState() as any).eeg.error
+    expect(error().message).toBe("Die Nachrichten konnten nicht geladen werden. (alt)")
+    page.store.dispatch({type: "eeg/clearErrorState"})
+
+    tenant = "TE100200"
+    get.mockRejectedValueOnce(new Error("neu"))
+    page.rerender(<NotificationPage/>)
+    await flush()
+    expect(error().message).toBe("Die Nachrichten konnten nicht geladen werden. (neu)")
+  })
+
   it("does not poll without a live entry", async () => {
     const get = mockNotifications([summary()])
     renderWithProviders(<NotificationPage/>)

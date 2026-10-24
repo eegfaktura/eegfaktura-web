@@ -41,6 +41,11 @@ const NotificationPage: FC = () => {
 
   // Ionic keeps the page mounted when switching views: load again on every visit (a new energy request summary
   // or answers would otherwise only show after a page reload) and when the community changes.
+  // another community: its list starts empty and its first failure is reported (never the old community's list)
+  useEffect(() => {
+    setNotifications([])
+    loadFailed.current = false
+  }, [tenant])
   useEffect(() => load(), [load])
   useIonViewWillEnter(() => load(), [load])
 

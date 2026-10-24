@@ -39,7 +39,8 @@ this changelog highlights the changes relevant for overview and operations.
   now keyed by the notification id. More likely since the list reloads every minute while a request runs.
 - **Messages: a failed load went unnoticed** (unhandled promise rejection). It now shows "Die Nachrichten konnten
   nicht geladen werden." with the reason, once until a load works again (the reload every minute during a running
-  request does not repeat it).
+  request does not repeat it). Switching the community empties the list first, so a failed load never shows the
+  previous community's messages.
 - **UX defects from Karl's analysis (23.10.2026), ids UX-1 … UX-8:**
   - **Participation factor 0 % was sent as 100 % (UX-4):** "Teilnahmefaktor ändern" sent `partFact || 100`, so
     an entered 0 reached the grid operator as 100 %. The field now accepts 1–100 only (like the meter form) and
