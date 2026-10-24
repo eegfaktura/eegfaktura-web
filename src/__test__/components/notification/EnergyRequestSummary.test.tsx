@@ -83,7 +83,7 @@ describe("EnergyRequestSummary (platform#173)", () => {
       noAnswer: ["AT3"],
     }), now)
     expect(groups.map(g => g.title)).toEqual(["Keine Antwort", "Bereits angefordert", "Nicht angefordert",
-      "In einer späteren Anforderung erneut angefordert", "Daten vollständig (nicht angefordert)"])
+      "In einer späteren Anforderung erneut angefordert", "Daten vollständig, ohne L3-Werte (nicht angefordert)"])
     expect(groups[1].lines).toEqual([
       {meteringPoint: "AT6", detail: "frei ab 14:32"},
       {meteringPoint: "AT7", detail: "frei ab 23.10.2026 09:05"},

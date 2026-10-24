@@ -113,7 +113,7 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
       })
       .catch(failed)  // keep the input on failure
 
-  // Smart: check the energy data first, request only the metering points with gaps, each over its missing days
+  // Smart: check the energy data first, request only the metering points with gaps or L3 values, each over those days
   const requestSmart = async (meter: Metering[], from: Date, until: Date) => {
     const period = smartPeriod(from, until)
     if (!period) {
@@ -201,7 +201,7 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
             <InputForm name="communityId" label={t("common-info.community-id")} control={control} protectedControl={true}/>
             <CheckboxComponent label={t("process.requestValue.selectEntire")} setChecked={(c) => selectAllMeteringPoints(c)}
                                checked={selectEntire!}/>
-            <CheckboxComponent label="Nur fehlende Daten anfordern (Smart)" setChecked={setSmart} checked={smart}/>
+            <CheckboxComponent label="Nur fehlende Daten und L3-Werte anfordern (Smart)" setChecked={setSmart} checked={smart}/>
             <BasicSelectComponent control={control} name={"participantId"}
                                   options={participants
                                     .sort((a,b) => a.lastname && b.lastname ? a.lastname.localeCompare(b.lastname) : a.firstname.localeCompare(b.firstname))
