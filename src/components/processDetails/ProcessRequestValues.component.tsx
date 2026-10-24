@@ -99,8 +99,8 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
     Api.eegService.syncMeteringPoint(eeg.id.toUpperCase(), request, start.getTime(), end.getTime(), complete)
       .then((r: SyncEnergyResult) => {
         const locked = alreadyRequestedInfo(r.skipped)
-        if (r.requested === 0 && locked) {
-          info(`Es wurde nichts angefordert. ${locked}`)
+        if (r.requested === 0) {  // all skipped, e.g. requested in the last hour: nothing went to the grid operator
+          info(locked ? `Es wurde nichts angefordert. ${locked}` : "Es wurde nichts angefordert.")
         } else {
           sent(locked)
         }
