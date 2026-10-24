@@ -160,9 +160,10 @@ export class AuthService extends UserManager {
     // window.location.href = `${endSessionEndpoint}?post_logout_redirect_uri=${window.location.origin}&client_id=at.ourproject.vfeeg.app`
   }
 
+  // "Passwort ändern": a regular sign-in request (state, nonce, PKCE, redirect_uri from the settings) with the
+  // Keycloak action; a hand-built URL without state failed on the way back (261005-ca4)
   public async redirectToUserAccount () {
-    const url = await this.metadataService.getAuthorizationEndpoint()
-    window.location.href = `${url}?response_type=code&client_id=${this.settings.client_id}&redirect_uri=${window.location.origin}&kc_action=UPDATE_PASSWORD`
+    await this.signinRedirect({extraQueryParams: {kc_action: "UPDATE_PASSWORD"}})
   }
 
   get logoutActive () {
