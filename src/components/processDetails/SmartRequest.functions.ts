@@ -177,8 +177,8 @@ export const alreadyRequestedInfo = (skipped: SyncEnergySkipped[], now = Date.no
   if (locked.length === 0) return undefined
   const untils = locked.map(s => s.until).filter((u): u is number => !!u)
   const verb = locked.length === 1 ? "wurde" : "wurden"
-  // the latest time: from then on all of them are free again
-  const free = untils.length > 0
-    ? `, ${locked.length === 1 ? "" : "alle "}wieder frei ab ${formatUntil(Math.max(...untils), now)}` : ""
+  // the latest time: from then on all of them are free again; without a time for each one it is a lower bound
+  const when = locked.length === 1 ? "wieder frei ab" : untils.length === locked.length ? "alle wieder frei ab" : "frühestens frei ab"
+  const free = untils.length > 0 ? `, ${when} ${formatUntil(Math.max(...untils), now)}` : ""
   return `${meterCount(locked.length)} ${verb} in der letzten Stunde schon angefordert${free}.`
 }

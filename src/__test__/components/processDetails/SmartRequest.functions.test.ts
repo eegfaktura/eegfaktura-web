@@ -233,6 +233,10 @@ describe("confirmation texts", () => {
       {meteringPoint: "AT3", reason: "ALREADY_REQUESTED", until: new Date(2026, 9, 24, 14, 35).getTime()},
       {meteringPoint: "AT4", reason: "COMPLETE"},
     ], now)).toBe("3 Zählpunkte wurden in der letzten Stunde schon angefordert, alle wieder frei ab 14:40.")
+    expect(alreadyRequestedInfo([
+      {meteringPoint: "AT1", reason: "ALREADY_REQUESTED", until: new Date(2026, 9, 24, 14, 32).getTime()},
+      {meteringPoint: "AT2", reason: "ALREADY_REQUESTED"},
+    ], now)).toBe("2 Zählpunkte wurden in der letzten Stunde schon angefordert, frühestens frei ab 14:32.")
     expect(alreadyRequestedInfo([{meteringPoint: "AT1", reason: "ALREADY_REQUESTED"}], now))
       .toBe("1 Zählpunkt wurde in der letzten Stunde schon angefordert.")
     expect(alreadyRequestedInfo([{meteringPoint: "AT4", reason: "NOT_FOUND"}], now)).toBeUndefined()
