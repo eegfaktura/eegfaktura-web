@@ -10,6 +10,11 @@ export interface RequestedMeter {
   to: number
 }
 
+// "angenommen" only means the grid operator will send the data; it arrives later in own messages and is then stored
+export const DATA_DELAY_HINT = "Angenommen heißt: Der Netzbetreiber schickt die Energiedaten. Sie kommen in eigenen " +
+  "Nachrichten und werden danach gespeichert. Bis sie in eegFaktura angezeigt werden, kann es dauern, bei vielen " +
+  "Zählpunkten auch mehrere Stunden."
+
 export interface EnergyRequestSummary {
   type: "ZUSAMMENFASSUNG_PT"
   runId: string

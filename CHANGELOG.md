@@ -9,6 +9,10 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Fixed
+- **Energy data request: "angenommen" does not mean the data is there yet.** The single answer
+  ("Energiedatenanfrage … angenommen") and the summary of a request now say that the grid operator sends the data in
+  own messages afterwards and that it can take a while, with many metering points several hours, until it shows
+  in eegFaktura. The summary points to "Datenstand prüfen" for the current state.
 - **UX defects from Karl's analysis (23.10.2026), ids UX-1 … UX-8:**
   - **Participation factor 0 % was sent as 100 % (UX-4):** "Teilnahmefaktor ändern" sent `partFact || 100`, so
     an entered 0 reached the grid operator as 100 %. The field now accepts 1–100 only (like the meter form) and
