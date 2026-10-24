@@ -39,6 +39,10 @@ this changelog highlights the changes relevant for overview and operations.
     EEG-Basisdaten!" or a raw key such as `Bad Gateway_eeg_load`. It now shows "Die Änderung der EEG-Daten konnte
     nicht gespeichert werden." with the reason. An unknown load error shows "Die EEG-Daten konnten nicht geladen
     werden." with the reason instead of the raw key; the known load texts stay.
+  - **A failed energy report load was silent (261024-ca6):** the dashboard and the member list just showed no
+    energy. It now shows "Die Energiedaten konnten nicht geladen werden." with the reason (only for the latest
+    request; an older one replaced by a newer one stays quiet). A community without any imported energy data yet
+    (energystore answers "Record doesn't exist") still shows an empty report, without an error.
 - **Dashboard "Energiemengen – Eingekauft/Verkauft" wrong after an owner change** (support 6611112, 6611148).
   A metering point with two participations in the period (old and new member) counted the value of one of them
   twice, e.g. 160 or 10 kWh instead of 5 + 80 = 85 kWh. Each participation now adds its own value once.

@@ -4,6 +4,7 @@ import {errorMiddleware, reducer} from "../../store/store";
 import {selectError} from "../../store/eeg/selectors/eeg.selector";
 import {fetchRatesModel} from "../../store/rate";
 import {updateParticipantPartial, updateParticipant} from "../../store/participant";
+import {fetchEnergyReportV2} from "../../store/energy";
 
 const newStore = () => configureStore({
   reducer,
@@ -29,5 +30,20 @@ describe("errorMiddleware", () => {
     const message = selectError(store.getState()).error?.message
     expect(message).not.toContain("_participant_update")
     expect(message).toBe("Das Mitglied konnte nicht gespeichert werden. (Mitgliedsnummer vergeben)")
+  })
+
+  it("reports a failed energy report of the latest request (261024-ca6)", () => {
+    const store = newStore()
+    store.dispatch(fetchEnergyReportV2.pending("a", {} as any))
+    store.dispatch(fetchEnergyReportV2.rejected(new Error("Bad Gateway"), "a", {} as any))
+    expect(selectError(store.getState()).error?.message).toBe("Die Energiedaten konnten nicht geladen werden. (Bad Gateway)")
+  })
+
+  it("does not report a failed energy report that a newer request replaced", () => {
+    const store = newStore()
+    store.dispatch(fetchEnergyReportV2.pending("old", {} as any))
+    store.dispatch(fetchEnergyReportV2.pending("new", {} as any))
+    store.dispatch(fetchEnergyReportV2.rejected(new Error("Bad Gateway"), "old", {} as any))
+    expect(selectError(store.getState()).hasError).toBe(false)
   })
 })

@@ -14,7 +14,7 @@ import {
   activeParticipantsSelector1, fetchParticipantModel, moveMeteringPoint, registerMeteringpoint, updateMeteringPoint,
   updateMeteringPointPartFact, updateParticipant, updateParticipantPartial
 } from "./participant";
-import {meteringEnergyGroup11} from "./energy";
+import {fetchEnergyReportV2, meteringEnergyGroup11} from "./energy";
 import {Metering} from "../models/meteringpoint.model";
 import {ErrorState, setErrorState} from "./eeg";
 import i18next from '../util/I18n'
@@ -63,6 +63,12 @@ export const errorMiddleware: Middleware = store => next => action => {
       const reason = (action.payload as Error | undefined)?.message
       store.dispatch(setErrorState({message: i18next.t(`${reason}_participant_update`,
         { ns: 'error', defaultValue: withReason("Das Mitglied konnte nicht gespeichert werden.", reason) })} as ErrorState))
+    } else if (fetchEnergyReportV2.rejected.match(action)) {
+      // only the latest request counts (the reducer ignores an older one that fails late)
+      const reason = store.getState()[energy.featureKey].reportError
+      if (reason) {
+        store.dispatch(setErrorState({message: withReason("Die Energiedaten konnten nicht geladen werden.", reason)} as ErrorState))
+      }
     } else if(saveNewRate.rejected.match(action)) {
       store.dispatch(setErrorState({message: i18next.t(`${action.error.message}_tariff_create`, { ns: 'error' })} as ErrorState))
     } else {
