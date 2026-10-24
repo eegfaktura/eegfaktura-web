@@ -80,7 +80,12 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
   const [enableBilling, setEnableBilling] = useState<boolean>(false)
   const [showAddMeterPane, setShowAddMeterPane] = useState<boolean>(false)
   const [checkedParticipants, setCheckedParticipants] = useState<Record<string, boolean>>({})
-  const [activeParticipants, setActiveParticipants] = useState<EegParticipant[]>([])
+  // the members active in the selected period, derived from the store (empty after a community switch, 261024-ca13)
+  const activeParticipants = useMemo(() => {
+    if (!activePeriod || !allParticipants) return []
+    const [start, end] = getPeriodDates(activePeriod)
+    return filterActiveParticipantAndMeter(allParticipants, start, end)
+  }, [allParticipants, activePeriod])
 
 // Helper function for deep equality check (especially for objects/arrays)
 // This is a common utility you might have or need to implement
@@ -192,9 +197,8 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
     setEnableBilling(state);
   }
 
-  // another community (261024-ca13): nothing of the previous one stays listed, checked or open until the new one is loaded
+  // another community (261024-ca13): nothing of the previous one stays checked or open
   useEffect(() => {
-    setActiveParticipants([])
     setCheckedParticipants({})
     setDetailOpen(false)
     setShowAddMeterPane(false)
@@ -204,24 +208,9 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
     // not while the application (re)loads EEG, tariffs and members (tenant switch, refresh): the store can then
     // mix the old members with the new tenant; the load ends by setting the period, which fetches once
     if (activePeriod && allParticipants && !isFechting) {
-      const [start, end] = getPeriodDates(activePeriod)
-      const _aps = filterActiveParticipantAndMeter(allParticipants, start, end)
-      // const identical = objectsSimilar(activeParticipants, _aps, "id", ["participantSince"])
-
-      setActiveParticipants(prevState => _aps.map(s => {
-        // I have no glue why this code is included
-        // const e = prevState.find(n => n.id === s.id)
-        // if (e) {
-        //   return e
-        // }
-        return s
-      }))
-
-      // if (!identical) {
-        fetchEnergyReport(_aps)
-      // }
+      fetchEnergyReport(activeParticipants)
     }
-  }, [allParticipants, activePeriod, zvtKey, isFechting]);
+  }, [activeParticipants, zvtKey, isFechting]);
 
   // useEffect(() => {
   //   fetchEnergyReport(activeParticipants)
