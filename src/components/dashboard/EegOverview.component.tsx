@@ -4,6 +4,7 @@ import {EegTariff} from "../../models/eeg.model";
 import {useAppSelector} from "../../store";
 import {allParticipantsSelector} from "../../store/participant";
 import {countMemberActivity} from "../../util/MemberActivity.util";
+import {countMeters} from "../../util/MeterCount.util";
 
 interface EegOverviewComponentProps {
   participants: EegParticipant[]
@@ -23,28 +24,11 @@ const EegOverviewComponent: FC<EegOverviewComponentProps> = ({participants, rate
   const allParticipants = useAppSelector(allParticipantsSelector)
   const members = useMemo(() => countMemberActivity(allParticipants), [allParticipants])
 
+  // platform#211: each metering point once, with the tariff of its current participation
   const [consumerCount, producerCount, tariffUsage] = useMemo(() => {
-      const defaultRateCount: Record<string, number> = Object.keys(rateMap).reduce((o, v) => {
-        return {...o, [v]: 0}
-      }, {} as Record<string, number>)
-
-      const s = participants.reduce((r, p) => {
-        p.meters.forEach(m => {
-          m.direction === 'CONSUMPTION' ? r.c += 1 : r.pp += 1
-          if (m.tariff_id) {
-            r.t[m.tariff_id] = r.t[m.tariff_id] + 1
-          }
-        })
-        return r
-      }, {c: 0, pp: 0, t: defaultRateCount})
-
-    return [s.c, s.pp, s.t]
-      // setConsumerCount(s.c)
-      // setProducerCount(s.pp)
-      // setParticipantCount(s.p)
-      // setTariffUssage(s.t)
-
-  }, [participants])
+    const s = countMeters(participants, Object.keys(rateMap))
+    return [s.consumers, s.producers, s.tariffs] as const
+  }, [participants, rateMap])
 
 
   // useEffect(() => {

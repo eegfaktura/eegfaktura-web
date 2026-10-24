@@ -125,7 +125,8 @@ export const acceptedMetersToCheck = (s: EnergyRequestSummary, participants: Eeg
 
 // Of several entries of a metering point (owner change, new registration) the active one counts, a not yet
 // registered (INIT) one last. Used for the name and the data check, so both show the same entry.
-const entryRank = (m: Metering) => m.status === 'ACTIVE' ? 2 : m.status === 'INIT' ? 0 : 1
+// Also used by the dashboard's metering point count (platform#211).
+export const entryRank = (m: Metering) => m.status === 'ACTIVE' ? 2 : m.status === 'INIT' ? 0 : 1
 
 // the name of a metering point, from the entry that counts
 export const meterNames = (meters: Metering[]): Map<string, string> => {
