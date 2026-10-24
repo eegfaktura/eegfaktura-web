@@ -1,5 +1,5 @@
 import React, {FC, forwardRef, useEffect, useState} from "react";
-import {IonButton, IonContent, IonInput, IonItem} from "@ionic/react";
+import {IonButton, IonContent, IonInput, IonItem, useIonAlert} from "@ionic/react";
 import InputForm from "../form/InputForm.component";
 import SelectForm from "../form/SelectForm.component";
 import DatePicker from "react-datepicker";
@@ -17,6 +17,19 @@ import {BasicSelectComponent, SelectOptions} from "../form/BasicSelect.component
 import {JoinStrings} from "../../util/Helper.util";
 import {meteringDisplayName, selectedMeters} from "../../util/FilterHelper";
 import {useProcessFeedback} from "./useProcessFeedback";
+import {useTenant} from "../../store/hook/Eeg.provider";
+import {SyncEnergyMeter, SyncEnergyResult} from "../../service/eeg.service";
+import {buildBillingCheckRequest} from "../participantPane/BillingCheck.functions";
+import {
+  alreadyRequestedInfo,
+  entireConfirmation,
+  metersToCheck,
+  NOTHING_MISSING,
+  NOTHING_TO_CHECK,
+  smartConfirmation,
+  smartPlan,
+  smartRequest
+} from "./SmartRequest.functions";
 
 interface ProcessValues {
   communityId: string | undefined
@@ -38,7 +51,9 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
   }
 
   const {t} = useLocale("common")
-  const {sent, failed} = useProcessFeedback()
+  const {sent, failed, info} = useProcessFeedback()
+  const tenant = useTenant()
+  const [alert] = useIonAlert()
   const {handleSubmit, reset,
     control, watch,
     setValue, formState} = useForm<ProcessValues>({defaultValues: processValues})
@@ -46,6 +61,8 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
   const [startDate, endDate] = dateRange;
   const [selectEntire, setSelectEntire] = useState(false)
+  const [smart, setSmart] = useState(true)
+  const [checking, setChecking] = useState(false)
   const [meteringPoints, participantId] = watch(['meteringPoints', 'participantId'])
 
   // useEffect(() => {
@@ -70,23 +87,66 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
     }
   }, [participantId])
 
-  const onRequest = (data: ProcessValues) => {
+  // resolves with the role of the chosen button; the submit stays running (button disabled) until then
+  const ask = (message: string, buttons: { text: string, role: string }[]) => new Promise<string | undefined>(resolve =>
+    alert({
+      subHeader: edaProcess.name, message,
+      buttons: [{text: "Abbrechen", role: "cancel"}, ...buttons],
+      onDidDismiss: (e: CustomEvent) => resolve(e.detail.role),
+    }))
+
+  const send = (request: SyncEnergyMeter[], complete: string[], start: Date, end: Date) =>
+    Api.eegService.syncMeteringPoint(eeg.id.toUpperCase(), request, start.getTime(), end.getTime(), complete)
+      .then((r: SyncEnergyResult) => {
+        const locked = alreadyRequestedInfo(r.skipped)
+        if (r.requested === 0 && locked) {
+          info(`Es wurde nichts angefordert. ${locked}`)
+        } else {
+          sent(locked)
+        }
+        reset()
+        setDateRange([null, null])
+        setSelectEntire(false)
+      })
+      .catch(failed)  // keep the input on failure
+
+  // Smart: check the energy data first, request only the metering points with gaps, each over its missing days
+  const requestSmart = async (meter: Metering[], start: Date, end: Date) => {
+    const toCheck = metersToCheck(meter, start, end)
+    if (toCheck.length === 0) {
+      info(NOTHING_TO_CHECK)
+      return
+    }
+    setChecking(true)
+    const plan = await Api.energyService.fetchBillingCheck(tenant, buildBillingCheckRequest(toCheck, start, end))
+      .then(res => smartPlan(toCheck, res))
+      .catch(() => smartPlan(toCheck, {error: "Energiedaten konnten nicht abgefragt werden."}))
+      .finally(() => setChecking(false))
+    const confirmation = smartConfirmation(plan)
+    if (!confirmation) {
+      info(NOTHING_MISSING)
+      return
+    }
+    const choice = await ask(confirmation.message, confirmation.buttons)
+    if (choice === 'missing' || choice === 'all') {
+      const {meters: request, complete} = smartRequest(plan, choice)
+      return send(request, complete, start, end)
+    }
+  }
+
+  const onRequest = async (data: ProcessValues) => {
     if (data.meteringPoints && startDate && endDate) {
 
       // „Gesamte Gemeinschaft“ fills the selection from all meters and keeps an earlier participant choice
       const meter = selectedMeters(selectEntire ? meters : useableMeters, data.meteringPoints)
       if (meter.length > 0) {  // empty: the selection does not belong to the chosen participant
-        return Api.eegService.syncMeteringPoint(
-          eeg.id.toUpperCase(),
-          meter.map(m => {return {meter: m.meteringPoint, direction: m.direction}}),
-          startDate.getTime(), endDate.getTime())
-          .then(() => {
-            sent()
-            reset()
-            setDateRange([null, null])
-            setSelectEntire(false)
-          })
-          .catch(failed)  // keep the input on failure
+        if (smart) {
+          return requestSmart(meter, startDate, endDate)
+        }
+        if (selectEntire && await ask(entireConfirmation(meter.length), [{text: "Anfordern", role: "confirm"}]) !== "confirm") {
+          return
+        }
+        return send(meter.map(m => {return {meter: m.meteringPoint, direction: m.direction}}), [], startDate, endDate)
       }
     }
   }
@@ -132,6 +192,7 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
             <InputForm name="communityId" label={t("common-info.community-id")} control={control} protectedControl={true}/>
             <CheckboxComponent label={t("process.requestValue.selectEntire")} setChecked={(c) => selectAllMeteringPoints(c)}
                                checked={selectEntire!}/>
+            <CheckboxComponent label="Nur fehlende Daten anfordern (Smart)" setChecked={setSmart} checked={smart}/>
             <BasicSelectComponent control={control} name={"participantId"}
                                   options={participants
                                     .sort((a,b) => a.lastname && b.lastname ? a.lastname.localeCompare(b.lastname) : a.firstname.localeCompare(b.firstname))
@@ -158,6 +219,7 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
                 {t("process.submit")}
               </IonButton>
             </IonItem>
+            {checking && <p style={{paddingLeft: "16px"}}>Datenstand wird geprüft …</p>}
           </>
       </CorePageTemplate>
       </ProcessContentComponent>

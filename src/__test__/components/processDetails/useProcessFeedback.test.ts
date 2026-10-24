@@ -14,6 +14,19 @@ describe("useProcessFeedback", () => {
     expect(toaster).toHaveBeenLastCalledWith(expect.objectContaining({message: "process.request_ok"}))
   })
 
+  it("adds a note to the confirmation and shows it longer", () => {
+    const {result} = renderHook(() => useProcessFeedback())
+    result.current.sent("1 Zählpunkt wurde in der letzten Stunde schon angefordert.")
+    expect(toaster).toHaveBeenLastCalledWith(expect.objectContaining({
+      message: "process.request_ok 1 Zählpunkt wurde in der letzten Stunde schon angefordert.", duration: 8000}))
+  })
+
+  it("shows an info instead of the confirmation", () => {
+    const {result} = renderHook(() => useProcessFeedback())
+    result.current.info("Es wird nichts angefordert.")
+    expect(toaster).toHaveBeenLastCalledWith(expect.objectContaining({message: "Es wird nichts angefordert."}))
+  })
+
   it("shows a failed request with its reason until closed", () => {
     const {result} = renderHook(() => useProcessFeedback())
     result.current.failed(new Error("Zählpunkt unbekannt"))
