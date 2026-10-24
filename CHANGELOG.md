@@ -27,6 +27,9 @@ this changelog highlights the changes relevant for overview and operations.
     (with "frei ab") and "Daten vollständig (nicht angefordert)".
 
 ### Fixed
+- **Messages: a card's data check moved to another card after a reload.** The list keyed its cards by position, so
+  when a newer notification came first, the result of "Datenstand prüfen" showed on the wrong summary. Cards are
+  now keyed by the notification id. More likely since the list reloads every minute while a request runs.
 - **UX defects from Karl's analysis (23.10.2026), ids UX-1 … UX-8:**
   - **Participation factor 0 % was sent as 100 % (UX-4):** "Teilnahmefaktor ändern" sent `partFact || 100`, so
     an entered 0 reached the grid operator as 100 %. The field now accepts 1–100 only (like the meter form) and
