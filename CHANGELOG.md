@@ -64,8 +64,8 @@ this changelog highlights the changes relevant for overview and operations.
     former check for a code 900 never matched).
   - **Start: "Keine aktive EEG geladen" while the EEG loads, blank EEG page after a failed load (261024-ca11):**
     the member list and the EEG page now show a spinner while the EEG loads, and after a failed load the error
-    with "Erneut versuchen" (loads the community again). "Keine aktive EEG geladen" shows only when the account
-    has no community.
+    with "Erneut versuchen" (loads the community again). An account without any community gets "Ihrem Konto ist
+    keine Gemeinschaft zugeordnet. Bitte wenden Sie sich an den Support." instead of "Keine aktive EEG geladen".
   - **English crash page without a way back, empty page for an unknown URL (261024-ca12):** a render error
     shows "Etwas ist schiefgelaufen." with "Neu laden" and "Zur Startseite" instead of "Something went wrong".
     An unknown URL (e.g. an old bookmark) shows "Diese Seite gibt es nicht." with "Zur Startseite". Still one

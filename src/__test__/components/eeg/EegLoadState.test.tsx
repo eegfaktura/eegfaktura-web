@@ -9,6 +9,8 @@ import EegLoadStateComponent from "../../../components/EegLoadState.component";
 import {EegContext} from "../../../store/hook/Eeg.provider";
 import {fetchEegModel} from "../../../store/eeg";
 
+const NO_COMMUNITY = "Ihrem Konto ist keine Gemeinschaft zugeordnet. Bitte wenden Sie sich an den Support."
+
 const render = (refresh = vi.fn()) => {
   const r = renderWithProviders(<EegContext.Provider value={{refresh} as any}><EegLoadStateComponent/></EegContext.Provider>)
   return {...r, refresh}
@@ -19,7 +21,7 @@ describe("EegLoadState (261024-ca11)", () => {
     tenants = ["TE100200"]
     const {container} = render()
     expect(container.querySelector("ion-spinner")).toBeTruthy()
-    expect(screen.queryByText("Keine aktive EEG geladen")).toBeNull()
+    expect(screen.queryByText(NO_COMMUNITY)).toBeNull()
   })
 
   it("shows the load error with \"Erneut versuchen\", which loads again", () => {
@@ -43,7 +45,8 @@ describe("EegLoadState (261024-ca11)", () => {
   it("without any community for the account it says so", () => {
     tenants = []
     render()
-    expect(screen.getByText("Keine aktive EEG geladen")).toBeTruthy()
+    expect(screen.getByText(NO_COMMUNITY)).toBeTruthy()
+    expect(screen.queryByText("Keine aktive EEG geladen")).toBeNull()
   })
 })
 
@@ -59,6 +62,6 @@ describe("EegLoadState is a page of the outlet (261024-ca11, review 1)", () => {
   it("also the empty state", () => {
     tenants = []
     const {container} = render()
-    expect(container.querySelector(".ion-page")?.textContent).toContain("Keine aktive EEG geladen")
+    expect(container.querySelector(".ion-page")?.textContent).toContain(NO_COMMUNITY)
   })
 })
