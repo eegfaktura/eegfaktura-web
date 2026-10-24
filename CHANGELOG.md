@@ -37,6 +37,11 @@ this changelog highlights the changes relevant for overview and operations.
     accepted metering points still with L3 values ("Noch mit L3-Werten", with their days).
 
 ### Fixed
+- Metering-point detail pane could show the previous meter's active/inactive state after
+  switching between meters (stale render of the disabled `ion-toggle`, observed on
+  Safari/WebKit; text and toggle even contradicted each other). The meter detail block now
+  remounts per metering point via a React `key`, so every switch renders the selected
+  meter's real state (#101).
 - **Energy data request: "angenommen" does not mean the data is there yet.** The single answer
   ("Energiedatenanfrage … angenommen") and the summary of a request now say that the grid operator sends the data in
   own messages afterwards and that it can take a while, with many metering points several hours, until it shows
