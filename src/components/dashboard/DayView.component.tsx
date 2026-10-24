@@ -26,7 +26,8 @@ export const useDayReport = (tenant: ActiveTenant | undefined, day: Date | undef
       .catch((e: unknown) => {
         if (id === request.current) setState({status: "error", day: key, message: e instanceof Error ? e.message : String(e)})
       })
-  }, [tenant, day?.getTime()])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenant?.tenant, tenant?.ecId, day?.getTime()])   // useTenant() returns a new object on every render: key on its values, else load() runs on every render
 
   useEffect(() => { load() }, [load])
 
