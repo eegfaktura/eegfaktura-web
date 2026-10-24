@@ -3,8 +3,7 @@ import {createReducer} from "@reduxjs/toolkit";
 import {adapter, ErrorState, initialState} from "../states/eeg.state";
 import i18next from '../../../util/I18n'
 import {saveNewRate} from "../../rate";
-
-const withReason = (text: string, reason: string | undefined) => reason ? `${text} (${reason})` : text
+import {withReason} from "../../../service/error.text";
 
 export const reducer = createReducer(initialState, builder =>
   builder

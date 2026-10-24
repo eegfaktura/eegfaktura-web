@@ -21,6 +21,7 @@ import i18next from '../util/I18n'
 import {fetchRatesModel, saveNewRate} from "./rate";
 import {userApi} from "./user/userApi";
 import {participantApi} from "./participant/api";
+import {withReason} from "../service/error.text";
 
 /**
  * Reducer
@@ -49,9 +50,6 @@ const silentFailures: [{ match: (a: any) => boolean }, string][] = [
   [moveMeteringPoint.rejected, "Der Zählpunkt konnte nicht verschoben werden."],
   [registerMeteringpoint.rejected, "Der Zählpunkt konnte nicht angelegt werden."],
 ]
-
-const withReason = (text: string, reason: string | undefined) =>
-  reason && reason !== "Rejected" ? `${text} (${reason})` : text
 
 export const errorMiddleware: Middleware = store => next => action => {
   try {
