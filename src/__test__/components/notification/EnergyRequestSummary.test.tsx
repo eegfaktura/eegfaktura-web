@@ -161,6 +161,21 @@ describe("EnergyRequestSummary (platform#173)", () => {
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2))
   })
 
+  it("drops the data check result when more metering points of a running request are accepted", async () => {
+    mockFetch().mockResolvedValue(energy([{meteringPoint: "AT1", missingCount: 4}]))
+    const one = summary({live: true, requested: 2, accepted: [{meteringPoint: "AT1", from, to}], noAnswer: ["AT2"]})
+    const {rerender} = renderWithProviders(<EnergyRequestSummaryComponent summary={one}/>,
+      withParticipants([participant("p1", "Muster", [{meteringPoint: "AT1"}, {meteringPoint: "AT2"}])]))
+    fireEvent.click(screen.getByText("Datenstand prüfen"))
+    await waitFor(() => expect(screen.getByText("Daten unvollständig (1)")).toBeTruthy())
+
+    rerender(<EnergyRequestSummaryComponent summary={{...one, noAnswer: []}}/>)  // same state: result stays
+    expect(screen.getByText("Daten unvollständig (1)")).toBeTruthy()
+    rerender(<EnergyRequestSummaryComponent summary={summary({live: true})}/>)
+    expect(screen.queryByText("Daten unvollständig (1)")).toBeNull()
+    expect(screen.getByText("Datenstand prüfen")).toBeTruthy()
+  })
+
   it("does not report complete when nothing could be checked or energystore fails", async () => {
     const fetch = mockFetch().mockRejectedValue(new Error("down"))
     const {unmount} = renderWithProviders(<EnergyRequestSummaryComponent summary={summary({})}/>)
