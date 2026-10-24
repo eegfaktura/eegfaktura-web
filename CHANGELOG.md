@@ -9,12 +9,14 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Added
-- **Dashboard day view** (platform#210, konzept-dashboard-tagesansicht). A switch "Zeitraum | Tag" above the
-  dashboard cards. "Tag" shows one day of the selected period for the whole community: "Lastverlauf" with
+- **Dashboard day view in the period menu** (platform#210, user feedback). The day view is chosen in the period
+  popover (gear) as a new row "Tag" with a date field, limited to the energy data range and yesterday; any other row
+  returns to the period view with that period. The separate switch "Zeitraum | Tag" is gone; the day view keeps its
+  arrows and day sums and has the same gear to go back.
+- **Dashboard day view** (platform#210, konzept-dashboard-tagesansicht). The day view shows one day for the whole community: "Lastverlauf" with
   quarter-hour lines Produktion, Verbrauch, Eigendeckung and "Tagesverlauf" with hourly bars EEG, EVU, Produziert,
   plus the day sums (Produktion, Verbrauch, Eigendeckung, Überschuss), to check whether production matches
-  Eigendeckung plus surplus. Arrows step one day, limited to the selected period, the community's energy data and
-  yesterday. Data from the existing energystore load-curve report for one day (no energystore change); the hourly
+  Eigendeckung plus surplus. Arrows step one day, limited to the community's energy data and yesterday. Data from the existing energystore load-curve report for one day (no energystore change); the hourly
   bars are summed from the quarter hours (the intra-day report shifts hour 0 to 23, energystore known-errors #26).
   A metering point with an owner change counts once (sums per stored metering point, not per participation). DST
   days show 23 / 25 hours. "Zeitraum" is unchanged.

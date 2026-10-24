@@ -11,6 +11,7 @@ import {settings} from "ionicons/icons";
 import './LoadCurveReport.component.scss'
 import {calcXAxisNameV2} from "./LoadCurveReport.functions";
 import {transformData} from "./dashboard.functions";
+import {DayBounds} from "./DayView.functions";
 import {NameType, ValueType} from "recharts/types/component/DefaultTooltipContent";
 
 interface LoadSharingComponentProps {
@@ -18,6 +19,8 @@ interface LoadSharingComponentProps {
   report: ReportNamedData[] | undefined;
   activePeriod: SelectedPeriod;
   energyDate: { begin: string, end: string };
+  dayRange?: DayBounds
+  onDaySelected?: (day: SelectedPeriod) => void
 }
 
 type LoadSharingData = {
@@ -30,7 +33,7 @@ type LoadSharingData = {
 
 const EMPTY_LOAD_CURVE_DATA = {} as LoadSharingData
 
-const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, activePeriod, energyDate}) => {
+const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, activePeriod, energyDate, dayRange, onDaySelected}) => {
 
   const [data, setData] = useState<LoadSharingData[]>([EMPTY_LOAD_CURVE_DATA] as LoadSharingData[])
   const [selectedPeriod, setSelectedPeriod] = useState<SelectedPeriod>(activePeriod)
@@ -47,10 +50,15 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
   const [properties, dismiss] = useIonPopover(ChartProperties, {
     periods: energyDate, //{begin: "01.01.2023 00:00:0000", end: moment().format("DD.MM.YYYY HH:mm:ss")},
     selectedPeriod: selectedPeriod,
+    dayRange: dayRange,
     onDismiss: (data: SelectedPeriod, role: string) => { dismiss(data, role)},
   });
 
   const onSelectionChanged = async (selectedPeriod: SelectedPeriod) => {
+    if (selectedPeriod?.type === 'D') {   // "Tag": the dashboard switches to the day view
+      onDaySelected?.(selectedPeriod)
+      return
+    }
     if (selectedPeriod) {
       dismissLoading(true)
       Api.energyService.fetchLoadCurveReportV2(tenant, selectedPeriod).then((d) => {

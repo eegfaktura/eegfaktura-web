@@ -9,6 +9,7 @@ import ChartProperties from "./ChartProperties.component";
 import {settings} from "ionicons/icons";
 import {ActiveTenant} from "../../models/eeg.model";
 import {LoadSharingData, transformData} from "./dashboard.functions";
+import {DayBounds} from "./DayView.functions";
 
 import "./eeg-card.scss"
 import "./IntraDayReport.component.scss"
@@ -23,9 +24,11 @@ interface IntraDayReportComponentProps {
   report: ReportNamedData[] | undefined;
   energyDate: {begin: string, end: string}
   activePeriod: SelectedPeriod
+  dayRange?: DayBounds
+  onDaySelected?: (day: SelectedPeriod) => void
 }
 
-const IntraDayReportComponent: FC<IntraDayReportComponentProps> = ({tenant, report, energyDate, activePeriod}) => {
+const IntraDayReportComponent: FC<IntraDayReportComponentProps> = ({tenant, report, energyDate, activePeriod, dayRange, onDaySelected}) => {
 
   const [selectedPeriod, setSelectedPeriod] = useState<SelectedPeriod>(activePeriod)
   const [data, setData] = useState<LoadSharingData[]>(EMPTY_DATA)
@@ -34,6 +37,7 @@ const IntraDayReportComponent: FC<IntraDayReportComponentProps> = ({tenant, repo
   const [properties, dismiss] = useIonPopover(ChartProperties, {
     periods: energyDate, //{begin: "01.01.2023 00:00:0000", end: moment().format("DD.MM.YYYY HH:mm:ss")},
     selectedPeriod: selectedPeriod,
+    dayRange: dayRange,
     onDismiss: (data: SelectedPeriod, role: string) => { dismiss(data, role)},
   });
 
@@ -46,6 +50,10 @@ const IntraDayReportComponent: FC<IntraDayReportComponentProps> = ({tenant, repo
   }, [activePeriod]);
 
   const onSelectionChanged = async (selectedPeriod: SelectedPeriod) => {
+    if (selectedPeriod?.type === 'D') {   // "Tag": the dashboard switches to the day view
+      onDaySelected?.(selectedPeriod)
+      return
+    }
     if (selectedPeriod) {
       dismissLoading(true)
       Api.energyService.fetchIntraDayReportV2(tenant, selectedPeriod).then((d) => {
