@@ -11,21 +11,24 @@ import user from './user';
 
 import {combineReducers, configureStore, createSelector, Middleware} from "@reduxjs/toolkit";
 import {
-  activeMetersSelector, fetchParticipantModel, moveMeteringPoint, registerMeteringpoint, updateMeteringPoint,
+  activeParticipantsSelector1, fetchParticipantModel, moveMeteringPoint, registerMeteringpoint, updateMeteringPoint,
   updateMeteringPointPartFact, updateParticipant, updateParticipantPartial
 } from "./participant";
-import {meteringEnergyGroup11} from "./energy";
+import {fetchEnergyReportV2, meteringEnergyGroup11} from "./energy";
 import {Metering} from "../models/meteringpoint.model";
 import {ErrorState, setErrorState} from "./eeg";
 import i18next from '../util/I18n'
 import {fetchRatesModel, saveNewRate} from "./rate";
 import {userApi} from "./user/userApi";
 import {participantApi} from "./participant/api";
+import {withReason} from "../service/error.text";
+import {isOtherCommunityRequest, tenantScoped} from "./tenantScope";
 
 /**
  * Reducer
  */
-export const reducer = combineReducers({
+// a community switch clears the community's data; late answers of the previous community are ignored (261024-ca13)
+export const reducer = tenantScoped(combineReducers({
   [eeg.featureKey]: eeg.reducer,
   [participant.featureKey]: participant.reducer,
   [rate.featureKey]: rate.reducer,
@@ -36,7 +39,7 @@ export const reducer = combineReducers({
   [userApi.reducerPath]: userApi.reducer,
   [participantApi.reducerPath]: participantApi.reducer,
   user,
-});
+}));
 
 // Thunks whose failure no caller shows: report them through the global error toast (Eeg.provider).
 // Thunks with their own error handling in the component (confirm, delete, create member) are not listed.
@@ -50,11 +53,10 @@ const silentFailures: [{ match: (a: any) => boolean }, string][] = [
   [registerMeteringpoint.rejected, "Der Zählpunkt konnte nicht angelegt werden."],
 ]
 
-const withReason = (text: string, reason: string | undefined) =>
-  reason && reason !== "Rejected" ? `${text} (${reason})` : text
-
 export const errorMiddleware: Middleware = store => next => action => {
   try {
+    // a failure of the previous community is no longer relevant after a switch (261024-ca13)
+    if (isOtherCommunityRequest(store.getState(), action)) return next(action)
 
     const result = next(action)
 
@@ -63,6 +65,13 @@ export const errorMiddleware: Middleware = store => next => action => {
       const reason = (action.payload as Error | undefined)?.message
       store.dispatch(setErrorState({message: i18next.t(`${reason}_participant_update`,
         { ns: 'error', defaultValue: withReason("Das Mitglied konnte nicht gespeichert werden.", reason) })} as ErrorState))
+    } else if (fetchEnergyReportV2.rejected.match(action)) {
+      // only the latest request counts: an older one that fails late gives no (second) toast
+      const energyState = store.getState()[energy.featureKey]
+      const reason = action.meta.requestId === energyState.reportRequestId ? energyState.reportError : undefined
+      if (reason) {
+        store.dispatch(setErrorState({message: withReason("Die Energiedaten konnten nicht geladen werden.", reason)} as ErrorState))
+      }
     } else if(saveNewRate.rejected.match(action)) {
       store.dispatch(setErrorState({message: i18next.t(`${action.error.message}_tariff_create`, { ns: 'error' })} as ErrorState))
     } else {
@@ -112,17 +121,18 @@ export type AppDispatch = typeof store.dispatch;
 
 
 export const activeMeterEnergyArray = createSelector(
-  activeMetersSelector,
+  activeParticipantsSelector1,
   meteringEnergyGroup11,
-  (metering, report) => metering.map((m) => {
-    return { meter: m, utilization: report[m.meteringPoint] }
-  })
+  (participants, report) => participants.flatMap(p => p.meters.map((m) => {
+    return { meter: m, utilization: report[p.id]?.[m.meteringPoint] as number | undefined }
+  }))
 )
 
 export const activeMeterEnergyGroup = createSelector(
-  activeMetersSelector,
+  activeParticipantsSelector1,
   meteringEnergyGroup11,
-  (metering, report) => metering.reduce((out, m) => {
-    return {...out, [m.meteringPoint]: {m: m, utilization: report[m.meteringPoint]}}
-  }, {} as Record<string, {m: Metering, utilization: number}>)
+  (participants, report) => participants.flatMap(p => p.meters.map(m => ({p, m}))).reduce((out, {p, m}) => {
+    out[m.meteringPoint] = {m: m, utilization: report[p.id]?.[m.meteringPoint]}
+    return out
+  }, {} as Record<string, {m: Metering, utilization: number | undefined}>)
 )

@@ -12,7 +12,7 @@ import DatePickerCoreElement from "./elements/DatePickerCore.element";
 import {IbanInputForm} from "../form/IbanInputForm";
 import {PhoneInputForm} from "../form/PhoneInputForm";
 import {useLocale} from "../../store/hook/useLocale";
-import {useAccessGroups} from "../../store/hook/Eeg.provider";
+import {useAccessGroups, useTenant} from "../../store/hook/Eeg.provider";
 import {usePersistBusinessTypeMutation} from "../../store/participant/api";
 import DatePickerFormElement from "../form/DatePickerForm.element";
 import {DebitExtensionComponent} from "./DebitExtensionComponent";
@@ -40,6 +40,7 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
   const [selectedBusinessType, setSelectedBusinessType] = useState(0)
 
   const [persistBusinessType] = usePersistBusinessTypeMutation()
+  const {tenant} = useTenant()
 
   const formMethods = useForm({
     defaultValues: participant, mode: "all"})
@@ -109,7 +110,7 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
                         askFor(t("alerts.changeBusinessType", { context: ''+selectedBusinessType }),
                           () => {
                             onChangeBusinessType(selectedBusinessType === 0 ? 1 : 0)
-                            persistBusinessType({participantId: participant.id, value: {path: 'businessRole',
+                            persistBusinessType({tenant: tenant!, participantId: participant.id, value: {path: 'businessRole',
                                 value: selectedBusinessType === 0 ? "EEG_BUSINESS" : "EEG_PRIVATE"}})
                           });
                       }}>

@@ -13,6 +13,8 @@ export interface EnergyEntitieState {
   totalConsumption: number
   // requestId of the latest fetchEnergyReportV2: an older response that arrives later is ignored (platform#174)
   reportRequestId?: string
+  // reason of the failed latest report load; undefined while it loads or after it worked (261024-ca6)
+  reportError?: string
 }
 
 export interface EnergyMetaState extends EntityState<EnergyMeta, string> {

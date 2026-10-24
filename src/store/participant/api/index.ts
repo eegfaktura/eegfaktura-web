@@ -17,7 +17,8 @@ export const participantApi = createApi({
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
       }
-      if (tenant) {
+      // the community of the call (query args) wins: the selection can change while the token is looked up
+      if (tenant && !headers.has("tenant")) {
         headers.set("tenant", tenant);
       }
       return headers;
@@ -25,18 +26,20 @@ export const participantApi = createApi({
   }),
   tagTypes: ["participants"],
   endpoints: (builder) => ({
-    persistBusinessType: builder.mutation<EegParticipant, { participantId: string, value: { path: string, value: any } }>({
+    persistBusinessType: builder.mutation<EegParticipant, { tenant: string, participantId: string, value: { path: string, value: any } }>({
       query: (p) => ({
         url: `/v2/${p.participantId}`,
         method: 'PUT',
+        headers: {tenant: p.tenant},
         body: JSON.stringify(p.value),
       }),
       extraOptions: { maxRetries: 2 },
     }),
-    deleteParticipant: builder.mutation<EegParticipant, { participantId: string }>({
+    deleteParticipant: builder.mutation<EegParticipant, { tenant: string, participantId: string }>({
       query: (p) => ({
         url: `/v2/${p.participantId}`,
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {tenant: p.tenant}
       })
     })
     // logout: builder.query<{ msg: string }, null>({

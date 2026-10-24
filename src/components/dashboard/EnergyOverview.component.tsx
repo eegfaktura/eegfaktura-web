@@ -1,7 +1,7 @@
 import React, {FC, useEffect, useState} from "react";
 import BarComponent from "../core/Bar.component";
 import {activeMeterEnergyArray, useAppSelector} from "../../store";
-import {PieSeriesType} from "../../pages/Dashbaord.page";
+import {PieSeriesType} from "../../pages/Dashboard.page";
 import {EegTariff} from "../../models/eeg.model";
 import {selectedPeriodSelector} from "../../store/energy";
 import {getPreviousPeriod} from "../../util/Helper.util";
@@ -65,7 +65,7 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
 
     meterGroup.forEach((m,i) => {
       if (rates[m.meter.tariff_id]) {
-        if (isNaN(m.utilization)) {
+        if (m.utilization === undefined || isNaN(m.utilization)) {
           console.error("Meter has invalid energy values!", i, m)
         } else {
           if (m.meter.direction === "CONSUMPTION") {

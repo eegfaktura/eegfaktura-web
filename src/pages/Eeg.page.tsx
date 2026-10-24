@@ -22,6 +22,7 @@ import {IbanInputForm} from "../components/form/IbanInputForm";
 import {PhoneInputForm} from "../components/form/PhoneInputForm";
 import {useLocale} from "../store/hook/useLocale";
 import {isValidEmailList} from "../util/EmailAddress.util";
+import EegLoadStateComponent from "../components/EegLoadState.component";
 
 
 const EMPTY_EEG_ENTITY = {
@@ -84,7 +85,7 @@ const EegPage: FC = () => {
   }
 
   if (!eeg) {
-    return <></>
+    return <EegLoadStateComponent/>
   }
 
   return (

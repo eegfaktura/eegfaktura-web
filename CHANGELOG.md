@@ -8,11 +8,105 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **Smart re-request of energy data** (konzept-smart-nachfordern). **Needs the eegfaktura-backend change "smart
+  re-request" (per-meter periods, one-hour lock, live entry) deployed first or together**; an older backend ignores
+  the per-meter periods and requests the whole period for the metering points with gaps or L3 values.
+  - "Zählpunktdaten nachfordern" has a new checkbox "Nur fehlende Daten oder L3-Werte anfordern (Smart)", on by
+    default. It checks the energy data of the selected metering points first and requests only those with gaps or L3
+    values (substitute values), each from its first to its last day missing or with L3 values; a day with L3 values
+    counts like a missing day (decision 24.10.2026). A question names the numbers first ("Bei 214 von 2.380
+    Zählpunkten gibt es fehlende Daten oder L3-Werte (zusammen 1.033 Tage). Diese 214 jetzt anfordern?"). Metering
+    points whose data could not be checked are named there and requested over the whole period only on request;
+    otherwise the message after sending names them as not requested. If nothing could be checked (energystore down
+    or timed out), the question warns that every metering point would be requested for the whole period. Nothing
+    missing and no L3 values: an info ("Für den Zeitraum gibt es keine fehlenden Daten oder L3-Werte, es wird nichts
+    angefordert."), nothing is sent. Metering points not registered or not active in the period are left out with
+    Smart. After an owner change or a new registration every entry of a metering point is checked; it counts as
+    complete only if all entries are, and its gaps are requested as one period from the first to the last missing or
+    L3 day over its entries. A period that reaches today is checked and requested up to yesterday (energy data of
+    today cannot exist yet); the question says so.
+  - Without Smart the request is as before; "Gesamte Gemeinschaft" now asks first with the number of metering
+    points.
+  - Metering points requested in the last hour are skipped by the backend; the dialog names how many and when
+    they are all free again ("3 Zählpunkte wurden in der letzten Stunde schon angefordert, alle wieder frei ab
+    14:40.").
+  - Messages: a running request shows as one entry "Energiedaten-Anforderung läuft" (with "Antwort noch offen"),
+    reloaded every minute while it is shown. Summary and live entry have the new groups "Bereits angefordert" (with
+    "frei ab") and "Keine fehlenden Daten oder L3-Werte (nicht angefordert)". "Datenstand prüfen" also lists the
+    accepted metering points still with L3 values ("Noch mit L3-Werten", with their days).
+
 ### Fixed
 - **Energy data request: "angenommen" does not mean the data is there yet.** The single answer
   ("Energiedatenanfrage … angenommen") and the summary of a request now say that the grid operator sends the data in
   own messages afterwards and that it can take a while, with many metering points several hours, until it shows
   in eegFaktura. The summary points to "Datenstand prüfen" for the current state.
+- **Community switch** (261024-ca13): after switching the community, the members, metering points, selected member,
+  checked members (billing selection), tariffs, energy and billing data of the previous community are cleared at
+  once; until the new community is loaded the lists stay empty instead of showing the old community's entries.
+  Answers to requests of the previous community that arrive after the switch are ignored, and a load of the previous
+  community no longer ends the new community's loading state or sets its period.
+- **GUI defects, second bundle (eegfaktura-dev tracking):**
+  - **A failed save of the EEG settings showed the load text (261024-ca7):** "Fehler beim Laden der
+    EEG-Basisdaten!" or a raw key such as `Bad Gateway_eeg_load`. It now shows "Die Änderung der EEG-Daten konnte
+    nicht gespeichert werden." with the reason. An unknown load error shows "Die EEG-Daten konnten nicht geladen
+    werden." with the reason instead of the raw key; the known load texts stay.
+  - **A failed energy report load was silent (261024-ca6):** the dashboard and the member list just showed no
+    energy. It now shows "Die Energiedaten konnten nicht geladen werden." with the reason (only for the latest
+    request; an older one replaced by a newer one stays quiet). A community without any imported energy data yet
+    (energystore answers "Record doesn't exist") still shows an empty report, without an error.
+  - **Billing ZIP and Excel download without busy state, failures only in the console (261024-ca14, part of
+    261024-ca6):** the buttons "ZIP", "DOWNLOAD" and "EXCEL" of a billing run now show "ZIP-Datei wird erstellt
+    ..." / "Excel-Datei wird erstellt ..." while the file is built (no second click meanwhile) and on failure "Die
+    ZIP-Datei konnte nicht erstellt werden." / "Die Excel-Datei konnte nicht erstellt werden." with the reason.
+  - **Billing settings showed "Änderung gespeichert" together with the error (261024-ca15):** a failed save now
+    shows only "Fehler beim Ändern der Abrechnungseinstellungen.". Deleting the logo asks first ("Soll das Bild
+    für das Logo gelöscht werden?").
+  - **"Tarif löschen" archived at once and ignored metering point tariffs (261024-ca16):** it now asks first
+    ("Soll der Tarif „…“ gelöscht werden?"). A tariff that a metering point still uses is refused like one a
+    member uses; the hint names the members and metering points (at most 10 each, then "und N weitere"). Rule (as
+    in eegfaktura-backend#106): members of any status count; a metering point counts only with its current entry,
+    any status. The old owner's entry after an owner change and archived entries do not count. The web has no flag
+    for this: the current entry is the one with the latest start, archived ones have the process state ARCHIVED,
+    and entries with the same start are left to the backend. Until eegfaktura-backend#106 the backend's
+    own check did not stop the archive; with it the backend refuses a used tariff (400, code 4002) and the toast
+    says "Der Tarif wird noch von Mitgliedern oder Zählpunkten verwendet und kann nicht gelöscht werden." (the
+    former check for a code 900 never matched).
+  - **Start: "Keine aktive EEG geladen" while the EEG loads, blank EEG page after a failed load (261024-ca11):**
+    the member list and the EEG page now show a spinner while the EEG loads, and after a failed load the error
+    with "Erneut versuchen" (loads the community again). An account without any community gets "Ihrem Konto ist
+    keine Gemeinschaft zugeordnet. Bitte wenden Sie sich an den Support." instead of "Keine aktive EEG geladen".
+  - **English crash page without a way back, empty page for an unknown URL (261024-ca12):** a render error
+    shows "Etwas ist schiefgelaufen." with "Neu laden" and "Zur Startseite" instead of "Something went wrong".
+    An unknown URL (e.g. an old bookmark) shows "Diese Seite gibt es nicht." with "Zur Startseite". Still one
+    error boundary for the whole app (no boundary per page), nothing is reported to a server.
+  - **Dashboard without error state (261024-ca26):** after a failed energy load it shows "Die Energiedaten
+    konnten nicht geladen werden." with the reason and "Erneut versuchen" above the charts (the layout and its
+    period selection stay), so empty charts no longer read as "no energy"; while the page code loads a spinner
+    instead of "Dashboard loading ...". The page file is now spelled `Dashboard.page.tsx` (URL unchanged).
+  - **A contract file vanished from the list although the server kept it (261005-ca3):** the delete counted
+    every answer as success (no check of the HTTP status or of GraphQL errors). The file now leaves the list only
+    after the filestore deleted it; otherwise "Die Datei … konnte nicht gelöscht werden." with the reason.
+  - **"Passwort ändern" built the Keycloak URL by hand (261005-ca4):** without state or PKCE and with an
+    unencoded `redirect_uri`, so the way back could fail and leave a spinner. It is now a regular sign-in
+    request (state and PKCE, like the login) with the Keycloak action `UPDATE_PASSWORD`.
+- **Error reasons showed "E_undefined_undefined"** (pre-existing). An error answer whose JSON `error` field is
+  a plain text (energystore, e.g. `{"error": "Record doesn't exist"}`; Spring's error body in billing) was looked
+  up as an error code. The toast now names that text, e.g. "(Internal Server Error)".
+- **Dashboard "Energiemengen – Eingekauft/Verkauft" wrong after an owner change** (support 6611112, 6611148).
+  A metering point with two participations in the period (old and new member) counted the value of one of them
+  twice, e.g. 160 or 10 kWh instead of 5 + 80 = 85 kWh. Each participation now adds its own value once.
+  Billing was not affected.
+- **Error messages showed "body stream already read" instead of the real error** (pre-existing). When a server
+  error had no JSON body (e.g. 502 from the ingress), the error handler read the body a second time and the
+  browser's read error replaced the status text. The body is now read once; the toast names e.g. "Bad Gateway".
+- **Messages: a card's data check moved to another card after a reload.** The list keyed its cards by position, so
+  when a newer notification came first, the result of "Datenstand prüfen" showed on the wrong summary. Cards are
+  now keyed by the notification id. More likely since the list reloads every minute while a request runs.
+- **Messages: a failed load went unnoticed** (unhandled promise rejection). It now shows "Die Nachrichten konnten
+  nicht geladen werden." with the reason, once until a load works again (the reload every minute during a running
+  request does not repeat it). Switching the community empties the list first, so a failed load never shows the
+  previous community's messages.
 - **UX defects from Karl's analysis (23.10.2026), ids UX-1 … UX-8:**
   - **Participation factor 0 % was sent as 100 % (UX-4):** "Teilnahmefaktor ändern" sent `partFact || 100`, so
     an entered 0 reached the grid operator as 100 %. The field now accepts 1–100 only (like the meter form) and

@@ -5,9 +5,10 @@ import {allParticipantsSelector, meterSelector} from "../../store/participant";
 import {useTenant} from "../../store/hook/Eeg.provider";
 import {Api} from "../../service";
 import {BillingCheckOverview, buildBillingCheckRequest, evaluateBillingChecks} from "../participantPane/BillingCheck.functions";
-import {incompleteText} from "../participantPane/BillingCheck.dialog";
+import {incompleteText, l3Text} from "../participantPane/BillingCheck.dialog";
 import {
   acceptedMetersToCheck,
+  count,
   DATA_DELAY_HINT,
   EnergyRequestSummary,
   formatDay,
@@ -19,7 +20,7 @@ import {
 type DataCheck =
   { state: 'idle' }
   | { state: 'running' }
-  | { state: 'done', result: BillingCheckOverview['completeness'], notCheckable: string[] }
+  | { state: 'done', result: BillingCheckOverview['completeness'], l3: BillingCheckOverview['l3']['findings'], notCheckable: string[] }
 
 // platform#173: one notification per energy data request for several metering points. The answers come with the
 // notification; the energy data of the accepted metering points is checked on demand, so it is current when checked.
@@ -36,6 +37,14 @@ const EnergyRequestSummaryComponent: FC<{ summary: EnergyRequestSummary }> = ({s
   const groups = summaryGroups(summary)
   const accepted = summary.accepted ?? []
 
+  // a running request gets more accepted metering points: an earlier check result no longer covers them. Closing
+  // alone (live → stored) keeps the result.
+  const checkedState = `${summary.runId}|${accepted.length}`
+  useEffect(() => {
+    controller.current?.abort()
+    setCheck({state: 'idle'})
+  }, [checkedState])
+
   const checkData = () => {
     const {toCheck, notCheckable} = acceptedMetersToCheck(summary, participants)
     controller.current?.abort()
@@ -48,7 +57,7 @@ const EnergyRequestSummaryComponent: FC<{ summary: EnergyRequestSummary }> = ({s
         .catch(() => evaluateBillingChecks(toCheck, {}, {error: "Energiedaten konnten nicht abgefragt werden."}))
       : Promise.resolve(evaluateBillingChecks(toCheck, {}, {error: "Keiner der angenommenen Zählpunkte ist geladen."}))
     request.then(o => {
-      if (!c.signal.aborted) setCheck({state: 'done', result: o.completeness, notCheckable})
+      if (!c.signal.aborted) setCheck({state: 'done', result: o.completeness, l3: o.l3.findings, notCheckable})
     })
   }
 
@@ -63,16 +72,27 @@ const EnergyRequestSummaryComponent: FC<{ summary: EnergyRequestSummary }> = ({s
       return button
     }
     const {status, incomplete, reason} = check.result
+    // accepted metering points still with L3 values (substitute values), one entry each
+    const l3 = check.l3
+    const l3Note = l3.length === 0 ? ", ohne L3-Werte." : `, ${count(l3.length)} davon noch mit L3-Werten.`
     return (
       <>
         {status === 'NOT_CHECKED' && <p>{reason}</p>}
         {status !== 'NOT_CHECKED' && incomplete.length === 0 && check.notCheckable.length === 0 &&
-          <p>Alle angenommenen Zählpunkte haben Daten für den ganzen Zeitraum.</p>}
+          <p>Alle angenommenen Zählpunkte haben Daten für den ganzen Zeitraum{l3Note}</p>}
         {incomplete.length > 0 && (
           <details open>
             <summary>Daten unvollständig ({incomplete.length})</summary>
             <ul style={{margin: "4px 0"}}>
               {incomplete.map(m => <li key={m.meter.meteringPoint}>{incompleteText(m)}</li>)}
+            </ul>
+          </details>
+        )}
+        {l3.length > 0 && (
+          <details open>
+            <summary>Noch mit L3-Werten ({l3.length})</summary>
+            <ul style={{margin: "4px 0"}}>
+              {l3.map(f => <li key={f.meter.meteringPoint}>{l3Text(f)}</li>)}
             </ul>
           </details>
         )}
@@ -92,7 +112,7 @@ const EnergyRequestSummaryComponent: FC<{ summary: EnergyRequestSummary }> = ({s
   return (
     <div>
       <p>
-        <strong><u>Zusammenfassung Energiedaten-Anforderung</u></strong> {formatDay(summary.from)} – {formatDay(summary.to)}
+        <strong><u>{summary.live ? "Energiedaten-Anforderung läuft" : "Zusammenfassung Energiedaten-Anforderung"}</u></strong> {formatDay(summary.from)} – {formatDay(summary.to)}
         <br/>
         {meterCount(summary.requested)} angefordert, {accepted.length} angenommen
       </p>

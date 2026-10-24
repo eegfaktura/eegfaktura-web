@@ -1,7 +1,7 @@
 import moment from "moment";
 import {EegParticipant} from "../../models/members.model";
 import {EegTariff} from "../../models/eeg.model";
-import {MeterDirectionType} from "../../models/meteringpoint.model";
+import {MeterDirectionType, Metering} from "../../models/meteringpoint.model";
 import {BillingCheckRequest, BillingCheckResponse, BillingCheckTotals} from "../../models/billingCheck.model";
 
 // Checks before a billing run (platform#148). Their results only warn; a check that is still running delays the run.
@@ -64,10 +64,14 @@ const participantName = (p: EegParticipant) => [p.firstname, p.lastname].filter(
  * checked ones.
  */
 export const activeMetersInPeriod = (participants: EegParticipant[], start: Date, end: Date): CheckedMeter[] =>
-  participants.flatMap(p => p.meters
+  participants.flatMap(p => metersActiveInPeriod(p.meters, participantName(p), start, end))
+
+/** The entries of meters active in the period [start, end], by the rules of activeMetersInPeriod. */
+export const metersActiveInPeriod = (meters: Metering[], name: string, start: Date, end: Date): CheckedMeter[] =>
+  meters
     .filter(m => m.status !== 'INIT' && !!m.participantState)
     .map(m => ({
-      participantName: participantName(p),
+      participantName: name,
       meteringPoint: m.meteringPoint,
       equipmentName: m.equipmentName,
       direction: m.direction,
@@ -76,7 +80,7 @@ export const activeMetersInPeriod = (participants: EegParticipant[], start: Date
       activeSince: m.participantState.activeSince ? localDay(m.participantState.activeSince) : 0,
       inactiveSince: m.participantState.inactiveSince ? localDay(m.participantState.inactiveSince) : 0,
     }))
-    .filter(m => m.activeSince <= localDay(end) && (m.inactiveSince === 0 || m.inactiveSince >= localDay(start))))
+    .filter(m => m.activeSince <= localDay(end) && (m.inactiveSince === 0 || m.inactiveSince >= localDay(start)))
 
 export const buildBillingCheckRequest = (meters: CheckedMeter[], start: Date, end: Date): BillingCheckRequest => ({
   start: start.getTime(),

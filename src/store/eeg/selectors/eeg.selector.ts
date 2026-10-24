@@ -49,6 +49,11 @@ export const activeTenant = createSelector(
   (state, eeg) => eeg ? {ecId: eeg.communityId, tenant: state.selectedTenant!} : undefined
 )
 
+export const eegLoadErrorSelector = createSelector(
+  featureStateSelector,
+  state => state.loadError
+)
+
 export const selectError = createSelector(
   featureStateSelector,
   state => {return {hasError: state.hasError, error: state.error}}
