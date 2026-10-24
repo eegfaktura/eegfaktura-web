@@ -28,7 +28,7 @@ const flush = () => act(async () => { await Promise.resolve() })
 
 describe("Messages page: a running energy request refreshes", () => {
   beforeEach(() => vi.useFakeTimers())
-  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks() })
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); tenant = "TE100100" })
 
   it("recognises a live entry", () => {
     const n = (live?: boolean) => ({...summary(live), message: new Message(summary(live).message)}) as unknown as EegNotification
@@ -73,7 +73,6 @@ describe("Messages page: a running energy request refreshes", () => {
     await act(async () => { first([JSON.parse(JSON.stringify(summary(true)))]) })
     await flush()
     expect(page.container.textContent).not.toContain("läuft")
-    tenant = "TE100100"
   })
 
   it("reports a failed load once until a load works again", async () => {
