@@ -9,7 +9,8 @@ const sameTenant = (a: string, b: string) => a.toUpperCase() === b.toUpperCase()
 
 // the community a request was sent for: thunk argument `tenant` (string or ActiveTenant), the `tenant` argument
 // of an RTK Query call, or the `tenant` header of its request.
-// Requests without a community (e.g. the user's community list) are not filtered.
+// Requests without a community are not filtered (fail-open): the user's community list, and thunks that take no
+// `tenant` argument (saveNewParticipant, chancelNewParticipant: local only). A new tenant-scoped thunk needs one.
 const requestTenant = (action: any): string | undefined => {
   const t = action.meta?.arg?.tenant ?? action.meta?.arg?.originalArgs?.tenant
   if (typeof t === "string") return t
