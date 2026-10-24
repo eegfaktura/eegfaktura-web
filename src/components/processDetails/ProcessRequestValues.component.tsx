@@ -112,7 +112,7 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
 
   // Smart: check the energy data first, request only the metering points with gaps, each over its missing days
   const requestSmart = async (meter: Metering[], start: Date, end: Date) => {
-    const toCheck = metersToCheck(meter, start, end)
+    const toCheck = metersToCheck(meter.map(m => m.meteringPoint), meters, start, end)
     if (toCheck.length === 0) {
       info(NOTHING_TO_CHECK)
       return

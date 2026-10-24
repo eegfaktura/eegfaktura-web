@@ -16,44 +16,71 @@ export interface SmartPlan {
   notChecked: SyncEnergyMeter[] // energystore failed or did not answer for them: full period, only if confirmed
 }
 
-// The selected metering points billing-check can check: registered and active in the period, by the same rules as
-// the check before billing. Not registered or inactive ones have nothing to request in the period and are left out.
-export const metersToCheck = (selected: Metering[], start: Date, end: Date): CheckedMeter[] =>
-  metersActiveInPeriod(selected, "", start, end)
+// The entries billing-check can check for the selected metering points: registered and active in the period, by the
+// same rules as the check before billing. All entries of a metering point count (owner change, new registration:
+// the backend requests every entry over its own active part), also those of other members. Not registered or
+// inactive ones have nothing to request in the period and are left out.
+export const metersToCheck = (ids: string[], all: Metering[], start: Date, end: Date): CheckedMeter[] => {
+  const selected = new Set(ids)
+  return metersActiveInPeriod(all.filter(m => selected.has(m.meteringPoint)), "", start, end)
+}
 
 const day = (d: string) => moment(d, "YYYY-MM-DD").startOf('day').valueOf()
 
 /**
- * The plan from the billing-check answer. A metering point with a gap is requested from its first to its last
- * missing day (local midnight of both days, like the dates of the date picker; the backend cuts to the start and
- * the end of the day). Without missing days (older energystore) the request period applies.
+ * The plan from the billing-check answer, per metering point over all its entries. A metering point with a gap is
+ * requested from its first to its last missing day over its entries (local midnight of both days, like the dates
+ * of the date picker; the backend cuts to the start and the end of the day and to each entry's active part). An
+ * entry with a gap but without missing days (no value at all, or an older energystore) gets the request period.
+ * A metering point counts as complete only if every entry is, and as not checked if one entry is not.
  */
-export const smartPlan = (meters: CheckedMeter[], energy: BillingCheckResponse | { error: string }): SmartPlan => {
-  const full = (m: CheckedMeter): SyncEnergyMeter => ({meter: m.meteringPoint, direction: m.direction})
-  if ('error' in energy) {
-    return {checked: 0, missing: [], missingDays: 0, complete: [], notChecked: meters.map(full)}
+export const smartPlan = (entries: CheckedMeter[], energy: BillingCheckResponse | { error: string }): SmartPlan => {
+  // energystore answers in request order; entries beyond its answer are not checked
+  const answered = 'error' in energy ? [] : entries.slice(0, energy.meters.length)
+  const incomplete = 'error' in energy ? [] : evaluateBillingChecks(answered, {}, energy).completeness.incomplete
+  const unchecked = new Set(entries.slice(answered.length).map(m => m.meteringPoint))
+
+  const ids: string[] = []
+  const direction = new Map<string, string>()
+  for (const m of entries) {
+    if (!direction.has(m.meteringPoint)) {
+      ids.push(m.meteringPoint)
+      direction.set(m.meteringPoint, m.direction)
+    }
   }
-  // energystore answers in request order; meters beyond its answer are not checked
-  const answered = meters.slice(0, energy.meters.length)
-  const incomplete = evaluateBillingChecks(answered, {}, energy).completeness.incomplete
-  const gaps = new Set(incomplete.map(i => i.meter.meteringPoint))
-  let missingDays = 0
-  const missing = incomplete.map((i): SyncEnergyMeter => {
+  // per metering point with a gap: the period over its entries (undefined: the request period) and the days
+  const gaps = new Map<string, { from?: number, to?: number, full: boolean, days: number }>()
+  for (const i of incomplete) {
+    const g = gaps.get(i.meter.meteringPoint) ?? {full: false, days: 0}
     const days = [...i.missingDays].sort()
     if (days.length === 0) {
-      missingDays += moment(i.expectedEnd).startOf('day').diff(moment(i.expectedStart).startOf('day'), 'days') + 1
-      return full(i.meter)
+      g.full = true
+      g.days += moment(i.expectedEnd).startOf('day').diff(moment(i.expectedStart).startOf('day'), 'days') + 1
+    } else {
+      g.from = Math.min(g.from ?? Infinity, day(days[0]))
+      g.to = Math.max(g.to ?? -Infinity, day(days[days.length - 1]))
+      g.days += days.length
     }
-    missingDays += days.length
-    return {...full(i.meter), from: day(days[0]), to: day(days[days.length - 1])}
-  })
-  return {
-    checked: answered.length,
-    missing,
-    missingDays,
-    complete: answered.filter(m => !gaps.has(m.meteringPoint)).map(m => m.meteringPoint),
-    notChecked: meters.slice(energy.meters.length).map(full),
+    gaps.set(i.meter.meteringPoint, g)
   }
+
+  const full = (id: string): SyncEnergyMeter => ({meter: id, direction: direction.get(id)!})
+  const plan: SmartPlan = {checked: 0, missing: [], missingDays: 0, complete: [], notChecked: []}
+  for (const id of ids) {
+    const g = gaps.get(id)
+    if (unchecked.has(id)) {
+      plan.notChecked.push(full(id))
+      continue
+    }
+    plan.checked++
+    if (!g) {
+      plan.complete.push(id)
+      continue
+    }
+    plan.missingDays += g.days
+    plan.missing.push(g.full ? full(id) : {...full(id), from: g.from, to: g.to})
+  }
+  return plan
 }
 
 // Counts with a dot as thousands separator, as in "2.380"

@@ -53,6 +53,29 @@ describe("smartPlan: the period per metering point from its missing days", () =>
     expect(p.checked).toBe(4)
   })
 
+  it("merges the gaps of several entries of a metering point into one period", () => {
+    const old = {...checked("AT1"), inactiveSince: ms(15)}
+    const now = {...checked("AT1"), activeSince: ms(16)}
+    const p = smartPlan([old, now, checked("AT2")], answer([
+      {id: "AT1", days: ["2026-09-03"]}, {id: "AT1", days: ["2026-09-20", "2026-09-21"]}, {id: "AT2", days: []},
+    ]))
+    expect(p.missing).toEqual([{...sync("AT1"), from: ms(3), to: ms(21)}])
+    expect(p.missingDays).toBe(3)
+    expect(p.checked).toBe(2)
+    expect(p.complete).toEqual(["AT2"])
+  })
+
+  it("counts a metering point as complete only if every entry is", () => {
+    const p = smartPlan([checked("AT1"), checked("AT1")], answer([{id: "AT1", days: []}, {id: "AT1", days: ["2026-09-30"]}]))
+    expect(p.complete).toEqual([])
+    expect(p.missing).toEqual([{...sync("AT1"), from: ms(30), to: ms(30)}])
+  })
+
+  it("does not check a metering point when one of its entries got no answer", () => {
+    const p = smartPlan([checked("AT1"), checked("AT1")], answer([{id: "AT1", days: []}]))
+    expect(p).toEqual(plan({notChecked: [sync("AT1")]}))
+  })
+
   it("puts metering points without a gap into complete", () => {
     const p = smartPlan(["AT1", "AT2"].map(checked), answer([{id: "AT1", days: []}, {id: "AT2", days: ["2026-09-03"]}]))
     expect(p.complete).toEqual(["AT1"])
@@ -95,13 +118,22 @@ describe("metersToCheck", () => {
   }) as unknown as Metering
 
   it("checks registered metering points active in the period only", () => {
-    const ids = metersToCheck([
+    const ids = metersToCheck(["AT1", "AT2", "AT3", "AT4"], [
       meter("AT1", "ACTIVE", "2024-01-01", "2099-12-31"),
       meter("AT2", "INIT", "2024-01-01", "2099-12-31"),
       meter("AT3", "INACTIVE", "2024-01-01", "2026-08-31"),
       meter("AT4", "ACTIVE", "2026-10-01", "2099-12-31"),
+      meter("AT5", "ACTIVE", "2024-01-01", "2099-12-31"),  // not selected
     ], start, end).map(m => m.meteringPoint)
     expect(ids).toEqual(["AT1"])
+  })
+
+  it("checks every entry of a selected metering point active in the period (owner change)", () => {
+    const entries = metersToCheck(["AT1"], [
+      meter("AT1", "INACTIVE", "2024-01-01", "2026-09-15"),
+      meter("AT1", "ACTIVE", "2026-09-16", "2099-12-31"),
+    ], start, end)
+    expect(entries.map(m => m.activeSince)).toEqual([new Date(2024, 0, 1).getTime(), ms(16)])
   })
 })
 
