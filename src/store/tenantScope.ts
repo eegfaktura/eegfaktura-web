@@ -17,6 +17,14 @@ const requestTenant = (action: any): string | undefined => {
   return action.meta?.baseQueryMeta?.request?.headers?.get?.("tenant") ?? undefined
 }
 
+// a request (start or answer) sent for another community than the selected one
+export const isOtherCommunityRequest = (state: { eeg?: { selectedTenant: string | null } } | undefined, action: unknown) => {
+  const current = state?.eeg?.selectedTenant
+  if (!current || !(isPending(action) || isFulfilled(action) || isRejected(action))) return false
+  const tenant = requestTenant(action)
+  return !!tenant && !sameTenant(tenant, current)
+}
+
 export const tenantScoped = <S extends { eeg: { selectedTenant: string | null } }>(reducer: Reducer<S>): Reducer<S> =>
   (state: S | undefined, action: UnknownAction) => {
     const current = state?.eeg?.selectedTenant
@@ -29,13 +37,10 @@ export const tenantScoped = <S extends { eeg: { selectedTenant: string | null } 
       // a request of the previous community (its start, e.g. a poller's next tick, or its answer) must not change
       // the new community: the community data stays as it is; request bookkeeping (RTK Query caches, the user's
       // community list) still takes it
-      if (isPending(action) || isFulfilled(action) || isRejected(action)) {
-        const tenant = requestTenant(action)
-        if (tenant && !sameTenant(tenant, current)) {
-          const next = {...reducer(state, action)} as any
-          ;[...tenantScopedSlices, "eeg"].forEach(slice => next[slice] = (state as any)[slice])
-          return next
-        }
+      if (isOtherCommunityRequest(state, action)) {
+        const next = {...reducer(state, action)} as any
+        ;[...tenantScopedSlices, "eeg"].forEach(slice => next[slice] = (state as any)[slice])
+        return next
       }
     }
     return reducer(state, action)

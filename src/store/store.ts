@@ -21,7 +21,7 @@ import i18next from '../util/I18n'
 import {fetchRatesModel, saveNewRate} from "./rate";
 import {userApi} from "./user/userApi";
 import {participantApi} from "./participant/api";
-import {tenantScoped} from "./tenantScope";
+import {isOtherCommunityRequest, tenantScoped} from "./tenantScope";
 
 /**
  * Reducer
@@ -57,6 +57,8 @@ const withReason = (text: string, reason: string | undefined) =>
 
 export const errorMiddleware: Middleware = store => next => action => {
   try {
+    // a failure of the previous community is no longer relevant after a switch (261024-ca13)
+    if (isOtherCommunityRequest(store.getState(), action)) return next(action)
 
     const result = next(action)
 

@@ -1,6 +1,7 @@
 import {afterEach, describe, expect, it, vi} from "vitest";
 import {configureStore} from "@reduxjs/toolkit";
-import {reducer} from "../../store/store";
+import {errorMiddleware, reducer} from "../../store/store";
+import {selectError} from "../../store/eeg/selectors/eeg.selector";
 import {selectTenant} from "../../store/eeg";
 import {fetchParticipantModel, selectParticipant} from "../../store/participant";
 import {fetchRatesModel} from "../../store/rate";
@@ -175,5 +176,19 @@ describe("billing run poller on a community switch (261024-ca13)", () => {
     expect(calls).toHaveBeenCalledTimes(3)  // the new poller only, every 2 s
     expect((await first).payload).toBe(BILLING_POLL_STOPPED)
     expect(store.getState().billing.isPolling).toBe(true)  // the stopped poller does not end the new one's flag
+  })
+})
+
+describe("error toast on a community switch (261024-ca13)", () => {
+  it("does not report a failure of the previous community", () => {
+    const store = configureStore({reducer, middleware: (d) => d({serializableCheck: false}).concat(errorMiddleware)})
+    store.dispatch(selectTenant("RC100100"))
+    store.dispatch(selectTenant("RC100200"))
+
+    store.dispatch(fetchRatesModel.rejected(new Error("Bad Gateway"), "old", {tenant: "RC100100"}))
+    expect(selectError(store.getState()).hasError).toBe(false)
+
+    store.dispatch(fetchRatesModel.rejected(new Error("Bad Gateway"), "new", {tenant: "RC100200"}))
+    expect(selectError(store.getState()).hasError).toBe(true)
   })
 })
