@@ -147,14 +147,6 @@ class EegBaseService {
     return response;
   }
 
-  protected async handleFilestoreResponse(response: Response) {
-    const data = await response.json()
-    if (data && data.data && data.data.deleteFile && data.data.deleteFile.message) {
-      throw new Error(data.data.deleteFile.message)
-    }
-    return data
-  }
-
   protected async handleGQLResponse(response: Response) {
     return response.json().then(d => {
       if (d.errors)

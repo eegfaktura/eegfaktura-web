@@ -66,6 +66,9 @@ this changelog highlights the changes relevant for overview and operations.
   - **Dashboard without error state (261024-ca26):** after a failed energy load it shows "Die Energiedaten
     konnten nicht geladen werden." with the reason instead of empty charts; while the page code loads a spinner
     instead of "Dashboard loading ...". The page file is now spelled `Dashboard.page.tsx` (URL unchanged).
+  - **A contract file vanished from the list although the server kept it (261005-ca3):** the delete counted
+    every answer as success (no check of the HTTP status or of GraphQL errors). The file now leaves the list only
+    after the filestore deleted it; otherwise "Die Datei … konnte nicht gelöscht werden." with the reason.
 - **Dashboard "Energiemengen – Eingekauft/Verkauft" wrong after an owner change** (support 6611112, 6611148).
   A metering point with two participations in the period (old and new member) counted the value of one of them
   twice, e.g. 160 or 10 kWh instead of 5 + 80 = 85 kWh. Each participation now adds its own value once.

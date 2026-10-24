@@ -117,7 +117,12 @@ const ContractDocumentComponent: FC<ContractDocumentComponentProps> = ({tenant, 
         if (e.detail.role === 'confirm') {
           Api.fileService.deleteContractDocuments(tenant, c.id).then(() => {
             setContractDocs((d) => d.filter(e => e.id !== c.id))
-          })
+          }).catch((e: unknown) => toaster({
+            message: `Die Datei ${c.name} konnte nicht gelöscht werden.${e instanceof Error && e.message ? ` (${e.message})` : ""}`,
+            duration: 4500,
+            position: 'bottom',
+            color: "danger"
+          }))
         }
       },
     })
