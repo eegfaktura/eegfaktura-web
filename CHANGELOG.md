@@ -57,8 +57,11 @@ this changelog highlights the changes relevant for overview and operations.
     für das Logo gelöscht werden?").
   - **"Tarif löschen" archived at once and ignored metering point tariffs (261024-ca16):** it now asks first
     ("Soll der Tarif „…“ gelöscht werden?"). A tariff that a metering point still uses is refused like one a
-    member uses; the hint names the members and metering points (at most 10 each, then "und N weitere"); all
-    loaded members and metering points count, whatever their status. Until eegfaktura-backend#106 the backend's
+    member uses; the hint names the members and metering points (at most 10 each, then "und N weitere"). Rule (as
+    in eegfaktura-backend#106): members of any status count; a metering point counts only with its current entry,
+    any status. The old owner's entry after an owner change and archived entries do not count. The web has no flag
+    for this: the current entry is the one with the latest start, archived ones have the process state ARCHIVED,
+    and entries with the same start are left to the backend. Until eegfaktura-backend#106 the backend's
     own check did not stop the archive; with it the backend refuses a used tariff (400, code 4002) and the toast
     says "Der Tarif wird noch von Mitgliedern oder Zählpunkten verwendet und kann nicht gelöscht werden." (the
     former check for a code 900 never matched).
