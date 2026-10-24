@@ -47,6 +47,9 @@ this changelog highlights the changes relevant for overview and operations.
     261024-ca6):** the buttons "ZIP", "DOWNLOAD" and "EXCEL" of a billing run now show "ZIP-Datei wird erstellt
     ..." / "Excel-Datei wird erstellt ..." while the file is built (no second click meanwhile) and on failure "Die
     ZIP-Datei konnte nicht erstellt werden." / "Die Excel-Datei konnte nicht erstellt werden." with the reason.
+  - **Billing settings showed "Änderung gespeichert" together with the error (261024-ca15):** a failed save now
+    shows only "Fehler beim Ändern der Abrechnungseinstellungen.". Deleting the logo asks first ("Soll das Bild
+    für das Logo gelöscht werden?").
 - **Dashboard "Energiemengen – Eingekauft/Verkauft" wrong after an owner change** (support 6611112, 6611148).
   A metering point with two participations in the period (old and new member) counted the value of one of them
   twice, e.g. 160 or 10 kWh instead of 5 + 80 = 85 kWh. Each participation now adds its own value once.
