@@ -36,6 +36,8 @@ export interface ParicipantState {
   setShowAddMeterPane: (show: boolean) => void
   checkedParticipant: Record<string, boolean>
   setCheckedParticipant: (participantId: string, checked: boolean) => void
+  // loads the energy report of the shown period again, e.g. after a failed load (261024-ca26)
+  reloadEnergyReport: () => void
 }
 
 const initialState: ParicipantState = {
@@ -55,7 +57,8 @@ const initialState: ParicipantState = {
   showAddMeterPane: false,
   setShowAddMeterPane: (show: boolean) => {},
   checkedParticipant: {},
-  setCheckedParticipant: (participantId: string, checked: boolean) => {}
+  setCheckedParticipant: (participantId: string, checked: boolean) => {},
+  reloadEnergyReport: () => {},
 }
 
 export const ParticipantContext = createContext(initialState)
@@ -234,6 +237,7 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
     checkedParticipant: checkedParticipants,
     showAddMeterPane: showAddMeterPane,
     setShowAddMeterPane: setShowAddMeterPane,
+    reloadEnergyReport: () => fetchEnergyReport(activeParticipants),
     setCheckedParticipant: (participantId: string, checked: boolean) => { setCheckedParticipants((s) => {
       const newS = {...s}
       if (!checked) {

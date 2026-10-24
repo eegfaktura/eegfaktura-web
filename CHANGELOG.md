@@ -64,7 +64,8 @@ this changelog highlights the changes relevant for overview and operations.
     An unknown URL (e.g. an old bookmark) shows "Diese Seite gibt es nicht." with "Zur Startseite". Still one
     error boundary for the whole app (no boundary per page), nothing is reported to a server.
   - **Dashboard without error state (261024-ca26):** after a failed energy load it shows "Die Energiedaten
-    konnten nicht geladen werden." with the reason instead of empty charts; while the page code loads a spinner
+    konnten nicht geladen werden." with the reason and "Erneut versuchen" above the charts (the layout and its
+    period selection stay), so empty charts no longer read as "no energy"; while the page code loads a spinner
     instead of "Dashboard loading ...". The page file is now spelled `Dashboard.page.tsx` (URL unchanged).
   - **A contract file vanished from the list although the server kept it (261005-ca3):** the delete counted
     every answer as success (no check of the HTTP status or of GraphQL errors). The file now leaves the list only

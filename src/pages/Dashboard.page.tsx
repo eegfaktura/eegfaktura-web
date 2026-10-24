@@ -1,5 +1,5 @@
 import React, {FC, useCallback, useContext, useEffect, useMemo, useState} from "react";
-import {IonCard, IonCol, IonContent, IonGrid, IonPage, IonRow, IonSpinner} from "@ionic/react";
+import {IonButton, IonCard, IonCol, IonContent, IonGrid, IonPage, IonRow, IonSpinner} from "@ionic/react";
 import {
   energyReportErrorSelector,
   selectAllIntermediatesV2,
@@ -28,6 +28,7 @@ const DashboardPage: FC = () => {
 
   const {
     participants,
+    reloadEnergyReport,
   } = useContext(ParticipantContext);
 
   const initialPeriod = useMemo(() => activePeriod, [activePeriod])
@@ -60,22 +61,16 @@ const DashboardPage: FC = () => {
       style={{margin: "auto", height: "48px", width: "48px"}}></IonSpinner></div>
   }
 
-  // a failed load is not "no energy" (261024-ca26)
-  if (reportError) {
-    return (
-      <IonPage>
-        <IonContent fullscreen color="eeg">
-          <div className="full-screen-center" style={{alignItems: "center", justifyContent: "center"}}>
-            <div>{`Die Energiedaten konnten nicht geladen werden. (${reportError})`}</div>
-          </div>
-        </IonContent>
-      </IonPage>
-    )
-  }
-
   return (
     <IonPage>
       <IonContent fullscreen color="eeg">
+        {reportError && (
+          // a failed load is not "no energy"; the layout with its period selection stays (261024-ca26)
+          <div style={{display: "flex", alignItems: "center", gap: "16px", padding: "10px 20px"}}>
+            <div>{`Die Energiedaten konnten nicht geladen werden. (${reportError})`}</div>
+            <IonButton size="small" onClick={() => reloadEnergyReport()}>Erneut versuchen</IonButton>
+          </div>
+        )}
         <DashboardLayoutComponent participants={participants} consumed={consumedSeries} produced={producedSeries}
                                   allocated={allocatedSeries} activePeriod={initialPeriod}/>
       </IonContent>
