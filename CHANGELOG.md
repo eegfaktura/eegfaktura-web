@@ -9,6 +9,12 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Added
+- **Member list sorting can be chosen** (platform#214). A sort icon next to the filter ("Periode / Ausstehende")
+  offers "Standard" (the order so far, the default), "Nachname", "Vorname", "Mitgliedsnummer" and "Mitglied seit"
+  (newest or oldest first). Members needing an action (not active, or a metering point not active: open problem or
+  registration in progress) stay on top as before; the chosen sort applies within the groups and also in the
+  filtered views ("Ausstehende", "Inaktive", "Abgewiesene"). Names compare in German collation, member numbers as
+  numbers, empty values last. The choice is kept per browser (localStorage), no backend change.
 - **Smart re-request of energy data** (konzept-smart-nachfordern). **Needs the eegfaktura-backend change "smart
   re-request" (per-meter periods, one-hour lock, live entry) deployed first or together**; an older backend ignores
   the per-meter periods and requests the whole period for the metering points with gaps or L3 values.

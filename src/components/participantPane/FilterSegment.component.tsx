@@ -10,14 +10,18 @@ import cn from "classnames";
 import './FilterSegment.component.scss'
 import {eegFilterList} from "../../eegIcons";
 import {useLocale} from "../../store/hook/useLocale";
+import {swapVertical} from "ionicons/icons";
+import {MEMBER_SORT_OPTIONS, MemberSort} from "./participantSort";
 
 
 interface FilterSegmentProps {
   selectedOption: string;
   setSelectedOption: (option: string) => void;
+  memberSort: MemberSort;
+  setMemberSort: (sort: MemberSort) => void;
 }
 
-const FilterSegmentComponent: FC<FilterSegmentProps> = ({selectedOption, setSelectedOption}) => {
+const FilterSegmentComponent: FC<FilterSegmentProps> = ({selectedOption, setSelectedOption, memberSort, setMemberSort}) => {
   const [filterAlert] = useIonAlert();
   const [selectedMenuItem, setSelectedMenuItem] = useState<number>(0)
   const [selectOption, setSelectOption] = useState<string>('init');
@@ -78,6 +82,21 @@ const FilterSegmentComponent: FC<FilterSegmentProps> = ({selectedOption, setSele
     e.preventDefault()
   }
 
+  const onClickSort = () => {
+    filterAlert({
+      header: t('meterlist.sort_header'),
+      message: t('meterlist.sort_message'),
+      inputs: MEMBER_SORT_OPTIONS.map(o =>
+        ({label: t('meterlist.sort_' + o), type: 'radio' as const, value: o, checked: memberSort === o})),
+      buttons: [
+        {text: 'Cancel', role: 'cancel'},
+        {text: 'Select', role: 'confirm', handler: (value: MemberSort) => setMemberSort(value)},
+      ]
+    })
+  }
+
+  const sortLabel = t('meterlist.sort_header') + ' ' + t('meterlist.sort_' + memberSort)
+
   return (
     <div className="period-filter-menu">
       <div className={cn("item", {selected: selectedMenuItem === 0})} onClick={() => onChangeSelection(0)}>
@@ -87,6 +106,9 @@ const FilterSegmentComponent: FC<FilterSegmentProps> = ({selectedOption, setSele
           <IonIcon aria-hidden="true" icon={eegFilterList} slot="end" onClick={onClickFilter}></IonIcon>
           <IonLabel>{t("meterlist.filter_text_"+selectOption)}</IonLabel>
         </IonItem>
+      </div>
+      <div className="sort" onClick={onClickSort} title={sortLabel}>
+        <IonIcon icon={swapVertical} aria-label={sortLabel} color={memberSort === 'standard' ? undefined : 'primary'}></IonIcon>
       </div>
     </div>
   )
