@@ -16,7 +16,8 @@ this changelog highlights the changes relevant for overview and operations.
     the energy data of the selected metering points first and requests only those with gaps, each from its first
     to its last missing day. A question names the numbers first ("Von 2.380 Zählpunkten fehlen bei 214 Daten
     (zusammen 1.033 Tage). Diese 214 jetzt anfordern?"). Metering points whose data could not be checked are named
-    there and requested over the whole period only on request. Nothing missing: an info, nothing is sent. Metering
+    there and requested over the whole period only on request; otherwise the message after sending names them as
+    not requested. Nothing missing: an info, nothing is sent. Metering
     points not registered or not active in the period are left out with Smart. After an owner change or a new
     registration every entry of a metering point is checked; it counts as complete only if all entries are, and
     its gaps are requested as one period from the first to the last missing day over its entries. A period that

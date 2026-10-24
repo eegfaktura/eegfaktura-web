@@ -1,7 +1,7 @@
 import moment from "moment";
 import {Metering} from "../../models/meteringpoint.model";
 import {BillingCheckResponse} from "../../models/billingCheck.model";
-import {SyncEnergyMeter, SyncEnergySkipped} from "../../service/eeg.service";
+import {SyncEnergyMeter, SyncEnergyResult, SyncEnergySkipped} from "../../service/eeg.service";
 import {CheckedMeter, evaluateBillingChecks, metersActiveInPeriod} from "../participantPane/BillingCheck.functions";
 import {formatUntil} from "../notification/EnergyRequestSummary.functions";
 
@@ -139,10 +139,23 @@ export const smartConfirmation = (p: SmartPlan, cappedTo?: Date): SmartConfirmat
 }
 
 // The request for the chosen answer: the complete metering points go along so the summary lists them.
-export const smartRequest = (p: SmartPlan, choice: SmartChoice): { meters: SyncEnergyMeter[], complete: string[] } => ({
+// The backend has no field for metering points left out unchecked; with 'missing' the note names them.
+export const smartRequest = (p: SmartPlan, choice: SmartChoice): { meters: SyncEnergyMeter[], complete: string[], note?: string } => ({
   meters: choice === 'all' ? [...p.missing, ...p.notChecked] : p.missing,
   complete: p.complete,
+  note: choice === 'missing' && p.notChecked.length > 0
+    ? `${meters(p.notChecked.length)} ohne geprüften Datenstand ${p.notChecked.length === 1 ? "wurde" : "wurden"} nicht angefordert.`
+    : undefined,
 })
+
+// The message after sending: 'sent' confirms with an optional detail, 'info' replaces the confirmation.
+export const sendFeedback = (r: SyncEnergyResult, note?: string): { kind: 'sent' | 'info', text?: string } => {
+  const detail = [alreadyRequestedInfo(r.skipped), note].filter(t => !!t).join(" ")
+  if (r.requested === 0) {  // all skipped, e.g. requested in the last hour: nothing went to the grid operator
+    return {kind: 'info', text: ["Es wurde nichts angefordert.", detail].filter(t => !!t).join(" ")}
+  }
+  return {kind: 'sent', text: detail || undefined}
+}
 
 export const entireConfirmation = (n: number) =>
   `Für die ganze Gemeinschaft werden ${meters(n)} für den ganzen Zeitraum angefordert. Jetzt anfordern?`

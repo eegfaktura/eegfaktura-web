@@ -5,6 +5,7 @@ import {
   metersToCheck,
   smartConfirmation,
   SmartPlan,
+  sendFeedback,
   smartPeriod,
   smartPlan,
   smartRequest
@@ -172,12 +173,32 @@ describe("smartConfirmation", () => {
 describe("smartRequest", () => {
   const p = plan({checked: 3, missing: [{...sync("AT1"), from: 1, to: 2}], complete: ["AT2"], notChecked: [sync("AT3")]})
 
-  it("sends the metering points with gaps and the complete ones", () => {
-    expect(smartRequest(p, 'missing')).toEqual({meters: [{...sync("AT1"), from: 1, to: 2}], complete: ["AT2"]})
+  it("sends the metering points with gaps and the complete ones, and names the not checked ones left out", () => {
+    expect(smartRequest(p, 'missing')).toEqual({meters: [{...sync("AT1"), from: 1, to: 2}], complete: ["AT2"],
+      note: "1 Zählpunkt ohne geprüften Datenstand wurde nicht angefordert."})
+    expect(smartRequest(plan({missing: [sync("AT1")]}), 'missing').note).toBeUndefined()
   })
 
   it("adds the not checked ones over the full period when confirmed", () => {
-    expect(smartRequest(p, 'all')).toEqual({meters: [{...sync("AT1"), from: 1, to: 2}, sync("AT3")], complete: ["AT2"]})
+    expect(smartRequest(p, 'all')).toEqual({meters: [{...sync("AT1"), from: 1, to: 2}, sync("AT3")], complete: ["AT2"],
+      note: undefined})
+  })
+})
+
+describe("sendFeedback", () => {
+  const locked = {meteringPoint: "AT1", reason: "ALREADY_REQUESTED"}
+  const note = "2 Zählpunkte ohne geprüften Datenstand wurden nicht angefordert."
+
+  it("confirms with the lock info and the note", () => {
+    expect(sendFeedback({requested: 3, skipped: []})).toEqual({kind: 'sent', text: undefined})
+    expect(sendFeedback({requested: 3, skipped: [locked]}, note)).toEqual({kind: 'sent',
+      text: `1 Zählpunkt wurde in der letzten Stunde schon angefordert. ${note}`})
+  })
+
+  it("says nothing was requested when the backend requested none", () => {
+    expect(sendFeedback({requested: 0, skipped: [locked]})).toEqual({kind: 'info',
+      text: "Es wurde nichts angefordert. 1 Zählpunkt wurde in der letzten Stunde schon angefordert."})
+    expect(sendFeedback({requested: 0, skipped: []})).toEqual({kind: 'info', text: "Es wurde nichts angefordert."})
   })
 })
 

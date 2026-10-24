@@ -21,13 +21,13 @@ import {useTenant} from "../../store/hook/Eeg.provider";
 import {SyncEnergyMeter, SyncEnergyResult} from "../../service/eeg.service";
 import {buildBillingCheckRequest} from "../participantPane/BillingCheck.functions";
 import {
-  alreadyRequestedInfo,
   entireConfirmation,
   metersToCheck,
   cappedNote,
   NOTHING_BEFORE_TODAY,
   NOTHING_MISSING,
   NOTHING_TO_CHECK,
+  sendFeedback,
   smartConfirmation,
   smartPeriod,
   smartPlan,
@@ -98,14 +98,14 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
       onDidDismiss: (e: CustomEvent) => resolve(e.detail.role),
     }))
 
-  const send = (request: SyncEnergyMeter[], complete: string[], start: Date, end: Date) =>
+  const send = (request: SyncEnergyMeter[], complete: string[], start: Date, end: Date, note?: string) =>
     Api.eegService.syncMeteringPoint(eeg.id.toUpperCase(), request, start.getTime(), end.getTime(), complete)
       .then((r: SyncEnergyResult) => {
-        const locked = alreadyRequestedInfo(r.skipped)
-        if (r.requested === 0) {  // all skipped, e.g. requested in the last hour: nothing went to the grid operator
-          info(locked ? `Es wurde nichts angefordert. ${locked}` : "Es wurde nichts angefordert.")
+        const feedback = sendFeedback(r, note)
+        if (feedback.kind === 'info') {
+          info(feedback.text!)
         } else {
-          sent(locked)
+          sent(feedback.text)
         }
         reset()
         setDateRange([null, null])
@@ -138,8 +138,8 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
     }
     const choice = await ask(confirmation.message, confirmation.buttons)
     if (choice === 'missing' || choice === 'all') {
-      const {meters: request, complete} = smartRequest(plan, choice)
-      return send(request, complete, start, end)
+      const {meters: request, complete, note} = smartRequest(plan, choice)
+      return send(request, complete, start, end, note)
     }
   }
 
