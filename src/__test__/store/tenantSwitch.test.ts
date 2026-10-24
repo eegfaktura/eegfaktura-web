@@ -1,11 +1,12 @@
-import {describe, expect, it} from "vitest";
+import {afterEach, describe, expect, it, vi} from "vitest";
 import {configureStore} from "@reduxjs/toolkit";
 import {reducer} from "../../store/store";
 import {selectTenant} from "../../store/eeg";
 import {fetchParticipantModel, selectParticipant} from "../../store/participant";
 import {fetchRatesModel} from "../../store/rate";
 import {fetchEnergyReportV2, setSelectedPeriod} from "../../store/energy";
-import {fetchParticipantAmounts} from "../../store/billing";
+import {BILLING_POLL_STOPPED, fetchParticipantAmounts, resumeEnergyBillsPolling} from "../../store/billing";
+import {Api} from "../../service";
 import {fetchBillingConfig} from "../../store/billingConfig/actions";
 import {fetchBillingRunById} from "../../store/billingRun/actions";
 import {participantApi} from "../../store/participant/api";
@@ -128,5 +129,51 @@ describe("community switch (261024-ca13)", () => {
 
     expect(store.getState().billingRun.isFetching).toBe(false)
     expect(store.getState().participant.selectedParticipant?.id).toBe("b1")
+  })
+})
+
+describe("billing run poller on a community switch (261024-ca13)", () => {
+  afterEach(() => { vi.useRealTimers() })
+
+  const fakeBackend = () => {
+    vi.useFakeTimers();
+    const fetchBillingRunById = vi.fn().mockImplementation(async () => ({id: "r1", runStatus: "RUNNING"}));
+    (Api as any).eegService = {fetchBillingRunById, fetchParticipantAmounts: vi.fn().mockResolvedValue([])}
+    return fetchBillingRunById
+  }
+
+  it("stops polling the previous community's run, without a loading flag in the new one", async () => {
+    const calls = fakeBackend()
+    const store = newStore("RC100100")
+    const poll = store.dispatch(resumeEnergyBillsPolling({tenant: "RC100100", billingRunId: "r1"}))
+    await vi.advanceTimersByTimeAsync(0)
+    expect(calls).toHaveBeenCalledTimes(1)
+
+    store.dispatch(selectTenant("RC100200"))
+    await vi.advanceTimersByTimeAsync(10000)
+
+    expect(calls).toHaveBeenCalledTimes(1)
+    expect((await poll).payload).toBe(BILLING_POLL_STOPPED)
+    expect(store.getState().billingRun.isFetching).toBe(false)
+    expect(store.getState().billing.isPolling).toBe(false)
+  })
+
+  it("keeps one poller per run when switching back before the old one noticed", async () => {
+    const calls = fakeBackend()
+    const store = newStore("RC100100")
+    const first = store.dispatch(resumeEnergyBillsPolling({tenant: "RC100100", billingRunId: "r1"}))
+    await vi.advanceTimersByTimeAsync(0)
+
+    store.dispatch(selectTenant("RC100200"))
+    store.dispatch(selectTenant("RC100100"))
+    // the resume effect of the member list attaches again to the running run
+    store.dispatch(resumeEnergyBillsPolling({tenant: "RC100100", billingRunId: "r1"}))
+    await vi.advanceTimersByTimeAsync(0)
+
+    calls.mockClear()
+    await vi.advanceTimersByTimeAsync(6000)
+    expect(calls).toHaveBeenCalledTimes(3)  // the new poller only, every 2 s
+    expect((await first).payload).toBe(BILLING_POLL_STOPPED)
+    expect(store.getState().billing.isPolling).toBe(true)  // the stopped poller does not end the new one's flag
   })
 })

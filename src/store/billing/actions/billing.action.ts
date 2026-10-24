@@ -16,11 +16,26 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 // participantAmounts (Payload-Form wie der frühere synchrone Response).
 // Der billingRun-Slice wird pro Tick via fetchBillingRunById aktualisiert,
 // damit die Oberfläche den RUNNING-Zustand live anzeigt.
+// Ein Poller endet still (BILLING_POLL_STOPPED), sobald eine andere Gemeinschaft gewählt ist oder ein neuerer
+// Poller denselben Lauf übernimmt (Rückwechsel zur Gemeinschaft): höchstens ein Poller je Lauf (261024-ca13).
+export const BILLING_POLL_STOPPED = "billing-poll-stopped";
+const currentPoller: Record<string, object> = {};
+
 const pollBillingRunUntilTerminal = async (
-  tenant: string, billingRunId: string, dispatch: any, rejectWithValue: (v: string) => any) => {
+  tenant: string, billingRunId: string, dispatch: any, getState: () => any, rejectWithValue: (v: string) => any) => {
+
+  const self = {};
+  currentPoller[billingRunId] = self;
+  const stopped = () => {
+    const selected = getState().eeg?.selectedTenant;
+    return currentPoller[billingRunId] !== self || (!!selected && selected.toUpperCase() !== tenant.toUpperCase());
+  };
 
   let consecutiveErrors = 0;
   for (;;) {
+    if (stopped()) {
+      return rejectWithValue(BILLING_POLL_STOPPED);
+    }
     try {
       const result = await dispatch(fetchBillingRunById({tenant, billingRunId})).unwrap();
       const run = result.billingRun;
@@ -47,7 +62,7 @@ const pollBillingRunUntilTerminal = async (
 
 export const fetchEnergyBills = createAsyncThunk(
   `${featureKey}/fetch`,
-  async (arg: { tenant: string, invoiceRequest: ClearingPreviewRequest}, {dispatch, rejectWithValue}) => {
+  async (arg: { tenant: string, invoiceRequest: ClearingPreviewRequest}, {dispatch, getState, rejectWithValue}) => {
     const { tenant, invoiceRequest } = arg;
 
     const start = await Api.eegService.startBilling(tenant, invoiceRequest);
@@ -55,7 +70,7 @@ export const fetchEnergyBills = createAsyncThunk(
     if ((start.status !== 202 && start.status !== 409) || !start.billingRunId) {
       return rejectWithValue(start.abstractText || "Abrechnungslauf konnte nicht gestartet werden.");
     }
-    return await pollBillingRunUntilTerminal(tenant, start.billingRunId, dispatch, rejectWithValue);
+    return await pollBillingRunUntilTerminal(tenant, start.billingRunId, dispatch, getState, rejectWithValue);
   }
 )
 
@@ -63,9 +78,9 @@ export const fetchEnergyBills = createAsyncThunk(
 // gestartet): an den bestehenden RUNNING-Lauf anhängen, ohne neuen POST.
 export const resumeEnergyBillsPolling = createAsyncThunk(
   `${featureKey}/resumePolling`,
-  async (arg: { tenant: string, billingRunId: string}, {dispatch, rejectWithValue}) => {
+  async (arg: { tenant: string, billingRunId: string}, {dispatch, getState, rejectWithValue}) => {
     const { tenant, billingRunId } = arg;
-    return await pollBillingRunUntilTerminal(tenant, billingRunId, dispatch, rejectWithValue);
+    return await pollBillingRunUntilTerminal(tenant, billingRunId, dispatch, getState, rejectWithValue);
   }
 )
 
