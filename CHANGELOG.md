@@ -34,6 +34,11 @@ this changelog highlights the changes relevant for overview and operations.
     (with "frei ab") and "Daten vollständig (nicht angefordert)".
 
 ### Fixed
+- **Community switch** (261024-ca13): after switching the community, the members, metering points, selected member,
+  checked members (billing selection), tariffs, energy and billing data of the previous community are cleared at
+  once; until the new community is loaded the lists stay empty instead of showing the old community's entries.
+  Answers to requests of the previous community that arrive after the switch are ignored, and a load of the previous
+  community no longer ends the new community's loading state or sets its period.
 - **Dashboard "Energiemengen – Eingekauft/Verkauft" wrong after an owner change** (support 6611112, 6611148).
   A metering point with two participations in the period (old and new member) counted the value of one of them
   twice, e.g. 160 or 10 kWh instead of 5 + 80 = 85 kWh. Each participation now adds its own value once.

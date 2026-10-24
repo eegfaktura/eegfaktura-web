@@ -192,6 +192,14 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
     setEnableBilling(state);
   }
 
+  // another community (261024-ca13): nothing of the previous one stays listed, checked or open until the new one is loaded
+  useEffect(() => {
+    setActiveParticipants([])
+    setCheckedParticipants({})
+    setDetailOpen(false)
+    setShowAddMeterPane(false)
+  }, [tenant.tenant?.toUpperCase()]);
+
   useEffect(() => {
     // not while the application (re)loads EEG, tariffs and members (tenant switch, refresh): the store can then
     // mix the old members with the new tenant; the load ends by setting the period, which fetches once
