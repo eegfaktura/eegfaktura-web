@@ -7,10 +7,11 @@ const tenantScopedSlices = ["participant", "rate", "energy", "billing", "billing
 
 const sameTenant = (a: string, b: string) => a.toUpperCase() === b.toUpperCase()
 
-// the community a request was sent for: thunk argument `tenant` (string or ActiveTenant),
-// or the `tenant` header of an RTK Query request
+// the community a request was sent for: thunk argument `tenant` (string or ActiveTenant), the `tenant` argument
+// of an RTK Query call, or the `tenant` header of its request.
+// Requests without a community (e.g. the user's community list) are not filtered.
 const requestTenant = (action: any): string | undefined => {
-  const t = action.meta?.arg?.tenant
+  const t = action.meta?.arg?.tenant ?? action.meta?.arg?.originalArgs?.tenant
   if (typeof t === "string") return t
   if (typeof t?.tenant === "string") return t.tenant
   return action.meta?.baseQueryMeta?.request?.headers?.get?.("tenant") ?? undefined
