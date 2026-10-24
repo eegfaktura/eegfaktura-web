@@ -57,9 +57,14 @@ const AddMeterPaneComponent: FC = () => {
       let participantId = participant.id;
       meter.participantId = participantId
 
+      // close only after the save worked; on failure the input stays (error toast: store middleware)
       dispatcher(registerMeteringpoint({tenant, participantId, meter}))
-      reset(meter);
-      setShowAddMeterPane(false);
+        .unwrap()
+        .then(() => {
+          reset(meter);
+          setShowAddMeterPane(false);
+        })
+        .catch(() => {})
     }
   }
   return (
