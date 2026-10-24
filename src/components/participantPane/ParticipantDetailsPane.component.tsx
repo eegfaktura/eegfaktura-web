@@ -47,6 +47,7 @@ import {useMoveMeteringPointHook} from "../../store/hook/MoveMeteringPoint.hook"
 import moment from "moment";
 import {useDeleteParticipantMutation} from "../../store/participant/api";
 import {useConfirm} from "../core/useConfirm";
+import {processStateText} from "./meterStatusText";
 
 type DynamicComponentKey = "memberForm" | "meterForm" | "documentForm" | "invoiceForm" | "participantDocumentForm"
 
@@ -194,7 +195,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
   const meterStatusText = (meter: Metering) => {
     return (
       <div>
-        <span>{t(`meter.status_text_${meter.processState}`)}</span>
+        <span>{processStateText(t, meter.processState)}</span>
         {hasStatusCode(meter) && <span> <strong>{t(`meter.status_code_${meter.statusCode}`)}</strong></span>}
       </div>
     )
