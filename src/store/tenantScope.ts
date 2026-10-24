@@ -1,4 +1,4 @@
-import {isFulfilled, isRejected, Reducer, UnknownAction} from "@reduxjs/toolkit";
+import {isFulfilled, isPending, isRejected, Reducer, UnknownAction} from "@reduxjs/toolkit";
 import {selectTenant} from "./eeg";
 
 // Slices that only hold data of the selected community (tenant). On a community switch they start empty
@@ -25,9 +25,10 @@ export const tenantScoped = <S extends { eeg: { selectedTenant: string | null } 
         tenantScopedSlices.forEach(slice => cleared[slice] = undefined)
         return reducer(cleared, action)
       }
-      // the answer to a request of the previous community must not land after a switch: the community data
-      // stays as it is; request bookkeeping (RTK Query caches, the user's community list) still takes it
-      if (isFulfilled(action) || isRejected(action)) {
+      // a request of the previous community (its start, e.g. a poller's next tick, or its answer) must not change
+      // the new community: the community data stays as it is; request bookkeeping (RTK Query caches, the user's
+      // community list) still takes it
+      if (isPending(action) || isFulfilled(action) || isRejected(action)) {
         const tenant = requestTenant(action)
         if (tenant && !sameTenant(tenant, current)) {
           const next = {...reducer(state, action)} as any

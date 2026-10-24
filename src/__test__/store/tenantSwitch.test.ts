@@ -7,6 +7,7 @@ import {fetchRatesModel} from "../../store/rate";
 import {fetchEnergyReportV2, setSelectedPeriod} from "../../store/energy";
 import {fetchParticipantAmounts} from "../../store/billing";
 import {fetchBillingConfig} from "../../store/billingConfig/actions";
+import {fetchBillingRunById} from "../../store/billingRun/actions";
 import {participantApi} from "../../store/participant/api";
 
 // 261024-ca13: a community (tenant) switch must not leave anything of the previous community in the store,
@@ -113,5 +114,19 @@ describe("community switch (261024-ca13)", () => {
 
     store.dispatch(lateAnswer("RC100200"))
     expect(store.getState().participant.selectedParticipant?.id).toBe("old")
+  })
+
+  it("ignores a request start of the previous community (no loading flag, selection kept)", () => {
+    const store = newStore("RC100100")
+    store.dispatch(selectTenant("RC100200"))
+    store.dispatch(loadMembers("RC100200", ["b1"]))
+    store.dispatch(selectParticipant("b1"))
+
+    // e.g. the billing run poller of the previous community asks again every 2 s
+    store.dispatch(fetchBillingRunById.pending("p-old", {tenant: "RC100100", billingRunId: "r1"}))
+    store.dispatch(fetchParticipantModel.pending("m-old", {tenant: "RC100100"}))
+
+    expect(store.getState().billingRun.isFetching).toBe(false)
+    expect(store.getState().participant.selectedParticipant?.id).toBe("b1")
   })
 })
