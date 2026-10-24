@@ -29,6 +29,36 @@ this changelog highlights the changes relevant for overview and operations.
   instead of „Mailversand fehlgeschlagen“; failed mails in the same notification are still listed.
 
 ### Fixed
+- **UX defects from Karl's analysis (23.10.2026), ids UX-1 … UX-8:**
+  - **Participation factor 0 % was sent as 100 % (UX-4):** "Teilnahmefaktor ändern" sent `partFact || 100`, so
+    an entered 0 reached the grid operator as 100 %. The field now accepts 1–100 only (like the meter form) and
+    sends the entered value.
+  - **"1.234,56" was saved as 1.234 (UX-8):** text fields with number input (`Input`, `isNumber`) replaced
+    only the first comma. With a comma present, dots now count as thousand separators; dot-only input keeps its
+    meaning ("1.5" stays 1.5). The tariff price fields (`NumberInput`) were not affected: they accept no dot.
+  - **Expired session (UX-5):** a 401 counted as success. It now fails the call with "Deine Sitzung ist
+    abgelaufen. Bitte melde Dich neu an." and starts the login (at most once per minute). A 401 with a valid
+    session (the backend also uses 401 for a missing access group) shows "Dafür fehlt Dir die Berechtigung."
+    instead and does not redirect.
+  - **EDA process forms (UX-2):** Change participation factor, register metering point, revoke and request energy
+    data now confirm "Die Anforderung wurde an den Netzbetreiber gesendet.". On failure the input stays and an
+    error stays until it is closed. Before, the form was cleared either way and, except for the energy request,
+    showed nothing. While a request runs, its button is disabled (no duplicate request to the grid operator).
+    "Teilnahmefaktor ändern" parsed the backend's empty 204 answer as JSON; that no longer counts as a failure.
+  - **Confirmations (UX-3):** revoking a data consent ("Anfordern" in the revoke form), deleting a new member
+    ("Nein, Löschen") and deleting a metering point now ask first. A failed delete shows an error.
+  - **New member and new metering point (UX-1):** a failed save no longer loses the form. The page or pane
+    closes only after the save worked; on failure an error names the reason. "Registrieren" is disabled while
+    saving, so a double click no longer creates the member twice.
+  - **Silent failures (UX-6):** failed loads of members and tariffs and failed saves of member, metering
+    point, participation factor, moving a metering point and a new metering point now show an error. A
+    failed partial member update showed the raw key "Rejected_participant_update"; it now shows readable
+    text.
+  - **Auto-saved fields (UX-7):** an invalid value no longer resets the whole form, a store update no longer
+    overwrites unsaved input in other fields, and a metering point field counts as saved only after the save
+    worked. Saving the participation factor no longer clears the other fields of the form. Unsaved input stays
+    with its member or meter and does not move to the next selection.
+  - Not in this change: navigation below 992 px and the member screen on phones (UX-9, deferred).
 - **New member: „Mandatsdatum fehlt!“ stayed after picking a date** (support 23.10.2026). Switching the debit type
   to CORE/B2B checks the still empty mandate date; the form validates on blur, but the date picker's input never
   passes the blur on, so picking a date did not re-check the field and the red message stayed — the member could
@@ -50,6 +80,9 @@ this changelog highlights the changes relevant for overview and operations.
 - `picomatch` 2.3.1 → 2.3.2 (build tooling) through `pnpm.overrides`: GHSA-c2c7-rcm5-vvqj (HIGH) and GHSA-3v7f-55p6-f55p (platform#179).
 - `source-map-js` 1.2.1 → 1.2.2 (via postcss/vite, build only) through `pnpm.overrides`: GHSA-68fv-2mgg-jv7q (HIGH) (platform#179).
 - `ws` 8.18.0 → 8.22.0 (via jsdom, tests only) through `pnpm.overrides`: GHSA-96hv-2xvq-fx4p (HIGH) and GHSA-58qx-3vcg-4xpx (platform#179).
+
+### CI
+- `rolling-release.yml`: no image build on a draft pull request — it runs when the pull request is marked ready for review (`ready_for_review`) and on every later push to it; `pr-checks.yml` still checks drafts. Pushes, tags and the deploy dispatch are unchanged.
 
 ## [1.8.0] – 2026-10-21
 

@@ -12,7 +12,9 @@
   "process": {
     "podList_ok": "Zählpunktliste konnte erfolgreich angefordert werden.",
     "podList_error": "Zählpunktliste konnte nicht erfolgreich angefordert werden.",
-    "revoke_consentIdEmpty": "Für diesen Zählpunkt fehlt noch die Consent-ID. Ohne diese Information kann der Abmeldeprozess nicht ausgeführt werden. Versuchen Sie die Teilnehmerliste anzufordern, damit die Consent-ID mit den Zählpunkten abgeglichen werden kann."
+    "revoke_consentIdEmpty": "Für diesen Zählpunkt fehlt noch die Consent-ID. Ohne diese Information kann der Abmeldeprozess nicht ausgeführt werden. Versuchen Sie die Teilnehmerliste anzufordern, damit die Consent-ID mit den Zählpunkten abgeglichen werden kann.",
+    "request_ok": "Die Anforderung wurde an den Netzbetreiber gesendet.",
+    "request_error": "Die Anforderung konnte nicht gesendet werden."
   },
   "E_BIC_MISSING": "Die BIC der EEG wurde noch nicht konfiguriert.",
   "E_IBAN_MISSING": "Die IBAN der EEG wurde noch nicht konfiguriert."

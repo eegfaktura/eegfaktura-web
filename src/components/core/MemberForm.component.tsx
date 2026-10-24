@@ -61,7 +61,7 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
   useEffect(() => {
     if (participant) {
       participant.businessRole === 'EEG_PRIVATE' ? setSelectedBusinessType(0) : setSelectedBusinessType(1)
-      reset(participant)
+      reset(participant, {keepDirtyValues: true})  // saving one field must not overwrite unsaved input elsewhere
     }
   }, [participant])
 

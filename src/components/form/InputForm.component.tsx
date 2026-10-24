@@ -46,9 +46,10 @@ const InputForm: (React.FC<InputFormProps>) =
 
   const handleOnChange1 = <TValue extends string|number>(onChange: PartialChangeFunction | undefined, fieldState: ControllerFieldState) => (value: TValue, e:IonInputCustomEvent<InputChangeEventDetail>) => {
     if (onChange === undefined) return undefined
+    // an invalid value is not saved and stays visible with its error; it used to reset the whole form
     if (!fieldState.invalid && fieldState.isDirty) {
       onChange(name, value, e)
-    } else control._reset()
+    }
   }
 
   const renderControl = (field: ControllerRenderProps<any, string>, fieldState: ControllerFieldState) => {
