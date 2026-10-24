@@ -10,12 +10,15 @@ import * as billingConfig from './billingConfig';
 import user from './user';
 
 import {combineReducers, configureStore, createSelector, Middleware} from "@reduxjs/toolkit";
-import {activeMetersSelector, updateParticipantPartial} from "./participant";
+import {
+  activeMetersSelector, fetchParticipantModel, moveMeteringPoint, registerMeteringpoint, updateMeteringPoint,
+  updateMeteringPointPartFact, updateParticipant, updateParticipantPartial
+} from "./participant";
 import {meteringEnergyGroup11} from "./energy";
 import {Metering} from "../models/meteringpoint.model";
 import {ErrorState, setErrorState} from "./eeg";
 import i18next from '../util/I18n'
-import {saveNewRate} from "./rate";
+import {fetchRatesModel, saveNewRate} from "./rate";
 import {userApi} from "./user/userApi";
 import {participantApi} from "./participant/api";
 
@@ -35,15 +38,37 @@ export const reducer = combineReducers({
   user,
 });
 
-const errorMiddleware: Middleware = store => next => action => {
+// Thunks whose failure no caller shows: report them through the global error toast (Eeg.provider).
+// Thunks with their own error handling in the component (confirm, delete, create member) are not listed.
+const silentFailures: [{ match: (a: any) => boolean }, string][] = [
+  [fetchParticipantModel.rejected, "Die Mitglieder konnten nicht geladen werden."],
+  [fetchRatesModel.rejected, "Die Tarife konnten nicht geladen werden."],
+  [updateParticipant.rejected, "Das Mitglied konnte nicht gespeichert werden."],
+  [updateMeteringPoint.rejected, "Der Zählpunkt konnte nicht gespeichert werden."],
+  [updateMeteringPointPartFact.rejected, "Der Teilnahmefaktor konnte nicht gespeichert werden."],
+  [moveMeteringPoint.rejected, "Der Zählpunkt konnte nicht verschoben werden."],
+  [registerMeteringpoint.rejected, "Der Zählpunkt konnte nicht angelegt werden."],
+]
+
+const withReason = (text: string, reason: string | undefined) =>
+  reason && reason !== "Rejected" ? `${text} (${reason})` : text
+
+export const errorMiddleware: Middleware = store => next => action => {
   try {
 
     const result = next(action)
 
     if (updateParticipantPartial.rejected.match(action)) {
-      store.dispatch(setErrorState({message: i18next.t(`${action.error.message}_participant_update`, { ns: 'error' })} as ErrorState))
+      // rejectWithValue sets error.message to "Rejected": without the default the raw key was shown
+      store.dispatch(setErrorState({message: i18next.t(`${action.error.message}_participant_update`,
+        { ns: 'error', defaultValue: "Das Mitglied konnte nicht gespeichert werden." })} as ErrorState))
     } else if(saveNewRate.rejected.match(action)) {
       store.dispatch(setErrorState({message: i18next.t(`${action.error.message}_tariff_create`, { ns: 'error' })} as ErrorState))
+    } else {
+      const hit = silentFailures.find(([thunk]) => thunk.match(action))
+      if (hit) {
+        store.dispatch(setErrorState({message: withReason(hit[1], (action as any).error?.message)} as ErrorState))
+      }
     }
 
     return result
