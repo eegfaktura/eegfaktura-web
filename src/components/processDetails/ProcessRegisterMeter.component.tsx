@@ -14,6 +14,7 @@ import {JoinStrings} from "../../util/Helper.util";
 import {meteringDisplayName} from "../../util/FilterHelper";
 import {useLocale} from "../../store/hook/useLocale";
 import CheckboxComponent from "../form/Checkbox.component";
+import {useProcessFeedback} from "./useProcessFeedback";
 
 interface ProcessValues {
   communityId: string | undefined
@@ -45,6 +46,7 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
   }
 
   const {t} = useLocale("common")
+  const {sent, failed} = useProcessFeedback()
   const {
     handleSubmit, reset,
     control, watch,
@@ -80,9 +82,11 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
       const meter = p?.meters.find(m => m.meteringPoint === data.meteringPoint)
       if (p && meter) {
         Api.eegService.registerMeteringPoint(eeg.id.toUpperCase(), p.id, data.meteringPoint, meter.direction, offline ? 'OFFLINE' : 'ONLINE', data.activationCode)
-          .finally(() => {
+          .then(() => {
+            sent()
             reset()
           })
+          .catch(failed)  // keep the input on failure
       }
     }
   }

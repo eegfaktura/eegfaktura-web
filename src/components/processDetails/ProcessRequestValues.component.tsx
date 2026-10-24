@@ -13,11 +13,10 @@ import ProcessContentComponent from "./ProcessContent.component";
 import {Api} from "../../service";
 import CheckboxComponent from "../form/Checkbox.component";
 import {useLocale} from "../../store/hook/useLocale";
-import {useAppDispatch} from "../../store";
-import {ErrorState, setErrorState} from "../../store/eeg";
 import {BasicSelectComponent, SelectOptions} from "../form/BasicSelect.component";
 import {JoinStrings} from "../../util/Helper.util";
 import {meteringDisplayName, selectedMeters} from "../../util/FilterHelper";
+import {useProcessFeedback} from "./useProcessFeedback";
 
 interface ProcessValues {
   communityId: string | undefined
@@ -39,6 +38,7 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
   }
 
   const {t} = useLocale("common")
+  const {sent, failed} = useProcessFeedback()
   const {handleSubmit, reset,
     control, watch,
     setValue, formState} = useForm<ProcessValues>({defaultValues: processValues})
@@ -48,7 +48,6 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
   const [selectEntire, setSelectEntire] = useState(false)
   const [meteringPoints, participantId] = watch(['meteringPoints', 'participantId'])
 
-  const dispatcher = useAppDispatch()
   // useEffect(() => {
   //   if (!participantId) {
   //     if (meteringPoint) {
@@ -81,12 +80,13 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
           eeg.id.toUpperCase(),
           meter.map(m => {return {meter: m.meteringPoint, direction: m.direction}}),
           startDate.getTime(), endDate.getTime())
-          .catch(e => dispatcher(setErrorState({message: "Fehler beim Senden!"} as ErrorState)))
-          .finally(() => {
+          .then(() => {
+            sent()
             reset()
             setDateRange([null, null])
             setSelectEntire(false)
           })
+          .catch(failed)  // keep the input on failure
       }
     }
   }

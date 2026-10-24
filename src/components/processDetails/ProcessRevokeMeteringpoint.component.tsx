@@ -16,6 +16,7 @@ import {meteringDisplayName, selectedMeters} from "../../util/FilterHelper";
 import {useLocale} from "../../store/hook/useLocale";
 import {JoinStrings} from "../../util/Helper.util";
 import moment from "moment";
+import {useProcessFeedback} from "./useProcessFeedback";
 
 interface ProcessValues {
   communityId: string | undefined
@@ -39,6 +40,7 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
   }
 
   const {t} = useLocale("common")
+  const {sent, failed} = useProcessFeedback()
   const {t: errorT} = useLocale("error")
 
   const {handleSubmit, reset,
@@ -90,10 +92,12 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
             eeg.id.toUpperCase(), data.participantId,
             meter.map(m => {return {meter: m.meteringPoint, direction: m.direction, consentId: m.consentId}}),
             consentEndDate.getTime(), reason)
-            .finally(() => {
+            .then(() => {
+              sent()
               reset()
               setConsentEndDate(null)
             })
+            .catch(failed)  // keep the input on failure
         } else {
           errorToast(errorT("process.revoke_consentIdEmpty"))
         }

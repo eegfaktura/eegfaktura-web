@@ -15,6 +15,7 @@ import {Api} from "../../service";
 import {useLocale} from "../../store/hook/useLocale";
 import {JoinStrings} from "../../util/Helper.util";
 import {isInPartFactWindow, PARTFACT_WINDOW_TEXT} from "../../util/PartFactWindow.util";
+import {useProcessFeedback} from "./useProcessFeedback";
 
 // 0 would have been sent as 100 % (`|| 100`); the factor is 1–100 like in the meter form
 const PARTFACT_RANGE = {value: 1, message: "Der Teilnahmefaktor muss zwischen 1 und 100 % liegen."}
@@ -42,6 +43,7 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
   const [useableMeters, setUsableMeters] = useState<Metering[]>([])
   const [participant, setParticipant] = useState<EegParticipant>()
   const {t} = useLocale("common")
+  const {sent, failed} = useProcessFeedback()
   const [inWindow, setInWindow] = useState(isInPartFactWindow)
 
   useEffect(() => {
@@ -90,9 +92,11 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
         Api.eegService.changeMeterPartitionFactor(
           eeg.id.toUpperCase(),
           partFactChanges(meter, data.partFact))
-          .finally(() => {
+          .then(() => {
+            sent()
             reset()
           })
+          .catch(failed)  // keep the input on failure
       }
     }
   }
