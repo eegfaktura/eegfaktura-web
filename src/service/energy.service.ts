@@ -120,6 +120,20 @@ export class EnergyService extends BaseService {
     }).then(this.handleErrors).then(res => res.json());
   }
 
+  // Load curve of an explicit window; for one day (start 00:00, end 23:45) energystore returns the quarter hours.
+  async fetchLoadCurveRangeV2(tenant: ActiveTenant, start: number, end: number): Promise<ReportNamedData[]> {
+    const token = await this.lookupToken()
+    return await fetch(`${ENERGY_API_SERVER}/eeg/v2/${tenant.ecId}/load-curve-report`, {
+      method: 'POST',
+      headers: {
+        ...this.getSecureHeadersX(token, tenant.rcNr),
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({start, end})
+    }).then(this.handleErrors).then(res => res.json());
+  }
+
   async fetchCombinedReportV2(tenant: ActiveTenant, reports: string[], selectedPeroid: SelectedPeriod): Promise<CombinedReportData[]> {
     const token = await this.lookupToken()
     return await fetch(`${ENERGY_API_SERVER}/eeg/v2/${tenant.ecId}/combined-report`, {

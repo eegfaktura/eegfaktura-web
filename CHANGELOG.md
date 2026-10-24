@@ -9,6 +9,15 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Added
+- **Dashboard day view** (platform#210, konzept-dashboard-tagesansicht). A switch "Zeitraum | Tag" above the
+  dashboard cards. "Tag" shows one day of the selected period for the whole community: "Lastverlauf" with
+  quarter-hour lines Produktion, Verbrauch, Eigendeckung and "Tagesverlauf" with hourly bars EEG, EVU, Produziert,
+  plus the day sums (Produktion, Verbrauch, Eigendeckung, Überschuss), to check whether production matches
+  Eigendeckung plus surplus. Arrows step one day, limited to the selected period, the community's energy data and
+  yesterday. Data from the existing energystore load-curve report for one day (no energystore change); the hourly
+  bars are summed from the quarter hours (the intra-day report shifts hour 0 to 23, energystore known-errors #26).
+  A metering point with an owner change counts once (sums per stored metering point, not per participation). DST
+  days show 23 / 25 hours. "Zeitraum" is unchanged.
 - **Smart re-request of energy data** (konzept-smart-nachfordern). **Needs the eegfaktura-backend change "smart
   re-request" (per-meter periods, one-hour lock, live entry) deployed first or together**; an older backend ignores
   the per-meter periods and requests the whole period for the metering points with gaps or L3 values.
