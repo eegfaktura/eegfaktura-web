@@ -9,6 +9,7 @@ import {incompleteText, l3Text} from "../participantPane/BillingCheck.dialog";
 import {
   acceptedMetersToCheck,
   count,
+  DATA_DELAY_HINT,
   EnergyRequestSummary,
   formatDay,
   meterCount,
@@ -130,6 +131,7 @@ const EnergyRequestSummaryComponent: FC<{ summary: EnergyRequestSummary }> = ({s
           </ul>
         </details>
       ))}
+      {accepted.length > 0 && <p><small>{DATA_DELAY_HINT} Den aktuellen Stand zeigt „Datenstand prüfen“.</small></p>}
       {accepted.length > 0 && renderDataCheck()}
     </div>
   )

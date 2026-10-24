@@ -37,6 +37,10 @@ this changelog highlights the changes relevant for overview and operations.
     accepted metering points still with L3 values ("Noch mit L3-Werten", with their days).
 
 ### Fixed
+- **Energy data request: "angenommen" does not mean the data is there yet.** The single answer
+  ("Energiedatenanfrage … angenommen") and the summary of a request now say that the grid operator sends the data in
+  own messages afterwards and that it can take a while, with many metering points several hours, until it shows
+  in eegFaktura. The summary points to "Datenstand prüfen" for the current state.
 - **Community switch** (261024-ca13): after switching the community, the members, metering points, selected member,
   checked members (billing selection), tariffs, energy and billing data of the previous community are cleared at
   once; until the new community is loaded the lists stay empty instead of showing the old community's entries.

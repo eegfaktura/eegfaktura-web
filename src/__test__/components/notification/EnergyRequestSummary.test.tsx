@@ -135,6 +135,8 @@ describe("EnergyRequestSummary (platform#173)", () => {
     expect(screen.getByText(/2 Zählpunkte angefordert, 2 angenommen/)).toBeTruthy()
     expect(screen.getByText("Alle Zählpunkte wurden angefordert und angenommen.")).toBeTruthy()
     expect(screen.getByText("Datenstand prüfen")).toBeTruthy()
+    // "angenommen" does not mean the data is in eegFaktura yet
+    expect(screen.getByText(/kann es dauern/)).toBeTruthy()
     expect(screen.getByText("Zusammenfassung Energiedaten-Anforderung")).toBeTruthy()
     expect(screen.queryByText(/läuft/)).toBeNull()
   })
@@ -144,6 +146,7 @@ describe("EnergyRequestSummary (platform#173)", () => {
     expect(screen.getByText("Keine Antwort (2)")).toBeTruthy()
     expect(screen.getByText("AT0001")).toBeTruthy()
     expect(screen.queryByText("Datenstand prüfen")).toBeNull()
+    expect(screen.queryByText(/kann es dauern/)).toBeNull()
   })
 
   it("lists incomplete and not checkable metering points after the data check, and can check again", async () => {
