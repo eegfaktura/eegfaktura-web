@@ -1,4 +1,4 @@
-import {ReportNamedData, SelectedPeriod} from "../../models/energy.model";
+import {ReportNamedData} from "../../models/energy.model";
 import {CpPeriodType} from "../../models/reports.model";
 import {splitDate} from "../../util/Helper.util";
 
@@ -97,16 +97,6 @@ export const daySums = (quarters: QuarterHourValues[]): DaySums =>
 export const hasEnergy = (quarters: QuarterHourValues[]) =>
   quarters.some(q => q.produced !== 0 || q.consumed !== 0 || q.distributed !== 0 || q.unused !== 0)
 
-// First and last month (1-based) of a period.
-const periodMonths = (period: SelectedPeriod): [number, number] => {
-  switch (period.type) {
-    case 'YH': return [period.segment * 6 - 5, period.segment * 6]
-    case 'YQ': return [period.segment * 3 - 2, period.segment * 3]
-    case 'YM': return [period.segment, period.segment]
-    default: return [1, 12]
-  }
-}
-
 // "DD.MM.YYYY HH:mm:ss" → local day, undefined if empty or invalid.
 const parseDay = (s: string | undefined): Date | undefined => {
   if (!s) return undefined
@@ -115,20 +105,16 @@ const parseDay = (s: string | undefined): Date | undefined => {
   return new Date(y, m - 1, d)
 }
 
-// Days the day view may show: within the selected period, within the community's energy data and not after
-// yesterday (today has no complete data yet). undefined when no day qualifies.
-export const dayBounds = (period: SelectedPeriod, energyData: CpPeriodType, today: Date): DayBounds | undefined => {
-  if (period.type === 'D') return undefined
-  const [firstMonth, lastMonth] = periodMonths(period)
-  const periodStart = new Date(period.year, firstMonth - 1, 1)
-  const periodEnd = new Date(period.year, lastMonth, 0)
+// Days the day view may show: within the community's energy data and not after yesterday (today has no complete
+// data yet). undefined when no day qualifies.
+export const dayBounds = (energyData: CpPeriodType, today: Date): DayBounds | undefined => {
   const dataBegin = parseDay(energyData.begin)
   const dataEnd = parseDay(energyData.end)
   if (!dataBegin || !dataEnd) return undefined
   const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1)
 
-  const first = new Date(Math.max(periodStart.getTime(), dataBegin.getTime()))
-  const last = new Date(Math.min(periodEnd.getTime(), dataEnd.getTime(), yesterday.getTime()))
+  const first = dataBegin
+  const last = new Date(Math.min(dataEnd.getTime(), yesterday.getTime()))
   return first.getTime() <= last.getTime() ? {first, last} : undefined
 }
 

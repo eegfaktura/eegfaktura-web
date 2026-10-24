@@ -9,6 +9,10 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Added
+- **Dashboard day view in the period menu** (platform#210, user feedback). The day view is chosen in the period
+  popover (gear) as a new row "Tag" with a date field, limited to the energy data range and yesterday; any other row
+  returns to the period view with that period. The separate switch "Zeitraum | Tag" is gone; the day view keeps its
+  arrows and day sums and has the same gear to go back.
 - **Dashboard day view** (platform#210, konzept-dashboard-tagesansicht). A switch "Zeitraum | Tag" above the
   dashboard cards. "Tag" shows one day of the selected period for the whole community: "Lastverlauf" with
   quarter-hour lines Produktion, Verbrauch, Eigendeckung and "Tagesverlauf" with hourly bars EEG, EVU, Produziert,

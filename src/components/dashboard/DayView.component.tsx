@@ -1,6 +1,6 @@
 import React, {FC, useCallback, useEffect, useRef, useState} from "react";
-import {IonButton, IonIcon, IonLabel, IonSegment, IonSegmentButton} from "@ionic/react";
-import {chevronBack, chevronForward} from "ionicons/icons";
+import {IonButton, IonIcon} from "@ionic/react";
+import {chevronBack, chevronForward, settings} from "ionicons/icons";
 import {ActiveTenant} from "../../models/eeg.model";
 import {Api} from "../../service";
 import {
@@ -36,26 +36,22 @@ export const useDayReport = (tenant: ActiveTenant | undefined, day: Date | undef
 const kwh = (v: number) => `${v.toLocaleString("de-AT", {minimumFractionDigits: 3, maximumFractionDigits: 3})} kWh`
 
 interface DayToolbarProps {
-  mode: DashboardMode
-  onModeChange: (mode: DashboardMode) => void
   day: Date | undefined
   bounds: DayBounds | undefined
   onDayChange: (day: Date) => void
   sums: DaySums | undefined
+  onProperties: (e: any) => void   // the period popover (gear), as on the other dashboard cards
 }
 
-export const DayToolbar: FC<DayToolbarProps> = ({mode, onModeChange, day, bounds, onDayChange, sums}) => {
+export const DayToolbar: FC<DayToolbarProps> = ({day, bounds, onDayChange, sums, onProperties}) => {
   const atFirst = !day || !bounds || day.getTime() <= bounds.first.getTime()
   const atLast = !day || !bounds || day.getTime() >= bounds.last.getTime()
 
   return (
     <div style={{display: "flex", alignItems: "center", flexWrap: "wrap", gap: "12px", padding: "0 20px"}}>
-      <IonSegment value={mode} style={{width: "220px"}}
-                  onIonChange={(e) => onModeChange(e.detail.value === "day" ? "day" : "period")}>
-        <IonSegmentButton value="period"><IonLabel>Zeitraum</IonLabel></IonSegmentButton>
-        <IonSegmentButton value="day"><IonLabel>Tag</IonLabel></IonSegmentButton>
-      </IonSegment>
-      {mode === "day" && (bounds && day ? (
+      <IonIcon icon={settings} color="primary" style={{fontSize: "24px", cursor: "pointer"}} aria-label="Zeitraum wählen"
+               onClick={onProperties}/>
+      {bounds && day ? (
         <>
           <div style={{display: "flex", alignItems: "center"}}>
             <IonButton fill="clear" size="small" disabled={atFirst} aria-label="Vorheriger Tag"
@@ -76,8 +72,8 @@ export const DayToolbar: FC<DayToolbarProps> = ({mode, onModeChange, day, bounds
           )}
         </>
       ) : (
-        <div style={{fontSize: "14px"}}>Im gewählten Zeitraum gibt es keinen Tag mit Energiedaten.</div>
-      ))}
+        <div style={{fontSize: "14px"}}>Es gibt keinen Tag mit Energiedaten.</div>
+      )}
     </div>
   )
 }

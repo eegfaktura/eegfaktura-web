@@ -115,34 +115,18 @@ describe("dayBounds", () => {
   const data = {begin: "15.03.2025 00:00:00", end: "20.10.2026 23:45:00"}
   const today = new Date(2026, 9, 24, 9, 0)
 
-  it("a past month inside the data: the whole month", () => {
-    expect(dayBounds({type: "YM", year: 2026, segment: 2}, data, today))
-      .toEqual({first: new Date(2026, 1, 1), last: new Date(2026, 1, 28)})
-  })
-
-  it("starts at the data begin and ends at the data end", () => {
-    expect(dayBounds({type: "Y", year: 2025, segment: 0}, data, today)?.first).toEqual(new Date(2025, 2, 15))
-    expect(dayBounds({type: "YM", year: 2026, segment: 10}, data, today)?.last).toEqual(new Date(2026, 9, 20))
+  it("the energy data range of the community", () => {
+    expect(dayBounds(data, today)).toEqual({first: new Date(2025, 2, 15), last: new Date(2026, 9, 20)})
   })
 
   it("never after yesterday", () => {
-    const fresh = {begin: data.begin, end: "31.12.2026 23:45:00"}
-    expect(dayBounds({type: "YQ", year: 2026, segment: 4}, fresh, today))
-      .toEqual({first: new Date(2026, 9, 1), last: new Date(2026, 9, 23)})
+    expect(dayBounds({begin: data.begin, end: "31.12.2026 23:45:00"}, today))
+      .toEqual({first: new Date(2025, 2, 15), last: new Date(2026, 9, 23)})
   })
 
-  it("half year and quarter cover their months", () => {
-    expect(dayBounds({type: "YH", year: 2025, segment: 2}, data, today))
-      .toEqual({first: new Date(2025, 6, 1), last: new Date(2025, 11, 31)})
-    expect(dayBounds({type: "YQ", year: 2025, segment: 2}, data, today))
-      .toEqual({first: new Date(2025, 3, 1), last: new Date(2025, 5, 30)})
-  })
-
-  it("no day: period without data, no energy data at all, or a day period", () => {
-    expect(dayBounds({type: "YM", year: 2024, segment: 5}, data, today)).toBeUndefined()
-    expect(dayBounds({type: "YM", year: 2026, segment: 11}, data, today)).toBeUndefined()
-    expect(dayBounds({type: "YM", year: 2026, segment: 2}, {begin: "24.10.2026 09:00:00", end: ""}, today)).toBeUndefined()
-    expect(dayBounds({type: "D", year: 2026, segment: 40}, data, today)).toBeUndefined()
+  it("no day: no energy data, or data only from today on", () => {
+    expect(dayBounds({begin: "24.10.2026 09:00:00", end: ""}, today)).toBeUndefined()
+    expect(dayBounds({begin: "24.10.2026 00:00:00", end: "31.12.2026 23:45:00"}, today)).toBeUndefined()
   })
 })
 
