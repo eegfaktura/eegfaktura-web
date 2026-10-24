@@ -50,6 +50,11 @@ this changelog highlights the changes relevant for overview and operations.
   - **Billing settings showed "Änderung gespeichert" together with the error (261024-ca15):** a failed save now
     shows only "Fehler beim Ändern der Abrechnungseinstellungen.". Deleting the logo asks first ("Soll das Bild
     für das Logo gelöscht werden?").
+  - **"Tarif löschen" archived at once and ignored metering point tariffs (261024-ca16):** it now asks first
+    ("Soll der Tarif „…“ gelöscht werden?"). A tariff that a metering point still uses is refused like one a
+    member uses; the hint names the members and metering points (at most 10 each, then "und N weitere"). The
+    backend's own check does not stop the archive (it only fails on a database error), so this hint is the
+    only guard; all loaded members and metering points count, whatever their status.
 - **Dashboard "Energiemengen – Eingekauft/Verkauft" wrong after an owner change** (support 6611112, 6611148).
   A metering point with two participations in the period (old and new member) counted the value of one of them
   twice, e.g. 160 or 10 kWh instead of 5 + 80 = 85 kWh. Each participation now adds its own value once.
