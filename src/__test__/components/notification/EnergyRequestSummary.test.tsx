@@ -70,6 +70,41 @@ describe("EnergyRequestSummary (platform#173)", () => {
     expect(groups[1].lines[0].detail).toBe("im Zeitraum nicht aktiv")
   })
 
+  it("groups the already requested and the complete metering points, the complete ones last", () => {
+    const now = new Date(2026, 9, 24, 13, 40).getTime()
+    const groups = summaryGroups(summary({
+      skipped: [
+        {meteringPoint: "AT5", reason: "COMPLETE"},
+        {meteringPoint: "AT6", reason: "ALREADY_REQUESTED", until: new Date(2026, 9, 24, 14, 32).getTime()},
+        {meteringPoint: "AT7", reason: "ALREADY_REQUESTED", until: new Date(2026, 9, 23, 9, 5).getTime()},
+        {meteringPoint: "AT8", reason: "NOT_FOUND"},
+      ],
+      superseded: ["AT9"],
+      noAnswer: ["AT3"],
+    }), now)
+    expect(groups.map(g => g.title)).toEqual(["Keine Antwort", "Bereits angefordert", "Nicht angefordert",
+      "In einer späteren Anforderung erneut angefordert", "Daten vollständig (nicht angefordert)"])
+    expect(groups[1].lines).toEqual([
+      {meteringPoint: "AT6", detail: "frei ab 14:32"},
+      {meteringPoint: "AT7", detail: "frei ab 23.10.2026 09:05"},
+    ])
+    expect(groups[2].lines).toEqual([{meteringPoint: "AT8", detail: "nicht gefunden"}])
+    expect(groups[4].lines).toEqual([{meteringPoint: "AT5"}])
+  })
+
+  it("labels the metering points without an answer as still open while the request runs", () => {
+    expect(summaryGroups(summary({noAnswer: ["AT3"], live: true}))[0].title).toBe("Antwort noch offen")
+    expect(summaryGroups(summary({noAnswer: ["AT3"]}))[0].title).toBe("Keine Antwort")
+  })
+
+  it("shows a running request with its own title, once", () => {
+    renderWithProviders(<EnergyRequestSummaryComponent summary={summary({live: true, noAnswer: ["AT0003"]})}/>)
+    expect(screen.getByText("Energiedaten-Anforderung läuft")).toBeTruthy()
+    expect(screen.getAllByText(/läuft/)).toHaveLength(1)
+    expect(screen.getByText("Antwort noch offen (1)")).toBeTruthy()
+    expect(screen.queryByText("Zusammenfassung Energiedaten-Anforderung")).toBeNull()
+  })
+
   it("checks each accepted metering point over the period the backend requested, the active entry first", () => {
     const own = new Date(2026, 8, 15).getTime()
     const {toCheck, notCheckable} = acceptedMetersToCheck(
@@ -91,6 +126,7 @@ describe("EnergyRequestSummary (platform#173)", () => {
   it("counts in singular and plural", () => {
     expect(meterCount(1)).toBe("1 Zählpunkt")
     expect(meterCount(3)).toBe("3 Zählpunkte")
+    expect(meterCount(2380)).toBe("2.380 Zählpunkte")
   })
 
   it("shows the header, a hint without problems and the data check button", () => {
@@ -99,6 +135,8 @@ describe("EnergyRequestSummary (platform#173)", () => {
     expect(screen.getByText(/2 Zählpunkte angefordert, 2 angenommen/)).toBeTruthy()
     expect(screen.getByText("Alle Zählpunkte wurden angefordert und angenommen.")).toBeTruthy()
     expect(screen.getByText("Datenstand prüfen")).toBeTruthy()
+    expect(screen.getByText("Zusammenfassung Energiedaten-Anforderung")).toBeTruthy()
+    expect(screen.queryByText(/läuft/)).toBeNull()
   })
 
   it("shows a collapsible group with its count and no data check without accepted metering points", () => {
@@ -122,6 +160,23 @@ describe("EnergyRequestSummary (platform#173)", () => {
 
     fireEvent.click(screen.getByText("Erneut prüfen"))
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2))
+  })
+
+  it("drops the data check result when more metering points of a running request are accepted", async () => {
+    mockFetch().mockResolvedValue(energy([{meteringPoint: "AT1", missingCount: 4}]))
+    const one = summary({live: true, requested: 2, accepted: [{meteringPoint: "AT1", from, to}], noAnswer: ["AT2"]})
+    const {rerender} = renderWithProviders(<EnergyRequestSummaryComponent summary={one}/>,
+      withParticipants([participant("p1", "Muster", [{meteringPoint: "AT1"}, {meteringPoint: "AT2"}])]))
+    fireEvent.click(screen.getByText("Datenstand prüfen"))
+    await waitFor(() => expect(screen.getByText("Daten unvollständig (1)")).toBeTruthy())
+
+    rerender(<EnergyRequestSummaryComponent summary={{...one, noAnswer: []}}/>)  // same state: result stays
+    expect(screen.getByText("Daten unvollständig (1)")).toBeTruthy()
+    rerender(<EnergyRequestSummaryComponent summary={{...one, live: undefined}}/>)  // only closed: result stays
+    expect(screen.getByText("Daten unvollständig (1)")).toBeTruthy()
+    rerender(<EnergyRequestSummaryComponent summary={summary({live: true})}/>)
+    expect(screen.queryByText("Daten unvollständig (1)")).toBeNull()
+    expect(screen.getByText("Datenstand prüfen")).toBeTruthy()
   })
 
   it("does not report complete when nothing could be checked or energystore fails", async () => {

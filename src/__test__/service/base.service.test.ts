@@ -29,6 +29,12 @@ describe("handleErrors", () => {
     expect(login).not.toHaveBeenCalled()
   })
 
+  it("reports the status text when the error body is not JSON (body read once)", async () => {
+    const svc = new TestService({} as AuthService)
+    const res = new Response("<html>Bad Gateway</html>", {status: 502, statusText: "Bad Gateway"})
+    await expect(svc.check(res)).rejects.toThrow("Bad Gateway")
+  })
+
   it("passes an ok response through", async () => {
     const svc = new TestService({} as AuthService)
     const res = new Response("{}", {status: 200})

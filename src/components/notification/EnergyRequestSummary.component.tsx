@@ -35,6 +35,14 @@ const EnergyRequestSummaryComponent: FC<{ summary: EnergyRequestSummary }> = ({s
   const groups = summaryGroups(summary)
   const accepted = summary.accepted ?? []
 
+  // a running request gets more accepted metering points: an earlier check result no longer covers them. Closing
+  // alone (live → stored) keeps the result.
+  const checkedState = `${summary.runId}|${accepted.length}`
+  useEffect(() => {
+    controller.current?.abort()
+    setCheck({state: 'idle'})
+  }, [checkedState])
+
   const checkData = () => {
     const {toCheck, notCheckable} = acceptedMetersToCheck(summary, participants)
     controller.current?.abort()
@@ -91,7 +99,7 @@ const EnergyRequestSummaryComponent: FC<{ summary: EnergyRequestSummary }> = ({s
   return (
     <div>
       <p>
-        <strong><u>Zusammenfassung Energiedaten-Anforderung</u></strong> {formatDay(summary.from)} – {formatDay(summary.to)}
+        <strong><u>{summary.live ? "Energiedaten-Anforderung läuft" : "Zusammenfassung Energiedaten-Anforderung"}</u></strong> {formatDay(summary.from)} – {formatDay(summary.to)}
         <br/>
         {meterCount(summary.requested)} angefordert, {accepted.length} angenommen
       </p>

@@ -1,5 +1,6 @@
 import {FC} from "react";
 import NotificationItemComponent from "./NotificationItem.component";
+import {EegNotification} from "../../models/eeg.model";
 
 import "./NotificationLayout.component.scss"
 
@@ -11,8 +12,9 @@ const NotificationLayoutComponent: FC<NotificationLayoutComponentProps> = ({noti
 
   return (
     <div className={"notification-main"}>
-      {notifications.map((n, idx) => (
-        <NotificationItemComponent key={idx} type={n.type} process={n.process} date={n.date} notification={n.notification}/>
+      {/* the id keeps the state of a card (e.g. a data check) with its notification when the list is reloaded */}
+      {notifications.map(n => (
+        <NotificationItemComponent key={(n.notification as EegNotification).id} type={n.type} process={n.process} date={n.date} notification={n.notification}/>
       ))}
     </div>
   )

@@ -8,7 +8,42 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **Smart re-request of energy data** (konzept-smart-nachfordern). **Needs the eegfaktura-backend change "smart
+  re-request" (per-meter periods, one-hour lock, live entry) deployed first or together**; an older backend
+  ignores the per-meter periods and requests the whole period for the metering points with gaps.
+  - "Zählpunktdaten nachfordern" has a new checkbox "Nur fehlende Daten anfordern (Smart)", on by default. It checks
+    the energy data of the selected metering points first and requests only those with gaps, each from its first
+    to its last missing day. A question names the numbers first ("Von 2.380 Zählpunkten fehlen bei 214 Daten
+    (zusammen 1.033 Tage). Diese 214 jetzt anfordern?"). Metering points whose data could not be checked are named
+    there and requested over the whole period only on request; otherwise the message after sending names them as
+    not requested. If nothing could be checked (energystore down or timed out), the question warns that
+    every metering point would be requested for the whole period. Nothing missing: an info, nothing is sent. Metering
+    points not registered or not active in the period are left out with Smart. After an owner change or a new
+    registration every entry of a metering point is checked; it counts as complete only if all entries are, and
+    its gaps are requested as one period from the first to the last missing day over its entries. A period that
+    reaches today is checked and requested up to yesterday (energy data of today cannot exist yet); the question
+    says so.
+  - Without Smart the request is as before; "Gesamte Gemeinschaft" now asks first with the number of metering
+    points.
+  - Metering points requested in the last hour are skipped by the backend; the dialog names how many and when
+    they are all free again ("3 Zählpunkte wurden in der letzten Stunde schon angefordert, alle wieder frei ab
+    14:40.").
+  - Messages: a running request shows as one entry "Energiedaten-Anforderung läuft" (with "Antwort noch offen"),
+    reloaded every minute while it is shown. Summary and live entry have the new groups "Bereits angefordert"
+    (with "frei ab") and "Daten vollständig (nicht angefordert)".
+
 ### Fixed
+- **Error messages showed "body stream already read" instead of the real error** (pre-existing). When a server
+  error had no JSON body (e.g. 502 from the ingress), the error handler read the body a second time and the
+  browser's read error replaced the status text. The body is now read once; the toast names e.g. "Bad Gateway".
+- **Messages: a card's data check moved to another card after a reload.** The list keyed its cards by position, so
+  when a newer notification came first, the result of "Datenstand prüfen" showed on the wrong summary. Cards are
+  now keyed by the notification id. More likely since the list reloads every minute while a request runs.
+- **Messages: a failed load went unnoticed** (unhandled promise rejection). It now shows "Die Nachrichten konnten
+  nicht geladen werden." with the reason, once until a load works again (the reload every minute during a running
+  request does not repeat it). Switching the community empties the list first, so a failed load never shows the
+  previous community's messages.
 - **UX defects from Karl's analysis (23.10.2026), ids UX-1 … UX-8:**
   - **Participation factor 0 % was sent as 100 % (UX-4):** "Teilnahmefaktor ändern" sent `partFact || 100`, so
     an entered 0 reached the grid operator as 100 %. The field now accepts 1–100 only (like the meter form) and

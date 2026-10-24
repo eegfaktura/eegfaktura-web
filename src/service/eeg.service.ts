@@ -17,6 +17,33 @@ import EegBaseService from "./base.service";
 
 const BILLING_API_SERVER = import.meta.env.VITE_BILLING_SERVER_URL;
 
+// POST /meteringpoint/syncenergy (smart re-request)
+export interface SyncEnergyMeter {
+  meter: string
+  direction: string
+  from?: number
+  to?: number
+}
+
+export interface SyncEnergySkipped {
+  meteringPoint: string
+  reason: string
+  until?: number  // ALREADY_REQUESTED: when the metering point is free again (ms)
+}
+
+// requested is unknown from an older backend (204, no body) or for a community that is not online
+export interface SyncEnergyResult {
+  requested?: number
+  skipped: SyncEnergySkipped[]
+}
+
+export const parseSyncEnergyResult = async (res: Response): Promise<SyncEnergyResult> => {
+  const text = res.status === 204 ? "" : await res.text()
+  if (!text) return {skipped: []}
+  const body = JSON.parse(text)
+  return {requested: body.requested, skipped: body.skipped ?? []}
+}
+
 export class EegService extends EegBaseService {
   
   public constructor(authService: AuthService) {
@@ -412,10 +439,12 @@ export class EegService extends EegBaseService {
     }).then(this.handleErrors).then(res => new Promise<void>((resolve) => resolve()));
   }
 
-  async syncMeteringPoint(tenant: string, meters: {meter: string, direction: string}[], from: number, to: number): Promise<any> {
+  // from/to of a metering point (ms) are optional, the request period applies without them; complete are the
+  // metering points found complete, recorded by the backend as skipped (COMPLETE) and not requested
+  async syncMeteringPoint(tenant: string, meters: SyncEnergyMeter[], from: number, to: number, complete?: string[]): Promise<SyncEnergyResult> {
     const token = await this.lookupToken()
 
-    const body = {meteringPoints: meters, from: from, to: to}
+    const body = {meteringPoints: meters, from: from, to: to, ...(complete && complete.length > 0 ? {complete} : {})}
     return await fetch(`${API_API_SERVER}/meteringpoint/syncenergy`, {
       method: 'POST',
       headers: {
@@ -423,7 +452,7 @@ export class EegService extends EegBaseService {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
-    }).then(this.handleErrors); // Response with 201 - no Content
+    }).then(this.handleErrors).then(parseSyncEnergyResult);
   }
 
   async revokeMeteringPoint(tenant: string, participantId: string, meters: {meter: string, direction: string, consentId: string}[], from: number, reason?: string): Promise<any> {
