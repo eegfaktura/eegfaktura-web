@@ -83,7 +83,10 @@ const ChartProperties:FC<ChartPropertiesProps> = ({selectedPeriod, periods, onDi
   const onDay = (range: DayBounds, iso: string) => {
     const [y, m, d] = iso.split('-').map(Number)
     if (!y || !m || !d) return
-    const day = clampDay(new Date(y, m - 1, d), range)!
+    const typed = new Date(y, m - 1, d)
+    // keyboard entry passes intermediate dates (year "0002"): ignore them instead of jumping to the last day
+    if (typed.getTime() < range.first.getTime() || typed.getTime() > range.last.getTime()) return
+    const day = clampDay(typed, range)!
     onDismiss({type: 'D', year: day.getFullYear(), segment: dateToDayOfYear(day)})
   }
 
