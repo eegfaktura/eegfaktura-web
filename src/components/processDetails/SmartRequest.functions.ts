@@ -3,7 +3,7 @@ import {Metering} from "../../models/meteringpoint.model";
 import {BillingCheckResponse} from "../../models/billingCheck.model";
 import {SyncEnergyMeter, SyncEnergyResult, SyncEnergySkipped} from "../../service/eeg.service";
 import {CheckedMeter, evaluateBillingChecks, metersActiveInPeriod} from "../participantPane/BillingCheck.functions";
-import {formatUntil} from "../notification/EnergyRequestSummary.functions";
+import {count, formatUntil, meterCount} from "../notification/EnergyRequestSummary.functions";
 
 // Smart re-request (konzept-smart-nachfordern): only the metering points with missing energy data are requested,
 // each from its first to its last missing day.
@@ -98,9 +98,6 @@ export const NOTHING_BEFORE_TODAY = "Für heute und spätere Tage gibt es noch k
 export const cappedNote = (end: Date) =>
   `Geprüft wird bis gestern (${moment(end).format("DD.MM.YYYY")}), für heute gibt es noch keine Energiedaten.`
 
-// Counts with a dot as thousands separator, as in "2.380"
-export const count = (n: number) => n.toLocaleString("de-DE")
-const meters = (n: number) => n === 1 ? "1 Zählpunkt" : `${count(n)} Zählpunkte`
 const metersDative = (n: number) => n === 1 ? "1 Zählpunkt" : `${count(n)} Zählpunkten`
 const days = (n: number) => n === 1 ? "1 Tag" : `${count(n)} Tage`
 
@@ -134,7 +131,7 @@ export const smartConfirmation = (p: SmartPlan, cappedTo?: Date): SmartConfirmat
     + `${n === 1 ? "Soll er" : "Sollen sie"} für den ganzen Zeitraum angefordert werden?`)
   const buttons: SmartConfirmation['buttons'] = []
   if (m > 0) buttons.push({text: `Nur die ${count(m)} mit Lücken`, role: 'missing'})
-  buttons.push({text: m > 0 ? `Alle ${count(m + n)} anfordern` : `${meters(n)} anfordern`, role: 'all'})
+  buttons.push({text: m > 0 ? `Alle ${count(m + n)} anfordern` : `${meterCount(n)} anfordern`, role: 'all'})
   return {message: parts.join(" "), buttons}
 }
 
@@ -144,7 +141,7 @@ export const smartRequest = (p: SmartPlan, choice: SmartChoice): { meters: SyncE
   meters: choice === 'all' ? [...p.missing, ...p.notChecked] : p.missing,
   complete: p.complete,
   note: choice === 'missing' && p.notChecked.length > 0
-    ? `${meters(p.notChecked.length)} ohne geprüften Datenstand ${p.notChecked.length === 1 ? "wurde" : "wurden"} nicht angefordert.`
+    ? `${meterCount(p.notChecked.length)} ohne geprüften Datenstand ${p.notChecked.length === 1 ? "wurde" : "wurden"} nicht angefordert.`
     : undefined,
 })
 
@@ -158,7 +155,7 @@ export const sendFeedback = (r: SyncEnergyResult, note?: string): { kind: 'sent'
 }
 
 export const entireConfirmation = (n: number) =>
-  `Für die ganze Gemeinschaft werden ${meters(n)} für den ganzen Zeitraum angefordert. Jetzt anfordern?`
+  `Für die ganze Gemeinschaft werden ${meterCount(n)} für den ganzen Zeitraum angefordert. Jetzt anfordern?`
 
 // After sending: the metering points the backend skipped because they were requested in the last hour
 export const alreadyRequestedInfo = (skipped: SyncEnergySkipped[], now = Date.now()): string | undefined => {
@@ -169,5 +166,5 @@ export const alreadyRequestedInfo = (skipped: SyncEnergySkipped[], now = Date.no
   // the latest time: from then on all of them are free again
   const free = untils.length > 0
     ? `, ${locked.length === 1 ? "" : "alle "}wieder frei ab ${formatUntil(Math.max(...untils), now)}` : ""
-  return `${meters(locked.length)} ${verb} in der letzten Stunde schon angefordert${free}.`
+  return `${meterCount(locked.length)} ${verb} in der letzten Stunde schon angefordert${free}.`
 }

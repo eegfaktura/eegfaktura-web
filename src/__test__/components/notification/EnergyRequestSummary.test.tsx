@@ -126,6 +126,7 @@ describe("EnergyRequestSummary (platform#173)", () => {
   it("counts in singular and plural", () => {
     expect(meterCount(1)).toBe("1 Zählpunkt")
     expect(meterCount(3)).toBe("3 Zählpunkte")
+    expect(meterCount(2380)).toBe("2.380 Zählpunkte")
   })
 
   it("shows the header, a hint without problems and the data check button", () => {

@@ -147,4 +147,7 @@ export const meterNames = (meters: Metering[]): Map<string, string> => {
 export const hasLiveEntry = (notifications: EegNotification[]) =>
   notifications.some(n => n.message?.properties?.type === "ZUSAMMENFASSUNG_PT" && n.message.properties.live === true)
 
-export const meterCount = (n: number) => n === 1 ? "1 Zählpunkt" : `${n} Zählpunkte`
+// Counts with a dot as thousands separator, as in "2.380"
+export const count = (n: number) => n.toLocaleString("de-DE")
+
+export const meterCount = (n: number) => n === 1 ? "1 Zählpunkt" : `${count(n)} Zählpunkte`
