@@ -1,9 +1,8 @@
 import moment from "moment";
 import {Metering} from "../../models/meteringpoint.model";
-import {EegParticipant} from "../../models/members.model";
 import {BillingCheckResponse} from "../../models/billingCheck.model";
 import {SyncEnergyMeter, SyncEnergySkipped} from "../../service/eeg.service";
-import {activeMetersInPeriod, CheckedMeter, evaluateBillingChecks} from "../participantPane/BillingCheck.functions";
+import {CheckedMeter, evaluateBillingChecks, metersActiveInPeriod} from "../participantPane/BillingCheck.functions";
 import {formatUntil} from "../notification/EnergyRequestSummary.functions";
 
 // Smart re-request (konzept-smart-nachfordern): only the metering points with missing energy data are requested,
@@ -20,7 +19,7 @@ export interface SmartPlan {
 // The selected metering points billing-check can check: registered and active in the period, by the same rules as
 // the check before billing. Not registered or inactive ones have nothing to request in the period and are left out.
 export const metersToCheck = (selected: Metering[], start: Date, end: Date): CheckedMeter[] =>
-  activeMetersInPeriod([{firstname: "", lastname: "", meters: selected} as unknown as EegParticipant], start, end)
+  metersActiveInPeriod(selected, "", start, end)
 
 const day = (d: string) => moment(d, "YYYY-MM-DD").startOf('day').valueOf()
 
