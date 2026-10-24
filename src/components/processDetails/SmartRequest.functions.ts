@@ -52,17 +52,20 @@ export const smartPlan = (entries: CheckedMeter[], energy: BillingCheckResponse 
     }
   }
   // per metering point with a gap: the period over its entries (undefined: the request period) and the days
-  const gaps = new Map<string, { from?: number, to?: number, full: boolean, days: number }>()
+  // (distinct days: overlapping entries can miss the same day)
+  const gaps = new Map<string, { from?: number, to?: number, full: boolean, days: Set<string> }>()
   for (const i of incomplete) {
-    const g = gaps.get(i.meter.meteringPoint) ?? {full: false, days: 0}
+    const g = gaps.get(i.meter.meteringPoint) ?? {full: false, days: new Set<string>()}
     const days = [...i.missingDays].sort()
     if (days.length === 0) {
       g.full = true
-      g.days += moment(i.expectedEnd).startOf('day').diff(moment(i.expectedStart).startOf('day'), 'days') + 1
+      for (const d = moment(i.expectedStart).startOf('day'); !d.isAfter(i.expectedEnd); d.add(1, 'day')) {
+        g.days.add(d.format("YYYY-MM-DD"))
+      }
     } else {
       g.from = Math.min(g.from ?? Infinity, day(days[0]))
       g.to = Math.max(g.to ?? -Infinity, day(days[days.length - 1]))
-      g.days += days.length
+      days.forEach(d => g.days.add(d))
     }
     gaps.set(i.meter.meteringPoint, g)
   }
@@ -80,7 +83,7 @@ export const smartPlan = (entries: CheckedMeter[], energy: BillingCheckResponse 
       plan.complete.push(id)
       continue
     }
-    plan.missingDays += g.days
+    plan.missingDays += g.days.size
     plan.missing.push(g.full ? full(id) : {...full(id), from: g.from, to: g.to})
   }
   return plan

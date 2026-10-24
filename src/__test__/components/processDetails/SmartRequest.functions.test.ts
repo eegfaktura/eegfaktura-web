@@ -67,6 +67,12 @@ describe("smartPlan: the period per metering point from its missing days", () =>
     expect(p.complete).toEqual(["AT2"])
   })
 
+  it("counts a day missing in two overlapping entries once", () => {
+    const p = smartPlan([checked("AT1"), checked("AT1")],
+      answer([{id: "AT1", days: ["2026-09-03", "2026-09-04"]}, {id: "AT1", days: ["2026-09-04"]}]))
+    expect(p.missingDays).toBe(2)
+  })
+
   it("counts a metering point as complete only if every entry is", () => {
     const p = smartPlan([checked("AT1"), checked("AT1")], answer([{id: "AT1", days: []}, {id: "AT1", days: ["2026-09-30"]}]))
     expect(p.complete).toEqual([])
