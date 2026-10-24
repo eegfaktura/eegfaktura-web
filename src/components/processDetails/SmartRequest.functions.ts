@@ -83,6 +83,21 @@ export const smartPlan = (entries: CheckedMeter[], energy: BillingCheckResponse 
   return plan
 }
 
+// Energy data of today cannot exist yet, and billing-check counts today and later days as missing: Smart checks
+// and requests up to yesterday (local midnight, like the dates of the date picker). Undefined: nothing before today.
+export const smartPeriod = (start: Date, end: Date, now = Date.now()): { start: Date, end: Date, capped: boolean } | undefined => {
+  const today = moment(now).startOf('day')
+  if (start.getTime() >= today.valueOf()) return undefined
+  if (end.getTime() < today.valueOf()) return {start, end, capped: false}
+  return {start, end: today.subtract(1, 'day').toDate(), capped: true}
+}
+
+export const NOTHING_BEFORE_TODAY = "Für heute und spätere Tage gibt es noch keine Energiedaten, es wird nichts angefordert."
+
+// the note for a period cut at yesterday
+export const cappedNote = (end: Date) =>
+  `Geprüft wird bis gestern (${moment(end).format("DD.MM.YYYY")}), für heute gibt es noch keine Energiedaten.`
+
 // Counts with a dot as thousands separator, as in "2.380"
 export const count = (n: number) => n.toLocaleString("de-DE")
 const meters = (n: number) => n === 1 ? "1 Zählpunkt" : `${count(n)} Zählpunkte`
@@ -100,11 +115,12 @@ export const NOTHING_TO_CHECK = "Keiner der gewählten Zählpunkte ist im Zeitra
 export const NOTHING_MISSING = "Für den Zeitraum sind alle Daten da, es wird nichts angefordert."
 
 // The question before sending; undefined when nothing is to be requested.
-export const smartConfirmation = (p: SmartPlan): SmartConfirmation | undefined => {
+// cappedTo: the period was cut at yesterday (smartPeriod)
+export const smartConfirmation = (p: SmartPlan, cappedTo?: Date): SmartConfirmation | undefined => {
   const m = p.missing.length
   const n = p.notChecked.length
   if (m === 0 && n === 0) return undefined
-  const parts: string[] = []
+  const parts: string[] = cappedTo ? [cappedNote(cappedTo)] : []
   if (p.checked > 0) {
     parts.push(m > 0
       ? `Von ${metersDative(p.checked)} fehlen bei ${count(m)} Daten (zusammen ${days(p.missingDays)}).`

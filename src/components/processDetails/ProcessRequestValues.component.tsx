@@ -24,9 +24,12 @@ import {
   alreadyRequestedInfo,
   entireConfirmation,
   metersToCheck,
+  cappedNote,
+  NOTHING_BEFORE_TODAY,
   NOTHING_MISSING,
   NOTHING_TO_CHECK,
   smartConfirmation,
+  smartPeriod,
   smartPlan,
   smartRequest
 } from "./SmartRequest.functions";
@@ -111,7 +114,13 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
       .catch(failed)  // keep the input on failure
 
   // Smart: check the energy data first, request only the metering points with gaps, each over its missing days
-  const requestSmart = async (meter: Metering[], start: Date, end: Date) => {
+  const requestSmart = async (meter: Metering[], from: Date, until: Date) => {
+    const period = smartPeriod(from, until)
+    if (!period) {
+      info(NOTHING_BEFORE_TODAY)
+      return
+    }
+    const {start, end, capped} = period
     const toCheck = metersToCheck(meter.map(m => m.meteringPoint), meters, start, end)
     if (toCheck.length === 0) {
       info(NOTHING_TO_CHECK)
@@ -122,9 +131,9 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
       .then(res => smartPlan(toCheck, res))
       .catch(() => smartPlan(toCheck, {error: "Energiedaten konnten nicht abgefragt werden."}))
       .finally(() => setChecking(false))
-    const confirmation = smartConfirmation(plan)
+    const confirmation = smartConfirmation(plan, capped ? end : undefined)
     if (!confirmation) {
-      info(NOTHING_MISSING)
+      info(capped ? `${NOTHING_MISSING} ${cappedNote(end)}` : NOTHING_MISSING)
       return
     }
     const choice = await ask(confirmation.message, confirmation.buttons)

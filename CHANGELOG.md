@@ -19,7 +19,9 @@ this changelog highlights the changes relevant for overview and operations.
     there and requested over the whole period only on request. Nothing missing: an info, nothing is sent. Metering
     points not registered or not active in the period are left out with Smart. After an owner change or a new
     registration every entry of a metering point is checked; it counts as complete only if all entries are, and
-    its gaps are requested as one period from the first to the last missing day over its entries.
+    its gaps are requested as one period from the first to the last missing day over its entries. A period that
+    reaches today is checked and requested up to yesterday (energy data of today cannot exist yet); the question
+    says so.
   - Without Smart the request is as before; "Gesamte Gemeinschaft" now asks first with the number of metering
     points.
   - Metering points requested in the last hour are skipped by the backend; the dialog names how many and when

@@ -5,6 +5,7 @@ import {
   metersToCheck,
   smartConfirmation,
   SmartPlan,
+  smartPeriod,
   smartPlan,
   smartRequest
 } from "../../../components/processDetails/SmartRequest.functions";
@@ -196,5 +197,30 @@ describe("confirmation texts", () => {
     expect(alreadyRequestedInfo([{meteringPoint: "AT1", reason: "ALREADY_REQUESTED"}], now))
       .toBe("1 Zählpunkt wurde in der letzten Stunde schon angefordert.")
     expect(alreadyRequestedInfo([{meteringPoint: "AT4", reason: "NOT_FOUND"}], now)).toBeUndefined()
+  })
+})
+
+describe("smartPeriod: energy data of today cannot exist yet", () => {
+  const now = new Date(2026, 9, 24, 11, 0).getTime()
+
+  it("keeps a period that ends before today", () => {
+    expect(smartPeriod(start, end, now)).toEqual({start, end, capped: false})
+  })
+
+  it("cuts a period that reaches today or later at yesterday", () => {
+    const p = smartPeriod(new Date(2026, 9, 1), new Date(2026, 9, 31), now)!
+    expect(p.end).toEqual(new Date(2026, 9, 23))
+    expect(p.capped).toBe(true)
+    expect(smartPeriod(new Date(2026, 9, 1), new Date(2026, 9, 24), now)!.end).toEqual(new Date(2026, 9, 23))
+  })
+
+  it("has nothing to check for a period from today on", () => {
+    expect(smartPeriod(new Date(2026, 9, 24), new Date(2026, 9, 31), now)).toBeUndefined()
+  })
+
+  it("names the cut in the question", () => {
+    const c = smartConfirmation(plan({checked: 1, missing: [sync("AT1")], missingDays: 1}), new Date(2026, 9, 23))!
+    expect(c.message).toBe("Geprüft wird bis gestern (23.10.2026), für heute gibt es noch keine Energiedaten. "
+      + "Von 1 Zählpunkt fehlen bei 1 Daten (zusammen 1 Tag). Diesen jetzt anfordern?")
   })
 })
