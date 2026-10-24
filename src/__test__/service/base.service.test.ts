@@ -35,6 +35,19 @@ describe("handleErrors", () => {
     await expect(svc.check(res)).rejects.toThrow("Bad Gateway")
   })
 
+  it("shows a plain-string error body (energystore) instead of \"E_undefined_undefined\" (pre-existing)", async () => {
+    const svc = new TestService({} as AuthService)
+    const res = new Response(JSON.stringify({error: "badger: database closed"}), {status: 500, statusText: "Internal Server Error"})
+    await expect(svc.check(res)).rejects.toThrow(/^badger: database closed$/)
+  })
+
+  it("shows the reason of a Spring error body (pre-existing)", async () => {
+    const svc = new TestService({} as AuthService)
+    const res = new Response(JSON.stringify({timestamp: "2026-10-24T12:00:00", status: 500, error: "Internal Server Error", path: "/api/x"}),
+      {status: 500, statusText: ""})
+    await expect(svc.check(res)).rejects.toThrow(/^Internal Server Error$/)
+  })
+
   it("passes an ok response through", async () => {
     const svc = new TestService({} as AuthService)
     const res = new Response("{}", {status: 200})

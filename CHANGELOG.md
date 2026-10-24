@@ -73,6 +73,9 @@ this changelog highlights the changes relevant for overview and operations.
   - **"Passwort ändern" built the Keycloak URL by hand (261005-ca4):** without state or PKCE and with an
     unencoded `redirect_uri`, so the way back could fail and leave a spinner. It is now a regular sign-in
     request (state and PKCE, like the login) with the Keycloak action `UPDATE_PASSWORD`.
+- **Error reasons showed "E_undefined_undefined"** (pre-existing). An error answer whose JSON `error` field is
+  a plain text (energystore, e.g. `{"error": "Record doesn't exist"}`; Spring's error body in billing) was looked
+  up as an error code. The toast now names that text, e.g. "(Internal Server Error)".
 - **Dashboard "Energiemengen – Eingekauft/Verkauft" wrong after an owner change** (support 6611112, 6611148).
   A metering point with two participations in the period (old and new member) counted the value of one of them
   twice, e.g. 160 or 10 kWh instead of 5 + 80 = 85 kWh. Each participation now adds its own value once.
