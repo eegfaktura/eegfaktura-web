@@ -4,7 +4,8 @@ import {
   fetchEnergyBills,
   fetchParticipantAmounts,
   resetParticipantAmounts,
-  resumeEnergyBillsPolling
+  resumeEnergyBillsPolling,
+  BILLING_POLL_STOPPED
 } from "../actions";
 
 export const reducer = createReducer(initialState, builder =>
@@ -16,7 +17,9 @@ export const reducer = createReducer(initialState, builder =>
       const {billing} = action.payload
       return adapter.setAll({...state, isFetching: false, isPolling: false}, billing.participantAmounts)
     })
-    .addCase(fetchEnergyBills.rejected, state => {
+    .addCase(fetchEnergyBills.rejected, (state, action) => {
+      // a poller replaced by a newer one for the same run (261024-ca13): the newer one still polls
+      if (action.payload === BILLING_POLL_STOPPED) return state
       return {...state, isFetching: false, isPolling: false};
     })
     .addCase(resumeEnergyBillsPolling.pending, state => {
@@ -26,7 +29,9 @@ export const reducer = createReducer(initialState, builder =>
       const {billing} = action.payload
       return adapter.setAll({...state, isFetching: false, isPolling: false}, billing.participantAmounts)
     })
-    .addCase(resumeEnergyBillsPolling.rejected, state => {
+    .addCase(resumeEnergyBillsPolling.rejected, (state, action) => {
+      // a poller replaced by a newer one for the same run (261024-ca13): the newer one still polls
+      if (action.payload === BILLING_POLL_STOPPED) return state
       return {...state, isFetching: false, isPolling: false};
     })
     .addCase(fetchParticipantAmounts.pending, state => {
