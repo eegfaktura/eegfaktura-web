@@ -8,7 +8,8 @@ import {
   IonMenuButton,
   IonPage,
   IonTitle,
-  IonToolbar
+  IonToolbar,
+  useIonToast
 } from "@ionic/react";
 
 
@@ -81,6 +82,7 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
     tariffId: '',
     meters: []} as EegParticipant
 
+  const [toaster] = useIonToast()
   const formMethods = useForm<EegParticipant>({defaultValues: selectedParticipant, mode: "onBlur", reValidateMode: 'onChange'})
   const {reset, handleSubmit, setValue, formState: {dirtyFields}} = formMethods
   // const {append} = useFieldArray<EegParticipant>({control, name: 'meters'})
@@ -94,10 +96,19 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
     }
   }, [nextParticipantNumber, dirtyFields.participantNumber, setValue])
 
-  const onRegisterParticipant = (participant: EegParticipant) => {
+  // navigate and clear only after the member was saved; on failure the input stays for a retry
+  const onRegisterParticipant = (participant: EegParticipant) =>
     dispatch(createParticipant({tenant, participant}))
-    history.replace("/page/participants")
-  }
+      .unwrap()
+      .then(() => {
+        reset()
+        history.replace("/page/participants")
+      })
+      .catch((e) => toaster({
+        message: "Das Mitglied konnte nicht angelegt werden. Deine Eingaben bleiben erhalten."
+          + (e?.message ? ` (${e.message})` : ""),
+        color: "danger", position: "bottom", buttons: [{text: "OK"}],
+      }))
 
   const onAddMeter = (meter: Metering) => {
     // append(meter)
@@ -111,7 +122,6 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
     data.residentAddress.streetNumber = data.billingAddress.streetNumber
     data.meters = data.meters.map(m => {return {...m, registeredSince: data.participantSince} as Metering})
     onRegisterParticipant(data)
-    reset()
   }
 
   return (
