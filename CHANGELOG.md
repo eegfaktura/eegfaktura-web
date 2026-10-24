@@ -9,6 +9,12 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Added
+- **Member list sorting can be chosen** (platform#214). A sort icon next to the filter ("Periode / Ausstehende")
+  offers "Standard" (the order so far, the default), "Nachname", "Vorname", "Mitgliedsnummer" and "Mitglied seit"
+  (newest or oldest first). Members needing an action (not active, or a metering point not active: open problem or
+  registration in progress) stay on top as before; the chosen sort applies within the groups and also in the
+  filtered views ("Ausstehende", "Inaktive", "Abgewiesene"). Names compare in German collation, member numbers as
+  numbers, empty values last. The choice is kept per browser (localStorage), no backend change.
 - **Day picker in the period popover like the meter chart** (platform#210, feedback from dev). The row "Tag" uses
   the day picker of the metering-point energy chart (MeterChartNavbar): a date chip ("23. Okt. 2026") opening a
   calendar, with arrows for the previous / next day; still limited to the energy data range and yesterday.

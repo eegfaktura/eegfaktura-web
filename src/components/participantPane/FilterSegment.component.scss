@@ -44,4 +44,10 @@ ion-segment-button.ios::part(indicator-background) {
       font-size: 1em;
     }
   }
+
+  & .sort {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
 }

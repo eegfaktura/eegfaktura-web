@@ -97,6 +97,7 @@ import BillingTotalsTable, {
   writeTotalsOpen
 } from "./BillingTotalsTable.component";
 import FilterSegmentComponent from "./FilterSegment.component";
+import {MemberSort, readMemberSort, writeMemberSort} from "./participantSort";
 import {VariableSizeList} from "react-window";
 
 import HeaderFavButtonComponent from "../core/HeaderFavButton.component";
@@ -160,6 +161,7 @@ const ParticipantPaneComponent: FC = () => {
   const [searchQuery, setSearchQuery] = useState<string | undefined>(undefined)
   const [searchActive, setSearchActive] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<string>('period');
+  const [memberSort, setMemberSort] = useState<MemberSort>(readMemberSort);
   const [downloadBillingId, setDownloadBillingId] = useState<string | undefined>();
 
   const [billingDownload, billingDownloadDismiss] = useIonModal(DownloadBillingDialog, {
@@ -298,7 +300,7 @@ const ParticipantPaneComponent: FC = () => {
 
   // list only: metering points with an open problem stay visible in every period, sorted with them
   const listParticipants = useMemo(() => withOpenProblems(participants, allParticipants), [participants, allParticipants])
-  const sortedParticipants1 = sortParticipants({participants: listParticipants, hideProducers, hideConsumers})
+  const sortedParticipants1 = sortParticipants({participants: listParticipants, hideProducers, hideConsumers, memberSort})
 
   const viewEntities = filterParticipant({
     selectedFilter,
@@ -306,8 +308,14 @@ const ParticipantPaneComponent: FC = () => {
     participants: allParticipants,
     hideConsumers,
     hideProducers,
-    hideMeter
+    hideMeter,
+    memberSort
   })
+
+  const onChangeMemberSort = (sort: MemberSort) => {
+    setMemberSort(sort)
+    writeMemberSort(sort)
+  }
 
   const infoToast = (message: string) => {
     toaster({
@@ -782,7 +790,8 @@ const ParticipantPaneComponent: FC = () => {
               ></IonSearchbar>
             </IonToolbar>
           )}
-          <FilterSegmentComponent selectedOption={selectedFilter} setSelectedOption={setSelectedFilter}/>
+          <FilterSegmentComponent selectedOption={selectedFilter} setSelectedOption={setSelectedFilter}
+                                  memberSort={memberSort} setMemberSort={onChangeMemberSort}/>
           <ParticipantPeriodHeaderComponent
             activePeriod={activePeriod}
             selectAll={selectAll}

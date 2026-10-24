@@ -248,6 +248,14 @@
     "filter_header": "Filteroptionen:",
     "filter_text_rejected": "Abgewiesene",
     "filter_text_init": "Ausstehende",
-    "filter_text_inactive": "Inaktive"
+    "filter_text_inactive": "Inaktive",
+    "sort_header": "Sortierung:",
+    "sort_message": "Mitglieder, bei denen eine Aktion nötig ist, bleiben oben.",
+    "sort_standard": "Standard",
+    "sort_lastname": "Nachname",
+    "sort_firstname": "Vorname",
+    "sort_participantNumber": "Mitgliedsnummer",
+    "sort_sinceNewest": "Mitglied seit (neueste zuerst)",
+    "sort_sinceOldest": "Mitglied seit (älteste zuerst)"
   }
 }
