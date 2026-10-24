@@ -5,14 +5,14 @@ import {SyncEnergyMeter, SyncEnergyResult, SyncEnergySkipped} from "../../servic
 import {CheckedMeter, evaluateBillingChecks, metersActiveInPeriod} from "../participantPane/BillingCheck.functions";
 import {count, formatUntil, meterCount} from "../notification/EnergyRequestSummary.functions";
 
-// Smart re-request (konzept-smart-nachfordern): only the metering points with missing energy data are requested,
-// each from its first to its last missing day.
+// Smart re-request (konzept-smart-nachfordern): only the metering points with missing energy data or L3 values
+// (substitute values) are requested, each from its first to its last such day.
 
 export interface SmartPlan {
   checked: number              // metering points whose data could be checked
-  missing: SyncEnergyMeter[]   // with their period from the first to the last missing day
-  missingDays: number
-  complete: string[]           // no gap: not requested, recorded as COMPLETE
+  toRequest: SyncEnergyMeter[] // with their period from the first to the last day missing or with L3 values
+  requestDays: number          // distinct days missing or with L3 values
+  complete: string[]           // neither missing nor L3 days: not requested, recorded as COMPLETE
   notChecked: SyncEnergyMeter[] // energystore failed or did not answer for them: full period, only if confirmed
 }
 
@@ -31,8 +31,9 @@ export const metersToCheck = (ids: string[], all: Metering[], start: Date, end: 
 const day = (d: string) => moment(d, "YYYY-MM-DD").startOf('day').valueOf()
 
 /**
- * The plan from the billing-check answer, per metering point over all its entries. A metering point with a gap is
- * requested from its first to its last missing day over its entries (local midnight of both days, like the dates
+ * The plan from the billing-check answer, per metering point over all its entries. A day with an L3 value (substitute
+ * value) counts like a missing day (user decision 24.10.2026). A metering point with a gap is requested from its
+ * first to its last such day over its entries (local midnight of both days, like the dates
  * of the date picker; the backend cuts to the start and the end of the day and to each entry's active part). An
  * entry with a gap but without missing days (no value at all, or an older energystore) gets the request period.
  * A metering point counts as complete only if every entry is, and as not checked if one entry is not.
@@ -40,7 +41,9 @@ const day = (d: string) => moment(d, "YYYY-MM-DD").startOf('day').valueOf()
 export const smartPlan = (entries: CheckedMeter[], energy: BillingCheckResponse | { error: string }): SmartPlan => {
   // energystore answers in request order; entries beyond its answer are not checked
   const answered = 'error' in energy ? [] : entries.slice(0, energy.meters.length)
-  const incomplete = 'error' in energy ? [] : evaluateBillingChecks(answered, {}, energy).completeness.incomplete
+  const overview = 'error' in energy ? undefined : evaluateBillingChecks(answered, {}, energy)
+  const incomplete = overview?.completeness.incomplete ?? []
+  const l3 = overview?.l3.findings ?? []
   const unchecked = new Set(entries.slice(answered.length).map(m => m.meteringPoint))
 
   const ids: string[] = []
@@ -52,26 +55,37 @@ export const smartPlan = (entries: CheckedMeter[], energy: BillingCheckResponse 
     }
   }
   // per metering point with a gap: the period over its entries (undefined: the request period) and the days
-  // (distinct days: overlapping entries can miss the same day)
+  // (distinct days: overlapping entries can miss the same day, a day can be missing and have L3 values)
   const gaps = new Map<string, { from?: number, to?: number, full: boolean, days: Set<string> }>()
+  const gap = (id: string) => {
+    const g = gaps.get(id) ?? {full: false, days: new Set<string>()}
+    gaps.set(id, g)
+    return g
+  }
+  const addDays = (id: string, list: string[]) => {
+    const g = gap(id)
+    const days = [...list].sort()
+    g.from = Math.min(g.from ?? Infinity, day(days[0]))
+    g.to = Math.max(g.to ?? -Infinity, day(days[days.length - 1]))
+    days.forEach(d => g.days.add(d))
+  }
   for (const i of incomplete) {
-    const g = gaps.get(i.meter.meteringPoint) ?? {full: false, days: new Set<string>()}
-    const days = [...i.missingDays].sort()
-    if (days.length === 0) {
+    if (i.missingDays.length === 0) {
+      const g = gap(i.meter.meteringPoint)
       g.full = true
       for (const d = moment(i.expectedStart).startOf('day'); !d.isAfter(i.expectedEnd); d.add(1, 'day')) {
         g.days.add(d.format("YYYY-MM-DD"))
       }
     } else {
-      g.from = Math.min(g.from ?? Infinity, day(days[0]))
-      g.to = Math.max(g.to ?? -Infinity, day(days[days.length - 1]))
-      days.forEach(d => g.days.add(d))
+      addDays(i.meter.meteringPoint, i.missingDays)
     }
-    gaps.set(i.meter.meteringPoint, g)
+  }
+  for (const f of l3) {
+    if (f.days.length > 0) addDays(f.meter.meteringPoint, f.days)
   }
 
   const full = (id: string): SyncEnergyMeter => ({meter: id, direction: direction.get(id)!})
-  const plan: SmartPlan = {checked: 0, missing: [], missingDays: 0, complete: [], notChecked: []}
+  const plan: SmartPlan = {checked: 0, toRequest: [], requestDays: 0, complete: [], notChecked: []}
   for (const id of ids) {
     const g = gaps.get(id)
     if (unchecked.has(id)) {
@@ -83,8 +97,8 @@ export const smartPlan = (entries: CheckedMeter[], energy: BillingCheckResponse 
       plan.complete.push(id)
       continue
     }
-    plan.missingDays += g.days.size
-    plan.missing.push(g.full ? full(id) : {...full(id), from: g.from, to: g.to})
+    plan.requestDays += g.days.size
+    plan.toRequest.push(g.full ? full(id) : {...full(id), from: g.from, to: g.to})
   }
   return plan
 }
@@ -115,20 +129,20 @@ export interface SmartConfirmation {
 }
 
 export const NOTHING_TO_CHECK = "Keiner der gewählten Zählpunkte ist im Zeitraum aktiv, es wird nichts angefordert."
-export const NOTHING_MISSING = "Für den Zeitraum sind alle Daten da, es wird nichts angefordert."
+export const NOTHING_MISSING = "Für den Zeitraum gibt es keine fehlenden Daten oder L3-Werte, es wird nichts angefordert."
 
 // The question before sending; undefined when nothing is to be requested.
 // cappedTo: the period was cut at yesterday (smartPeriod)
 export const smartConfirmation = (p: SmartPlan, cappedTo?: Date): SmartConfirmation | undefined => {
-  const m = p.missing.length
+  const m = p.toRequest.length
   const n = p.notChecked.length
   if (m === 0 && n === 0) return undefined
   // the cut at yesterday leads only when something was checked; otherwise it is part of the warning below
   const parts: string[] = cappedTo && p.checked > 0 ? [cappedNote(cappedTo)] : []
   if (p.checked > 0) {
     parts.push(m > 0
-      ? `Von ${metersDative(p.checked)} fehlen bei ${count(m)} Daten (zusammen ${days(p.missingDays)}).`
-      : `Bei ${metersDative(p.checked)} sind alle Daten da.`)
+      ? `Bei ${count(m)} von ${metersDative(p.checked)} gibt es fehlende Daten oder L3-Werte (zusammen ${days(p.requestDays)}).`
+      : `Bei ${metersDative(p.checked)} gibt es keine fehlenden Daten oder L3-Werte.`)
   }
   if (n === 0) {
     parts.push(m === 1 ? "Diesen jetzt anfordern?" : `Diese ${count(m)} jetzt anfordern?`)
@@ -144,7 +158,7 @@ export const smartConfirmation = (p: SmartPlan, cappedTo?: Date): SmartConfirmat
       + `${n === 1 ? "Soll er" : "Sollen sie"} für den ganzen Zeitraum angefordert werden?`)
   }
   const buttons: SmartConfirmation['buttons'] = []
-  if (m > 0) buttons.push({text: `Nur die ${count(m)} mit Lücken`, role: 'missing'})
+  if (m > 0) buttons.push({text: `Nur die ${count(m)} mit Lücken oder L3-Werten`, role: 'missing'})
   buttons.push({text: m > 0 ? `Alle ${count(m + n)} anfordern` : `${meterCount(n)} anfordern`, role: 'all'})
   return {message: parts.join(" "), buttons}
 }
@@ -152,7 +166,7 @@ export const smartConfirmation = (p: SmartPlan, cappedTo?: Date): SmartConfirmat
 // The request for the chosen answer: the complete metering points go along so the summary lists them.
 // The backend has no field for metering points left out unchecked; with 'missing' the note names them.
 export const smartRequest = (p: SmartPlan, choice: SmartChoice): { meters: SyncEnergyMeter[], complete: string[], note?: string } => ({
-  meters: choice === 'all' ? [...p.missing, ...p.notChecked] : p.missing,
+  meters: choice === 'all' ? [...p.toRequest, ...p.notChecked] : p.toRequest,
   complete: p.complete,
   note: choice === 'missing' && p.notChecked.length > 0
     ? `${meterCount(p.notChecked.length)} ohne geprüften Datenstand ${p.notChecked.length === 1 ? "wurde" : "wurden"} nicht angefordert.`

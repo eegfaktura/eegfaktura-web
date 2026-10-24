@@ -10,28 +10,31 @@ this changelog highlights the changes relevant for overview and operations.
 
 ### Added
 - **Smart re-request of energy data** (konzept-smart-nachfordern). **Needs the eegfaktura-backend change "smart
-  re-request" (per-meter periods, one-hour lock, live entry) deployed first or together**; an older backend
-  ignores the per-meter periods and requests the whole period for the metering points with gaps.
-  - "Zählpunktdaten nachfordern" has a new checkbox "Nur fehlende Daten anfordern (Smart)", on by default. It checks
-    the energy data of the selected metering points first and requests only those with gaps, each from its first
-    to its last missing day. A question names the numbers first ("Von 2.380 Zählpunkten fehlen bei 214 Daten
-    (zusammen 1.033 Tage). Diese 214 jetzt anfordern?"). Metering points whose data could not be checked are named
-    there and requested over the whole period only on request; otherwise the message after sending names them as
-    not requested. If nothing could be checked (energystore down or timed out), the question warns that
-    every metering point would be requested for the whole period. Nothing missing: an info, nothing is sent. Metering
-    points not registered or not active in the period are left out with Smart. After an owner change or a new
-    registration every entry of a metering point is checked; it counts as complete only if all entries are, and
-    its gaps are requested as one period from the first to the last missing day over its entries. A period that
-    reaches today is checked and requested up to yesterday (energy data of today cannot exist yet); the question
-    says so.
+  re-request" (per-meter periods, one-hour lock, live entry) deployed first or together**; an older backend ignores
+  the per-meter periods and requests the whole period for the metering points with gaps or L3 values.
+  - "Zählpunktdaten nachfordern" has a new checkbox "Nur fehlende Daten oder L3-Werte anfordern (Smart)", on by
+    default. It checks the energy data of the selected metering points first and requests only those with gaps or L3
+    values (substitute values), each from its first to its last day missing or with L3 values; a day with L3 values
+    counts like a missing day (decision 24.10.2026). A question names the numbers first ("Bei 214 von 2.380
+    Zählpunkten gibt es fehlende Daten oder L3-Werte (zusammen 1.033 Tage). Diese 214 jetzt anfordern?"). Metering
+    points whose data could not be checked are named there and requested over the whole period only on request;
+    otherwise the message after sending names them as not requested. If nothing could be checked (energystore down
+    or timed out), the question warns that every metering point would be requested for the whole period. Nothing
+    missing and no L3 values: an info ("Für den Zeitraum gibt es keine fehlenden Daten oder L3-Werte, es wird nichts
+    angefordert."), nothing is sent. Metering points not registered or not active in the period are left out with
+    Smart. After an owner change or a new registration every entry of a metering point is checked; it counts as
+    complete only if all entries are, and its gaps are requested as one period from the first to the last missing or
+    L3 day over its entries. A period that reaches today is checked and requested up to yesterday (energy data of
+    today cannot exist yet); the question says so.
   - Without Smart the request is as before; "Gesamte Gemeinschaft" now asks first with the number of metering
     points.
   - Metering points requested in the last hour are skipped by the backend; the dialog names how many and when
     they are all free again ("3 Zählpunkte wurden in der letzten Stunde schon angefordert, alle wieder frei ab
     14:40.").
   - Messages: a running request shows as one entry "Energiedaten-Anforderung läuft" (with "Antwort noch offen"),
-    reloaded every minute while it is shown. Summary and live entry have the new groups "Bereits angefordert"
-    (with "frei ab") and "Daten vollständig (nicht angefordert)".
+    reloaded every minute while it is shown. Summary and live entry have the new groups "Bereits angefordert" (with
+    "frei ab") and "Keine fehlenden Daten oder L3-Werte (nicht angefordert)". "Datenstand prüfen" also lists the
+    accepted metering points still with L3 values ("Noch mit L3-Werten", with their days).
 
 ### Fixed
 - **Community switch** (261024-ca13): after switching the community, the members, metering points, selected member,

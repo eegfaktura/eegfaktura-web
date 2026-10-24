@@ -82,7 +82,7 @@ export const summaryGroups = (s: EnergyRequestSummary, now = Date.now()): Summar
       lines: (s.superseded ?? []).map(m => ({meteringPoint: m})),
     },
     {
-      title: "Daten vollständig (nicht angefordert)",
+      title: "Keine fehlenden Daten oder L3-Werte (nicht angefordert)",
       lines: skipped.filter(k => k.reason === COMPLETE).map(k => ({meteringPoint: k.meteringPoint})),
     },
   ].filter(g => g.lines.length > 0)
