@@ -64,8 +64,9 @@ export const errorMiddleware: Middleware = store => next => action => {
       store.dispatch(setErrorState({message: i18next.t(`${reason}_participant_update`,
         { ns: 'error', defaultValue: withReason("Das Mitglied konnte nicht gespeichert werden.", reason) })} as ErrorState))
     } else if (fetchEnergyReportV2.rejected.match(action)) {
-      // only the latest request counts (the reducer ignores an older one that fails late)
-      const reason = store.getState()[energy.featureKey].reportError
+      // only the latest request counts: an older one that fails late gives no (second) toast
+      const energyState = store.getState()[energy.featureKey]
+      const reason = action.meta.requestId === energyState.reportRequestId ? energyState.reportError : undefined
       if (reason) {
         store.dispatch(setErrorState({message: withReason("Die Energiedaten konnten nicht geladen werden.", reason)} as ErrorState))
       }
