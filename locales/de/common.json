@@ -240,7 +240,9 @@
     "status_text_REJECTED": "Zählpunkt wurde vom Netzbetreiber abgewiesen.",
     "status_text_REVOKED": "Zählpunkt wurde vom Netzbetreiber aufgehoben.",
     "status_text_INVALID": "Zählpunkt wurde vom Netzbetreiber nicht angenommen.",
-    "status_text_INACTIVE": "Zählpunkt INAKTIV."
+    "status_text_INACTIVE": "Zählpunkt INAKTIV.",
+    "status_text_ARCHIVED": "Zählpunkt wurde archiviert.",
+    "status_text_WARN": "Zählpunkt hat eine Warnung, bitte die Prozess History prüfen."
   },
   "meterlist": {
     "filter_header": "Filteroptionen:",

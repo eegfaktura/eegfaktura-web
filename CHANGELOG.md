@@ -37,6 +37,12 @@ this changelog highlights the changes relevant for overview and operations.
     accepted metering points still with L3 values ("Noch mit L3-Werten", with their days).
 
 ### Fixed
+- Metering-point detail pane showed the raw key `meter.status_text_WARN` for a meter in process state
+  `WARN` (pre-existing). It now reads "Zählpunkt hat eine Warnung, bitte die Prozess History prüfen.";
+  the backend defines `WARN` but no code path on its master sets it, so it only comes from older or
+  manually changed data. The state `ARCHIVED` (set when a meter is archived) had no text either and now
+  reads "Zählpunkt wurde archiviert.". Any other state without a text shows "Zählpunkt-Status <STATE>."
+  instead of the raw key.
 - Metering-point detail pane could show the previous meter's active/inactive state after
   switching between meters (stale render of the disabled `ion-toggle`, observed on
   Safari/WebKit; text and toggle even contradicted each other). The meter detail block now
