@@ -24,6 +24,12 @@ export type DaySums = Pick<QuarterHourValues, "produced" | "consumed" | "distrib
 
 export type DayBounds = { first: Date, last: Date }
 
+// The answer for one day; `day` is the requested day (local 00:00, Unix ms).
+export type DayReportState =
+  | { status: "loading", day?: number }
+  | { status: "error", day: number, message: string }
+  | { status: "ok", day: number, quarters: QuarterHourValues[] }
+
 const pad = (n: number) => n.toString().padStart(2, '0')
 const timeLabel = (ts: number, withMinutes: boolean) => {
   const d = new Date(ts)
@@ -139,3 +145,7 @@ export const clampDay = (day: Date | undefined, bounds: DayBounds | undefined): 
   if (!day || day.getTime() < bounds.first.getTime() || day.getTime() > bounds.last.getTime()) return bounds.last
   return day
 }
+
+// The state to show for `day`: an answer for another day (paging, request still running) counts as loading.
+export const stateForDay = (state: DayReportState, day: Date | undefined): DayReportState =>
+  day && state.day === startOfDay(day).getTime() ? state : {status: "loading", day: day ? startOfDay(day).getTime() : undefined}

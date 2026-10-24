@@ -3,14 +3,11 @@ import {IonButton, IonIcon, IonLabel, IonSegment, IonSegmentButton} from "@ionic
 import {chevronBack, chevronForward} from "ionicons/icons";
 import {ActiveTenant} from "../../models/eeg.model";
 import {Api} from "../../service";
-import {DayBounds, DaySums, dayRequestRange, formatDay, QuarterHourValues, shiftDay, toQuarterHours} from "./DayView.functions";
+import {
+  DayBounds, DayReportState, DaySums, dayRequestRange, formatDay, shiftDay, startOfDay, stateForDay, toQuarterHours
+} from "./DayView.functions";
 
 export type DashboardMode = "period" | "day"
-
-export type DayReportState =
-  | { status: "loading" }
-  | { status: "error", message: string }
-  | { status: "ok", quarters: QuarterHourValues[] }
 
 // Loads the quarter hours of one day for the whole community. A slower, older answer (fast paging) never
 // overwrites the answer for the day shown now.
@@ -21,18 +18,19 @@ export const useDayReport = (tenant: ActiveTenant | undefined, day: Date | undef
   const load = useCallback(() => {
     if (!tenant || !day) return
     const id = ++request.current
-    setState({status: "loading"})
+    const key = startOfDay(day).getTime()
+    setState({status: "loading", day: key})
     const {start, end} = dayRequestRange(day)
     Api.energyService.fetchLoadCurveRangeV2(tenant, start, end)
-      .then(report => { if (id === request.current) setState({status: "ok", quarters: toQuarterHours(report)}) })
+      .then(report => { if (id === request.current) setState({status: "ok", day: key, quarters: toQuarterHours(report)}) })
       .catch((e: unknown) => {
-        if (id === request.current) setState({status: "error", message: e instanceof Error ? e.message : String(e)})
+        if (id === request.current) setState({status: "error", day: key, message: e instanceof Error ? e.message : String(e)})
       })
   }, [tenant, day?.getTime()])
 
   useEffect(() => { load() }, [load])
 
-  return {state, reload: load}
+  return {state: stateForDay(state, day), reload: load}
 }
 
 const kwh = (v: number) => `${v.toLocaleString("de-AT", {minimumFractionDigits: 3, maximumFractionDigits: 3})} kWh`

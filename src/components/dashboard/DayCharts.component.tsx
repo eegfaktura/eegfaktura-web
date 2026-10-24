@@ -1,8 +1,7 @@
 import React, {FC, ReactNode, useMemo} from "react";
 import {IonButton, IonSpinner} from "@ionic/react";
 import {Bar, BarChart, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
-import {DayReportState} from "./DayView.component";
-import {formatDay, hasEnergy, toHours} from "./DayView.functions";
+import {DayReportState, formatDay, hasEnergy, toHours} from "./DayView.functions";
 
 import "./eeg-card.scss"
 

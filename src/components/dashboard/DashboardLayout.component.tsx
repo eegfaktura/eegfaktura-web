@@ -16,7 +16,7 @@ import {Api} from "../../service";
 import {IonSpinner} from "@ionic/react";
 import {DashboardMode, DayToolbar, useDayReport} from "./DayView.component";
 import {DayHourChart, DayLoadCurveChart} from "./DayCharts.component";
-import {clampDay, dayBounds, daySums} from "./DayView.functions";
+import {clampDay, dayBounds, daySums, formatDay} from "./DayView.functions";
 
 interface LoadSharingComponentProps {
   participants: EegParticipant[]
@@ -53,7 +53,8 @@ const DashboardLayoutComponent: FC<LoadSharingComponentProps> = ({consumed, prod
   // Day view (platform#210): one day of the selected period, whole community, quarter hours.
   const [mode, setMode] = useState<DashboardMode>("period")
   const [day, setDay] = useState<Date | undefined>(undefined)
-  const bounds = useMemo(() => dayBounds(activePeriod, periods, new Date()), [activePeriod, periods])
+  const todayKey = formatDay(new Date())   // per render: an open dashboard reaches the new "yesterday" after midnight
+  const bounds = useMemo(() => dayBounds(activePeriod, periods, new Date()), [activePeriod, periods, todayKey])
   useEffect(() => { setDay(d => clampDay(d, bounds)) }, [bounds])
   const {state: dayState, reload: reloadDay} = useDayReport(tenant, mode === "day" ? day : undefined)
   const sums = useMemo(() => dayState.status === "ok" ? daySums(dayState.quarters) : undefined, [dayState])

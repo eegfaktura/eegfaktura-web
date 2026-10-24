@@ -3,8 +3,9 @@ process.env.TZ = 'Europe/Vienna'
 
 import {describe, expect, it} from "vitest"
 import {
-  clampDay, dayBounds, dayRequestRange, daySums, formatDay, hasEnergy, shiftDay, toHours, toQuarterHours
+  clampDay, dayBounds, dayRequestRange, daySums, formatDay, hasEnergy, shiftDay, stateForDay, toHours, toQuarterHours
 } from "../../../components/dashboard/DayView.functions"
+import {DayReportState} from "../../../components/dashboard/DayView.functions"
 import {ReportNamedData} from "../../../models/energy.model"
 
 // A DAYRAW entry of the load-curve report for the quarter hour starting at `ts`.
@@ -168,5 +169,23 @@ describe("shiftDay / clampDay", () => {
 
   it("formats the day as TT.MM.JJJJ", () => {
     expect(formatDay(new Date(2026, 0, 5))).toBe("05.01.2026")
+  })
+})
+
+describe("stateForDay", () => {
+  const oct22 = new Date(2026, 9, 22), oct23 = new Date(2026, 9, 23)
+  const ok: DayReportState = {status: "ok", day: oct22.getTime(), quarters: []}
+
+  it("an answer for another day counts as loading (no old values under the new date)", () => {
+    expect(stateForDay(ok, oct23)).toEqual({status: "loading", day: oct23.getTime()})
+    expect(stateForDay({status: "error", day: oct22.getTime(), message: "x"}, oct23).status).toBe("loading")
+  })
+
+  it("an answer for the shown day is kept", () => {
+    expect(stateForDay(ok, new Date(2026, 9, 22))).toBe(ok)
+  })
+
+  it("no day: loading", () => {
+    expect(stateForDay(ok, undefined).status).toBe("loading")
   })
 })
