@@ -19,10 +19,13 @@ export interface SmartPlan {
 // The entries billing-check can check for the selected metering points: registered and active in the period, by the
 // same rules as the check before billing. All entries of a metering point count (owner change, new registration:
 // the backend requests every entry over its own active part), also those of other members. Not registered or
-// inactive ones have nothing to request in the period and are left out.
+// inactive ones have nothing to request in the period and are left out. Only entries the dialog offers count
+// (process state ACTIVE or INACTIVE): the backend skips entries that are not assigned (flag), which web does not
+// see; a rejected or invalid entry is the closest it has.
 export const metersToCheck = (ids: string[], all: Metering[], start: Date, end: Date): CheckedMeter[] => {
   const selected = new Set(ids)
-  return metersActiveInPeriod(all.filter(m => selected.has(m.meteringPoint)), "", start, end)
+  return metersActiveInPeriod(all.filter(m => selected.has(m.meteringPoint)
+    && (m.processState === 'ACTIVE' || m.processState === 'INACTIVE')), "", start, end)
 }
 
 const day = (d: string) => moment(d, "YYYY-MM-DD").startOf('day').valueOf()

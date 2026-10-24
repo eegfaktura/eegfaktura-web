@@ -115,9 +115,18 @@ describe("smartPlan: the period per metering point from its missing days", () =>
 })
 
 describe("metersToCheck", () => {
-  const meter = (id: string, status: string, activeSince: string, inactiveSince: string) => ({
-    meteringPoint: id, direction: "CONSUMPTION", status, participantState: {activeSince, inactiveSince},
+  const meter = (id: string, status: string, activeSince: string, inactiveSince: string, processState = status) => ({
+    meteringPoint: id, direction: "CONSUMPTION", status, processState, participantState: {activeSince, inactiveSince},
   }) as unknown as Metering
+
+  it("leaves out entries the dialog does not offer (rejected, invalid)", () => {
+    const entries = metersToCheck(["AT1"], [
+      meter("AT1", "ACTIVE", "2024-01-01", "2026-09-15", "REJECTED"),
+      meter("AT1", "ACTIVE", "2024-01-01", "2026-09-15", "INVALID"),
+      meter("AT1", "ACTIVE", "2026-09-16", "2099-12-31"),
+    ], start, end)
+    expect(entries.map(m => m.activeSince)).toEqual([ms(16)])
+  })
 
   it("checks registered metering points active in the period only", () => {
     const ids = metersToCheck(["AT1", "AT2", "AT3", "AT4"], [
