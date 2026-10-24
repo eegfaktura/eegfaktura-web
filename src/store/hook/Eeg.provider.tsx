@@ -57,8 +57,9 @@ export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
 
   const [activeTenant, setActiveTenant] = useState<string>()
   const [fetching, setFetching] = useState<boolean>(false)
-  // the community whose load runs last: a load of the previous community must not end the new one's loading state
-  const loadingTenant = useRef<string>()
+  // only the load started last ends the loading state: an earlier one (previous community, A→B→A, a second
+  // refresh) must not end it or set the period
+  const loadSeq = useRef(0)
 
   const errorToast = (message: string | undefined) => {
     toaster({
@@ -173,7 +174,7 @@ export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
   const initApplication = useCallback(async () => {
     setFetching(true)
     if (activeTenant && activeTenant.length > 0) {
-      loadingTenant.current = activeTenant;
+      const seq = ++loadSeq.current;
       (await Promise.all([
         getUser(),
         dispatch(fetchEegModel({tenant: activeTenant})),
@@ -183,7 +184,7 @@ export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
         const eeg = eegSelector(store.getState())
         return getCurrentPeriod(eeg)
       }).then((a) => {
-        if (loadingTenant.current !== activeTenant) return
+        if (seq !== loadSeq.current) return
         dispatch(setSelectedPeriod(a))
         setFetching(false)
       }))
