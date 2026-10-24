@@ -11,7 +11,7 @@ import user from './user';
 
 import {combineReducers, configureStore, createSelector, Middleware} from "@reduxjs/toolkit";
 import {
-  activeMetersSelector, fetchParticipantModel, moveMeteringPoint, registerMeteringpoint, updateMeteringPoint,
+  activeParticipantsSelector1, fetchParticipantModel, moveMeteringPoint, registerMeteringpoint, updateMeteringPoint,
   updateMeteringPointPartFact, updateParticipant, updateParticipantPartial
 } from "./participant";
 import {meteringEnergyGroup11} from "./energy";
@@ -112,17 +112,17 @@ export type AppDispatch = typeof store.dispatch;
 
 
 export const activeMeterEnergyArray = createSelector(
-  activeMetersSelector,
+  activeParticipantsSelector1,
   meteringEnergyGroup11,
-  (metering, report) => metering.map((m) => {
-    return { meter: m, utilization: report[m.meteringPoint] }
-  })
+  (participants, report) => participants.flatMap(p => p.meters.map((m) => {
+    return { meter: m, utilization: report[p.id]?.[m.meteringPoint] }
+  }))
 )
 
 export const activeMeterEnergyGroup = createSelector(
-  activeMetersSelector,
+  activeParticipantsSelector1,
   meteringEnergyGroup11,
-  (metering, report) => metering.reduce((out, m) => {
-    return {...out, [m.meteringPoint]: {m: m, utilization: report[m.meteringPoint]}}
+  (participants, report) => participants.flatMap(p => p.meters.map(m => ({p, m}))).reduce((out, {p, m}) => {
+    return {...out, [m.meteringPoint]: {m: m, utilization: report[p.id]?.[m.meteringPoint]}}
   }, {} as Record<string, {m: Metering, utilization: number}>)
 )

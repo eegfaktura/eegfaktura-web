@@ -198,17 +198,22 @@ export const meteringEnergyGroup1 = createSelector(
   featureStateSelector,
   (state:EnergyEntitieState) => selectAllParticipants(state.participantReports),
 )
+// Value per participant and metering point: with an owner change one metering point has two participations,
+// each keeps its own value.
 export const meteringEnergyGroup11 = createSelector(
   meteringEnergyGroup1,
-  items => items.flatMap(i => i.meters).reduce((i, s) => {
-    let utilization = 0.0
-    if (s.meterDir === "CONSUMPTION") {
-      utilization = s.report.summary.utilization
-    } else {
-      utilization = s.report.summary.production - s.report.summary.allocation
-    }
-    return {...i, [s.meterId]: utilization}
-  }, {} as Record<string, number>),
+  items => items.reduce((out, p) => {
+    out[p.participantId] = p.meters.reduce((i, s) => {
+      let utilization = 0.0
+      if (s.meterDir === "CONSUMPTION") {
+        utilization = s.report.summary.utilization
+      } else {
+        utilization = s.report.summary.production - s.report.summary.allocation
+      }
+      return {...i, [s.meterId]: utilization}
+    }, {} as Record<string, number>)
+    return out
+  }, {} as Record<string, Record<string, number>>),
 )
 
 export const selectMetaRecord = createSelector(

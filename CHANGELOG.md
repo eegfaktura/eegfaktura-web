@@ -34,6 +34,10 @@ this changelog highlights the changes relevant for overview and operations.
     (with "frei ab") and "Daten vollständig (nicht angefordert)".
 
 ### Fixed
+- **Dashboard "Energiemengen – Eingekauft/Verkauft" wrong after an owner change** (support 6611112, 6611148).
+  A metering point with two participations in the period (old and new member) counted the value of one of them
+  twice, e.g. 160 or 10 kWh instead of 5 + 80 = 85 kWh. Each participation now adds its own value once.
+  Billing was not affected.
 - **Error messages showed "body stream already read" instead of the real error** (pre-existing). When a server
   error had no JSON body (e.g. 502 from the ingress), the error handler read the body a second time and the
   browser's read error replaced the status text. The body is now read once; the toast names e.g. "Bad Gateway".
