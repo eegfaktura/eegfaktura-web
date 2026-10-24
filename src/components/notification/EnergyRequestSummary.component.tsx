@@ -1,5 +1,5 @@
 import React, {FC, useEffect, useMemo, useRef, useState} from "react";
-import {IonButton, IonChip} from "@ionic/react";
+import {IonButton} from "@ionic/react";
 import {useAppSelector} from "../../store";
 import {allParticipantsSelector, meterSelector} from "../../store/participant";
 import {useTenant} from "../../store/hook/Eeg.provider";
@@ -91,9 +91,7 @@ const EnergyRequestSummaryComponent: FC<{ summary: EnergyRequestSummary }> = ({s
   return (
     <div>
       <p>
-        <strong><u>{summary.live ? "Energiedaten-Anforderung läuft" : "Zusammenfassung Energiedaten-Anforderung"}</u></strong>
-        {summary.live && <IonChip color="primary" style={{height: "20px", fontSize: "12px", margin: "0 4px"}}>läuft</IonChip>}
-        {" "}{formatDay(summary.from)} – {formatDay(summary.to)}
+        <strong><u>{summary.live ? "Energiedaten-Anforderung läuft" : "Zusammenfassung Energiedaten-Anforderung"}</u></strong> {formatDay(summary.from)} – {formatDay(summary.to)}
         <br/>
         {meterCount(summary.requested)} angefordert, {accepted.length} angenommen
       </p>

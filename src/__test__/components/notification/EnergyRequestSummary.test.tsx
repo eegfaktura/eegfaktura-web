@@ -97,10 +97,10 @@ describe("EnergyRequestSummary (platform#173)", () => {
     expect(summaryGroups(summary({noAnswer: ["AT3"]}))[0].title).toBe("Keine Antwort")
   })
 
-  it("shows a running request with its own title and a chip", () => {
+  it("shows a running request with its own title, once", () => {
     renderWithProviders(<EnergyRequestSummaryComponent summary={summary({live: true, noAnswer: ["AT0003"]})}/>)
     expect(screen.getByText("Energiedaten-Anforderung läuft")).toBeTruthy()
-    expect(screen.getByText("läuft")).toBeTruthy()
+    expect(screen.getAllByText(/läuft/)).toHaveLength(1)
     expect(screen.getByText("Antwort noch offen (1)")).toBeTruthy()
     expect(screen.queryByText("Zusammenfassung Energiedaten-Anforderung")).toBeNull()
   })
@@ -135,7 +135,7 @@ describe("EnergyRequestSummary (platform#173)", () => {
     expect(screen.getByText("Alle Zählpunkte wurden angefordert und angenommen.")).toBeTruthy()
     expect(screen.getByText("Datenstand prüfen")).toBeTruthy()
     expect(screen.getByText("Zusammenfassung Energiedaten-Anforderung")).toBeTruthy()
-    expect(screen.queryByText("läuft")).toBeNull()
+    expect(screen.queryByText(/läuft/)).toBeNull()
   })
 
   it("shows a collapsible group with its count and no data check without accepted metering points", () => {
