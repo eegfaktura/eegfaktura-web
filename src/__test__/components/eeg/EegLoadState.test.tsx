@@ -46,3 +46,19 @@ describe("EegLoadState (261024-ca11)", () => {
     expect(screen.getByText("Keine aktive EEG geladen")).toBeTruthy()
   })
 })
+
+describe("EegLoadState is a page of the outlet (261024-ca11, review 1)", () => {
+  it("renders inside an IonPage in every state, so it replaces the previous page", () => {
+    tenants = ["TE100200"]
+    const {container, store} = render()
+    expect(container.querySelector(".ion-page ion-spinner")).toBeTruthy()
+    act(() => { store.dispatch(fetchEegModel.rejected(new Error("Bad Gateway"), "req", {tenant: "TE100200"})) })
+    expect(container.querySelector(".ion-page ion-button")).toBeTruthy()
+  })
+
+  it("also the empty state", () => {
+    tenants = []
+    const {container} = render()
+    expect(container.querySelector(".ion-page")?.textContent).toContain("Keine aktive EEG geladen")
+  })
+})
