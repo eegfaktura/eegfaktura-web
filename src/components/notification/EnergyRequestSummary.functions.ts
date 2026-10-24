@@ -1,5 +1,6 @@
 import moment from "moment";
 import {Metering} from "../../models/meteringpoint.model";
+import {EegNotification} from "../../models/eeg.model";
 import {EegParticipant} from "../../models/members.model";
 import {CheckedMeter} from "../participantPane/BillingCheck.functions";
 
@@ -141,5 +142,9 @@ export const meterNames = (meters: Metering[]): Map<string, string> => {
   })
   return names
 }
+
+// whether the list shows a still running energy request
+export const hasLiveEntry = (notifications: EegNotification[]) =>
+  notifications.some(n => n.message?.properties?.type === "ZUSAMMENFASSUNG_PT" && n.message.properties.live === true)
 
 export const meterCount = (n: number) => n === 1 ? "1 Zählpunkt" : `${n} Zählpunkte`

@@ -1,11 +1,15 @@
 import React, {FC, useCallback, useEffect, useState} from "react";
-import {IonContent, IonHeader, IonItem, IonPage, IonToolbar, useIonViewWillEnter} from "@ionic/react";
+import {IonContent, IonHeader, IonItem, IonPage, IonToolbar, useIonViewWillEnter, useIonViewWillLeave} from "@ionic/react";
 import {EegNotification, Message} from "../models/eeg.model";
 import {useAppSelector} from "../store";
 import {selectedTenant} from "../store/eeg";
 import NotificationLayoutComponent from "../components/notification/NotificationLayout.component";
 import {Api} from "../service";
 import {useTenant} from "../store/hook/Eeg.provider";
+import {hasLiveEntry} from "../components/notification/EnergyRequestSummary.functions";
+
+// a running energy request is loaded again this often while it is shown
+export const LIVE_REFRESH_MS = 60000
 
 
 const NotificationPage: FC = () => {
@@ -26,6 +30,18 @@ const NotificationPage: FC = () => {
   // or answers would otherwise only show after a page reload) and when the community changes.
   useEffect(() => load(), [load])
   useIonViewWillEnter(() => load(), [load])
+
+  // A running energy request (live entry) shows its current state: load again every minute while one is shown
+  // and the page is visible.
+  const [visible, setVisible] = useState(true)
+  useIonViewWillEnter(() => setVisible(true))
+  useIonViewWillLeave(() => setVisible(false))
+  const live = hasLiveEntry(notifictions.map(n => n.notification))
+  useEffect(() => {
+    if (!live || !visible) return
+    const timer = setInterval(() => { if (!document.hidden) load() }, LIVE_REFRESH_MS)
+    return () => clearInterval(timer)
+  }, [live, visible, load])
 
   return (
     <IonPage>
