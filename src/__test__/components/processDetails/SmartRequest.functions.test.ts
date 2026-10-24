@@ -32,7 +32,7 @@ const answer = (meters: { id: string, days: string[], l3?: string[] }[]): Billin
   totals: {produced: 0, consumed: 0, allocated: 0, selfCovered: 0, surplus: 0},
 })
 
-const plan = (p: Partial<SmartPlan>): SmartPlan => ({checked: 0, missing: [], missingDays: 0, complete: [], notChecked: [], ...p})
+const plan = (p: Partial<SmartPlan>): SmartPlan => ({checked: 0, toRequest: [], requestDays: 0, complete: [], notChecked: [], ...p})
 const sync = (id: string) => ({meter: id, direction: "CONSUMPTION"})
 
 describe("smartPlan: the period per metering point from its missing days", () => {
@@ -44,13 +44,13 @@ describe("smartPlan: the period per metering point from its missing days", () =>
       {id: "AT3", days: ["2026-09-10", "2026-09-20"]},
       {id: "AT4", days: ["2026-09-15"]},
     ]))
-    expect(p.missing).toEqual([
+    expect(p.toRequest).toEqual([
       {...sync("AT1"), from: ms(1), to: ms(2)},
       {...sync("AT2"), from: ms(29), to: ms(30)},
       {...sync("AT3"), from: ms(10), to: ms(20)},
       {...sync("AT4"), from: ms(15), to: ms(15)},
     ])
-    expect(p.missingDays).toBe(7)
+    expect(p.requestDays).toBe(7)
     expect(p.complete).toEqual([])
     expect(p.checked).toBe(4)
   })
@@ -61,8 +61,8 @@ describe("smartPlan: the period per metering point from its missing days", () =>
     const p = smartPlan([old, now, checked("AT2")], answer([
       {id: "AT1", days: ["2026-09-03"]}, {id: "AT1", days: ["2026-09-20", "2026-09-21"]}, {id: "AT2", days: []},
     ]))
-    expect(p.missing).toEqual([{...sync("AT1"), from: ms(3), to: ms(21)}])
-    expect(p.missingDays).toBe(3)
+    expect(p.toRequest).toEqual([{...sync("AT1"), from: ms(3), to: ms(21)}])
+    expect(p.requestDays).toBe(3)
     expect(p.checked).toBe(2)
     expect(p.complete).toEqual(["AT2"])
   })
@@ -70,13 +70,13 @@ describe("smartPlan: the period per metering point from its missing days", () =>
   it("counts a day missing in two overlapping entries once", () => {
     const p = smartPlan([checked("AT1"), checked("AT1")],
       answer([{id: "AT1", days: ["2026-09-03", "2026-09-04"]}, {id: "AT1", days: ["2026-09-04"]}]))
-    expect(p.missingDays).toBe(2)
+    expect(p.requestDays).toBe(2)
   })
 
   it("counts a metering point as complete only if every entry is", () => {
     const p = smartPlan([checked("AT1"), checked("AT1")], answer([{id: "AT1", days: []}, {id: "AT1", days: ["2026-09-30"]}]))
     expect(p.complete).toEqual([])
-    expect(p.missing).toEqual([{...sync("AT1"), from: ms(30), to: ms(30)}])
+    expect(p.toRequest).toEqual([{...sync("AT1"), from: ms(30), to: ms(30)}])
   })
 
   it("does not check a metering point when one of its entries got no answer", () => {
@@ -87,7 +87,7 @@ describe("smartPlan: the period per metering point from its missing days", () =>
   it("puts metering points without a gap into complete", () => {
     const p = smartPlan(["AT1", "AT2"].map(checked), answer([{id: "AT1", days: []}, {id: "AT2", days: ["2026-09-03"]}]))
     expect(p.complete).toEqual(["AT1"])
-    expect(p.missing.map(m => m.meter)).toEqual(["AT2"])
+    expect(p.toRequest.map(m => m.meter)).toEqual(["AT2"])
   })
 
   it("takes nothing missing as all complete", () => {
@@ -115,16 +115,16 @@ describe("smartPlan: the period per metering point from its missing days", () =>
     delete energy.meters[0].missingCount
     delete energy.meters[0].missingDays
     const p = smartPlan([checked("AT1")], energy)
-    expect(p.missing).toEqual([sync("AT1")])
-    expect(p.missingDays).toBe(30)
+    expect(p.toRequest).toEqual([sync("AT1")])
+    expect(p.requestDays).toBe(30)
   })
 })
 
 describe("smartPlan: days with L3 values are requested like missing days", () => {
   it("requests a metering point with L3 values only over its L3 days", () => {
     const p = smartPlan([checked("AT1")], answer([{id: "AT1", days: [], l3: ["2026-09-12", "2026-09-05"]}]))
-    expect(p.missing).toEqual([{...sync("AT1"), from: ms(5), to: ms(12)}])
-    expect(p.missingDays).toBe(2)
+    expect(p.toRequest).toEqual([{...sync("AT1"), from: ms(5), to: ms(12)}])
+    expect(p.requestDays).toBe(2)
     expect(p.complete).toEqual([])
     expect(p.checked).toBe(1)
   })
@@ -132,22 +132,22 @@ describe("smartPlan: days with L3 values are requested like missing days", () =>
   it("requests the union of missing and L3 days, a day counted once", () => {
     const p = smartPlan([checked("AT1")], answer([{id: "AT1", days: ["2026-09-10", "2026-09-11"],
       l3: ["2026-09-11", "2026-09-25"]}]))
-    expect(p.missing).toEqual([{...sync("AT1"), from: ms(10), to: ms(25)}])
-    expect(p.missingDays).toBe(3)
+    expect(p.toRequest).toEqual([{...sync("AT1"), from: ms(10), to: ms(25)}])
+    expect(p.requestDays).toBe(3)
   })
 
   it("merges L3 days of one entry with missing days of another entry of the metering point", () => {
     const old = {...checked("AT1"), inactiveSince: ms(15)}
     const now = {...checked("AT1"), activeSince: ms(16)}
     const p = smartPlan([old, now], answer([{id: "AT1", days: [], l3: ["2026-09-02"]}, {id: "AT1", days: ["2026-09-20"]}]))
-    expect(p.missing).toEqual([{...sync("AT1"), from: ms(2), to: ms(20)}])
-    expect(p.missingDays).toBe(2)
+    expect(p.toRequest).toEqual([{...sync("AT1"), from: ms(2), to: ms(20)}])
+    expect(p.requestDays).toBe(2)
   })
 
   it("counts a metering point with neither missing nor L3 days as complete", () => {
     const p = smartPlan(["AT1", "AT2"].map(checked), answer([{id: "AT1", days: [], l3: []}, {id: "AT2", days: [], l3: ["2026-09-03"]}]))
     expect(p.complete).toEqual(["AT1"])
-    expect(p.missing.map(m => m.meter)).toEqual(["AT2"])
+    expect(p.toRequest.map(m => m.meter)).toEqual(["AT2"])
   })
 
   it("keeps the full request period for a gap without missing days when it also has L3 days", () => {
@@ -157,8 +157,8 @@ describe("smartPlan: days with L3 values are requested like missing days", () =>
     delete energy.meters[0].missingCount
     delete energy.meters[0].missingDays
     const p = smartPlan([checked("AT1")], energy)
-    expect(p.missing).toEqual([sync("AT1")])
-    expect(p.missingDays).toBe(30)
+    expect(p.toRequest).toEqual([sync("AT1")])
+    expect(p.requestDays).toBe(30)
   })
 })
 
@@ -199,27 +199,27 @@ describe("metersToCheck", () => {
 describe("smartConfirmation", () => {
   it("names the checked, the missing metering points and the missing days", () => {
     const missing = Array.from({length: 214}, (_, i) => sync(`AT${i}`))
-    const c = smartConfirmation(plan({checked: 2380, missing, missingDays: 1033}))!
-    expect(c.message).toBe("Von 2.380 Zählpunkten haben 214 fehlende Daten oder L3-Werte (zusammen 1.033 Tage). Diese 214 jetzt anfordern?")
+    const c = smartConfirmation(plan({checked: 2380, toRequest: missing, requestDays: 1033}))!
+    expect(c.message).toBe("Bei 214 von 2.380 Zählpunkten gibt es fehlende Daten oder L3-Werte (zusammen 1.033 Tage). Diese 214 jetzt anfordern?")
     expect(c.buttons).toEqual([{text: "Anfordern", role: "missing"}])
   })
 
   it("speaks of one metering point and one day in the singular", () => {
-    const c = smartConfirmation(plan({checked: 1, missing: [sync("AT1")], missingDays: 1}))!
-    expect(c.message).toBe("Von 1 Zählpunkt hat 1 fehlende Daten oder L3-Werte (zusammen 1 Tag). Diesen jetzt anfordern?")
+    const c = smartConfirmation(plan({checked: 1, toRequest: [sync("AT1")], requestDays: 1}))!
+    expect(c.message).toBe("Bei 1 von 1 Zählpunkt gibt es fehlende Daten oder L3-Werte (zusammen 1 Tag). Diesen jetzt anfordern?")
   })
 
   it("asks for the not checked metering points, which go only with the second button", () => {
-    const c = smartConfirmation(plan({checked: 10, missing: [sync("AT1"), sync("AT2")], missingDays: 3,
+    const c = smartConfirmation(plan({checked: 10, toRequest: [sync("AT1"), sync("AT2")], requestDays: 3,
       notChecked: [sync("AT9")]}))!
-    expect(c.message).toBe("Von 10 Zählpunkten haben 2 fehlende Daten oder L3-Werte (zusammen 3 Tage). "
+    expect(c.message).toBe("Bei 2 von 10 Zählpunkten gibt es fehlende Daten oder L3-Werte (zusammen 3 Tage). "
       + "Bei 1 Zählpunkt konnte der Datenstand nicht geprüft werden. Soll er für den ganzen Zeitraum angefordert werden?")
-    expect(c.buttons).toEqual([{text: "Nur die 2 mit Lücken oder L3", role: "missing"}, {text: "Alle 3 anfordern", role: "all"}])
+    expect(c.buttons).toEqual([{text: "Nur die 2 mit Lücken oder L3-Werten", role: "missing"}, {text: "Alle 3 anfordern", role: "all"}])
   })
 
   it("asks only for the not checked ones when the checked ones are complete or energystore failed", () => {
     expect(smartConfirmation(plan({checked: 5, complete: ["A", "B", "C", "D", "E"], notChecked: [sync("AT9")]}))!.message)
-      .toBe("Bei 5 Zählpunkten sind alle Daten da, ohne L3-Werte. Bei 1 Zählpunkt konnte der Datenstand nicht geprüft werden. "
+      .toBe("Bei 5 Zählpunkten gibt es keine fehlenden Daten oder L3-Werte. Bei 1 Zählpunkt konnte der Datenstand nicht geprüft werden. "
         + "Soll er für den ganzen Zeitraum angefordert werden?")
     const c = smartConfirmation(plan({notChecked: [sync("AT1"), sync("AT2")]}))!
     expect(c.message).toBe("Der Datenstand konnte nicht geprüft werden – es würden alle 2 Zählpunkte für den ganzen "
@@ -231,12 +231,12 @@ describe("smartConfirmation", () => {
 })
 
 describe("smartRequest", () => {
-  const p = plan({checked: 3, missing: [{...sync("AT1"), from: 1, to: 2}], complete: ["AT2"], notChecked: [sync("AT3")]})
+  const p = plan({checked: 3, toRequest: [{...sync("AT1"), from: 1, to: 2}], complete: ["AT2"], notChecked: [sync("AT3")]})
 
   it("sends the metering points with gaps and the complete ones, and names the not checked ones left out", () => {
     expect(smartRequest(p, 'missing')).toEqual({meters: [{...sync("AT1"), from: 1, to: 2}], complete: ["AT2"],
       note: "1 Zählpunkt ohne geprüften Datenstand wurde nicht angefordert."})
-    expect(smartRequest(plan({missing: [sync("AT1")]}), 'missing').note).toBeUndefined()
+    expect(smartRequest(plan({toRequest: [sync("AT1")]}), 'missing').note).toBeUndefined()
   })
 
   it("adds the not checked ones over the full period when confirmed", () => {
@@ -310,8 +310,8 @@ describe("smartPeriod: energy data of today cannot exist yet", () => {
   })
 
   it("names the cut in the question", () => {
-    const c = smartConfirmation(plan({checked: 1, missing: [sync("AT1")], missingDays: 1}), new Date(2026, 9, 23))!
+    const c = smartConfirmation(plan({checked: 1, toRequest: [sync("AT1")], requestDays: 1}), new Date(2026, 9, 23))!
     expect(c.message).toBe("Geprüft wird bis gestern (23.10.2026), für heute gibt es noch keine Energiedaten. "
-      + "Von 1 Zählpunkt hat 1 fehlende Daten oder L3-Werte (zusammen 1 Tag). Diesen jetzt anfordern?")
+      + "Bei 1 von 1 Zählpunkt gibt es fehlende Daten oder L3-Werte (zusammen 1 Tag). Diesen jetzt anfordern?")
   })
 })

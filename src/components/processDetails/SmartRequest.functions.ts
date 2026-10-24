@@ -10,8 +10,8 @@ import {count, formatUntil, meterCount} from "../notification/EnergyRequestSumma
 
 export interface SmartPlan {
   checked: number              // metering points whose data could be checked
-  missing: SyncEnergyMeter[]   // with their period from the first to the last day missing or with L3 values
-  missingDays: number          // distinct days missing or with L3 values
+  toRequest: SyncEnergyMeter[] // with their period from the first to the last day missing or with L3 values
+  requestDays: number          // distinct days missing or with L3 values
   complete: string[]           // neither missing nor L3 days: not requested, recorded as COMPLETE
   notChecked: SyncEnergyMeter[] // energystore failed or did not answer for them: full period, only if confirmed
 }
@@ -85,7 +85,7 @@ export const smartPlan = (entries: CheckedMeter[], energy: BillingCheckResponse 
   }
 
   const full = (id: string): SyncEnergyMeter => ({meter: id, direction: direction.get(id)!})
-  const plan: SmartPlan = {checked: 0, missing: [], missingDays: 0, complete: [], notChecked: []}
+  const plan: SmartPlan = {checked: 0, toRequest: [], requestDays: 0, complete: [], notChecked: []}
   for (const id of ids) {
     const g = gaps.get(id)
     if (unchecked.has(id)) {
@@ -97,8 +97,8 @@ export const smartPlan = (entries: CheckedMeter[], energy: BillingCheckResponse 
       plan.complete.push(id)
       continue
     }
-    plan.missingDays += g.days.size
-    plan.missing.push(g.full ? full(id) : {...full(id), from: g.from, to: g.to})
+    plan.requestDays += g.days.size
+    plan.toRequest.push(g.full ? full(id) : {...full(id), from: g.from, to: g.to})
   }
   return plan
 }
@@ -119,7 +119,6 @@ export const cappedNote = (end: Date) =>
   `Geprüft wird bis gestern (${moment(end).format("DD.MM.YYYY")}), für heute gibt es noch keine Energiedaten.`
 
 const metersDative = (n: number) => n === 1 ? "1 Zählpunkt" : `${count(n)} Zählpunkten`
-const have = (n: number) => n === 1 ? "hat 1" : `haben ${count(n)}`
 const days = (n: number) => n === 1 ? "1 Tag" : `${count(n)} Tage`
 
 export type SmartChoice = 'missing' | 'all'
@@ -130,20 +129,20 @@ export interface SmartConfirmation {
 }
 
 export const NOTHING_TO_CHECK = "Keiner der gewählten Zählpunkte ist im Zeitraum aktiv, es wird nichts angefordert."
-export const NOTHING_MISSING = "Für den Zeitraum sind alle Daten da, ohne L3-Werte. Es wird nichts angefordert."
+export const NOTHING_MISSING = "Für den Zeitraum gibt es keine fehlenden Daten oder L3-Werte, es wird nichts angefordert."
 
 // The question before sending; undefined when nothing is to be requested.
 // cappedTo: the period was cut at yesterday (smartPeriod)
 export const smartConfirmation = (p: SmartPlan, cappedTo?: Date): SmartConfirmation | undefined => {
-  const m = p.missing.length
+  const m = p.toRequest.length
   const n = p.notChecked.length
   if (m === 0 && n === 0) return undefined
   // the cut at yesterday leads only when something was checked; otherwise it is part of the warning below
   const parts: string[] = cappedTo && p.checked > 0 ? [cappedNote(cappedTo)] : []
   if (p.checked > 0) {
     parts.push(m > 0
-      ? `Von ${metersDative(p.checked)} ${have(m)} fehlende Daten oder L3-Werte (zusammen ${days(p.missingDays)}).`
-      : `Bei ${metersDative(p.checked)} sind alle Daten da, ohne L3-Werte.`)
+      ? `Bei ${count(m)} von ${metersDative(p.checked)} gibt es fehlende Daten oder L3-Werte (zusammen ${days(p.requestDays)}).`
+      : `Bei ${metersDative(p.checked)} gibt es keine fehlenden Daten oder L3-Werte.`)
   }
   if (n === 0) {
     parts.push(m === 1 ? "Diesen jetzt anfordern?" : `Diese ${count(m)} jetzt anfordern?`)
@@ -159,7 +158,7 @@ export const smartConfirmation = (p: SmartPlan, cappedTo?: Date): SmartConfirmat
       + `${n === 1 ? "Soll er" : "Sollen sie"} für den ganzen Zeitraum angefordert werden?`)
   }
   const buttons: SmartConfirmation['buttons'] = []
-  if (m > 0) buttons.push({text: `Nur die ${count(m)} mit Lücken oder L3`, role: 'missing'})
+  if (m > 0) buttons.push({text: `Nur die ${count(m)} mit Lücken oder L3-Werten`, role: 'missing'})
   buttons.push({text: m > 0 ? `Alle ${count(m + n)} anfordern` : `${meterCount(n)} anfordern`, role: 'all'})
   return {message: parts.join(" "), buttons}
 }
@@ -167,7 +166,7 @@ export const smartConfirmation = (p: SmartPlan, cappedTo?: Date): SmartConfirmat
 // The request for the chosen answer: the complete metering points go along so the summary lists them.
 // The backend has no field for metering points left out unchecked; with 'missing' the note names them.
 export const smartRequest = (p: SmartPlan, choice: SmartChoice): { meters: SyncEnergyMeter[], complete: string[], note?: string } => ({
-  meters: choice === 'all' ? [...p.missing, ...p.notChecked] : p.missing,
+  meters: choice === 'all' ? [...p.toRequest, ...p.notChecked] : p.toRequest,
   complete: p.complete,
   note: choice === 'missing' && p.notChecked.length > 0
     ? `${meterCount(p.notChecked.length)} ohne geprüften Datenstand ${p.notChecked.length === 1 ? "wurde" : "wurden"} nicht angefordert.`

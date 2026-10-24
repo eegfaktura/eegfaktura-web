@@ -40,11 +40,11 @@ const withParticipants = (participants: EegParticipant[]) => ({
   },
 })
 
-const energy = (meters: { meteringPoint: string, missingCount: number }[]): BillingCheckResponse => ({
+const energy = (meters: { meteringPoint: string, missingCount: number, l3Days?: string[] }[]): BillingCheckResponse => ({
   periodStart: from, periodEnd: to,
   meters: meters.map(m => ({
     meteringPoint: m.meteringPoint, direction: "CONSUMPTION", activeSince: from, inactiveSince: to,
-    l3Count: 0, l3Days: [], firstData: from, lastData: to,
+    l3Count: (m.l3Days ?? []).length * 4, l3Days: m.l3Days ?? [], firstData: from, lastData: to,
     missingCount: m.missingCount, missingDays: m.missingCount > 0 ? ["2026-09-15"] : [],
   })),
   totals: {produced: 0, consumed: 0, allocated: 0, selfCovered: 0, surplus: 0},
@@ -83,7 +83,7 @@ describe("EnergyRequestSummary (platform#173)", () => {
       noAnswer: ["AT3"],
     }), now)
     expect(groups.map(g => g.title)).toEqual(["Keine Antwort", "Bereits angefordert", "Nicht angefordert",
-      "In einer späteren Anforderung erneut angefordert", "Daten vollständig, ohne L3-Werte (nicht angefordert)"])
+      "In einer späteren Anforderung erneut angefordert", "Keine fehlenden Daten oder L3-Werte (nicht angefordert)"])
     expect(groups[1].lines).toEqual([
       {meteringPoint: "AT6", detail: "frei ab 14:32"},
       {meteringPoint: "AT7", detail: "frei ab 23.10.2026 09:05"},
@@ -155,11 +155,45 @@ describe("EnergyRequestSummary (platform#173)", () => {
     await waitFor(() => expect(screen.getByText("Daten unvollständig (1)")).toBeTruthy())
     expect(screen.getByText(/4 Viertelstunden fehlen/)).toBeTruthy()
     expect(screen.getByText("Nicht prüfbar, Zählpunkt nicht geladen (1)")).toBeTruthy()
-    expect(screen.queryByText("Alle angenommenen Zählpunkte haben Daten für den ganzen Zeitraum.")).toBeNull()
+    expect(screen.queryByText(/Alle angenommenen Zählpunkte haben Daten/)).toBeNull()
     expect(fetch.mock.calls[0][1].cps.map((c: { meteringPoint: string }) => c.meteringPoint)).toEqual(["AT1"])
 
     fireEvent.click(screen.getByText("Erneut prüfen"))
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2))
+  })
+
+  it("reports complete data without L3 values", async () => {
+    mockFetch().mockResolvedValue(energy([{meteringPoint: "AT1", missingCount: 0}, {meteringPoint: "AT2", missingCount: 0}]))
+    renderWithProviders(<EnergyRequestSummaryComponent summary={summary({})}/>,
+      withParticipants([participant("p1", "Muster", [{meteringPoint: "AT1"}, {meteringPoint: "AT2"}])]))
+    fireEvent.click(screen.getByText("Datenstand prüfen"))
+    await waitFor(() => expect(screen.getByText(
+      "Alle angenommenen Zählpunkte haben Daten für den ganzen Zeitraum, ohne L3-Werte.")).toBeTruthy())
+    expect(screen.queryByText(/Noch mit L3-Werten/)).toBeNull()
+  })
+
+  it("reports the metering points still with L3 values and their days", async () => {
+    mockFetch().mockResolvedValue(energy([{meteringPoint: "AT1", missingCount: 0, l3Days: ["2026-09-03", "2026-09-04"]},
+      {meteringPoint: "AT2", missingCount: 0}]))
+    renderWithProviders(<EnergyRequestSummaryComponent summary={summary({})}/>,
+      withParticipants([participant("p1", "Muster", [{meteringPoint: "AT1"}, {meteringPoint: "AT2"}])]))
+    fireEvent.click(screen.getByText("Datenstand prüfen"))
+    await waitFor(() => expect(screen.getByText(
+      "Alle angenommenen Zählpunkte haben Daten für den ganzen Zeitraum, 1 davon noch mit L3-Werten.")).toBeTruthy())
+    expect(screen.getByText("Noch mit L3-Werten (1)")).toBeTruthy()
+    expect(screen.getByText("Erika Muster – AT1: L3-Werte (03.09.–04.09.)")).toBeTruthy()
+  })
+
+  it("lists L3 values next to incomplete data", async () => {
+    mockFetch().mockResolvedValue(energy([{meteringPoint: "AT1", missingCount: 4},
+      {meteringPoint: "AT2", missingCount: 0, l3Days: ["2026-09-10"]}]))
+    renderWithProviders(<EnergyRequestSummaryComponent summary={summary({})}/>,
+      withParticipants([participant("p1", "Muster", [{meteringPoint: "AT1"}, {meteringPoint: "AT2"}])]))
+    fireEvent.click(screen.getByText("Datenstand prüfen"))
+    await waitFor(() => expect(screen.getByText("Daten unvollständig (1)")).toBeTruthy())
+    expect(screen.getByText("Noch mit L3-Werten (1)")).toBeTruthy()
+    expect(screen.getByText("Erika Muster – AT2: L3-Werte (10.09.)")).toBeTruthy()
+    expect(screen.queryByText(/Alle angenommenen Zählpunkte haben Daten/)).toBeNull()
   })
 
   it("drops the data check result when more metering points of a running request are accepted", async () => {
@@ -191,6 +225,6 @@ describe("EnergyRequestSummary (platform#173)", () => {
       withParticipants([participant("p1", "Muster", [{meteringPoint: "AT1"}, {meteringPoint: "AT2"}])]))
     fireEvent.click(screen.getByText("Datenstand prüfen"))
     await waitFor(() => expect(screen.getByText("Energiedaten konnten nicht abgefragt werden.")).toBeTruthy())
-    expect(screen.queryByText("Alle angenommenen Zählpunkte haben Daten für den ganzen Zeitraum.")).toBeNull()
+    expect(screen.queryByText(/Alle angenommenen Zählpunkte haben Daten/)).toBeNull()
   })
 })

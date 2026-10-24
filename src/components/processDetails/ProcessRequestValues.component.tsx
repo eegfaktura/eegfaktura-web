@@ -201,7 +201,7 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
             <InputForm name="communityId" label={t("common-info.community-id")} control={control} protectedControl={true}/>
             <CheckboxComponent label={t("process.requestValue.selectEntire")} setChecked={(c) => selectAllMeteringPoints(c)}
                                checked={selectEntire!}/>
-            <CheckboxComponent label="Nur fehlende Daten und L3-Werte anfordern (Smart)" setChecked={setSmart} checked={smart}/>
+            <CheckboxComponent label="Nur fehlende Daten oder L3-Werte anfordern (Smart)" setChecked={setSmart} checked={smart}/>
             <BasicSelectComponent control={control} name={"participantId"}
                                   options={participants
                                     .sort((a,b) => a.lastname && b.lastname ? a.lastname.localeCompare(b.lastname) : a.firstname.localeCompare(b.firstname))
