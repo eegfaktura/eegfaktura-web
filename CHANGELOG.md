@@ -43,6 +43,10 @@ this changelog highlights the changes relevant for overview and operations.
     energy. It now shows "Die Energiedaten konnten nicht geladen werden." with the reason (only for the latest
     request; an older one replaced by a newer one stays quiet). A community without any imported energy data yet
     (energystore answers "Record doesn't exist") still shows an empty report, without an error.
+  - **Billing ZIP and Excel download without busy state, failures only in the console (261024-ca14, part of
+    261024-ca6):** the buttons "ZIP", "DOWNLOAD" and "EXCEL" of a billing run now show "ZIP-Datei wird erstellt
+    ..." / "Excel-Datei wird erstellt ..." while the file is built (no second click meanwhile) and on failure "Die
+    ZIP-Datei konnte nicht erstellt werden." / "Die Excel-Datei konnte nicht erstellt werden." with the reason.
 - **Dashboard "Energiemengen – Eingekauft/Verkauft" wrong after an owner change** (support 6611112, 6611148).
   A metering point with two participations in the period (old and new member) counted the value of one of them
   twice, e.g. 160 or 10 kWh instead of 5 + 80 = 85 kWh. Each participation now adds its own value once.

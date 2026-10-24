@@ -84,7 +84,7 @@ import DatePickerCoreElement from "../core/elements/DatePickerCore.element";
 import {filterActiveMeter, filterActiveParticipantAndMeter,} from "../../util/FilterHelper.unit";
 import moment from "moment";
 import {Api} from "../../service";
-import {billTotal, buildAllocationMapFromSelected, filterSearchQuery} from "./ParticipantPane.functions";
+import {billTotal, buildAllocationMapFromSelected, downloadWithFeedback, filterSearchQuery} from "./ParticipantPane.functions";
 import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
 import {withOpenProblems} from "./ParticipantPane.functions";
 import {billingTotals, BillingTotals, salesTaxation} from "./BillingTotals.functions";
@@ -612,20 +612,16 @@ const ParticipantPaneComponent: FC = () => {
     }
   }
 
+  const exportBusy = {show: (message: string) => loading({message}), hide: () => dismissLoading()}
+
   async function exportBillingExcel(billingRunId: string) {
-    try {
-      await Api.eegService.exportBillingExcel(tenant, billingRunId);
-    } catch (e) {
-      console.log(e as string);
-    }
+    await downloadWithFeedback(() => Api.eegService.exportBillingExcel(tenant, billingRunId),
+      exportBusy, errorToast, "Excel-Datei");
   }
 
   async function exportBillingArchive(billingRunId: string) {
-    try {
-      await Api.eegService.exportBillingArchive(tenant, billingRunId);
-    } catch (e) {
-      console.log(e as string);
-    }
+    await downloadWithFeedback(() => Api.eegService.exportBillingArchive(tenant, billingRunId),
+      exportBusy, errorToast, "ZIP-Datei");
   }
 
   // const viewPortRef = useRef<HTMLDivElement | null>(null);
