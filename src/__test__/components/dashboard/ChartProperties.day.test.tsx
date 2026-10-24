@@ -11,7 +11,7 @@ describe("ChartProperties – row \"Tag\" (platform#210)", () => {
     expect(screen.queryByLabelText("Tag")).toBeNull()
   })
 
-  it("offers the last allowed day and returns the chosen day as period D, clamped to the range", () => {
+  it("offers the last allowed day and returns the chosen day as period D and ignores dates outside the range", () => {
     const onDismiss = vi.fn()
     render(<ChartProperties selectedPeriod={{type: "YM", year: 2026, segment: 10}} periods={periods}
                             onDismiss={onDismiss} dayRange={dayRange}/>)
@@ -20,7 +20,10 @@ describe("ChartProperties – row \"Tag\" (platform#210)", () => {
     expect(input.max).toBe("2026-10-23")
     fireEvent.change(input, {target: {value: "2026-03-29"}})
     expect(onDismiss).toHaveBeenLastCalledWith({type: "D", year: 2026, segment: 88})
+    // outside the range (e.g. an intermediate keyboard value): no change, no dismiss
     fireEvent.change(input, {target: {value: "2026-12-24"}})
-    expect(onDismiss).toHaveBeenLastCalledWith({type: "D", year: 2026, segment: 296})
+    fireEvent.change(input, {target: {value: "0002-03-29"}})
+    expect(onDismiss).toHaveBeenCalledTimes(1)
+    expect(onDismiss).toHaveBeenLastCalledWith({type: "D", year: 2026, segment: 88})
   })
 })
