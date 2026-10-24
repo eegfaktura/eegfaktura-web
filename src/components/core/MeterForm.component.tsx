@@ -69,9 +69,7 @@ const MeterFormComponent: FC<MeterFromComponentProps> = ({meteringPoint}) => {
 
     const _factValue = Number(value)
     if (isNaN(_factValue) || _factValue > 100 || _factValue < 1) {
-      // used to reset the whole form without a word
-      formMethods.setError(name as keyof Metering, {message: "Der Teilnahmefaktor muss zwischen 1 und 100 % liegen."})
-      return
+      return  // used to reset the whole form; the field's 1-100 rule shows the error
     }
 
     // setValue(name as keyof Metering, value, {shouldDirty: true, shouldValidate: true})
