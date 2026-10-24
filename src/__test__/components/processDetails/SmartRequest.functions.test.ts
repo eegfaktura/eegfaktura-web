@@ -165,8 +165,11 @@ describe("smartConfirmation", () => {
       .toBe("Bei 5 Zählpunkten sind alle Daten da. Bei 1 Zählpunkt konnte der Datenstand nicht geprüft werden. "
         + "Soll er für den ganzen Zeitraum angefordert werden?")
     const c = smartConfirmation(plan({notChecked: [sync("AT1"), sync("AT2")]}))!
-    expect(c.message).toBe("Bei 2 Zählpunkten konnte der Datenstand nicht geprüft werden. Sollen sie für den ganzen Zeitraum angefordert werden?")
+    expect(c.message).toBe("Der Datenstand konnte nicht geprüft werden – es würden alle 2 Zählpunkte für den ganzen "
+      + "Zeitraum angefordert. Trotzdem anfordern?")
     expect(c.buttons).toEqual([{text: "2 Zählpunkte anfordern", role: "all"}])
+    expect(smartConfirmation(plan({notChecked: [sync("AT1")]}))!.message).toBe("Der Datenstand konnte nicht geprüft "
+      + "werden – es würde 1 Zählpunkt für den ganzen Zeitraum angefordert. Trotzdem anfordern?")
   })
 })
 

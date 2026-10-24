@@ -127,8 +127,14 @@ export const smartConfirmation = (p: SmartPlan, cappedTo?: Date): SmartConfirmat
     parts.push(m === 1 ? "Diesen jetzt anfordern?" : `Diese ${count(m)} jetzt anfordern?`)
     return {message: parts.join(" "), buttons: [{text: "Anfordern", role: 'missing'}]}
   }
-  parts.push(`Bei ${metersDative(n)} konnte der Datenstand nicht geprüft werden. `
-    + `${n === 1 ? "Soll er" : "Sollen sie"} für den ganzen Zeitraum angefordert werden?`)
+  if (p.checked === 0) {
+    // nothing could be checked (energystore failed or timed out): the expensive path, every metering point in full
+    parts.push(`Der Datenstand konnte nicht geprüft werden – es ${n === 1 ? "würde 1 Zählpunkt" : `würden alle ${meterCount(n)}`} `
+      + "für den ganzen Zeitraum angefordert. Trotzdem anfordern?")
+  } else {
+    parts.push(`Bei ${metersDative(n)} konnte der Datenstand nicht geprüft werden. `
+      + `${n === 1 ? "Soll er" : "Sollen sie"} für den ganzen Zeitraum angefordert werden?`)
+  }
   const buttons: SmartConfirmation['buttons'] = []
   if (m > 0) buttons.push({text: `Nur die ${count(m)} mit Lücken`, role: 'missing'})
   buttons.push({text: m > 0 ? `Alle ${count(m + n)} anfordern` : `${meterCount(n)} anfordern`, role: 'all'})
