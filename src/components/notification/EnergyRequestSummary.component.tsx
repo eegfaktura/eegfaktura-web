@@ -35,8 +35,9 @@ const EnergyRequestSummaryComponent: FC<{ summary: EnergyRequestSummary }> = ({s
   const groups = summaryGroups(summary)
   const accepted = summary.accepted ?? []
 
-  // a running request gets more accepted metering points: an earlier check result no longer covers them
-  const checkedState = `${summary.runId}|${summary.live ? "live" : ""}|${accepted.length}`
+  // a running request gets more accepted metering points: an earlier check result no longer covers them. Closing
+  // alone (live → stored) keeps the result.
+  const checkedState = `${summary.runId}|${accepted.length}`
   useEffect(() => {
     controller.current?.abort()
     setCheck({state: 'idle'})

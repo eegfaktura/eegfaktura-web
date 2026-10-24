@@ -172,6 +172,8 @@ describe("EnergyRequestSummary (platform#173)", () => {
 
     rerender(<EnergyRequestSummaryComponent summary={{...one, noAnswer: []}}/>)  // same state: result stays
     expect(screen.getByText("Daten unvollständig (1)")).toBeTruthy()
+    rerender(<EnergyRequestSummaryComponent summary={{...one, live: undefined}}/>)  // only closed: result stays
+    expect(screen.getByText("Daten unvollständig (1)")).toBeTruthy()
     rerender(<EnergyRequestSummaryComponent summary={summary({live: true})}/>)
     expect(screen.queryByText("Daten unvollständig (1)")).toBeNull()
     expect(screen.getByText("Datenstand prüfen")).toBeTruthy()
