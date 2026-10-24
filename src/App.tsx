@@ -54,15 +54,15 @@ const DashboardPage = React.lazy(() => import("./pages/Dashboard.page"))
 //   )
 // }
 
-// IonRouterOutlet shows MemberViewProvider (its only child without a path) for every URL no other route takes,
-// so an unknown URL ends here: the Switch shows the not-found page instead of an empty outlet (261024-ca12).
+// Members and tariffs share one outlet view (MemberViewProvider, RateProvider). The view has its own paths: the
+// outlet keeps a left view mounted (hidden), so a not-found route in here would render for every other page.
+export const MEMBER_PATHS = ["/page/participants", "/page/rates"]
 export const MemberRoutes: React.FC = () => (
   <MemberViewProvider>
     <RateProvider>
       <Switch>
         <Route path="/page/participants" exact={true} component={Participants} />
         <Route path="/page/rates" component={RatesPage} exact={true}/>
-        <Route component={NotFoundPage}/>
       </Switch>
     </RateProvider>
   </MemberViewProvider>
@@ -79,6 +79,24 @@ export const AppErrorFallback: React.FC = () => (
   </div>
 )
 
+export const PageRoutes: React.FC = () => (
+    <IonRouterOutlet id="main">
+      <Route path="/" exact={true} render={() => <Redirect to="/page/participants"/>}/>
+      <Route path="/page/dashboard" exact={true}>
+        <Suspense fallback = { <div style={{height: "100%", display: "flex"}}><IonSpinner
+          style={{margin: "auto", height: "48px", width: "48px"}}/></div> }> <DashboardPage/></Suspense>
+      </Route>
+      <Route path="/page/eeg" component={EegPage} exact={true}/>
+      <Route path={MEMBER_PATHS} exact={true} render={() => <MemberRoutes/>}/>
+      <Route path="/page/addParticipant" exact={true} component={ParticipantRegisterPage} />
+      <Route path="/page/profiles" exact={true} component={ProfilesPage} />
+      <Route path="/page/processes" exact={true} component={ProcessesPage} />
+      <Route path="/page/notifications" exact={true} component={NotificationPage} />
+      {/* the outlet's only child without a path: every URL no route takes (261024-ca12) */}
+      <Route component={NotFoundPage}/>
+    </IonRouterOutlet>
+)
+
 const SecureSection: React.FC = () => {
   return (
     <IonReactRouter>
@@ -86,19 +104,7 @@ const SecureSection: React.FC = () => {
         <ParticipantProvider>
           <IonSplitPane contentId="main">
             <Menu/>
-            <IonRouterOutlet id="main">
-              <Route path="/" exact={true} render={() => <Redirect to="/page/participants"/>}/>
-              <Route path="/page/dashboard" exact={true}>
-                <Suspense fallback = { <div style={{height: "100%", display: "flex"}}><IonSpinner
-                  style={{margin: "auto", height: "48px", width: "48px"}}/></div> }> <DashboardPage/></Suspense>
-              </Route>
-              <Route path="/page/eeg" component={EegPage} exact={true}/>
-              <MemberRoutes/>
-              <Route path="/page/addParticipant" exact={true} component={ParticipantRegisterPage} />
-              <Route path="/page/profiles" exact={true} component={ProfilesPage} />
-              <Route path="/page/processes" exact={true} component={ProcessesPage} />
-              <Route path="/page/notifications" exact={true} component={NotificationPage} />
-            </IonRouterOutlet>
+            <PageRoutes/>
           </IonSplitPane>
         </ParticipantProvider>
       </EegProvider>

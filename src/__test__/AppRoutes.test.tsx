@@ -10,12 +10,13 @@ import {AppErrorFallback, MemberRoutes} from "../App";
 
 const at = (path: string) => render(<MemoryRouter initialEntries={[path]}><MemberRoutes/></MemoryRouter>)
 
-describe("routes and crash fallback (261024-ca12)", () => {
-  it("an unknown URL shows a not-found page with a way back, not an empty page", () => {
-    at("/page/gibtsnicht")
-    expect(screen.getByText("Diese Seite gibt es nicht.")).toBeTruthy()
-    expect(screen.getByText("Zur Startseite")).toBeTruthy()
-    expect(screen.queryByText("Mitgliederseite")).toBeNull()
+describe("member routes and crash fallback (261024-ca12)", () => {
+  it("renders nothing for another page's URL: the outlet keeps this view mounted while hidden", () => {
+    for (const path of ["/page/dashboard", "/page/eeg", "/page/gibtsnicht"]) {
+      const {container, unmount} = at(path)
+      expect(container.textContent, path).toBe("")
+      unmount()
+    }
   })
 
   it("the known pages still render", () => {
