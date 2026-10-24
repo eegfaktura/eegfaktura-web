@@ -25,7 +25,9 @@ describe("errorMiddleware", () => {
 
   it("shows a readable text for a rejected partial update instead of the raw i18n key", () => {
     const store = newStore()
-    store.dispatch(updateParticipantPartial.rejected(null, "req", {} as any, new Error("x")))
-    expect(selectError(store.getState()).error?.message).not.toContain("_participant_update")
+    store.dispatch(updateParticipantPartial.rejected(null, "req", {} as any, new Error("Mitgliedsnummer vergeben")))
+    const message = selectError(store.getState()).error?.message
+    expect(message).not.toContain("_participant_update")
+    expect(message).toBe("Das Mitglied konnte nicht gespeichert werden. (Mitgliedsnummer vergeben)")
   })
 })

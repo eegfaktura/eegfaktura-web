@@ -60,8 +60,9 @@ export const errorMiddleware: Middleware = store => next => action => {
 
     if (updateParticipantPartial.rejected.match(action)) {
       // rejectWithValue sets error.message to "Rejected": without the default the raw key was shown
-      store.dispatch(setErrorState({message: i18next.t(`${action.error.message}_participant_update`,
-        { ns: 'error', defaultValue: "Das Mitglied konnte nicht gespeichert werden." })} as ErrorState))
+      const reason = (action.payload as Error | undefined)?.message
+      store.dispatch(setErrorState({message: i18next.t(`${reason}_participant_update`,
+        { ns: 'error', defaultValue: withReason("Das Mitglied konnte nicht gespeichert werden.", reason) })} as ErrorState))
     } else if(saveNewRate.rejected.match(action)) {
       store.dispatch(setErrorState({message: i18next.t(`${action.error.message}_tariff_create`, { ns: 'error' })} as ErrorState))
     } else {
