@@ -14,6 +14,7 @@ import {periodsSelector, selectedPeriodSelector} from "../../store/energy";
 import {useTenant} from "../../store/hook/Eeg.provider";
 import {Api} from "../../service";
 import {IonSpinner} from "@ionic/react";
+import {dayBounds, formatDay} from "./DayView.functions";
 
 interface LoadSharingComponentProps {
   participants: EegParticipant[]
@@ -47,6 +48,10 @@ const DashboardLayoutComponent: FC<LoadSharingComponentProps> = ({consumed, prod
 
   const energyDate = useMemo(() => periods, [periods])
 
+  // Day view (platform#210): "Tag" in a card's period popover; each card keeps its own day.
+  const todayKey = formatDay(new Date())   // per render: an open dashboard reaches the new "yesterday" after midnight
+  const bounds = useMemo(() => dayBounds(periods, new Date()), [periods, todayKey])
+
   const showChart = (report: ReportNamedData[] | undefined, children: ReactNode) => {
     if (report) {
       return children
@@ -56,14 +61,15 @@ const DashboardLayoutComponent: FC<LoadSharingComponentProps> = ({consumed, prod
   }
 
   return (
-    <div style={{display: "flex", height: "100%", padding: "10px"}}>
-      <div style={{flex: "1", display: "grid", gridTemplateColumns: "50% 50%", height: "100%"}}>
+    <div style={{display: "flex", flexFlow: "column", height: "100%", padding: "10px"}}>
+      <div style={{flex: "1", display: "grid", gridTemplateColumns: "50% 50%", minHeight: 0}}>
         <div style={{display: "grid", gridTemplateRows: "50% 50%", overflowY: "auto"}}>
           <div className="eeg-card eeg-card-border" style={{margin: "10px"}}>
             <EegOverviewComponent participants={participants} rateMap={rates} />
           </div>
           <div className="eeg-card-border" style={{margin: "10px"}}>
-            {showChart(combinedReport.intraday, <LoadSharingComponent activePeriod={activePeriod} report={combinedReport.loadcurve} tenant={tenant} energyDate={energyDate}/>)}
+            {showChart(combinedReport.intraday, <LoadSharingComponent activePeriod={activePeriod} report={combinedReport.loadcurve} tenant={tenant} energyDate={energyDate}
+                                                                     dayRange={bounds}/>)}
           </div>
         </div>
         <div style={{display: "grid", gridTemplateRows: "50% 50%"}}>
@@ -72,6 +78,7 @@ const DashboardLayoutComponent: FC<LoadSharingComponentProps> = ({consumed, prod
           </div>
           <div className="eeg-card-border" style={{margin: "10px"}}>
             {showChart(combinedReport.intraday, <IntraDayReportComponent activePeriod={activePeriod} tenant={tenant}
+                                                                           dayRange={bounds}
                                                                            report={combinedReport.intraday}
                                                                            energyDate={energyDate}/>)}
           </div>

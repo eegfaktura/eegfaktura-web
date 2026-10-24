@@ -11,6 +11,8 @@ import {settings} from "ionicons/icons";
 import './LoadCurveReport.component.scss'
 import {calcXAxisNameV2} from "./LoadCurveReport.functions";
 import {transformData} from "./dashboard.functions";
+import {DayBounds, dayToPeriod, periodToDay} from "./DayView.functions";
+import {DayLoadCurveChart} from "./DayCharts.component";
 import {NameType, ValueType} from "recharts/types/component/DefaultTooltipContent";
 
 interface LoadSharingComponentProps {
@@ -18,6 +20,7 @@ interface LoadSharingComponentProps {
   report: ReportNamedData[] | undefined;
   activePeriod: SelectedPeriod;
   energyDate: { begin: string, end: string };
+  dayRange?: DayBounds
 }
 
 type LoadSharingData = {
@@ -30,7 +33,7 @@ type LoadSharingData = {
 
 const EMPTY_LOAD_CURVE_DATA = {} as LoadSharingData
 
-const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, activePeriod, energyDate}) => {
+const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, activePeriod, energyDate, dayRange}) => {
 
   const [data, setData] = useState<LoadSharingData[]>([EMPTY_LOAD_CURVE_DATA] as LoadSharingData[])
   const [selectedPeriod, setSelectedPeriod] = useState<SelectedPeriod>(activePeriod)
@@ -47,10 +50,15 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
   const [properties, dismiss] = useIonPopover(ChartProperties, {
     periods: energyDate, //{begin: "01.01.2023 00:00:0000", end: moment().format("DD.MM.YYYY HH:mm:ss")},
     selectedPeriod: selectedPeriod,
+    dayRange: dayRange,
     onDismiss: (data: SelectedPeriod, role: string) => { dismiss(data, role)},
   });
 
   const onSelectionChanged = async (selectedPeriod: SelectedPeriod) => {
+    if (selectedPeriod?.type === 'D') {   // "Tag": only this card switches to the day view
+      setSelectedPeriod(selectedPeriod)
+      return
+    }
     if (selectedPeriod) {
       dismissLoading(true)
       Api.energyService.fetchLoadCurveReportV2(tenant, selectedPeriod).then((d) => {
@@ -88,6 +96,17 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
     }
   }
 
+  const openProperties = (e: any) => properties({
+    event: e,
+    onDidDismiss: (e: CustomEvent) => onSelectionChanged(e.detail.data),
+    cssClass: "property-popover"
+  })
+
+  if (selectedPeriod?.type === 'D' && dayRange) {
+    return <DayLoadCurveChart tenant={tenant} day={periodToDay(selectedPeriod, dayRange)} bounds={dayRange}
+                         onDayChange={(d) => setSelectedPeriod(dayToPeriod(d))} onProperties={openProperties}/>
+  }
+
   if (!selectedPeriod || loading) {
     return <div style={{height: "100%", display: "flex"}}><IonSpinner
       style={{margin: "auto", height: "48px", width: "48px"}}></IonSpinner></div>
@@ -104,12 +123,7 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
         fontSize: "24px",
         cursor: "pointer"
       }}>
-        <IonIcon icon={settings} size="32px" color="primary" onClick={(e: any) =>
-          properties({
-            event: e,
-            onDidDismiss: (e: CustomEvent) => onSelectionChanged(e.detail.data),
-            cssClass: "property-popover"
-          })}></IonIcon>
+        <IonIcon icon={settings} size="32px" color="primary" onClick={openProperties}></IonIcon>
       </div>
       <div style={{display: "flex", flexFlow: "column", height: "100%"}}>
         <div style={{textAlign: "center", margin: "6px"}}>

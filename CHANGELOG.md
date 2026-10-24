@@ -15,6 +15,25 @@ this changelog highlights the changes relevant for overview and operations.
   registration in progress) stay on top as before; the chosen sort applies within the groups and also in the
   filtered views ("Ausstehende", "Inaktive", "Abgewiesene"). Names compare in German collation, member numbers as
   numbers, empty values last. The choice is kept per browser (localStorage), no backend change.
+- **Day picker in the period popover like the meter chart** (platform#210, feedback from dev). The row "Tag" uses
+  the day picker of the metering-point energy chart (MeterChartNavbar): a date chip ("23. Okt. 2026") opening a
+  calendar, with arrows for the previous / next day; still limited to the energy data range and yesterday.
+- **Dashboard day view per card** (platform#210, feedback from dev). "Tag" in a card's period popover switches only
+  that card (Lastverlauf or Tagesverlauf) to the day view; the other card keeps its period. Each card in day mode has
+  its own gear, arrows and day sums. The day Lastverlauf lines follow the day chart of a metering point (MeterChart:
+  monotone, width 2, no dots, grid); Produktion is drawn on top, so it is no longer hidden under Eigendeckung when the
+  community uses all of its production.
+- **Dashboard day view in the period menu** (platform#210, user feedback). The day view is chosen in the period
+  popover (gear) as a new row "Tag" with a date field, limited to the energy data range and yesterday; any other row
+  returns to the period view with that period. The separate switch "Zeitraum | Tag" is gone; the day view keeps its
+  arrows and day sums and has the same gear to go back.
+- **Dashboard day view** (platform#210, konzept-dashboard-tagesansicht). The day view shows one day for the whole community: "Lastverlauf" with
+  quarter-hour lines Produktion, Verbrauch, Eigendeckung and "Tagesverlauf" with hourly bars EEG, EVU, Produziert,
+  plus the day sums (Produktion, Verbrauch, Eigendeckung, Überschuss), to check whether production matches
+  Eigendeckung plus surplus. Arrows step one day, limited to the community's energy data and yesterday. Data from the existing energystore load-curve report for one day (no energystore change); the hourly
+  bars are summed from the quarter hours (the intra-day report shifts hour 0 to 23, energystore known-errors #26).
+  A metering point with an owner change counts once (sums per stored metering point, not per participation). DST
+  days show 23 / 25 hours. "Zeitraum" is unchanged.
 - **Smart re-request of energy data** (konzept-smart-nachfordern). **Needs the eegfaktura-backend change "smart
   re-request" (per-meter periods, one-hour lock, live entry) deployed first or together**; an older backend ignores
   the per-meter periods and requests the whole period for the metering points with gaps or L3 values.
