@@ -17,16 +17,19 @@ this changelog highlights the changes relevant for overview and operations.
     only the first comma. With a comma present, dots now count as thousand separators; dot-only input keeps its
     meaning ("1.5" stays 1.5). The tariff price fields (`NumberInput`) were not affected: they accept no dot.
   - **Expired session (UX-5):** a 401 counted as success. It now fails the call with "Deine Sitzung ist
-    abgelaufen. Bitte melde Dich neu an." and starts the login — at most once per minute, so a 401 that is not
-    about the session cannot loop between the app and the login.
+    abgelaufen. Bitte melde Dich neu an." and starts the login (at most once per minute). A 401 with a valid
+    session (the backend also uses 401 for a missing access group) shows "Dafür fehlt Dir die Berechtigung."
+    instead and does not redirect.
   - **EDA process forms (UX-2):** Change participation factor, register metering point, revoke and request energy
     data now confirm "Die Anforderung wurde an den Netzbetreiber gesendet.". On failure the input stays and an
     error stays until it is closed. Before, the form was cleared either way and, except for the energy request,
-    showed nothing.
+    showed nothing. While a request runs, its button is disabled (no duplicate request to the grid operator).
+    "Teilnahmefaktor ändern" parsed the backend's empty 204 answer as JSON; that no longer counts as a failure.
   - **Confirmations (UX-3):** revoking a data consent ("Anfordern" in the revoke form), deleting a new member
     ("Nein, Löschen") and deleting a metering point now ask first. A failed delete shows an error.
   - **New member and new metering point (UX-1):** a failed save no longer loses the form. The page or pane
-    closes only after the save worked; on failure an error names the reason.
+    closes only after the save worked; on failure an error names the reason. "Registrieren" is disabled while
+    saving, so a double click no longer creates the member twice.
   - **Silent failures (UX-6):** failed loads of members and tariffs and failed saves of member, metering
     point, participation factor, moving a metering point and a new metering point now show an error. A
     failed partial member update showed the raw key "Rejected_participant_update"; it now shows readable
