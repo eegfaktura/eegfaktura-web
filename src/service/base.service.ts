@@ -47,8 +47,20 @@ function createLoc<T>() {
 const Lock = createLoc<string>()
 
 export const SESSION_EXPIRED = "Deine Sitzung ist abgelaufen. Bitte melde Dich neu an."
-// several calls can fail with 401 at once; one redirect is enough
-let loginRedirectStarted = false
+// Several calls can fail with 401 at once, and a 401 that is not about the session (a misconfigured service)
+// would come back right after the login: at most one redirect per minute, also across the reload.
+const LOGIN_REDIRECT_KEY = "eegfaktura.loginRedirectAt"
+const LOGIN_REDIRECT_PAUSE_MS = 60_000
+export const mayRedirectToLogin = (now: number = Date.now()): boolean => {
+  try {
+    const last = Number(sessionStorage.getItem(LOGIN_REDIRECT_KEY) || 0)
+    if (now - last < LOGIN_REDIRECT_PAUSE_MS) return false
+    sessionStorage.setItem(LOGIN_REDIRECT_KEY, String(now))
+    return true
+  } catch {
+    return false  // no storage: show the error, do not risk a loop
+  }
+}
 const mutex = new Mutex();
 
 class EegBaseService {
@@ -95,7 +107,8 @@ class EegBaseService {
     return {'Authorization': `Bearer ${token}`, "X-Tenant": tenant}
   }
 
-  protected async handleErrors(response: Response):Promise<Response> {
+  // arrow property: most callers pass it unbound (`.then(this.handleErrors)`), and the 401 branch needs `this`
+  protected handleErrors = async (response: Response): Promise<Response> => {
 
     const isErrorResponse = (err: any): err is IErrorResponse => {
       return err.error !== undefined
@@ -105,9 +118,8 @@ class EegBaseService {
       switch (response.status) {
         case 401:
           // the session is gone: fail the call (it used to pass as success) and send the user to the login once
-          if (!loginRedirectStarted) {
-            loginRedirectStarted = true
-            this.authService.login().catch(() => { loginRedirectStarted = false })
+          if (mayRedirectToLogin()) {
+            this.authService.login().catch(() => {})
           }
           throw new Error(SESSION_EXPIRED)
         default:
