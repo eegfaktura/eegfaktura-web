@@ -1,13 +1,19 @@
-import React, {FC, useState} from "react";
+import React, {FC, useId, useState} from "react";
 import {
+  IonButton,
   IonCheckbox,
   IonCol,
   IonContent,
+  IonDatetime,
+  IonDatetimeButton,
   IonGrid,
+  IonIcon,
+  IonModal,
   IonRow,
   IonSelect,
   IonSelectOption
 } from "@ionic/react";
+import {chevronBack, chevronForward} from "ionicons/icons";
 
 import "./ChartProperty.popup.scss"
 import {generatePeriodOptions, transformPeriodFromSegment} from "../../util/PeriodHelper.functions";
@@ -16,7 +22,7 @@ import moment from "moment";
 import {dateToDayOfYear, dayOfYearToDate, periodDisplayString, splitCpPeriod, toLocalISODate} from "../../util/Helper.util";
 import {ReportType, SelectedPeriod} from "../../models/energy.model";
 import cn from "classnames";
-import {clampDay, DayBounds} from "./DayView.functions";
+import {clampDay, DayBounds, shiftDay} from "./DayView.functions";
 
 interface ChartPropertiesProps {
   selectedPeriod: SelectedPeriod;
@@ -80,8 +86,11 @@ const ChartProperties:FC<ChartPropertiesProps> = ({selectedPeriod, periods, onDi
   const selectedDay = (range: DayBounds) =>
     selectedPeriod.type === 'D' ? clampDay(dayOfYearToDate(selectedPeriod.year, selectedPeriod.segment), range)! : range.last
 
+  // one popover per card: the datetime id must be unique in the page
+  const datetimeId = "chart-day-datetime-" + useId().replace(/:/g, "")
+
   const onDay = (range: DayBounds, iso: string) => {
-    const [y, m, d] = iso.split('-').map(Number)
+    const [y, m, d] = iso.slice(0, 10).split('-').map(Number)   // IonDatetime may append a time
     if (!y || !m || !d) return
     const typed = new Date(y, m - 1, d)
     // keyboard entry passes intermediate dates (year "0002"): ignore them instead of jumping to the last day
@@ -149,9 +158,31 @@ const ChartProperties:FC<ChartPropertiesProps> = ({selectedPeriod, periods, onDi
               <IonCheckbox labelPlacement="end" checked={isSelected('D')} onIonChange={() => onDay(dayRange, toLocalISODate(selectedDay(dayRange)))}>Tag</IonCheckbox>
             </IonCol>
             <IonCol>
-              <input type="date" aria-label="Tag" value={toLocalISODate(selectedDay(dayRange))}
-                     min={toLocalISODate(dayRange.first)} max={toLocalISODate(dayRange.last)}
-                     onChange={(e) => onDay(dayRange, e.target.value)}/>
+              {/* same day picker as the meter chart (participantPane/MeterChartNavbar.component.tsx) */}
+              <div style={{display: "flex", alignItems: "center", gap: "4px"}}>
+                <IonButton fill="clear" size="small" aria-label="Vorheriger Tag"
+                           disabled={selectedDay(dayRange).getTime() <= dayRange.first.getTime()}
+                           onClick={() => onDay(dayRange, toLocalISODate(shiftDay(selectedDay(dayRange), -1, dayRange)))}>
+                  <IonIcon slot="icon-only" icon={chevronBack}/>
+                </IonButton>
+                <IonDatetimeButton datetime={datetimeId} style={{flexShrink: 0}}/>
+                <IonButton fill="clear" size="small" aria-label="Nächster Tag"
+                           disabled={selectedDay(dayRange).getTime() >= dayRange.last.getTime()}
+                           onClick={() => onDay(dayRange, toLocalISODate(shiftDay(selectedDay(dayRange), 1, dayRange)))}>
+                  <IonIcon slot="icon-only" icon={chevronForward}/>
+                </IonButton>
+                <IonModal keepContentsMounted={true}>
+                  <IonDatetime
+                    id={datetimeId}
+                    presentation="date"
+                    locale="de-DE"
+                    value={toLocalISODate(selectedDay(dayRange))}
+                    min={toLocalISODate(dayRange.first)}
+                    max={toLocalISODate(dayRange.last)}
+                    onIonChange={(e) => { if (typeof e.detail.value === 'string') onDay(dayRange, e.detail.value) }}
+                  />
+                </IonModal>
+              </div>
             </IonCol>
           </IonRow>
         )}
