@@ -57,9 +57,11 @@ this changelog highlights the changes relevant for overview and operations.
     für das Logo gelöscht werden?").
   - **"Tarif löschen" archived at once and ignored metering point tariffs (261024-ca16):** it now asks first
     ("Soll der Tarif „…“ gelöscht werden?"). A tariff that a metering point still uses is refused like one a
-    member uses; the hint names the members and metering points (at most 10 each, then "und N weitere"). The
-    backend's own check does not stop the archive (it only fails on a database error), so this hint is the
-    only guard; all loaded members and metering points count, whatever their status.
+    member uses; the hint names the members and metering points (at most 10 each, then "und N weitere"); all
+    loaded members and metering points count, whatever their status. Until eegfaktura-backend#106 the backend's
+    own check did not stop the archive; with it the backend refuses a used tariff (400, code 4002) and the toast
+    says "Der Tarif wird noch von Mitgliedern oder Zählpunkten verwendet und kann nicht gelöscht werden." (the
+    former check for a code 900 never matched).
   - **Start: "Keine aktive EEG geladen" while the EEG loads, blank EEG page after a failed load (261024-ca11):**
     the member list and the EEG page now show a spinner while the EEG loads, and after a failed load the error
     with "Erneut versuchen" (loads the community again). "Keine aktive EEG geladen" shows only when the account
