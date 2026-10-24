@@ -76,6 +76,31 @@ describe("Messages page: a running energy request refreshes", () => {
     tenant = "TE100100"
   })
 
+  it("reports a failed load once until a load works again", async () => {
+    const get = mockNotifications([summary(true)])
+    const {store} = renderWithProviders(<NotificationPage/>)
+    await flush()
+    get.mockRejectedValue(new Error("Netzwerkfehler"))
+    await act(async () => { vi.advanceTimersByTime(LIVE_REFRESH_MS) })
+    await flush()
+    const error = () => (store.getState() as any).eeg.error
+    expect(error()).toEqual(expect.objectContaining({message: "Die Nachrichten konnten nicht geladen werden. (Netzwerkfehler)"}))
+
+    store.dispatch({type: "eeg/setErrorState", payload: {message: "andere"}})  // a later error elsewhere
+    await act(async () => { vi.advanceTimersByTime(LIVE_REFRESH_MS) })
+    await flush()
+    expect(get).toHaveBeenCalledTimes(3)
+    expect(error().message).toBe("andere")  // the repeated poll failure is not reported again
+
+    get.mockImplementation(async () => [JSON.parse(JSON.stringify(summary(true)))])
+    await act(async () => { vi.advanceTimersByTime(LIVE_REFRESH_MS) })
+    await flush()
+    get.mockRejectedValue(new Error("wieder"))
+    await act(async () => { vi.advanceTimersByTime(LIVE_REFRESH_MS) })
+    await flush()
+    expect(error().message).toBe("Die Nachrichten konnten nicht geladen werden. (wieder)")
+  })
+
   it("does not poll without a live entry", async () => {
     const get = mockNotifications([summary()])
     renderWithProviders(<NotificationPage/>)
