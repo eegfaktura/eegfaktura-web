@@ -70,9 +70,9 @@ this changelog highlights the changes relevant for overview and operations.
   - **A contract file vanished from the list although the server kept it (261005-ca3):** the delete counted
     every answer as success (no check of the HTTP status or of GraphQL errors). The file now leaves the list only
     after the filestore deleted it; otherwise "Die Datei … konnte nicht gelöscht werden." with the reason.
-  - **"Passwort ändern" built the Keycloak URL by hand (261005-ca4):** without state, nonce or PKCE and with an
+  - **"Passwort ändern" built the Keycloak URL by hand (261005-ca4):** without state or PKCE and with an
     unencoded `redirect_uri`, so the way back could fail and leave a spinner. It is now a regular sign-in
-    request with the Keycloak action `UPDATE_PASSWORD`, the same way as the login. Not tried in a browser.
+    request (state and PKCE, like the login) with the Keycloak action `UPDATE_PASSWORD`.
 - **Dashboard "Energiemengen – Eingekauft/Verkauft" wrong after an owner change** (support 6611112, 6611148).
   A metering point with two participations in the period (old and new member) counted the value of one of them
   twice, e.g. 160 or 10 kWh instead of 5 + 80 = 85 kWh. Each participation now adds its own value once.
