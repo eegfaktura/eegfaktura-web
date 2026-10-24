@@ -14,6 +14,9 @@ import {periodsSelector, selectedPeriodSelector} from "../../store/energy";
 import {useTenant} from "../../store/hook/Eeg.provider";
 import {Api} from "../../service";
 import {IonSpinner} from "@ionic/react";
+import {DashboardMode, DayToolbar, useDayReport} from "./DayView.component";
+import {DayHourChart, DayLoadCurveChart} from "./DayCharts.component";
+import {clampDay, dayBounds, daySums, formatDay} from "./DayView.functions";
 
 interface LoadSharingComponentProps {
   participants: EegParticipant[]
@@ -47,6 +50,16 @@ const DashboardLayoutComponent: FC<LoadSharingComponentProps> = ({consumed, prod
 
   const energyDate = useMemo(() => periods, [periods])
 
+  // Day view (platform#210): one day of the selected period, whole community, quarter hours.
+  const [mode, setMode] = useState<DashboardMode>("period")
+  const [day, setDay] = useState<Date | undefined>(undefined)
+  const todayKey = formatDay(new Date())   // per render: an open dashboard reaches the new "yesterday" after midnight
+  const bounds = useMemo(() => dayBounds(activePeriod, periods, new Date()), [activePeriod, periods, todayKey])
+  useEffect(() => { setDay(d => clampDay(d, bounds)) }, [bounds])
+  const {state: dayState, reload: reloadDay} = useDayReport(tenant, mode === "day" ? day : undefined)
+  const sums = useMemo(() => dayState.status === "ok" ? daySums(dayState.quarters) : undefined, [dayState])
+  const showDay = mode === "day" && day !== undefined
+
   const showChart = (report: ReportNamedData[] | undefined, children: ReactNode) => {
     if (report) {
       return children
@@ -56,14 +69,16 @@ const DashboardLayoutComponent: FC<LoadSharingComponentProps> = ({consumed, prod
   }
 
   return (
-    <div style={{display: "flex", height: "100%", padding: "10px"}}>
-      <div style={{flex: "1", display: "grid", gridTemplateColumns: "50% 50%", height: "100%"}}>
+    <div style={{display: "flex", flexFlow: "column", height: "100%", padding: "10px"}}>
+      <DayToolbar mode={mode} onModeChange={setMode} day={day} bounds={bounds} onDayChange={setDay} sums={sums}/>
+      <div style={{flex: "1", display: "grid", gridTemplateColumns: "50% 50%", minHeight: 0}}>
         <div style={{display: "grid", gridTemplateRows: "50% 50%", overflowY: "auto"}}>
           <div className="eeg-card eeg-card-border" style={{margin: "10px"}}>
             <EegOverviewComponent participants={participants} rateMap={rates} />
           </div>
           <div className="eeg-card-border" style={{margin: "10px"}}>
-            {showChart(combinedReport.intraday, <LoadSharingComponent activePeriod={activePeriod} report={combinedReport.loadcurve} tenant={tenant} energyDate={energyDate}/>)}
+            {showDay ? <DayLoadCurveChart day={day} state={dayState} onRetry={reloadDay}/> :
+              showChart(combinedReport.intraday, <LoadSharingComponent activePeriod={activePeriod} report={combinedReport.loadcurve} tenant={tenant} energyDate={energyDate}/>)}
           </div>
         </div>
         <div style={{display: "grid", gridTemplateRows: "50% 50%"}}>
@@ -71,7 +86,8 @@ const DashboardLayoutComponent: FC<LoadSharingComponentProps> = ({consumed, prod
             <EnergyOverviewComponent consumed={consumed} allocated={allocated} produced={produced} rates={rates}/>
           </div>
           <div className="eeg-card-border" style={{margin: "10px"}}>
-            {showChart(combinedReport.intraday, <IntraDayReportComponent activePeriod={activePeriod} tenant={tenant}
+            {showDay ? <DayHourChart day={day} state={dayState} onRetry={reloadDay}/> :
+              showChart(combinedReport.intraday, <IntraDayReportComponent activePeriod={activePeriod} tenant={tenant}
                                                                            report={combinedReport.intraday}
                                                                            energyDate={energyDate}/>)}
           </div>

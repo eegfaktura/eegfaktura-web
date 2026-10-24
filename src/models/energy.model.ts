@@ -161,6 +161,7 @@ export interface ReportNamedData extends SummaryReportData {
   name: string
   cntConsumer: number
   cntProducer: number
+  unused?: number   // producer P.01 (community surplus); energystore sends it, older code ignored it
 }
 
 export interface CombinedReportData {
