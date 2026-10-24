@@ -1,6 +1,7 @@
 import React, {FC, useCallback, useContext, useEffect, useMemo, useState} from "react";
 import {IonCard, IonCol, IonContent, IonGrid, IonPage, IonRow, IonSpinner} from "@ionic/react";
 import {
+  energyReportErrorSelector,
   selectAllIntermediatesV2,
   selectedPeriodSelector
 } from "../store/energy";
@@ -19,10 +20,11 @@ export type PieSeriesType = {
 export type ReportSeriesType = {
   name: string, distributed: number, consumed: number, produced: number
 }
-const DashbaordPage: FC = () => {
+const DashboardPage: FC = () => {
 
   const intermediateSeriesV2 = useAppSelector(selectAllIntermediatesV2)
   const activePeriod = useAppSelector(selectedPeriodSelector);
+  const reportError = useAppSelector(energyReportErrorSelector);
 
   const {
     participants,
@@ -58,6 +60,19 @@ const DashbaordPage: FC = () => {
       style={{margin: "auto", height: "48px", width: "48px"}}></IonSpinner></div>
   }
 
+  // a failed load is not "no energy" (261024-ca26)
+  if (reportError) {
+    return (
+      <IonPage>
+        <IonContent fullscreen color="eeg">
+          <div className="full-screen-center" style={{alignItems: "center", justifyContent: "center"}}>
+            <div>{`Die Energiedaten konnten nicht geladen werden. (${reportError})`}</div>
+          </div>
+        </IonContent>
+      </IonPage>
+    )
+  }
+
   return (
     <IonPage>
       <IonContent fullscreen color="eeg">
@@ -68,4 +83,4 @@ const DashbaordPage: FC = () => {
   )
 }
 
-export default DashbaordPage;
+export default DashboardPage;

@@ -1,4 +1,4 @@
-import {IonApp, IonRouterOutlet, IonSplitPane, setupIonicReact} from '@ionic/react';
+import {IonApp, IonRouterOutlet, IonSpinner, IonSplitPane, setupIonicReact} from '@ionic/react';
 import {IonReactRouter} from '@ionic/react-router';
 import {Redirect, Route, Switch} from 'react-router-dom';
 
@@ -43,7 +43,7 @@ import {ErrorBoundary} from "react-error-boundary";
 
 setupIonicReact();
 
-const DashbaordPage = React.lazy(() => import("./pages/Dashbaord.page"))
+const DashboardPage = React.lazy(() => import("./pages/Dashboard.page"))
 
 // const PublicSection: React.FC = () => {
 //   return (
@@ -89,7 +89,8 @@ const SecureSection: React.FC = () => {
             <IonRouterOutlet id="main">
               <Route path="/" exact={true} render={() => <Redirect to="/page/participants"/>}/>
               <Route path="/page/dashboard" exact={true}>
-                <Suspense fallback = { <div> Dashboard loading ... </div> }> <DashbaordPage/></Suspense>
+                <Suspense fallback = { <div style={{height: "100%", display: "flex"}}><IonSpinner
+                  style={{margin: "auto", height: "48px", width: "48px"}}/></div> }> <DashboardPage/></Suspense>
               </Route>
               <Route path="/page/eeg" component={EegPage} exact={true}/>
               <MemberRoutes/>

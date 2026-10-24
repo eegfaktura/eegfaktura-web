@@ -63,6 +63,9 @@ this changelog highlights the changes relevant for overview and operations.
     shows "Etwas ist schiefgelaufen." with "Neu laden" and "Zur Startseite" instead of "Something went wrong".
     An unknown URL (e.g. an old bookmark) shows "Diese Seite gibt es nicht." with "Zur Startseite". Still one
     error boundary for the whole app (no boundary per page), nothing is reported to a server.
+  - **Dashboard without error state (261024-ca26):** after a failed energy load it shows "Die Energiedaten
+    konnten nicht geladen werden." with the reason instead of empty charts; while the page code loads a spinner
+    instead of "Dashboard loading ...". The page file is now spelled `Dashboard.page.tsx` (URL unchanged).
 - **Dashboard "Energiemengen – Eingekauft/Verkauft" wrong after an owner change** (support 6611112, 6611148).
   A metering point with two participations in the period (old and new member) counted the value of one of them
   twice, e.g. 160 or 10 kWh instead of 5 + 80 = 85 kWh. Each participation now adds its own value once.

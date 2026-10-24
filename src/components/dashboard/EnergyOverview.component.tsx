@@ -1,7 +1,7 @@
 import React, {FC, useEffect, useState} from "react";
 import BarComponent from "../core/Bar.component";
 import {activeMeterEnergyArray, useAppSelector} from "../../store";
-import {PieSeriesType} from "../../pages/Dashbaord.page";
+import {PieSeriesType} from "../../pages/Dashboard.page";
 import {EegTariff} from "../../models/eeg.model";
 import {selectedPeriodSelector} from "../../store/energy";
 import {getPreviousPeriod} from "../../util/Helper.util";
