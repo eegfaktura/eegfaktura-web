@@ -70,6 +70,7 @@ describe("EegBillingConfigCard (261024-ca15)", () => {
     fireEvent.click(remove)
 
     expect(alert).toHaveBeenCalledTimes(1)
+    expect(alert.mock.lastCall![0].message).toBe("Soll das Bild für das Logo gelöscht werden?")
     expect(Api.eegService.deleteImageBillingConfig).not.toHaveBeenCalled()
     await act(async () => alert.mock.lastCall![0].onDidDismiss({detail: {role: "confirm"}}))
     expect(Api.eegService.deleteImageBillingConfig).toHaveBeenCalledTimes(1)

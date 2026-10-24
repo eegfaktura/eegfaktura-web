@@ -126,7 +126,7 @@ const EegBillingConfigCardComponent: FC = () => {
 
     const onDeleteImage = (billingConfigId : string, imageType : 'logo' | 'footer') => {
         if (billingConfig && tenant) {
-            confirm("Bild löschen", "Soll das Bild für das Logo gelöscht werden?", "Löschen",
+            confirm("Bild löschen", `Soll das Bild für ${imageType === 'logo' ? "das Logo" : "die Fußzeile"} gelöscht werden?`, "Löschen",
                 () => dispatcher(deleteImageBillingConfig({billingConfig, imageType, tenant})))
         }
     }
