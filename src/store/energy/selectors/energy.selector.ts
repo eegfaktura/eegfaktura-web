@@ -162,6 +162,11 @@ export const periodsSelector = createSelector(
   }, {begin: nowTimeString(), end: ""})
 )
 
+export const energyReportErrorSelector = createSelector(
+  featureStateSelector,
+  state => state.reportError
+)
+
 export const selectedPeriodSelector = createSelector(
   featureStateSelector,
   items => items.selectedPeriod

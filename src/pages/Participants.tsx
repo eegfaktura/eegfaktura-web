@@ -10,8 +10,8 @@ import {
 import {ParticipantContext} from "../store/hook/ParticipantProvider";
 import {MemberViewContext} from "../store/hook/MemberViewProvider";
 import {EegContext} from "../store/hook/Eeg.provider";
-import {useLocale} from "../store/hook/useLocale";
 import ParticipantDetailsPaneComponent from "../components/participantPane/ParticipantDetailsPane.component";
+import EegLoadStateComponent from "../components/EegLoadState.component";
 
 const Participants: FC = () => {
   // const periods = useAppSelector(periodsSelector);
@@ -21,7 +21,6 @@ const Participants: FC = () => {
   const selectedParticipant = useAppSelector(selectedParticipantSelector);
 
   // console.log("PARTICIPANTS:", participants, activePeriod)
-  const {t} = useLocale("error")
   const {
     billingEnabled,
     showAddMeterPane,
@@ -70,12 +69,7 @@ const Participants: FC = () => {
     }
   }
   if (!eeg || !tenant) {
-    return (
-      <div className="full-screen-center">
-        <div>{t("intern.empty_eeg")}</div>
-        {/*<IonSpinner style={{margin: "auto", height: "48px", width: "48px", color: "black"}}/>*/}
-      </div>
-    )
+    return <EegLoadStateComponent/>
   }
 
   return (
