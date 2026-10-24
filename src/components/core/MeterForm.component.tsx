@@ -37,15 +37,18 @@ const MeterFormComponent: FC<MeterFromComponentProps> = ({meteringPoint}) => {
   const {handleSubmit, formState: { dirtyFields}, reset, setValue} = formMethods
 
   useEffect(() => {
-    reset(metering)
+    reset(metering, {keepDirtyValues: true})  // a store update must not overwrite unsaved input
   }, [metering])
 
   const onSubmit = (meter: Metering) => {
     if (Object.keys(dirtyFields).length > 0) {
       const participantId = participant?.id;
       if (participantId) {
+        // mark as saved only after the save worked; a failure keeps the input (error toast: store middleware)
         dispatcher(updateMeteringPoint({tenant, participantId, meter}))
-        reset(meter);
+          .unwrap()
+          .then(() => reset(meter))
+          .catch(() => {})
       }
     }
   }
@@ -66,7 +69,8 @@ const MeterFormComponent: FC<MeterFromComponentProps> = ({meteringPoint}) => {
 
     const _factValue = Number(value)
     if (isNaN(_factValue) || _factValue > 100 || _factValue < 1) {
-      reset()
+      // used to reset the whole form without a word
+      formMethods.setError(name as keyof Metering, {message: "Der Teilnahmefaktor muss zwischen 1 und 100 % liegen."})
       return
     }
 
@@ -74,8 +78,11 @@ const MeterFormComponent: FC<MeterFromComponentProps> = ({meteringPoint}) => {
     const participantId = participant?.id;
     if (participantId && metering) {
       const meter = metering.meteringPoint
+      // reset({[name]: value}) replaced all form values with this one field, also after a failed save
       await dispatcher(updateMeteringPointPartFact({tenant, participantId, meter, value: _factValue}))
-      reset({[name]: value})
+        .unwrap()
+        .then(() => formMethods.resetField(name as keyof Metering, {defaultValue: value}))
+        .catch(() => {})
     }
   }
 
