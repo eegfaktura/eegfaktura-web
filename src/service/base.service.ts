@@ -45,6 +45,10 @@ function createLoc<T>() {
   };
 };
 const Lock = createLoc<string>()
+
+export const SESSION_EXPIRED = "Deine Sitzung ist abgelaufen. Bitte melde Dich neu an."
+// several calls can fail with 401 at once; one redirect is enough
+let loginRedirectStarted = false
 const mutex = new Mutex();
 
 class EegBaseService {
@@ -100,8 +104,12 @@ class EegBaseService {
     if (!response.ok) {
       switch (response.status) {
         case 401:
-          // await this.authService.logout()
-          break
+          // the session is gone: fail the call (it used to pass as success) and send the user to the login once
+          if (!loginRedirectStarted) {
+            loginRedirectStarted = true
+            this.authService.login().catch(() => { loginRedirectStarted = false })
+          }
+          throw new Error(SESSION_EXPIRED)
         default:
           const errorBody = await response.json().catch(e => response.text())
           if (isErrorResponse(errorBody)) {
