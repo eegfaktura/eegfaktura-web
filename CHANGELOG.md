@@ -8,6 +8,24 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **Smart re-request of energy data** (konzept-smart-nachfordern). **Needs the eegfaktura-backend change "smart
+  re-request" (per-meter periods, one-hour lock, live entry) deployed first or together**; an older backend
+  ignores the per-meter periods and requests the whole period for the metering points with gaps.
+  - "Zählpunktdaten nachfordern" has a new checkbox "Nur fehlende Daten anfordern (Smart)", on by default. It checks
+    the energy data of the selected metering points first and requests only those with gaps, each from its first
+    to its last missing day. A question names the numbers first ("Von 2.380 Zählpunkten fehlen bei 214 Daten
+    (zusammen 1.033 Tage). Diese 214 jetzt anfordern?"). Metering points whose data could not be checked are named
+    there and requested over the whole period only on request. Nothing missing: an info, nothing is sent. Metering
+    points not registered or not active in the period are left out with Smart.
+  - Without Smart the request is as before; "Gesamte Gemeinschaft" now asks first with the number of metering
+    points.
+  - Metering points requested in the last hour are skipped by the backend; the dialog names how many and when
+    they are free again ("3 Zählpunkte wurden in der letzten Stunde schon angefordert, wieder frei ab 14:32.").
+  - Messages: a running request shows as one entry "Energiedaten-Anforderung läuft" (with "Antwort noch offen"),
+    reloaded every minute while it is shown. Summary and live entry have the new groups "Bereits angefordert"
+    (with "frei ab") and "Daten vollständig (nicht angefordert)".
+
 ### Fixed
 - **UX defects from Karl's analysis (23.10.2026), ids UX-1 … UX-8:**
   - **Participation factor 0 % was sent as 100 % (UX-4):** "Teilnahmefaktor ändern" sent `partFact || 100`, so
