@@ -9,6 +9,9 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Added
+- **Day picker in the period popover like the meter chart** (platform#210, feedback from dev). The row "Tag" uses
+  the day picker of the metering-point energy chart (MeterChartNavbar): a date chip ("23. Okt. 2026") opening a
+  calendar, with arrows for the previous / next day; still limited to the energy data range and yesterday.
 - **Dashboard day view per card** (platform#210, feedback from dev). "Tag" in a card's period popover switches only
   that card (Lastverlauf or Tagesverlauf) to the day view; the other card keeps its period. Each card in day mode has
   its own gear, arrows and day sums. The day Lastverlauf lines follow the day chart of a metering point (MeterChart:
