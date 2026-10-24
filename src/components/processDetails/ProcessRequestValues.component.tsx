@@ -76,7 +76,7 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
       // „Gesamte Gemeinschaft“ fills the selection from all meters and keeps an earlier participant choice
       const meter = selectedMeters(selectEntire ? meters : useableMeters, data.meteringPoints)
       if (meter.length > 0) {  // empty: the selection does not belong to the chosen participant
-        Api.eegService.syncMeteringPoint(
+        return Api.eegService.syncMeteringPoint(
           eeg.id.toUpperCase(),
           meter.map(m => {return {meter: m.meteringPoint, direction: m.direction}}),
           startDate.getTime(), endDate.getTime())
@@ -154,7 +154,7 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
               />
             </div>
             <IonItem lines="none" style={{zIndex: "0"}}>
-              <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={((!formState.isValid && !selectEntire) || !startDate || !endDate)}>
+              <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={((!formState.isValid && !selectEntire) || !startDate || !endDate || formState.isSubmitting)}>
                 {t("process.submit")}
               </IonButton>
             </IonItem>

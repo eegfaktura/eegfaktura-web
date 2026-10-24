@@ -84,7 +84,7 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
 
   const [toaster] = useIonToast()
   const formMethods = useForm<EegParticipant>({defaultValues: selectedParticipant, mode: "onBlur", reValidateMode: 'onChange'})
-  const {reset, handleSubmit, setValue, formState: {dirtyFields}} = formMethods
+  const {reset, handleSubmit, setValue, formState: {dirtyFields, isSubmitting}} = formMethods
   // const {append} = useFieldArray<EegParticipant>({control, name: 'meters'})
 
   // Async-Race: useForm({defaultValues}) erfasst die Nummer beim ersten Render,
@@ -121,7 +121,7 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
     data.residentAddress.street = data.billingAddress.street
     data.residentAddress.streetNumber = data.billingAddress.streetNumber
     data.meters = data.meters.map(m => {return {...m, registeredSince: data.participantSince} as Metering})
-    onRegisterParticipant(data)
+    return onRegisterParticipant(data)  // handleSubmit keeps isSubmitting until the save finished
   }
 
   return (
@@ -157,7 +157,7 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
       <IonFooter>
         <IonToolbar className={"ion-padding-horizontal"}>
           <IonButton fill="clear" slot="start" routerLink="/page/participants" routerDirection="root">Zurück</IonButton>
-          <IonButton form="submit-register-participant" type="submit" slot="end">Registrieren</IonButton>
+          <IonButton form="submit-register-participant" type="submit" slot="end" disabled={isSubmitting}>Registrieren</IonButton>
         </IonToolbar>
       </IonFooter>
     </IonPage>

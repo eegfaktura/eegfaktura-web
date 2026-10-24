@@ -54,6 +54,7 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
 
   const [toaster] = useIonToast();
   const confirm = useConfirm()
+  const [sending, setSending] = useState(false)  // the request runs after the dialog, outside isSubmitting
 
   const infoToast = (message: string) => {
     toaster({
@@ -94,7 +95,8 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
           const participantId = data.participantId, endDate = consentEndDate
           confirm("Datenfreigabe aufheben",
             `Soll die Datenfreigabe für ${meter.length === 1 ? "den Zählpunkt " + meter[0].meteringPoint : meter.length + " Zählpunkte"} beim Netzbetreiber aufgehoben werden?`,
-            "Aufheben", () =>
+            "Aufheben", () => {
+              setSending(true)
               Api.eegService.revokeMeteringPoint(
                 eeg.id.toUpperCase(), participantId,
                 meter.map(m => {return {meter: m.meteringPoint, direction: m.direction, consentId: m.consentId}}),
@@ -104,7 +106,9 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
                   reset()
                   setConsentEndDate(null)
                 })
-                .catch(failed))  // keep the input on failure
+                .catch(failed)  // keep the input on failure
+                .finally(() => setSending(false))
+            })
         } else {
           errorToast(errorT("process.revoke_consentIdEmpty"))
         }
@@ -155,7 +159,7 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
               />
             </div>
             <IonItem lines="none" style={{zIndex: "0"}}>
-              <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={(!formState.isValid || !consentEndDate)}>
+              <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={(!formState.isValid || !consentEndDate || sending)}>
                 {t("process.submit")}
               </IonButton>
             </IonItem>

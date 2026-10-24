@@ -89,7 +89,7 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
       const meter =
         selectedMeters(useableMeters, data.meteringPoints)
       if (meter.length > 0) {  // empty: the selection does not belong to the chosen participant
-        Api.eegService.changeMeterPartitionFactor(
+        return Api.eegService.changeMeterPartitionFactor(
           eeg.id.toUpperCase(),
           partFactChanges(meter, data.partFact))
           .then(() => {
@@ -138,7 +138,7 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
               </IonItem>
             )}
             <IonItem lines="none" style={{zIndex: "0"}}>
-              <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={(!formState.isValid)}>
+              <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={!formState.isValid || formState.isSubmitting}>
                 Anfordern
               </IonButton>
             </IonItem>
