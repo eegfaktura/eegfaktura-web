@@ -65,7 +65,7 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
 
     meterGroup.forEach((m,i) => {
       if (rates[m.meter.tariff_id]) {
-        if (isNaN(m.utilization)) {
+        if (m.utilization === undefined || isNaN(m.utilization)) {
           console.error("Meter has invalid energy values!", i, m)
         } else {
           if (m.meter.direction === "CONSUMPTION") {

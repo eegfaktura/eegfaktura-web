@@ -210,7 +210,8 @@ export const meteringEnergyGroup11 = createSelector(
       } else {
         utilization = s.report.summary.production - s.report.summary.allocation
       }
-      return {...i, [s.meterId]: utilization}
+      i[s.meterId] = utilization
+      return i
     }, {} as Record<string, number>)
     return out
   }, {} as Record<string, Record<string, number>>),

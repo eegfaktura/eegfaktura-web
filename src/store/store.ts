@@ -115,7 +115,7 @@ export const activeMeterEnergyArray = createSelector(
   activeParticipantsSelector1,
   meteringEnergyGroup11,
   (participants, report) => participants.flatMap(p => p.meters.map((m) => {
-    return { meter: m, utilization: report[p.id]?.[m.meteringPoint] }
+    return { meter: m, utilization: report[p.id]?.[m.meteringPoint] as number | undefined }
   }))
 )
 
@@ -123,6 +123,7 @@ export const activeMeterEnergyGroup = createSelector(
   activeParticipantsSelector1,
   meteringEnergyGroup11,
   (participants, report) => participants.flatMap(p => p.meters.map(m => ({p, m}))).reduce((out, {p, m}) => {
-    return {...out, [m.meteringPoint]: {m: m, utilization: report[p.id]?.[m.meteringPoint]}}
-  }, {} as Record<string, {m: Metering, utilization: number}>)
+    out[m.meteringPoint] = {m: m, utilization: report[p.id]?.[m.meteringPoint]}
+    return out
+  }, {} as Record<string, {m: Metering, utilization: number | undefined}>)
 )

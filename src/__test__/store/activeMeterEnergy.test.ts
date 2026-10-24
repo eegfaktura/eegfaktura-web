@@ -4,21 +4,22 @@ import {activeMeterEnergyArray} from "../../store";
 // Dashboard "Energiemengen": with an owner change one metering point has two participations (old and new
 // participant). Each participation must contribute its own value exactly once (support 6611112 / 6611148).
 
-const meter = (participantId: string, meteringPoint: string, direction: "CONSUMPTION" | "GENERATION") =>
-  ({participantId, meteringPoint, direction, tariff_id: "t1"})
+const meter = (participantId: string, meteringPoint: string, direction: "CONSUMPTION" | "GENERATION",
+               participantState?: {activeSince: Date, inactiveSince: Date}, status = "ACTIVE") =>
+  ({participantId, meteringPoint, direction, tariff_id: "t1", participantState, status})
 
 const participant = (id: string, meters: any[]) => ({id, meters})
 
 const meterReport = (meterId: string, meterDir: "CONSUMPTION" | "GENERATION", utilization: number, production = 0, allocation = 0) =>
   ({meterId, meterDir, from: 0, until: 0, report: {summary: {utilization, production, allocation}, intermediate: {}}})
 
-const state = (participants: any[], reports: any[]) => ({
+const state = (participants: any[], reports: any[], selectedPeriod?: any) => ({
   participant: {
     ids: participants.map(p => p.id),
     entities: Object.fromEntries(participants.map(p => [p.id, p])),
   },
   energy: {
-    selectedPeriod: undefined,
+    selectedPeriod,
     participantReports: {
       ids: reports.map(r => r.participantId),
       entities: Object.fromEntries(reports.map(r => [r.participantId, r])),
@@ -62,5 +63,46 @@ describe("activeMeterEnergyArray: value per participation and metering point", (
   it("a metering point without report stays undefined (dashboard skips it)", () => {
     const s = state([participant("p1", [meter("p1", "AT020", "CONSUMPTION")])], [])
     expect(values(s)).toEqual([["p1", "AT020", undefined]])
+  })
+})
+
+// Production path with a selected period: activeParticipantsSelector1 applies filterActiveParticipantAndMeter.
+// September 2026: start 01.09. 00:00, the filter's end bound is 01.10. 00:00 (last day + 24 h), local time.
+describe("activeMeterEnergyArray with a selected period (owner change inside the period)", () => {
+  const september = {type: "YM", year: 2026, segment: 9}
+  const periodEnd = new Date(2026, 9, 1, 0, 0, 0)
+  const open = new Date(2999, 11, 31)
+  const consumed = (s: any) => activeMeterEnergyArray(s)
+    .reduce((sum, e) => sum + (e.meter.direction === "CONSUMPTION" ? e.utilization ?? 0 : 0), 0)
+  const reports = [
+    {participantId: "p-old", meters: [meterReport("AT001", "CONSUMPTION", 5)]},
+    {participantId: "p-new", meters: [meterReport("AT001", "CONSUMPTION", 80)]},
+    {participantId: "p-out", meters: [meterReport("AT001", "CONSUMPTION", 1000)]},
+  ]
+
+  it("old participation ends and new one starts inside the period: both counted, sum old + new", () => {
+    const s = state([
+      participant("p-out", [meter("p-out", "AT001", "CONSUMPTION",
+        {activeSince: new Date(2024, 0, 1), inactiveSince: new Date(2026, 7, 31)}, "INACTIVE")]),
+      participant("p-old", [meter("p-old", "AT001", "CONSUMPTION",
+        {activeSince: new Date(2025, 0, 1), inactiveSince: new Date(2026, 8, 15)}, "INACTIVE")]),
+      participant("p-new", [meter("p-new", "AT001", "CONSUMPTION",
+        {activeSince: new Date(2026, 8, 16), inactiveSince: open})]),
+    ], reports, september)
+    expect(values(s)).toEqual([["p-old", "AT001", 5], ["p-new", "AT001", 80]])
+    expect(consumed(s)).toBe(85)
+  })
+
+  it("period-end boundary: inactiveSince / activeSince at the end bound are kept, 1 ms later is not", () => {
+    const s = state([
+      participant("p-old", [meter("p-old", "AT001", "CONSUMPTION",
+        {activeSince: new Date(2025, 0, 1), inactiveSince: periodEnd}, "INACTIVE")]),
+      participant("p-new", [meter("p-new", "AT001", "CONSUMPTION",
+        {activeSince: periodEnd, inactiveSince: open})]),
+      participant("p-out", [meter("p-out", "AT001", "CONSUMPTION",
+        {activeSince: new Date(periodEnd.getTime() + 1), inactiveSince: open})]),
+    ], reports, september)
+    expect(values(s)).toEqual([["p-old", "AT001", 5], ["p-new", "AT001", 80]])
+    expect(consumed(s)).toBe(85)
   })
 })
