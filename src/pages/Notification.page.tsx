@@ -1,4 +1,4 @@
-import React, {FC, useCallback, useEffect, useState} from "react";
+import React, {FC, useCallback, useEffect, useRef, useState} from "react";
 import {IonContent, IonHeader, IonItem, IonPage, IonToolbar, useIonViewWillEnter, useIonViewWillLeave} from "@ionic/react";
 import {EegNotification, Message} from "../models/eeg.model";
 import {useAppSelector} from "../store";
@@ -16,9 +16,13 @@ const NotificationPage: FC = () => {
   const {tenant} = useTenant()
   const [notifictions, setNotifications] = useState<{type: string, process: string, date: Date, notification: EegNotification}[]>([])
 
+  // only the answer of the latest load counts: an older one (e.g. of the community before a switch) is dropped
+  const loadSeq = useRef(0)
   const load = useCallback(() => {
     if (!tenant) return
+    const seq = ++loadSeq.current
     Api.eegService.getNotifications(tenant, 0).then(r => {
+      if (seq !== loadSeq.current) return
       setNotifications(r.map(x => {
         x.message = new Message(x.message)
         return {type: x.type, process: x.process, date: x.date, notification: x}
@@ -32,7 +36,7 @@ const NotificationPage: FC = () => {
   useIonViewWillEnter(() => load(), [load])
 
   // A running energy request (live entry) shows its current state: load again every minute while one is shown
-  // and the page is visible.
+  // and the page is visible, and once when the browser tab becomes visible again.
   const [visible, setVisible] = useState(true)
   useIonViewWillEnter(() => setVisible(true))
   useIonViewWillLeave(() => setVisible(false))
@@ -40,7 +44,12 @@ const NotificationPage: FC = () => {
   useEffect(() => {
     if (!live || !visible) return
     const timer = setInterval(() => { if (!document.hidden) load() }, LIVE_REFRESH_MS)
-    return () => clearInterval(timer)
+    const onVisible = () => { if (!document.hidden) load() }
+    document.addEventListener("visibilitychange", onVisible)
+    return () => {
+      clearInterval(timer)
+      document.removeEventListener("visibilitychange", onVisible)
+    }
   }, [live, visible, load])
 
   return (

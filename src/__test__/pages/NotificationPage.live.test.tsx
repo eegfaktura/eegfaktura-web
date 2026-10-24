@@ -2,7 +2,8 @@ import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import {act} from "@testing-library/react";
 import {renderWithProviders} from "../test-utils";
 
-vi.mock("../../store/hook/Eeg.provider", () => ({useTenant: () => ({tenant: "TE100100"})}))
+let tenant = "TE100100"
+vi.mock("../../store/hook/Eeg.provider", () => ({useTenant: () => ({tenant})}))
 
 import NotificationPage, {LIVE_REFRESH_MS} from "../../pages/Notification.page";
 import {Api} from "../../service";
@@ -45,6 +46,34 @@ describe("Messages page: a running energy request refreshes", () => {
     await act(async () => { vi.advanceTimersByTime(LIVE_REFRESH_MS) })
     await flush()
     expect(get).toHaveBeenCalledTimes(2)
+  })
+
+  it("loads once when the browser tab becomes visible again", async () => {
+    const get = mockNotifications([summary(true)])
+    renderWithProviders(<NotificationPage/>)
+    await flush()
+    await act(async () => { document.dispatchEvent(new Event("visibilitychange")) })
+    await flush()
+    expect(get).toHaveBeenCalledTimes(2)
+  })
+
+  it("drops the answer of an older load that arrives after a newer one (community switch)", async () => {
+    let first: (rows: object[]) => void = () => {}
+    const get = vi.fn()
+      .mockImplementationOnce(() => new Promise(resolve => { first = resolve }))
+      .mockImplementation(async () => [JSON.parse(JSON.stringify(summary()))])
+    Api.eegService = {getNotifications: get} as unknown as typeof Api.eegService
+    const page = renderWithProviders(<NotificationPage/>)
+    tenant = "TE100200"
+    page.rerender(<NotificationPage/>)
+    await flush()
+    expect(get).toHaveBeenCalledTimes(2)
+    expect(page.container.textContent).toContain("Zusammenfassung Energiedaten-Anforderung")
+
+    await act(async () => { first([JSON.parse(JSON.stringify(summary(true)))]) })
+    await flush()
+    expect(page.container.textContent).not.toContain("läuft")
+    tenant = "TE100100"
   })
 
   it("does not poll without a live entry", async () => {
