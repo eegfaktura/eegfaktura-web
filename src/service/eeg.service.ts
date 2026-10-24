@@ -444,6 +444,7 @@ export class EegService extends EegBaseService {
     const token = await this.lookupToken()
 
     const body = {meteringPoints: meters}
+    // the backend answers 204 No Content: no body to parse
     return await fetch(`${API_API_SERVER}/meteringpoint/changepartitionfactor`, {
       method: 'POST',
       headers: {
@@ -451,7 +452,7 @@ export class EegService extends EegBaseService {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
-    }).then(this.handleErrors).then(res => res.json());
+    }).then(this.handleErrors).then(() => undefined);
   }
 
   async registerMeteringPoint(tenant: string, participantId: string, meter: string, direction: string, mode: 'ONLINE' | 'OFFLINE', code?: string): Promise<EegEnergyReport> {
