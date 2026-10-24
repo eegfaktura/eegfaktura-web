@@ -25,7 +25,8 @@ this changelog highlights the changes relevant for overview and operations.
   - Without Smart the request is as before; "Gesamte Gemeinschaft" now asks first with the number of metering
     points.
   - Metering points requested in the last hour are skipped by the backend; the dialog names how many and when
-    they are free again ("3 Zählpunkte wurden in der letzten Stunde schon angefordert, wieder frei ab 14:32.").
+    they are all free again ("3 Zählpunkte wurden in der letzten Stunde schon angefordert, alle wieder frei ab
+    14:40.").
   - Messages: a running request shows as one entry "Energiedaten-Anforderung läuft" (with "Antwort noch offen"),
     reloaded every minute while it is shown. Summary and live entry have the new groups "Bereits angefordert"
     (with "frei ab") and "Daten vollständig (nicht angefordert)".

@@ -186,14 +186,14 @@ describe("confirmation texts", () => {
     expect(entireConfirmation(2380)).toBe("Für die ganze Gemeinschaft werden 2.380 Zählpunkte für den ganzen Zeitraum angefordert. Jetzt anfordern?")
   })
 
-  it("names the already requested metering points and the earliest time they are free", () => {
+  it("names the already requested metering points and the time from which all are free", () => {
     const now = new Date(2026, 9, 24, 13, 40).getTime()
     expect(alreadyRequestedInfo([
       {meteringPoint: "AT1", reason: "ALREADY_REQUESTED", until: new Date(2026, 9, 24, 14, 40).getTime()},
       {meteringPoint: "AT2", reason: "ALREADY_REQUESTED", until: new Date(2026, 9, 24, 14, 32).getTime()},
       {meteringPoint: "AT3", reason: "ALREADY_REQUESTED", until: new Date(2026, 9, 24, 14, 35).getTime()},
       {meteringPoint: "AT4", reason: "COMPLETE"},
-    ], now)).toBe("3 Zählpunkte wurden in der letzten Stunde schon angefordert, wieder frei ab 14:32.")
+    ], now)).toBe("3 Zählpunkte wurden in der letzten Stunde schon angefordert, alle wieder frei ab 14:40.")
     expect(alreadyRequestedInfo([{meteringPoint: "AT1", reason: "ALREADY_REQUESTED"}], now))
       .toBe("1 Zählpunkt wurde in der letzten Stunde schon angefordert.")
     expect(alreadyRequestedInfo([{meteringPoint: "AT4", reason: "NOT_FOUND"}], now)).toBeUndefined()

@@ -153,6 +153,8 @@ export const alreadyRequestedInfo = (skipped: SyncEnergySkipped[], now = Date.no
   if (locked.length === 0) return undefined
   const untils = locked.map(s => s.until).filter((u): u is number => !!u)
   const verb = locked.length === 1 ? "wurde" : "wurden"
-  const free = untils.length > 0 ? `, wieder frei ab ${formatUntil(Math.min(...untils), now)}` : ""
+  // the latest time: from then on all of them are free again
+  const free = untils.length > 0
+    ? `, ${locked.length === 1 ? "" : "alle "}wieder frei ab ${formatUntil(Math.max(...untils), now)}` : ""
   return `${meters(locked.length)} ${verb} in der letzten Stunde schon angefordert${free}.`
 }
