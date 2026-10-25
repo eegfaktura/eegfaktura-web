@@ -207,11 +207,11 @@ const ParticipantDetailsPaneComponent: FC = () => {
       const diff = moment(meter.participantState.inactiveSince).diff(moment(), "days")
       if (diff >= 0) {
         return (
-          <span>Zählpunkt inaktiv am <strong>{moment(meter.participantState.inactiveSince).format("DD-MM-YYYY")}</strong></span>
+          <span>Zählpunkt inaktiv am <strong>{moment(meter.participantState.inactiveSince).format("DD.MM.YYYY")}</strong></span>
         )
       }
       return (
-        <span>Zählpunkt inaktiv seit <strong>{moment(meter.participantState.inactiveSince).format("DD-MM-YYYY")}</strong></span>
+        <span>Zählpunkt inaktiv seit <strong>{moment(meter.participantState.inactiveSince).format("DD.MM.YYYY")}</strong></span>
       )
     }
 
