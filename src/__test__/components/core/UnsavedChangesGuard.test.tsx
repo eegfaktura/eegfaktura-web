@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import {act, render} from "@testing-library/react";
+import {act, render, screen} from "@testing-library/react";
 import React from "react";
 import {MemoryRouter, useHistory} from "react-router";
+import {Route} from "react-router-dom";
+import {IonApp, IonContent, IonItem, IonPage, IonRouterOutlet} from "@ionic/react";
+import {IonReactRouter} from "@ionic/react-router";
 import UnsavedChangesGuard, {UNSAVED_CHANGES_MESSAGE} from "../../../components/core/UnsavedChangesGuard.component";
 
 // renders the guard in a memory router and hands out its history to navigate with
@@ -45,5 +48,28 @@ describe("UnsavedChangesGuard (261024-ca18)", () => {
     const event = new Event("beforeunload", {cancelable: true})
     window.dispatchEvent(event)
     expect(event.defaultPrevented).toBe(true)
+  })
+
+  it("asks only while its page is shown: a page left through the menu stays mounted, hidden", async () => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true)
+    const page = (name: string, next?: string) => () =>
+      <IonPage><IonContent>{name}{name === "Formular" && <UnsavedChangesGuard dirty={true}/>}
+        {next && <IonItem routerLink={next} routerDirection="none">nach {next}</IonItem>}</IonContent></IonPage>
+    window.history.pushState({}, "", "/form")
+    render(<IonApp><IonReactRouter><IonRouterOutlet>
+      <Route path="/form" exact component={page("Formular", "/b")}/>
+      <Route path="/b" exact component={page("Seite B", "/c")}/>
+      <Route path="/c" exact component={page("Seite C")}/>
+    </IonRouterOutlet></IonReactRouter></IonApp>)
+    const click = async (text: string) => {
+      await act(async () => { (await screen.findByText(text)).click() })
+      await act(async () => { await new Promise(r => setTimeout(r, 100)) })
+    }
+    await click("nach /b")
+    expect(confirm).toHaveBeenCalledTimes(1)
+    await click("nach /c")
+    expect(window.location.pathname).toBe("/c")
+    expect(confirm).toHaveBeenCalledTimes(1)
+    confirm.mockRestore()
   })
 })

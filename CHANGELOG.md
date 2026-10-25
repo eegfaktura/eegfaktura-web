@@ -28,6 +28,11 @@ this changelog highlights the changes relevant for overview and operations.
   default available — or `E_MAIL_TEMPLATE` — default sent instead) show their own text under „E-Mail-Texte:“
   instead of „Mailversand fehlgeschlagen“; failed mails in the same notification are still listed.
 
+### Fixed
+- Member registration (ca18, 1.10.0): after leaving the form with unsaved input through the menu, every later
+  page change asked again ("Die Eingaben sind noch nicht gespeichert"), because the hidden page stays mounted. The
+  question now only comes while the form is shown.
+
 ## [1.10.1] – 2026-10-25
 
 ### Fixed
