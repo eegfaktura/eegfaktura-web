@@ -216,10 +216,11 @@ const Menu: FC = () => {
         <UserDetailPopover authSvc={authSvr} />
       </IonPopover>
       <IonContent>
-        <IonItem button lines="full" routerLink={"/page/notifications"} routerDirection="none">
+        {/* the notifications come from an admin-only backend call (261024-ca19) */}
+        {isAdmin() && <IonItem button lines="full" routerLink={"/page/notifications"} routerDirection="none">
           <IonIcon aria-hidden="true" slot="start" ios={eegChartBubble} md={eegChartBubble}/>
-          <IonLabel>Messages</IonLabel>
-        </IonItem>
+          <IonLabel>Nachrichten</IonLabel>
+        </IonItem>}
         <IonList id="inbox-list">
           {appPages.map((appPage, index) => {
             return (
