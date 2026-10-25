@@ -1,7 +1,7 @@
 import React from "react";
 import {describe, expect, it, vi} from "vitest";
 import {render, screen} from "@testing-library/react";
-import {balanceOf, balanceText, isBalanced, periodBalance} from "../../../components/dashboard/Balance.functions";
+import {balanceOf, balanceText, daysOfBar, isBalanced, periodBalance, roundKwh} from "../../../components/dashboard/Balance.functions";
 import {transformData} from "../../../components/dashboard/dashboard.functions";
 import {DayLoadCurveChart} from "../../../components/dashboard/DayCharts.component";
 import LoadSharingComponent from "../../../components/dashboard/LoadSharing.component";
@@ -26,29 +26,35 @@ describe("Bilanzdifferenz", () => {
     // values of the screenshots: 23.10.2026 (data missing) and 07.10.2026 (rounding)
     const missing = {produced: 244.844, distributed: 191.098, unused: 61.596}
     expect(balanceOf(missing)).toBeCloseTo(-7.85, 6)
-    expect(balanceText(balanceOf(missing), missing.produced)).toBe("Bilanzdifferenz -7,850 kWh")
-    expect(isBalanced(balanceOf({produced: 680.273, distributed: 428.373, unused: 251.901}), 680.273)).toBe(true)
-    expect(balanceText(0.001, 5)).toBe("Bilanz ausgeglichen")
-    expect(isBalanced(0.01, 5)).toBe(false)   // small production: at least 0.01 kWh
+    expect(balanceText(balanceOf(missing), 1)).toBe("Bilanzdifferenz -7,850 kWh")
+    expect(isBalanced(balanceOf({produced: 680.273, distributed: 428.373, unused: 251.901}), 1)).toBe(true)
+    expect(balanceText(0.001, 1)).toBe("Bilanz ausgeglichen")
+    expect(isBalanced(0.01, 1)).toBe(false)
   })
 
-  it("the tolerance grows with production, so a year of rounding residuals does not read as missing data", () => {
-    // a year of a mid-size community: ~250 MWh production, 365 × 0.001 kWh residual
-    expect(isBalanced(0.365, 250_000)).toBe(true)
-    // a missing producer for a day in that year is still visible
-    expect(isBalanced(-150, 250_000)).toBe(false)
+  it("the tolerance grows with the days: a year of rounding is balanced, a producer missing for a day is not", () => {
+    expect(isBalanced(0.365, 365)).toBe(true)
+    expect(isBalanced(-20, 12 * 31)).toBe(false)   // year view with 12 month bars
+    expect(daysOfBar("W:2026:40")).toBe(7)
+    expect(daysOfBar("M:2026:10")).toBe(31)
+    expect(daysOfBar("D:2026:296")).toBe(1)
   })
 
   it("the period sum exists only when every bar carries the difference", () => {
-    expect(periodBalance([{produced: 100, balance: 0}, {produced: 100, balance: 20}]))
-      .toEqual({difference: 20, produced: 200})
-    expect(periodBalance([{produced: 100, balance: 20}, {produced: 5}])).toBeUndefined()
+    expect(periodBalance([{balance: 0, days: 7}, {balance: 20, days: 7}])).toEqual({difference: 20, days: 14})
+    expect(periodBalance([{balance: 20, days: 7}, {days: 7}])).toBeUndefined()
     expect(periodBalance([])).toBeUndefined()
+  })
+
+  it("the curve value is rounded to 3 decimals, without a negative zero", () => {
+    expect(Object.is(roundKwh(-0.0004), 0)).toBe(true)
+    expect(roundKwh(-7.8504)).toBe(-7.85)
   })
 
   it("period bars carry it, but not when the report has no surplus", () => {
     const data = transformData([row("W:2026:40", 100, 60, 40), row("W:2026:41", 100, 50, 30), row("W:2026:42", 5, 5)], n => n)
     expect(data.map(d => d.balance)).toEqual([0, 20, undefined])
+    expect(transformData([{...row("W:2026:40", 5, 5), unused: null as any}], n => n)[0].balance).toBeUndefined()
   })
 
   it("the period view shows the sum over the bars", () => {

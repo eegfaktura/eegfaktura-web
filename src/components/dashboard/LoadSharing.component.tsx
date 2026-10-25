@@ -126,7 +126,7 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
           <div style={{fontSize: "24px"}}>Lastverlauf</div>
           <div style={{fontSize: "14px"}}>Zeitraum: {periodDisplayString(selectedPeriod)}</div>
           {balance && (
-            <div style={{fontSize: "12px"}}><BalanceValue difference={balance.difference} produced={balance.produced}/></div>
+            <div style={{fontSize: "12px"}}><BalanceValue difference={balance.difference} days={balance.days}/></div>
           )}
         </div>
         <div style={{display: "flex", flexFlow: "column", height: "100%", margin: "16px"}}>
@@ -149,7 +149,7 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
               <Line yAxisId="right" type="monotone" name="Einspeiser" dataKey="cntProd" stroke="#456035FF" />
               {balance &&
                 <Line yAxisId="left" type="monotone" name="Bilanzdifferenz" dataKey="balance" stroke={BALANCE_LINE_COLOR}
-                      strokeDasharray="5 3"/>}
+                      strokeDasharray="5 3" dot={false}/>}
             </ComposedChart>
             </ResponsiveContainer>
           </div>

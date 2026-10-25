@@ -5,13 +5,12 @@ import {Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContain
 import {ActiveTenant} from "../../models/eeg.model";
 import {useDayReport} from "./DayView.component";
 import {DayBounds, DayReportState, daySums, formatDay, hasEnergy, shiftDay, toHours} from "./DayView.functions";
-import {BALANCE_LINE_COLOR, balanceOf} from "./Balance.functions";
+import {BALANCE_LINE_COLOR, balanceOf, formatKwh as kwh, roundKwh} from "./Balance.functions";
 import BalanceValue from "./BalanceValue.component";
 
 import "./eeg-card.scss"
 
 const formatKwh = (value: unknown) => Number(value).toFixed(3) + " kWh"
-const kwh = (v: number) => `${v.toLocaleString("de-AT", {minimumFractionDigits: 3, maximumFractionDigits: 3})} kWh`
 
 // A card in day mode ("Tag" chosen in its period popover): its own day, arrows and gear.
 export interface DayChartProps {
@@ -48,7 +47,7 @@ const DayCard: FC<DayChartProps & { title: string, state: DayReportState, childr
             <div style={{fontSize: "12px"}}>
               Produktion {kwh(sums.produced)} · Verbrauch {kwh(sums.consumed)} · Eigendeckung {kwh(sums.distributed)} ·
               Überschuss {kwh(sums.unused)} ·{" "}
-              <BalanceValue difference={balanceOf(sums)} produced={sums.produced}/>
+              <BalanceValue difference={balanceOf(sums)} days={1}/>
             </div>
           )}
         </div>
@@ -89,7 +88,7 @@ const DayState: FC<{ state: DayReportState, onRetry: () => void, children: React
 // hide the Produktion line.
 export const DayLoadCurveChart: FC<DayChartProps> = (props) => {
   const {state, reload} = useDayReport(props.tenant, props.day)
-  const data = useMemo(() => state.status === "ok" ? state.quarters.map(q => ({...q, balance: balanceOf(q)})) : [], [state])
+  const data = useMemo(() => state.status === "ok" ? state.quarters.map(q => ({...q, balance: roundKwh(balanceOf(q))})) : [], [state])
   return (
     <DayCard {...props} title="Lastverlauf" state={state}>
       <DayState state={state} onRetry={reload}>
