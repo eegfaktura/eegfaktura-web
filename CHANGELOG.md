@@ -12,6 +12,12 @@ this changelog highlights the changes relevant for overview and operations.
 - **Member list filter "Aktive"** (wish from pilot). The filter next to "Periode" also offers "Aktive": members with
   at least one active metering point, showing only their active metering points (status, not the period), like
   "Inaktive" for inactive ones.
+- **Dashboard: period in the upper cards** (user feedback). "Übersicht EEG" and "Übersicht Stromproduktion und
+  Verteilung" show "Zeitraum: …" of the selected period, like the load curve and day curve cards; the footnote names
+  the previous period ("*) vorherige Periode: Okt-Dez 2025"). The member counts are marked "(Stand heute)": they
+  count all members by their current state, not by the period. Metering points and tariffs count the members of
+  the period, each metering point with its current tariff (unchanged). A late answer for the previous period of an
+  earlier selection no longer overwrites the values of the current one.
 
 ### Changed
 - **Dashboard period popover: day picker without arrows** (user feedback on pilot). The row "Tag" only has the date
