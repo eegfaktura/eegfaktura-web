@@ -46,16 +46,21 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
 
   useEffect(() => {
     if (tenant && activePeriod) {
+      // a late answer for an earlier selection must not show up under the footnote of the current one
+      let stale = false
       const prePeriod = getPreviousPeriod(activePeriod)
       Api.energyService.fetchSummary(tenant, prePeriod.year, prePeriod.segment, prePeriod.type).then((r) => {
+        if (stale) return
         setPreConsumedEnergy(r.consumed)
         setPreDistributedEnergy(r.distributed)
         setPreProducedEnergy(r.produced)
       }).catch(() => {
+        if (stale) return
         setPreConsumedEnergy(0)
         setPreDistributedEnergy(0)
         setPreProducedEnergy(0)
       })
+      return () => { stale = true }
     }
   }, [activePeriod]);
 
