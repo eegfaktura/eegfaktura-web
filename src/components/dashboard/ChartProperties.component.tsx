@@ -1,19 +1,16 @@
 import React, {FC, useId, useState} from "react";
 import {
-  IonButton,
   IonCheckbox,
   IonCol,
   IonContent,
   IonDatetime,
   IonDatetimeButton,
   IonGrid,
-  IonIcon,
   IonModal,
   IonRow,
   IonSelect,
   IonSelectOption
 } from "@ionic/react";
-import {chevronBack, chevronForward} from "ionicons/icons";
 
 import "./ChartProperty.popup.scss"
 import {generatePeriodOptions, transformPeriodFromSegment} from "../../util/PeriodHelper.functions";
@@ -22,7 +19,7 @@ import moment from "moment";
 import {dateToDayOfYear, dayOfYearToDate, periodDisplayString, splitCpPeriod, toLocalISODate} from "../../util/Helper.util";
 import {ReportType, SelectedPeriod} from "../../models/energy.model";
 import cn from "classnames";
-import {clampDay, DayBounds, shiftDay} from "./DayView.functions";
+import {clampDay, DayBounds} from "./DayView.functions";
 
 interface ChartPropertiesProps {
   selectedPeriod: SelectedPeriod;
@@ -158,19 +155,10 @@ const ChartProperties:FC<ChartPropertiesProps> = ({selectedPeriod, periods, onDi
               <IonCheckbox labelPlacement="end" checked={isSelected('D')} onIonChange={() => onDay(dayRange, toLocalISODate(selectedDay(dayRange)))}>Tag</IonCheckbox>
             </IonCol>
             <IonCol>
-              {/* same day picker as the meter chart (participantPane/MeterChartNavbar.component.tsx) */}
+              {/* date chip of the meter chart (participantPane/MeterChartNavbar.component.tsx), without arrows here:
+                  stepping day by day happens with the arrows of the card in day mode (DayCharts) */}
               <div style={{display: "flex", alignItems: "center", gap: "4px"}}>
-                <IonButton fill="clear" size="small" aria-label="Vorheriger Tag"
-                           disabled={selectedDay(dayRange).getTime() <= dayRange.first.getTime()}
-                           onClick={() => onDay(dayRange, toLocalISODate(shiftDay(selectedDay(dayRange), -1, dayRange)))}>
-                  <IonIcon slot="icon-only" icon={chevronBack}/>
-                </IonButton>
                 <IonDatetimeButton datetime={datetimeId} style={{flexShrink: 0}}/>
-                <IonButton fill="clear" size="small" aria-label="Nächster Tag"
-                           disabled={selectedDay(dayRange).getTime() >= dayRange.last.getTime()}
-                           onClick={() => onDay(dayRange, toLocalISODate(shiftDay(selectedDay(dayRange), 1, dayRange)))}>
-                  <IonIcon slot="icon-only" icon={chevronForward}/>
-                </IonButton>
                 <IonModal keepContentsMounted={true}>
                   <IonDatetime
                     id={datetimeId}

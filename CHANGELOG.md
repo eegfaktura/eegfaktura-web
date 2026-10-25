@@ -8,6 +8,10 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **Dashboard period popover: day picker without arrows** (user feedback on pilot). The row "Tag" only has the date
+  chip to choose a day; stepping day by day stays with the arrows of the card in day mode.
+
 ## [1.9.0] – 2026-10-25
 
 ### Added
