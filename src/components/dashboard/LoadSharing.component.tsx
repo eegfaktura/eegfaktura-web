@@ -11,7 +11,7 @@ import {settings} from "ionicons/icons";
 import './LoadCurveReport.component.scss'
 import {calcXAxisNameV2} from "./LoadCurveReport.functions";
 import {LoadSharingData, transformData} from "./dashboard.functions";
-import {BALANCE_LINE_COLOR, periodBalance} from "./Balance.functions";
+import {periodBalance} from "./Balance.functions";
 import BalanceValue from "./BalanceValue.component";
 import {DayBounds, dayToPeriod, periodToDay} from "./DayView.functions";
 import {DayLoadCurveChart} from "./DayCharts.component";
@@ -147,9 +147,6 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
               {/*</BarChart>*/}
               <Line yAxisId="right" type="monotone" name="Abnehmer" dataKey="cntCons" stroke="#ff7300" />
               <Line yAxisId="right" type="monotone" name="Einspeiser" dataKey="cntProd" stroke="#456035FF" />
-              {balance &&
-                <Line yAxisId="left" type="monotone" name="Bilanzdifferenz" dataKey="balance" stroke={BALANCE_LINE_COLOR}
-                      strokeDasharray="5 3" dot={false}/>}
             </ComposedChart>
             </ResponsiveContainer>
           </div>

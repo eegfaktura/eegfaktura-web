@@ -5,7 +5,7 @@ import {Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContain
 import {ActiveTenant} from "../../models/eeg.model";
 import {useDayReport} from "./DayView.component";
 import {DayBounds, DayReportState, daySums, formatDay, hasEnergy, shiftDay, toHours} from "./DayView.functions";
-import {BALANCE_LINE_COLOR, balanceOf, formatKwh as kwh, roundKwh} from "./Balance.functions";
+import {balanceOf, formatKwh as kwh} from "./Balance.functions";
 import BalanceValue from "./BalanceValue.component";
 
 import "./eeg-card.scss"
@@ -88,7 +88,7 @@ const DayState: FC<{ state: DayReportState, onRetry: () => void, children: React
 // hide the Produktion line.
 export const DayLoadCurveChart: FC<DayChartProps> = (props) => {
   const {state, reload} = useDayReport(props.tenant, props.day)
-  const data = useMemo(() => state.status === "ok" ? state.quarters.map(q => ({...q, balance: roundKwh(balanceOf(q))})) : [], [state])
+  const data = state.status === "ok" ? state.quarters : []
   return (
     <DayCard {...props} title="Lastverlauf" state={state}>
       <DayState state={state} onRetry={reload}>
@@ -102,8 +102,6 @@ export const DayLoadCurveChart: FC<DayChartProps> = (props) => {
             <Line name="Verbrauch" type="monotone" dataKey="consumed" stroke="#8884d8" dot={false} strokeWidth={2}/>
             <Line name="Eigendeckung" type="monotone" dataKey="distributed" stroke="#82ca9d" dot={false} strokeWidth={2}/>
             <Line name="Produktion" type="monotone" dataKey="produced" stroke="#2B6860" dot={false} strokeWidth={2}/>
-            <Line name="Bilanzdifferenz" type="monotone" dataKey="balance" stroke={BALANCE_LINE_COLOR} dot={false} strokeWidth={2}
-                  strokeDasharray="5 3"/>
           </LineChart>
         </ResponsiveContainer>
       </DayState>

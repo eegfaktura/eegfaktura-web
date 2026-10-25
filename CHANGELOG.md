@@ -14,13 +14,12 @@ this changelog highlights the changes relevant for overview and operations.
   "Inaktive" for inactive ones.
 - **Dashboard load curve: "Bilanzdifferenz"** (platform#220). Production − self-coverage (Eigendeckung) − surplus
   (Überschuss); with complete energy data it is 0 (checked on pilot data, also for one EEG with multiple
-  participation; a check on production data is open, platform#220). A
-  difference shows that energy data of single metering points is missing (negative: probably producers, positive:
-  probably consumers; explained behind a help icon, also on touch). Day view: in the sums line (also of the
-  "Tagesverlauf" card, which shares it) and as a dashed curve per quarter hour. Period views (month, quarter, …): per
-  bar as a dashed line and as the sum under "Zeitraum". Rounding reads "Bilanz ausgeglichen": below 0.01 kWh per day of the
-  period. For the newest days a difference is normal until all data has arrived.
-  energystore already sent the surplus; no backend change.
+  participation; a check on production data is open, platform#220). A difference shows that energy data of single
+  metering points is missing (negative: probably producers, positive: probably consumers; explained behind a help
+  icon, also on touch). Shown as a number only, no extra curve (decision 25.10.2026): in the sums line of the day
+  view (also of the "Tagesverlauf" card, which shares it) and under "Zeitraum" in the period views (month, quarter,
+  …). Rounding reads "Bilanz ausgeglichen": below 0.01 kWh per day of the period. For the newest days a difference
+  is normal until all data has arrived. energystore already sent the surplus; no backend change.
 
 ### Changed
 - **Dashboard period popover: day picker without arrows** (user feedback on pilot). The row "Tag" only has the date

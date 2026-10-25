@@ -1,7 +1,7 @@
 import React from "react";
 import {describe, expect, it, vi} from "vitest";
 import {render, screen} from "@testing-library/react";
-import {balanceOf, balanceText, daysOfBar, isBalanced, periodBalance, roundKwh} from "../../../components/dashboard/Balance.functions";
+import {balanceOf, balanceText, daysOfBar, isBalanced, periodBalance} from "../../../components/dashboard/Balance.functions";
 import {transformData} from "../../../components/dashboard/dashboard.functions";
 import {DayLoadCurveChart} from "../../../components/dashboard/DayCharts.component";
 import LoadSharingComponent from "../../../components/dashboard/LoadSharing.component";
@@ -44,11 +44,6 @@ describe("Bilanzdifferenz", () => {
     expect(periodBalance([{balance: 0, days: 7}, {balance: 20, days: 7}])).toEqual({difference: 20, days: 14})
     expect(periodBalance([{balance: 20, days: 7}, {days: 7}])).toBeUndefined()
     expect(periodBalance([])).toBeUndefined()
-  })
-
-  it("the curve value is rounded to 3 decimals, without a negative zero", () => {
-    expect(Object.is(roundKwh(-0.0004), 0)).toBe(true)
-    expect(roundKwh(-7.8504)).toBe(-7.85)
   })
 
   it("period bars carry it, but not when the report has no surplus", () => {
