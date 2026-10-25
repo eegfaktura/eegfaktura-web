@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.9.0] – 2026-10-25
+
 ### Added
 - **Member list sorting can be chosen** (platform#214). A sort icon next to the filter ("Periode / Ausstehende")
   offers "Standard" (the order so far, the default), "Nachname", "Vorname", "Mitgliedsnummer" and "Mitglied seit"
