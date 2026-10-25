@@ -8,6 +8,11 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Security
+- **vitest 3.2.6 → 4.1.11** (dev dependency, published 2026-08-18). Removes `tinypool` 1.1.1 and its two critical
+  advisories (prototype pollution in worker options, GHSA alerts of 2026-10-17); vitest 4 no longer uses tinypool.
+  Test tooling only, the delivered app is unchanged. All 62 test files / 378 tests pass unchanged.
+
 ### Added
 - **Member list sorting can be chosen** (platform#214). A sort icon next to the filter ("Periode / Ausstehende")
   offers "Standard" (the order so far, the default), "Nachname", "Vorname", "Mitgliedsnummer" and "Mitglied seit"
