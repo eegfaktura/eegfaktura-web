@@ -37,6 +37,17 @@ describe("createNewPeriod 'D'", () => {
     expect(isoDay(p)).toBe("2025-12-30")
   })
 
+  it("a second 'D' after the jump into the earlier year stays on the last day with data", () => {
+    vi.setSystemTime(new Date(2026, 0, 2, 12, 0))   // 02.01.2026, data until 30.12.2025
+    const p = createNewPeriod({type: "YM", year: 2025, segment: 12}, 'D', 1, range("01.03.2023 00:00:00", "30.12.2025 23:45:00"))
+    expect(isoDay(p)).toBe("2025-12-30")
+  })
+
+  it("a metering point whose data ended in the selected earlier year opens on its last day with data", () => {
+    expect(isoDay(createNewPeriod({type: "Y", year: 2024, segment: 0}, 'D', 1,
+      range("01.01.2023 00:00:00", "15.06.2024 23:45:00")))).toBe("2024-06-15")
+  })
+
   it("a period of an earlier year still opens on the start of the range", () => {
     expect(isoDay(createNewPeriod({type: "Y", year: 2025, segment: 0}, 'D', 1,
       range("01.03.2025 00:00:00", "21.10.2026 23:45:00")))).toBe("2025-03-01")

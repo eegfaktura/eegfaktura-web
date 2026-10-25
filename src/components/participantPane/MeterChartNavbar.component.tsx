@@ -19,10 +19,10 @@ interface MeterChartNavbarComponentProps {
 
 const MeterChartNavbarComponent: FC<MeterChartNavbarComponentProps> = ({selectedMeterId, activePeriod, onSelectionChanged}) => {
   const periods = useAppSelector(periodsSelector);
-  // the data range of this metering point: the day view opens on its last day with data
+  // the day view ("D") opens on this metering point's last day with data; the begin stays the community's.
+  // Without a known end of this metering point it opens on yesterday, as before.
   const meterMeta = useAppSelector(useMemo(() => selectMeta(selectedMeterId), [selectedMeterId]))
-  const meterPeriod: CpPeriodType | undefined = meterMeta && meterMeta.period_end
-    ? {begin: meterMeta.period_start, end: meterMeta.period_end} : undefined
+  const dayPeriod: CpPeriodType = {begin: periods.begin, end: meterMeta?.period_end ?? ""}
 
   const [selectedPeriod, setSelectedPeriod] = useState<SelectedPeriod|undefined>(activePeriod)
   const [lastSegmentIdx, setLastSegmentIdx] = useState<number>(1)
@@ -99,7 +99,7 @@ const MeterChartNavbarComponent: FC<MeterChartNavbarComponentProps> = ({selected
           {(["Y", "YH", "YQ", "YM", "D"] as ('YH' | "YQ" | 'YM' | 'Y' | 'D')[]).map((p, i) => (
             <IonButton
               key={i}
-              onClick={() => onChangePeriod(createNewPeriod(selectedPeriod, p, lastSegmentIdx, p === 'D' && meterPeriod ? meterPeriod : periods))}
+              onClick={() => onChangePeriod(createNewPeriod(selectedPeriod, p, lastSegmentIdx, p === 'D' ? dayPeriod : periods))}
               shape="round"
               size="small"
               className="stateButton"

@@ -171,17 +171,17 @@ export const createNewPeriod = (period: SelectedPeriod | undefined, target: Repo
   if (period !== undefined) {
     switch (target) {
       case 'D': {
-        // Current period: default to yesterday, not today — today's 15-minute
-        // data is still incomplete, so open on the last fully-recorded day.
-        // If the data ends earlier (cpPeriod.end, energy data usually arrives a
-        // few days late), open on that last day with data instead.
-        const yesterday = new Date()
-        yesterday.setDate(yesterday.getDate() - 1)
-        if (yesterday.getFullYear() === period.year) {
-          const last = lastDataDay(cpPeriod)
-          const day = last && last.getTime() < new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate()).getTime()
-            ? last : yesterday
-          return {type: target, year: day.getFullYear(), segment: dateToDayOfYear(day)}
+        // Default to yesterday, not today — today's 15-minute data is still
+        // incomplete, so open on the last fully-recorded day. If the data ends
+        // earlier (cpPeriod.end, energy data usually arrives a few days late),
+        // open on that last day with data instead, also when it lies in the
+        // selected earlier year.
+        const now = new Date()
+        const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
+        const end = lastDataDay(cpPeriod)
+        const last = end && end.getTime() < yesterday.getTime() ? end : yesterday
+        if (yesterday.getFullYear() === period.year || last.getFullYear() === period.year) {
+          return {type: target, year: last.getFullYear(), segment: dateToDayOfYear(last)}
         }
         // A non-current billing period: open on its first day (period start),
         // not 1 January.
