@@ -8,6 +8,35 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **„E-Mail-Texte“: EEG admins edit the member mails themselves** (konzept-mail-texte-editierbar.md). New page
+  `/page/mailtemplates`, reached from the card „E-Mail-Texte“ on the EEG page, left column below „Netzbetreiber“ (admins only). One list of the four mails —
+  `consent-request`, `zp-active`, `zp-inactive` from backend (`/eeg/mailtemplates`) and `billing-document` from
+  billing (`/api/mailtemplates`) — with status „Standard“ / „Angepasst“ and a hint when the default text changed.
+  Editor (TipTap 3.32.0) for subject and text: bold, italic, underline, H1–H3, lists, https/mailto links,
+  alignment, images; placeholders from the mail's catalogue as non-editable chips (`<span|div data-ph>`; blocks
+  only at the top level), in the subject as plain text `{key}` (inline keys only, within 200 characters).
+  Images are reduced to at most 1200 px width in the browser before the upload and stored as `mailfile:{id}`
+  (UUID, or the built-in `mailfile:eegfaktura-logo` of the default texts). Uploads are drafts until saved: the
+  images and the PDF (sent as `attachmentFileId`) are listed as draft/saved with remove. Hint when a hand-made
+  template still applies (`legacyTemplateActive`). Preview in a sandboxed iframe, test mail to the own login or
+  to the community address, preview and test mail with the chosen PDF (`attachmentFileId`; for the unchanged default of a mail without
+  stored version with `useDefault`, so they show a hand-made template that still applies), save with version check (409 → „wurde inzwischen geändert“, reload; 400 messages
+  shown), reset to the default. With unsaved edits, the back button, the menu links, browser back, a reload and
+  closing the tab ask first (switching the community in the menu does not ask yet). While a save runs, subject, text,
+  toolbar, placeholder pickers, the file chips and the "Standard übernehmen" / reload buttons are locked, so nothing
+  done meanwhile is replaced by the saved version. A community switch clears the list's load errors of the previous
+  community, and a save of its editor that ends after the switch does not reload the old list into the new one. The page and the editor load as a separate chunk (~138 kB gzip), the main
+  bundle grows by ~2 kB gzip. Needs backend and billing with the mail template API.
+- Messages: the backend's notices about customised mails (`Mail` with message code `I_MAIL_TEMPLATE_DEFAULT` — new
+  default available — or `E_MAIL_TEMPLATE` — default sent instead) show their own text under „E-Mail-Texte:“
+  instead of „Mailversand fehlgeschlagen“; failed mails in the same notification are still listed.
+
+### Fixed
+- Member registration (ca18, 1.10.0): after leaving the form with unsaved input through the menu, every later
+  page change asked again ("Die Eingaben sind noch nicht gespeichert"), because the hidden page stays mounted. The
+  question now only comes while the form is shown.
+
 ## [1.10.1] – 2026-10-25
 
 ### Fixed

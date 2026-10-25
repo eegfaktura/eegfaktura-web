@@ -4,6 +4,7 @@ import {FileService} from "./file.service";
 import {ParticipantService} from "./participant.service";
 import {TariffService} from "./tariff.service";
 import {AuthService} from "./auth.service";
+import {MailTemplateService} from "./mailtemplate.service";
 
 interface IApi {
   eegService: EegService
@@ -12,6 +13,7 @@ interface IApi {
   participantService: ParticipantService
   tariffService: TariffService
   authService: AuthService
+  mailTemplateService: MailTemplateService
 }
 
 export const Api = {} as IApi

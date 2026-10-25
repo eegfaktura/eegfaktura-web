@@ -10,6 +10,7 @@ vi.mock("../pages/Participants", () => page("Mitgliederseite"))
 vi.mock("../pages/Rates.page", () => page("Tarifseite"))
 vi.mock("../pages/Eeg.page", () => page("EEG-Seite"))
 vi.mock("../pages/Dashboard.page", () => page("Dashboardseite"))
+vi.mock("../pages/MailTemplates.page", () => page("E-Mail-Texte-Seite"))
 vi.mock("../pages/ParticipantRegister.page", () => page("Registrierseite"))
 vi.mock("../pages/Profiles.page", () => page("Profilseite"))
 vi.mock("../pages/Processes.page", () => page("Prozessseite"))
@@ -43,7 +44,8 @@ describe("IonRouterOutlet routes (261024-ca12)", () => {
     await go("/page/participants")
     expect(await screen.findByText("Mitgliederseite")).toBeTruthy()
     for (const [path, name] of [["/page/eeg", "EEG-Seite"], ["/page/addParticipant", "Registrierseite"],
-      ["/page/dashboard", "Dashboardseite"], ["/page/rates", "Tarifseite"], ["/page/notifications", "Nachrichtenseite"]]) {
+      ["/page/dashboard", "Dashboardseite"], ["/page/rates", "Tarifseite"], ["/page/notifications", "Nachrichtenseite"],
+      ["/page/mailtemplates", "E-Mail-Texte-Seite"]]) {
       await go(path)
       expect(await screen.findByText(name)).toBeTruthy()
       expect(screen.queryByText("Diese Seite gibt es nicht.")).toBeNull()
