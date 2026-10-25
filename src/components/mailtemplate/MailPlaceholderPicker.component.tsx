@@ -8,16 +8,17 @@ interface MailPlaceholderPickerProps {
   target: "subject" | "body"
   placeholders: MailPlaceholder[]
   onPick: (ph: MailPlaceholder) => void
+  disabled?: boolean
 }
 
 // The caller remounts the picker (key) after each insert, so the same placeholder can be chosen again.
-const MailPlaceholderPicker: FC<MailPlaceholderPickerProps> = ({target, placeholders, onPick}) => {
+const MailPlaceholderPicker: FC<MailPlaceholderPickerProps> = ({target, placeholders, onPick, disabled}) => {
   const {t} = useLocale("common")
   const label = t(target === "subject" ? "mailtemplates.placeholder_insert_subject" : "mailtemplates.placeholder_insert")
   const options = target === "subject" ? placeholders.filter(p => !p.block) : placeholders
   return (
     <IonSelect interface="popover" data-testid={`${target}-placeholder`} placeholder={label} value={null}
-               aria-label={label}
+               aria-label={label} disabled={disabled}
                onIonChange={e => {
                  const ph = options.find(p => p.key === e.detail.value)
                  if (ph) onPick(ph)

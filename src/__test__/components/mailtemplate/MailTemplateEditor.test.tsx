@@ -325,6 +325,31 @@ describe("MailTemplateEditor unsaved changes", () => {
   })
 })
 
+describe("MailTemplateEditor while saving", () => {
+  it("locks subject, text and toolbar until the answer and unlocks them after it", async () => {
+    let answer: (tpl: MailTemplate) => void = () => undefined
+    const saveTemplate = vi.fn(() => new Promise<MailTemplate>(r => { answer = r }))
+    Api.mailTemplateService = {
+      fetchTemplate: vi.fn().mockResolvedValue(template(3, "Alt")), saveTemplate, fetchFile: vi.fn(),
+    } as unknown as typeof Api.mailTemplateService
+    const {container} = render(<MailTemplateEditor tenant="RC100100" source="backend" templateKey="zp-active"
+                                                   onClose={vi.fn()} onChanged={vi.fn()}/>)
+    await waitFor(() => expect(screen.getByText("Zählpunkt aktiv")).toBeTruthy())
+    const text = () => container.querySelector(".ProseMirror")!.getAttribute("contenteditable")
+    const subject = () => (container.querySelector("ion-input") as any).disabled
+    const bold = () => (container.querySelector("ion-button[title=\"Fett\"]") as any).disabled
+    expect([text(), subject(), bold()]).toEqual(["true", false, false])
+
+    fireEvent.click(screen.getByText("Speichern"))
+    await waitFor(() => expect(saveTemplate).toHaveBeenCalled())
+    expect([text(), subject(), bold()]).toEqual(["false", true, true])
+
+    await act(async () => answer(template(4, "Neu")))
+    await waitFor(() => expect(text()).toBe("true"))
+    expect([subject(), bold()]).toEqual([false, false])
+  })
+})
+
 describe("createBlobUrlCache", () => {
   it("caches fetched images but not failed fetches", async () => {
     const createObjectURL = vi.fn(() => "blob:1")

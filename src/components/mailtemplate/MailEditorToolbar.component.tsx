@@ -9,9 +9,11 @@ interface ToolbarProps {
   onLink: () => void
   onImage: () => void
   imageDisabled: boolean
+  // all buttons, e.g. while a save runs
+  disabled?: boolean
 }
 
-const MailEditorToolbar: FC<ToolbarProps> = ({editor, onLink, onImage, imageDisabled}) => {
+const MailEditorToolbar: FC<ToolbarProps> = ({editor, onLink, onImage, imageDisabled, disabled = false}) => {
   const {t} = useLocale("common")
   const state = useEditorState({
     editor,
@@ -31,9 +33,9 @@ const MailEditorToolbar: FC<ToolbarProps> = ({editor, onLink, onImage, imageDisa
     })
   })
   const chain = () => editor.chain().focus()
-  const button = (key: string, label: React.ReactNode, active: boolean, run: () => void, disabled = false) => (
+  const button = (key: string, label: React.ReactNode, active: boolean, run: () => void, off = false) => (
     <IonButton key={key} size="small" fill={active ? "solid" : "outline"} title={t(`mailtemplates.toolbar.${key}`)}
-               aria-label={t(`mailtemplates.toolbar.${key}`)} disabled={disabled} onClick={run}>{label}</IonButton>
+               aria-label={t(`mailtemplates.toolbar.${key}`)} disabled={disabled || off} onClick={run}>{label}</IonButton>
   )
   return (
     <div className="mail-editor-toolbar">

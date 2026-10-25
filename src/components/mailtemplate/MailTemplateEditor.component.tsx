@@ -66,6 +66,8 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
   const [removedIds, setRemovedIds] = useState<string[]>([])
   const [dirty, setDirty] = useState(false)
   const [busy, setBusy] = useState(false)
+  // subject, text and toolbar are locked while a save runs: the server copy replaces them afterwards
+  const [saving, setSaving] = useState(false)
   const [loadError, setLoadError] = useState<string>()
   const [conflict, setConflict] = useState(false)
   const [preview, setPreview] = useState<MailPreview>()
@@ -145,6 +147,8 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
   const onSave = () => run(async () => {
     if (!template) return
     setSaveErrors([])
+    setSaving(true)
+    editor?.setEditable(false, false)
     try {
       apply(await service.saveTemplate(source, tenant, templateKey, draft(), template.version))
       toast(t("mailtemplates.saved"), "success")
@@ -159,6 +163,9 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
         return
       }
       throw e
+    } finally {
+      editor?.setEditable(true, false)
+      setSaving(false)
     }
   })
 
@@ -379,21 +386,21 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
       <IonCard color="eeglight" className={template ? "" : "ion-hide"}>
         <div className="mail-editor-row">
           <IonInput ref={subjectInput} label={t("mailtemplates.subject")} labelPlacement="floating" fill="outline"
-                    maxlength={MAX_SUBJECT_CHARS} className="mail-subject"
+                    maxlength={MAX_SUBJECT_CHARS} className="mail-subject" disabled={saving}
                     value={subject} onIonInput={e => {
             setSubject(String(e.detail.value ?? ""));
             setDirty(true)
           }}/>
           {template && template.placeholders.some(p => !p.block) &&
-            <MailPlaceholderPicker key={`subject-${pickerRound}`} target="subject" placeholders={template.placeholders}
+            <MailPlaceholderPicker key={`subject-${pickerRound}`} target="subject" placeholders={template.placeholders} disabled={saving}
                                    onPick={ph => onInsertSubjectPlaceholder(ph.key)}/>}
         </div>
         <div className="mail-editor-row">
-          {editor && <MailEditorToolbar editor={editor} onLink={onLink}
+          {editor && <MailEditorToolbar editor={editor} onLink={onLink} disabled={saving}
                                         onImage={() => imageInput.current?.click()}
                                         imageDisabled={busy || !limits || images.length >= limits.maxImages}/>}
           {template && template.placeholders.length > 0 &&
-            <MailPlaceholderPicker key={`body-${pickerRound}`} target="body" placeholders={template.placeholders}
+            <MailPlaceholderPicker key={`body-${pickerRound}`} target="body" placeholders={template.placeholders} disabled={saving}
                                    onPick={onInsertPlaceholder}/>}
         </div>
         <EditorContent editor={editor} className="mail-editor"/>
