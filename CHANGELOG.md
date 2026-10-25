@@ -8,6 +8,13 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.10.1] – 2026-10-25
+
+### Fixed
+- **Dashboard crashed in 1.10.0** ("Etwas ist schiefgelaufen", `Cannot read properties of undefined (reading
+  'split')`): the hourly report of the "Tagesverlauf" card has no bar names (energystore IntraDay), and the new
+  Bilanzdifferenz read `name.split`. A missing name now counts as one day.
+
 ## [1.10.0] – 2026-10-25
 
 ### Added

@@ -22,8 +22,9 @@ export const isBalanced = (difference: number, days: number) =>
   Math.abs(difference) < BALANCE_TOLERANCE_KWH_PER_DAY * Math.max(1, days)
 
 // Days of a load-curve bar from its name ("D:..." day, "W:..." week, "M:..." month; upper bound for a month).
-export const daysOfBar = (name: string) => {
-  switch (name.split(':')[0]) {
+// The hourly report of the "Tagesverlauf" card has no names (energystore IntraDay): one day.
+export const daysOfBar = (name: string | undefined) => {
+  switch ((name ?? "").split(':')[0]) {
     case 'W': return 7
     case 'M': return 31
     default: return 1
