@@ -1,4 +1,4 @@
-import React, {FC, useEffect, useMemo} from "react";
+import React, {FC, useCallback, useEffect, useMemo, useRef} from "react";
 import {
   IonButton,
   IonButtons,
@@ -28,6 +28,7 @@ import {Metering} from "../models/meteringpoint.model";
 import {RouteComponentProps} from "react-router";
 import {useTenant} from "../store/hook/Eeg.provider";
 import moment from "moment/moment";
+import UnsavedChangesGuard from "../components/core/UnsavedChangesGuard.component";
 
 const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
 
@@ -84,7 +85,10 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
 
   const [toaster] = useIonToast()
   const formMethods = useForm<EegParticipant>({defaultValues: selectedParticipant, mode: "onBlur", reValidateMode: 'onChange'})
-  const {reset, handleSubmit, setValue, formState: {dirtyFields, isSubmitting}} = formMethods
+  const {reset, handleSubmit, setValue, formState: {dirtyFields, isDirty, isSubmitting}} = formMethods
+  // set right before the navigation after a successful save, so the leave guard does not ask (261024-ca18)
+  const saved = useRef(false)
+  const allowLeave = useCallback(() => saved.current, [])
   // const {append} = useFieldArray<EegParticipant>({control, name: 'meters'})
 
   // Async-Race: useForm({defaultValues}) erfasst die Nummer beim ersten Render,
@@ -101,6 +105,7 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
     dispatch(createParticipant({tenant, participant}))
       .unwrap()
       .then(() => {
+        saved.current = true
         reset()
         history.replace("/page/participants")
       })
@@ -154,6 +159,7 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
           </form>
         </FormProvider>
       </IonContent>
+      <UnsavedChangesGuard dirty={isDirty} allowLeave={allowLeave}/>
       <IonFooter>
         <IonToolbar className={"ion-padding-horizontal"}>
           <IonButton fill="clear" slot="start" routerLink="/page/participants" routerDirection="root">Zurück</IonButton>
