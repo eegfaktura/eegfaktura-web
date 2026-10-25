@@ -8,6 +8,11 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **Member list filter "Aktive"** (wish from pilot). The filter next to "Periode" also offers "Aktive": members with
+  at least one active metering point, showing only their active metering points (status, not the period), like
+  "Inaktive" for inactive ones.
+
 ### Changed
 - **Dashboard period popover: day picker without arrows** (user feedback on pilot). The row "Tag" only has the date
   chip to choose a day; stepping day by day stays with the arrows of the card in day mode.

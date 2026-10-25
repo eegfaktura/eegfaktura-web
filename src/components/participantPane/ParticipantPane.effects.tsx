@@ -4,6 +4,7 @@ import {filterMeters} from "./ParticipantPane.functions";
 import {hasOpenProblem} from "../../util/FilterHelper.unit";
 import moment from "moment";
 import {MemberSort, sortMembers} from "./participantSort";
+import {memberActivity} from "../../util/MemberActivity.util";
 
 interface SortParticipantProps {
   participants: EegParticipant[],
@@ -31,6 +32,11 @@ export const filterParticipant = (options: FilterParticipantProps) => {
     // the filtered views keep their order with the standard sort
     const sorted = (list: EegParticipant[]) => memberSort === 'standard' ? list : sortMembers(list, memberSort)
     switch (selectedFilter) {
+      case 'active':
+        // the same rule as the "Aktive" count of the dashboard
+        const sorted0 = participants.filter(p => memberActivity(p) === 'ACTIVE')
+          .map(p => ({...p, meters: p.meters.filter(m => m.status === "ACTIVE")}))
+        return filterMeters(sorted(sorted0), hideProducers, hideConsumers, false)
       case 'init':
         const sorted1 = participants
           .filter(p => p.meters.findIndex(meter => meter.status === 'INIT' || (meter.processState !== "ACTIVE" && meter.processState !== "INACTIVE")) >= 0)
