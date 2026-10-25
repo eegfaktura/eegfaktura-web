@@ -4,8 +4,8 @@ import {EegParticipant} from "../../../models/members.model";
 import {Metering} from "../../../models/meteringpoint.model";
 import {filterParticipant} from "../../../components/participantPane/ParticipantPane.effects";
 
-const meter = (id: string, status: string, direction = "CONSUMPTION") =>
-  ({meteringPoint: id, status, processState: status, direction} as Metering)
+const meter = (id: string, status: string, direction = "CONSUMPTION", processState = status) =>
+  ({meteringPoint: id, status, processState, direction} as Metering)
 
 const member = (id: string, meters: Metering[]) => ({id, status: "ACTIVE", meters} as EegParticipant)
 
@@ -20,15 +20,17 @@ describe("filterParticipant 'active'", () => {
     member("mixed", [meter("AT1", "ACTIVE"), meter("AT2", "INACTIVE"), meter("AT3", "NEW")]),
     member("left", [meter("AT4", "INACTIVE")]),
     member("producer", [meter("AT5", "ACTIVE", "GENERATION")]),
+    member("reRegistering", [meter("AT6", "INACTIVE", "CONSUMPTION", "PENDING")]),
+    member("activeRejected", [meter("AT7", "ACTIVE", "CONSUMPTION", "REJECTED")]),
   ]
 
   it("keeps members with an active metering point and shows only the active ones", () => {
     const result = run("active", list)
-    expect(result.map(p => p.id)).toEqual(["mixed", "producer"])
+    expect(result.map(p => p.id)).toEqual(["mixed", "producer", "activeRejected"])
     expect(result[0].meters.map(m => m.meteringPoint)).toEqual(["AT1"])
   })
 
   it("drops a member whose only active metering points are hidden producers", () => {
-    expect(run("active", list, true).map(p => p.id)).toEqual(["mixed"])
+    expect(run("active", list, true).map(p => p.id)).toEqual(["mixed", "activeRejected"])
   })
 })
