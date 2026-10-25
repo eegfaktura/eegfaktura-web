@@ -20,6 +20,11 @@ describe("createNewPeriod 'D'", () => {
     expect(isoDay(createNewPeriod(q4, 'D', 1, range("01.01.2026 00:00:00", "21.10.2026 23:45:00")))).toBe("2026-10-21")
   })
 
+  it("an end at 00:00:00 (exclusive end) belongs to the day before", () => {
+    expect(isoDay(createNewPeriod(q4, 'D', 1, range("01.01.2026 00:00:00", "22.10.2026 00:00:00")))).toBe("2026-10-21")
+    expect(isoDay(createNewPeriod(q4, 'D', 1, range("01.01.2026 00:00:00", "22.10.2026 00:15:00")))).toBe("2026-10-22")
+  })
+
   it("opens on yesterday when the data reaches yesterday or later", () => {
     expect(isoDay(createNewPeriod(q4, 'D', 1, range("01.01.2026 00:00:00", "24.10.2026 23:45:00")))).toBe("2026-10-24")
     expect(isoDay(createNewPeriod(q4, 'D', 1, range("01.01.2026 00:00:00", "25.10.2026 10:00:00")))).toBe("2026-10-24")

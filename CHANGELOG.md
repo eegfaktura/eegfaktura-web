@@ -18,6 +18,8 @@ this changelog highlights the changes relevant for overview and operations.
   which usually has no data yet; it now opens on the metering point's last day with energy data (end of its data
   range), at most yesterday, also in an earlier selected year. Without a known data end it stays yesterday. Gaps
   inside the range are not looked for.
+- **Dashboard: community data range without energy meta begins on today's date** (pre-existing error): it used the
+  weekday (e.g. "0.10.2026" on a Sunday) instead of the day of the month.
 - **Dashboard period popover: day picker without arrows** (user feedback on pilot). The row "Tag" only has the date
   chip to choose a day; stepping day by day stays with the arrows of the card in day mode.
 

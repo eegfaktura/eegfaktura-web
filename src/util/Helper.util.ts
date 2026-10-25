@@ -161,10 +161,13 @@ export const getPreviousPeriod = (period: SelectedPeriod) => {
 }
 
 // The last day with energy data of a range ("DD.MM.YYYY HH:mm:ss"), local 00:00; undefined if it has no end.
+// energystore stores the start of the last quarter hour (…23:45:00, day blocks); an end exactly at 00:00:00 (data
+// stored before the day blocks, exclusive end) belongs to the day before.
 const lastDataDay = (cpPeriod?: CpPeriodType): Date | undefined => {
   if (!cpPeriod || !cpPeriod.end) return undefined
-  const [day, month, year] = splitDate(cpPeriod.end)
-  return (day && month && year) ? new Date(year, month - 1, day) : undefined
+  const [day, month, year, hour, minute] = splitDate(cpPeriod.end)
+  if (!day || !month || !year) return undefined
+  return new Date(year, month - 1, hour === 0 && minute === 0 ? day - 1 : day)
 }
 
 export const createNewPeriod = (period: SelectedPeriod | undefined, target: ReportType, currentSegmentIdx: number, cpPeriod?: CpPeriodType) => {
