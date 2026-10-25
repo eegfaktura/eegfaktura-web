@@ -46,7 +46,7 @@ const Participants: FC = () => {
     if (selectedParticipant) {
       if (showAmount) {
         return (
-          <Suspense fallback = { <div> Invoicing loading ... </div> }>
+          <Suspense fallback = { <div> Abrechnung wird geladen … </div> }>
             <ParticipantInvoiceDetailsComponent />
           </Suspense>
         )

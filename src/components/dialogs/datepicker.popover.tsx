@@ -74,7 +74,7 @@ const DatepickerPopover: FC<{
       <IonInput style={{"--padding-start": "16px"}}
                 {...p}
                 label={"Zeitraum"}
-                placeholder="Enter text"
+                placeholder="Zeitraum wählen"
                 fill="outline"
                 labelPlacement={"floating"}
                 ref={ref}
