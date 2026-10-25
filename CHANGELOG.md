@@ -8,6 +8,11 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- Dependabot (Docker base images): no more major updates (legacy system, replaced by v3 in the medium term; majors
+  only for security reasons, decision 23.10.2026), patch and minor updates come in one weekly grouped PR, new versions
+  only after a 7-day cooldown. Security updates for the language ecosystems are unaffected.
+
 ### Fixed
 - **Dashboard "Übersicht Stromproduktion": "Verteilt" showed the total consumption** (pre-existing). The number next to
   "Verteilt" now is the energy distributed in the community (also for the previous period); the bar still shows
