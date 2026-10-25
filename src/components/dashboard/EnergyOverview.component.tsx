@@ -4,7 +4,7 @@ import {activeMeterEnergyArray, useAppSelector} from "../../store";
 import {PieSeriesType} from "../../pages/Dashboard.page";
 import {EegTariff} from "../../models/eeg.model";
 import {selectedPeriodSelector} from "../../store/energy";
-import {getPreviousPeriod} from "../../util/Helper.util";
+import {getPreviousPeriod, periodDisplayString} from "../../util/Helper.util";
 import {IonContent, IonIcon, IonPopover} from "@ionic/react";
 import {helpCircleOutline} from "ionicons/icons";
 import {Api} from "../../service";
@@ -94,7 +94,10 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
     <div className="peter" style={{display: "flex", flexFlow: "column", height: "100%", maxHeight: "100%"}}>
       <div className="peter"
            style={{display: "flex", flexFlow: "column", height: "100%", maxHeight: "100%", margin: "20px"}}>
-        <div style={{paddingBottom: "20px", fontSize: "20px"}}>Übersicht Stromproduktion und Verteilung</div>
+        <div style={{paddingBottom: "20px"}}>
+          <div style={{fontSize: "20px"}}>Übersicht Stromproduktion und Verteilung</div>
+          {activePeriod && <div style={{fontSize: "14px"}}>Zeitraum: {periodDisplayString(activePeriod)}</div>}
+        </div>
         <div
           style={{display: "flex", flexFlow: "column", height: "100%", margin: "0 20px", flex: "1", flexBasis: "50%"}}>
           <div style={{display: "flex", flex: "1", padding: "5px 16px", gap: "10px", alignItems: "center"}}>
@@ -164,7 +167,7 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
               </div>
             </div>
           </div>
-          <div style={{fontSize: "10px"}}>*) vorherige Periode</div>
+          <div style={{fontSize: "10px"}}>*) vorherige Periode{activePeriod ? `: ${periodDisplayString(getPreviousPeriod(activePeriod))}` : ""}</div>
         </div>
         <div style={{display: "flex", flexFlow: "column", height: "100%", margin: "8px", flex: "1", flexBasis: "30%"}}>
           <div style={{display: "flex", flexFlow: "column", height: "100%", background: "#EAE7D9", padding: "8px"}}>
