@@ -199,6 +199,9 @@ this changelog highlights the changes relevant for overview and operations.
   text and the other places already „Teilnahmefaktor“.
 
 ### Security
+- **vitest 3.2.6 → 4.1.11** (dev dependency, published 2026-08-18). Removes `tinypool` 1.1.1 and its two critical
+  advisories (prototype pollution in worker options, GHSA alerts of 2026-10-17); vitest 4 no longer uses tinypool.
+  Test tooling only, the delivered app is unchanged. All 62 test files / 378 tests pass unchanged.
 - `js-yaml` 3.14.1 → 3.15.2 (via xmlbuilder2) and 4.1.0 → 4.3.2 (build/lint tooling) through `pnpm.overrides`: GHSA-2883-xcg3-v3hh, GHSA-52cp-r559-cp3m, GHSA-5p4m-2wfm-xmqj (CVE-2026-59869, CVE-2026-84375) and two moderate advisories (platform#179).
 - `lodash` 4.17.21 → 4.18.1 (via recharts) through `pnpm.overrides`: GHSA-r5fr-rjxr-66jc (CVE-2026-4800, HIGH) and two moderate advisories (platform#179).
 - `vite` 6.4.3 → 6.4.4 (dev server/build): GHSA-587h-7wmj-h5pm (HIGH) and four moderate/low dev-server advisories; replaces Dependabot PR #173. 6.4.5 follows once it is 7 days old (platform#179).
