@@ -1,6 +1,6 @@
 import React, {FC, useEffect, useState} from "react";
 import {ReportNamedData, SelectedPeriod} from "../../models/energy.model";
-import {Bar, ComposedChart, Legend, Line, ResponsiveContainer, Text, Tooltip, XAxis, YAxis} from "recharts";
+import {Bar, ComposedChart, LabelList, Legend, Line, ResponsiveContainer, Text, Tooltip, XAxis, YAxis} from "recharts";
 import {periodDisplayString} from "../../util/Helper.util";
 import {IonIcon, IonSpinner, useIonPopover} from "@ionic/react";
 import {ActiveTenant} from "../../models/eeg.model";
@@ -11,7 +11,7 @@ import {settings} from "ionicons/icons";
 import './LoadCurveReport.component.scss'
 import {calcXAxisNameV2} from "./LoadCurveReport.functions";
 import {LoadSharingData, transformData} from "./dashboard.functions";
-import {balanceTooltip, periodBalance, unbalancedBars} from "./Balance.functions";
+import {BALANCE_WARN_COLOR, balanceTooltip, periodBalance, unbalancedBars} from "./Balance.functions";
 import BalanceValue from "./BalanceValue.component";
 import {DayBounds, dayToPeriod, periodToDay} from "./DayView.functions";
 import {DayLoadCurveChart} from "./DayCharts.component";
@@ -99,13 +99,18 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
   })
 
   const balance = periodBalance(data)
-  // per bar: its axis label red and bold when the bar's Bilanzdifferenz is more than rounding
+  // per bar: its axis label red and bold, and a "!" above its production bar (recharts drops labels that do not fit,
+  // e.g. 31 days on a narrow card), when the bar's Bilanzdifferenz is more than rounding
   const unbalanced = unbalancedBars(data)
   const renderTick = (props: any) => {
     const marked = unbalanced.has(props.payload.value)
-    return <Text {...props} fill={marked ? "#F20A5E" : props.fill} fontWeight={marked ? "bold" : undefined}>
+    return <Text {...props} fill={marked ? BALANCE_WARN_COLOR : props.fill} fontWeight={marked ? "bold" : undefined}>
       {props.payload.value}</Text>
   }
+  const renderMark = (props: any) => unbalanced.has(props.value)
+    ? <text className="balance-mark" x={props.x + props.width / 2} y={props.y - 4} textAnchor="middle" fontSize={12}
+            fontWeight="bold" fill={BALANCE_WARN_COLOR}>!</text>
+    : null
 
   if (selectedPeriod?.type === 'D' && dayRange) {
     return <DayLoadCurveChart tenant={tenant} day={periodToDay(selectedPeriod, dayRange)} bounds={dayRange}
@@ -135,7 +140,7 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
           <div style={{fontSize: "24px"}}>Lastverlauf</div>
           <div style={{fontSize: "14px"}}>Zeitraum: {periodDisplayString(selectedPeriod)}</div>
           {balance && (
-            <div style={{fontSize: "12px"}}><BalanceValue difference={balance.difference} days={balance.days}/></div>
+            <div style={{fontSize: "12px"}}><BalanceValue difference={balance.difference} days={balance.days} marked={balance.marked}/></div>
           )}
         </div>
         <div style={{display: "flex", flexFlow: "column", height: "100%", margin: "16px"}}>
@@ -153,7 +158,9 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
                 {/*<Legend content={renderLegend} align={'center'} verticalAlign={'bottom'} height={40} fontSize={"4px"}/>*/}
                 <Bar yAxisId="left" name="EEG" stackId="a" dataKey="distributed" fill="#0AF2D3"/>
                 <Bar yAxisId="left" name="EVU" stackId="a" dataKey="consumed" fill="#F20A5E"/>
-                <Bar yAxisId="left" name="Erzeugt" dataKey="produced" fill="#2B6860"/>
+                <Bar yAxisId="left" name="Erzeugt" dataKey="produced" fill="#2B6860">
+                  {balance && <LabelList dataKey="name" content={renderMark}/>}
+                </Bar>
               {/*</BarChart>*/}
               <Line yAxisId="right" type="monotone" name="Abnehmer" dataKey="cntCons" stroke="#ff7300" />
               <Line yAxisId="right" type="monotone" name="Einspeiser" dataKey="cntProd" stroke="#456035FF" />

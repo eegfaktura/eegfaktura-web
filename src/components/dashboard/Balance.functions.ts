@@ -12,6 +12,9 @@ export const BALANCE_HELP = "Bilanzdifferenz = Produktion − Eigendeckung − �
   "fehlen Daten von Beziehern. Für die jüngsten Tage ist eine Differenz normal, solange noch nicht alle Daten " +
   "eingetroffen sind."
 
+// Warning colour of an unbalanced value, darker than the EVU red of the bars.
+export const BALANCE_WARN_COLOR = "#B71C1C"
+
 export const balanceOf = (v: { produced: number, distributed: number, unused: number }) =>
   v.produced - v.distributed - v.unused
 
@@ -30,8 +33,12 @@ export const daysOfBar = (name: string) => {
 export const formatKwh = (v: number) =>
   `${v.toLocaleString("de-AT", {minimumFractionDigits: 3, maximumFractionDigits: 3})} kWh`
 
-export const balanceText = (difference: number, days: number) =>
-  isBalanced(difference, days) ? "Bilanz ausgeglichen" : `Bilanzdifferenz ${formatKwh(difference)}`
+// marked: number of bars that do not balance; a period with such a bar is not "ausgeglichen", even if the signed
+// differences of its bars cancel out (missing producer data on one day, missing consumer data on another).
+export const balanceText = (difference: number, days: number, marked = 0) =>
+  isBalanced(difference, days) && marked === 0
+    ? "Bilanz ausgeglichen"
+    : `Bilanzdifferenz ${formatKwh(difference)}${marked > 0 ? ` (${marked} Balken auffällig)` : ""}`
 
 // Bars whose difference is more than rounding, by their axis name (marked red under the bar).
 export const unbalancedBars = (bars: { name: string, balance?: number, days?: number }[]) =>
@@ -41,8 +48,10 @@ export const unbalancedBars = (bars: { name: string, balance?: number, days?: nu
 export const balanceTooltip = (difference: number, days: number) =>
   isBalanced(difference, days) ? "ausgeglichen" : formatKwh(difference)
 
-// The period sum, only when every bar carries the difference (a report without surplus shows nothing, not a part).
-export const periodBalance = (bars: { balance?: number, days?: number }[]) =>
+// The period sum, only when every bar carries the difference (a report without surplus shows nothing, not a part),
+// with the number of bars that do not balance.
+export const periodBalance = (bars: { name: string, balance?: number, days?: number }[]) =>
   bars.length > 0 && bars.every(b => b.balance !== undefined)
-    ? {difference: bars.reduce((s, b) => s + b.balance!, 0), days: bars.reduce((s, b) => s + (b.days ?? 1), 0)}
+    ? {difference: bars.reduce((s, b) => s + b.balance!, 0), days: bars.reduce((s, b) => s + (b.days ?? 1), 0),
+       marked: unbalancedBars(bars).size}
     : undefined
