@@ -6,7 +6,8 @@ import {eegSelector} from "../store/eeg";
 import {useLocale} from "../store/hook/useLocale";
 import {Api} from "../service";
 import {MailTemplateListItem, MailTemplateSource} from "../models/mailtemplate.model";
-import MailTemplateEditor, {statusText} from "../components/mailtemplate/MailTemplateEditor.component";
+import MailTemplateEditor from "../components/mailtemplate/MailTemplateEditor.component";
+import {statusText} from "../components/mailtemplate/mailTemplate.util";
 
 import "./Eeg.page.scss"
 

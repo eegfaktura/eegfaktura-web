@@ -1,7 +1,8 @@
 import {describe, expect, it, vi} from "vitest";
 import {fireEvent, render, screen, waitFor} from "@testing-library/react";
 import "../../../util/I18n";
-import MailTemplateEditor, {createBlobUrlCache, insertAtCursor} from "../../../components/mailtemplate/MailTemplateEditor.component";
+import MailTemplateEditor from "../../../components/mailtemplate/MailTemplateEditor.component";
+import {createBlobUrlCache, insertAtCursor} from "../../../components/mailtemplate/mailTemplate.util";
 import {Api} from "../../../service";
 import {MailTemplateError} from "../../../service/mailtemplate.service";
 import {MailTemplate} from "../../../models/mailtemplate.model";
