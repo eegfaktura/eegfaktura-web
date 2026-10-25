@@ -20,7 +20,7 @@ const {selectAll: selectAllParticipants, selectById: selectParticipantById} = pa
 
 const nowTimeString = () => {
  const now = new Date()
- return `${now.getDay()}.${now.getMonth()+1}.${now.getFullYear()}`
+ return `${now.getDate()}.${now.getMonth()+1}.${now.getFullYear()}`
 }
 
 const featureStateSelector = (state: { [featureKey]: EnergyEntitieState }) => state[featureKey];

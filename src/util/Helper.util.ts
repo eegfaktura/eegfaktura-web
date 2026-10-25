@@ -160,16 +160,31 @@ export const getPreviousPeriod = (period: SelectedPeriod) => {
   return prePeriod
 }
 
+// The last day with energy data of a range ("DD.MM.YYYY HH:mm:ss"), local 00:00; undefined if it has no end.
+// energystore stores the start of the last quarter hour (…23:45:00, day blocks); an end exactly at 00:00:00 (data
+// stored before the day blocks, exclusive end) belongs to the day before.
+const lastDataDay = (cpPeriod?: CpPeriodType): Date | undefined => {
+  if (!cpPeriod || !cpPeriod.end) return undefined
+  const [day, month, year, hour, minute] = splitDate(cpPeriod.end)
+  if (!day || !month || !year) return undefined
+  return new Date(year, month - 1, hour === 0 && minute === 0 ? day - 1 : day)
+}
+
 export const createNewPeriod = (period: SelectedPeriod | undefined, target: ReportType, currentSegmentIdx: number, cpPeriod?: CpPeriodType) => {
   if (period !== undefined) {
     switch (target) {
       case 'D': {
-        // Current period: default to yesterday, not today — today's 15-minute
-        // data is still incomplete, so open on the last fully-recorded day.
-        const yesterday = new Date()
-        yesterday.setDate(yesterday.getDate() - 1)
-        if (yesterday.getFullYear() === period.year) {
-          return {type: target, year: period.year, segment: dateToDayOfYear(yesterday)}
+        // Default to yesterday, not today — today's 15-minute data is still
+        // incomplete, so open on the last fully-recorded day. If the data ends
+        // earlier (cpPeriod.end, energy data usually arrives a few days late),
+        // open on that last day with data instead, also when it lies in the
+        // selected earlier year.
+        const now = new Date()
+        const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
+        const end = lastDataDay(cpPeriod)
+        const last = end && end.getTime() < yesterday.getTime() ? end : yesterday
+        if (yesterday.getFullYear() === period.year || last.getFullYear() === period.year) {
+          return {type: target, year: last.getFullYear(), segment: dateToDayOfYear(last)}
         }
         // A non-current billing period: open on its first day (period start),
         // not 1 January.
