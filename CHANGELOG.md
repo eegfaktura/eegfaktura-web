@@ -18,6 +18,17 @@ this changelog highlights the changes relevant for overview and operations.
   count all members by their current state, not by the period. Metering points and tariffs count the members of
   the period, each metering point with its current tariff (unchanged). A late answer for the previous period of an
   earlier selection no longer overwrites the values of the current one.
+- **Dashboard load curve: "Bilanzdifferenz"** (platform#220). Production − self-coverage (Eigendeckung) − surplus
+  (Überschuss); with complete energy data it is 0 (checked on pilot data, also for one EEG with multiple
+  participation; a check on production data is open, platform#220). A difference shows that energy data of single
+  metering points is missing (negative: probably producers, positive: probably consumers; explained behind a help
+  icon, also on touch). Shown as a number only, no extra curve (decision 25.10.2026): in the sums line of the day
+  view (also of the "Tagesverlauf" card, which shares it) and under "Zeitraum" in the period views (month, quarter,
+  …). Per bar (a day in the month view, a week or month in longer views): its axis label turns red and bold and a
+  "!" appears above the bar when the bar does not balance; the tooltip shows the value. The period sum reads
+  "ausgeglichen" only when no bar is marked (gaps of opposite sign can cancel out in the sum). Rounding reads "Bilanz
+  ausgeglichen": below 0.01 kWh per day of the period. For the newest days a difference is normal until all data
+  has arrived. energystore already sent the surplus; no backend change.
 
 ### Changed
 - **Metering point chart: the day view opens on the last day with data** (wish Harald). "D" opened on yesterday,

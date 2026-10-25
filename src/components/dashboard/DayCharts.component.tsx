@@ -5,11 +5,12 @@ import {Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContain
 import {ActiveTenant} from "../../models/eeg.model";
 import {useDayReport} from "./DayView.component";
 import {DayBounds, DayReportState, daySums, formatDay, hasEnergy, shiftDay, toHours} from "./DayView.functions";
+import {balanceOf, formatKwh as kwh} from "./Balance.functions";
+import BalanceValue from "./BalanceValue.component";
 
 import "./eeg-card.scss"
 
 const formatKwh = (value: unknown) => Number(value).toFixed(3) + " kWh"
-const kwh = (v: number) => `${v.toLocaleString("de-AT", {minimumFractionDigits: 3, maximumFractionDigits: 3})} kWh`
 
 // A card in day mode ("Tag" chosen in its period popover): its own day, arrows and gear.
 export interface DayChartProps {
@@ -45,7 +46,8 @@ const DayCard: FC<DayChartProps & { title: string, state: DayReportState, childr
           {sums && (
             <div style={{fontSize: "12px"}}>
               Produktion {kwh(sums.produced)} · Verbrauch {kwh(sums.consumed)} · Eigendeckung {kwh(sums.distributed)} ·
-              Überschuss {kwh(sums.unused)}
+              Überschuss {kwh(sums.unused)} ·{" "}
+              <BalanceValue difference={balanceOf(sums)} days={1}/>
             </div>
           )}
         </div>
