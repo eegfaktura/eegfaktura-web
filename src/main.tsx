@@ -13,6 +13,7 @@ import {OidcAuthProvider} from "./store/hook/AuthProvider";
 import {FileService} from "./service/file.service";
 import {ParticipantService} from "./service/participant.service";
 import {TariffService} from "./service/tariff.service";
+import {MailTemplateService} from "./service/mailtemplate.service";
 import {I18nextProvider} from "react-i18next";
 import i18n from "./util/I18n";
 
@@ -41,6 +42,7 @@ const initApiServices = async (config: AppConfig): Promise<AuthService> => {
   Api.fileService = new FileService(authService)
   Api.participantService = new ParticipantService(authService)
   Api.tariffService = new TariffService(authService)
+  Api.mailTemplateService = new MailTemplateService(authService)
 
   return authService
 }
