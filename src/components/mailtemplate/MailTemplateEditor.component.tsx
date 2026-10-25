@@ -38,6 +38,7 @@ import MailFileList from "./MailFileList.component";
 import MailPreviewCard from "./MailPreviewCard.component";
 import MailTemplateHeader from "./MailTemplateHeader.component";
 import MailPlaceholderPicker from "./MailPlaceholderPicker.component";
+import UnsavedChangesGuard from "../core/UnsavedChangesGuard.component";
 
 import "./MailTemplateEditor.component.scss"
 
@@ -366,6 +367,8 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
 
   return (
     <div className="mail-template-editor">
+      {/* the side menu, browser back, reload and closing the tab; the back button above asks itself */}
+      <UnsavedChangesGuard dirty={dirty}/>
       <IonButton fill="clear" onClick={onClickClose}>{t("mailtemplates.back")}</IonButton>
       {!template && <p>{t("mailtemplates.loading")}</p>}
       {template && <MailTemplateHeader template={template} source={source} busy={busy} loadError={loadError}

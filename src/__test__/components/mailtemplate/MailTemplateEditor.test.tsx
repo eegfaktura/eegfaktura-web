@@ -1,11 +1,17 @@
 import {describe, expect, it, vi} from "vitest";
-import {fireEvent, render, screen, waitFor} from "@testing-library/react";
+import {act, fireEvent, render as rtlRender, screen, waitFor} from "@testing-library/react";
+import {ReactElement} from "react";
+import {MemoryRouter, useHistory} from "react-router";
 import "../../../util/I18n";
 import MailTemplateEditor from "../../../components/mailtemplate/MailTemplateEditor.component";
 import {createBlobUrlCache, insertAtCursor} from "../../../components/mailtemplate/mailTemplate.util";
 import {Api} from "../../../service";
 import {MailTemplateError} from "../../../service/mailtemplate.service";
 import {MailTemplate} from "../../../models/mailtemplate.model";
+import {UNSAVED_CHANGES_MESSAGE} from "../../../components/core/UnsavedChangesGuard.component";
+
+// the editor holds an UnsavedChangesGuard (Prompt), which needs a router
+const render = (ui: ReactElement) => rtlRender(ui, {wrapper: MemoryRouter})
 
 const template = (version: number, subject: string): MailTemplate => ({
   key: "zp-active", name: "Zählpunkt aktiv", description: "wird verschickt, wenn …",
@@ -291,6 +297,31 @@ describe("MailTemplateEditor reload/reset errors", () => {
     fireEvent.click(banner.querySelector("ion-button")!)
     await new Promise(r => setTimeout(r, 0))
     expect(fetchTemplate).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe("MailTemplateEditor unsaved changes", () => {
+  it("asks before the side menu or browser back leaves unsaved edits", async () => {
+    Api.mailTemplateService = {
+      fetchTemplate: vi.fn().mockResolvedValue(template(3, "Alt")), fetchFile: vi.fn(),
+    } as unknown as typeof Api.mailTemplateService
+    const confirm = vi.fn((_message: string, callback: (ok: boolean) => void) => callback(false))
+    let history: ReturnType<typeof useHistory> | undefined
+    const Capture = () => { history = useHistory(); return null }
+    rtlRender(<MemoryRouter initialEntries={["/page/mailtemplates"]} getUserConfirmation={confirm}>
+      <Capture/>
+      <MailTemplateEditor tenant="RC100100" source="backend" templateKey="zp-active" onClose={vi.fn()} onChanged={vi.fn()}/>
+    </MemoryRouter>)
+    await waitFor(() => expect(screen.getByText("Zählpunkt aktiv")).toBeTruthy())
+    act(() => history!.push("/page/eeg"))
+    expect(confirm).not.toHaveBeenCalled()
+    act(() => history!.push("/page/mailtemplates"))
+
+    fireEvent(screen.getByText("Speichern").closest("ion-card")!.querySelector("ion-input")!,
+      new CustomEvent("ionInput", {detail: {value: "Geändert"}}))
+    act(() => history!.push("/page/eeg"))
+    expect(confirm).toHaveBeenCalledWith(UNSAVED_CHANGES_MESSAGE, expect.any(Function))
+    expect(history!.location.pathname).toBe("/page/mailtemplates")
   })
 })
 
