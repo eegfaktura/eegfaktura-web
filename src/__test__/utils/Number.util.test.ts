@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {parseDecimal} from "../../util/Number.util";
+import {formatDecimal2, parseDecimal} from "../../util/Number.util";
 
 describe("parseDecimal", () => {
   it("reads German notation with thousand separators", () => {
@@ -20,5 +20,17 @@ describe("parseDecimal", () => {
 
   it("returns NaN for no number", () => {
     expect(parseDecimal("abc")).toBeNaN()
+  })
+})
+
+describe("formatDecimal2", () => {
+  it("uses a decimal comma and two decimals", () => {
+    expect(formatDecimal2(12.345)).toBe("12,35")
+    expect(formatDecimal2(0.5)).toBe("0,50")
+    expect(formatDecimal2(3)).toBe("3,00")
+  })
+
+  it("never shows a negative zero", () => {
+    expect(formatDecimal2(-0)).toBe("0,00")
   })
 })

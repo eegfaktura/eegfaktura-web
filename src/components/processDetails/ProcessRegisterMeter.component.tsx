@@ -96,7 +96,7 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
       <IonInput
         {...p}
         label={t("button_labels.calendar")}
-        placeholder="Enter text"
+        placeholder="Datum wählen"
         fill="outline"
         labelPlacement={"floating"}
         ref={ref}

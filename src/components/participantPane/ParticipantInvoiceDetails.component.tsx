@@ -9,6 +9,7 @@ import MeterCardComponent from "./MeterCard.component";
 import {IonGrid, IonIcon, IonItem, IonLabel, IonRow} from "@ionic/react";
 import {eegSumSign} from "../../eegIcons";
 import {billTotal} from "./ParticipantPane.functions";
+import {formatDecimal2} from "../../util/Number.util";
 
 
 type RateModelGroup = Record<string, Record<string, number>>
@@ -55,7 +56,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
       <div key={tariff_id}>
         <RateCardComponent rate={tariff}/>
         <IonItem lines="none" fill={undefined} style={{"--background": "transparent"}}>
-          <IonLabel slot="end">{fee.toFixed(2)} €</IonLabel>
+          <IonLabel slot="end">{formatDecimal2(fee)} €</IonLabel>
         </IonItem>
       </div>
     )
@@ -90,7 +91,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
           }
         })}
         <IonItem lines="none" fill={undefined} style={{"--background": "transparent"}}>
-          <IonLabel slot="end">{sum.toFixed(2)} €</IonLabel>
+          <IonLabel slot="end">{formatDecimal2(sum)} €</IonLabel>
         </IonItem>
       </div>
     )
@@ -101,7 +102,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
       return (
         <div style={{display: "flex", justifyContent: "space-between", width: "100%"}}>
           <div style={{padding: "5px"}}>Mitgliedsbeitrag:</div>
-          <div style={{padding: "5px"}}>{fee.toFixed(2)} €</div>
+          <div style={{padding: "5px"}}>{formatDecimal2(fee)} €</div>
         </div>
       )
     }
@@ -113,7 +114,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
       return (
         <div style={{display: "flex", justifyContent: "space-between", width: "100%"}}>
           <div style={{padding: "5px"}}>Zählpunktgebühren:</div>
-          <div style={{padding: "5px"}}>{fee.toFixed(2)} €</div>
+          <div style={{padding: "5px"}}>{formatDecimal2(fee)} €</div>
         </div>
       )
     }
@@ -125,7 +126,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
       return (
         <div style={{display: "flex", justifyContent: "space-between", width: "100%"}}>
           <div style={{padding: "5px"}}>Energielieferung brutto:</div>
-          <div style={{padding: "5px"}}>{credit.toFixed(2)} €</div>
+          <div style={{padding: "5px"}}>{formatDecimal2(credit)} €</div>
         </div>
       )
     }
@@ -136,7 +137,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
       return (
         <div style={{display: "flex", justifyContent: "space-between", width: "100%"}}>
           <div style={{padding: "5px"}}>Energiebezug brutto:</div>
-          <div style={{padding: "5px"}}>{debit.toFixed(2)} €</div>
+          <div style={{padding: "5px"}}>{formatDecimal2(debit)} €</div>
         </div>
       )
     }
@@ -192,7 +193,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
                   {memberBill ? <>
                     <IonItem lines="none" mode="md" style={{"--min-height": "32px", fontSize: "14px"}}>
                       <IonIcon style={{marginTop: "5px", marginBottom: "5px"}} icon={eegSumSign} slot="start"></IonIcon>
-                      <span>{billTotal(memberBill).toFixed(2)}</span> €
+                      <span>{formatDecimal2(billTotal(memberBill))}</span> €
                     </IonItem></> : <></>}
                 </div>
               </IonRow>

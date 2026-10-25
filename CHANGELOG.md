@@ -62,6 +62,17 @@ this changelog highlights the changes relevant for overview and operations.
     accepted metering points still with L3 values ("Noch mit L3-Werten", with their days).
 
 ### Fixed
+- **UX defects from the v2 catalogue, round 3** (eegfaktura-dev 261024-ca18–ca25, user decision: only the cheap and
+  useful parts, the rest is left for the v2 web):
+  - ca25: the invoice details and the add-meter pane no longer remount on every render (React.lazy moved out of render).
+  - ca21: German texts instead of "Something went wrong", "Invoicing loading ...", "Enter text" and the validation
+    fallback "error message"; typo "Zählpunkt inaktiv am/seit".
+  - ca19: the messages page is titled "Nachrichten"; its menu entry shows for admins only (the call behind it is admin-only).
+  - ca23: `<html lang="de">` (only this part).
+  - ca20: amounts on screen in Austrian notation ("12,34 €"), dates as DD.MM.YYYY (meter inactive, notifications);
+    display only, SEPA files and exports are unchanged.
+  - ca18: the member registration asks before unsaved input is lost (leaving, reload, closing the tab); other forms
+    unchanged.
 - Metering-point detail pane showed the raw key `meter.status_text_WARN` for a meter in process state
   `WARN` (pre-existing). It now reads "Zählpunkt hat eine Warnung, bitte die Prozess History prüfen.";
   the backend defines `WARN` but no code path on its master sets it, so it only comes from older or

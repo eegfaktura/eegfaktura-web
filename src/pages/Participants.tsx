@@ -13,6 +13,13 @@ import {EegContext} from "../store/hook/Eeg.provider";
 import ParticipantDetailsPaneComponent from "../components/participantPane/ParticipantDetailsPane.component";
 import EegLoadStateComponent from "../components/EegLoadState.component";
 
+// declared once at module level: React.lazy inside render creates a new component type on every render,
+// which remounts the pane (flicker, lost local state) — 261024-ca25
+const ParticipantInvoiceDetailsComponent =
+  React.lazy(() => import("../components/participantPane/ParticipantInvoiceDetails.component"))
+const AddMeterPaneComponent =
+  React.lazy(() => import("../components/participantPane/AddMeterPane.component"))
+
 const Participants: FC = () => {
   // const periods = useAppSelector(periodsSelector);
   // const activePeriod = useAppSelector(selectedPeriodSelector);
@@ -38,16 +45,12 @@ const Participants: FC = () => {
   function showParticipantDetails() {
     if (selectedParticipant) {
       if (showAmount) {
-        const ParticipantInvoiceDetailsComponent =
-          React.lazy(() => import("../components/participantPane/ParticipantInvoiceDetails.component"))
         return (
-          <Suspense fallback = { <div> Invoicing loading ... </div> }>
+          <Suspense fallback = { <div> Abrechnung wird geladen … </div> }>
             <ParticipantInvoiceDetailsComponent />
           </Suspense>
         )
       } else if (showAddMeterPane) {
-        const AddMeterPaneComponent =
-          React.lazy(() => import("../components/participantPane/AddMeterPane.component"))
         return (
           <Suspense fallback = { <div></div> }>
             <AddMeterPaneComponent />

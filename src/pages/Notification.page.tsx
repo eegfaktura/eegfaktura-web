@@ -70,7 +70,7 @@ const NotificationPage: FC = () => {
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <div style={{paddingLeft: "16px"}}><h3>Messages</h3></div>
+          <div style={{paddingLeft: "16px"}}><h3>Nachrichten</h3></div>
         </IonToolbar>
       </IonHeader>
       <IonContent color="eeg">
