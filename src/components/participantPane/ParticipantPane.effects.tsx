@@ -31,6 +31,10 @@ export const filterParticipant = (options: FilterParticipantProps) => {
     // the filtered views keep their order with the standard sort
     const sorted = (list: EegParticipant[]) => memberSort === 'standard' ? list : sortMembers(list, memberSort)
     switch (selectedFilter) {
+      case 'active':
+        const sorted0 = participants.filter(p => p.meters.some(m => m.status === "ACTIVE"))
+          .map(p => ({...p, meters: p.meters.filter(m => m.status === "ACTIVE")}))
+        return filterMeters(sorted(sorted0), hideProducers, hideConsumers, false)
       case 'init':
         const sorted1 = participants
           .filter(p => p.meters.findIndex(meter => meter.status === 'INIT' || (meter.processState !== "ACTIVE" && meter.processState !== "INACTIVE")) >= 0)

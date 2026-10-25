@@ -246,6 +246,7 @@
   },
   "meterlist": {
     "filter_header": "Filteroptionen:",
+    "filter_text_active": "Aktive",
     "filter_text_rejected": "Abgewiesene",
     "filter_text_init": "Ausstehende",
     "filter_text_inactive": "Inaktive",

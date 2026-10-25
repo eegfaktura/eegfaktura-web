@@ -57,6 +57,7 @@ const FilterSegmentComponent: FC<FilterSegmentProps> = ({selectedOption, setSele
     filterAlert({
       header: t('meterlist.filter_header'),
       inputs: [
+        {label: t('meterlist.filter_text_active'), type: 'radio', value: 'active', checked: selectOption === 'active'},
         {label: t('meterlist.filter_text_init'), type: 'radio', value: 'init', checked: selectOption === 'init'},
         {label: t('meterlist.filter_text_inactive'), type: 'radio', value: 'inactive', checked: selectOption === 'inactive'},
         {label: t('meterlist.filter_text_rejected'), type: 'radio', value: 'rejected', checked: selectOption === 'rejected'},
