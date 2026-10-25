@@ -1,6 +1,6 @@
 import React, {FC, useEffect, useState} from "react";
 import {ReportNamedData, SelectedPeriod} from "../../models/energy.model";
-import {Bar, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
+import {Bar, ComposedChart, Legend, Line, ResponsiveContainer, Text, Tooltip, XAxis, YAxis} from "recharts";
 import {periodDisplayString} from "../../util/Helper.util";
 import {IonIcon, IonSpinner, useIonPopover} from "@ionic/react";
 import {ActiveTenant} from "../../models/eeg.model";
@@ -11,7 +11,7 @@ import {settings} from "ionicons/icons";
 import './LoadCurveReport.component.scss'
 import {calcXAxisNameV2} from "./LoadCurveReport.functions";
 import {LoadSharingData, transformData} from "./dashboard.functions";
-import {periodBalance} from "./Balance.functions";
+import {balanceTooltip, periodBalance, unbalancedBars} from "./Balance.functions";
 import BalanceValue from "./BalanceValue.component";
 import {DayBounds, dayToPeriod, periodToDay} from "./DayView.functions";
 import {DayLoadCurveChart} from "./DayCharts.component";
@@ -79,12 +79,14 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
     );
   }
 
-  const tooltipFormater = (arg: ValueType, name: NameType/*, props: Payload<ValueType, NameType>*/) => {
+  const tooltipFormater = (arg: ValueType, name: NameType, props: any) => {
     // console.log("tooltip", arg, name, props)
     switch (name) {
       case 'Abnehmer':
       case 'Einspeiser':
         return Number(arg)
+      case 'Bilanzdifferenz':
+        return balanceTooltip(Number(arg), props?.payload?.days ?? 1)
       default:
         return Number(arg).toFixed(3) + " kWh"
     }
@@ -97,6 +99,13 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
   })
 
   const balance = periodBalance(data)
+  // per bar: its axis label red and bold when the bar's Bilanzdifferenz is more than rounding
+  const unbalanced = unbalancedBars(data)
+  const renderTick = (props: any) => {
+    const marked = unbalanced.has(props.payload.value)
+    return <Text {...props} fill={marked ? "#F20A5E" : props.fill} fontWeight={marked ? "bold" : undefined}>
+      {props.payload.value}</Text>
+  }
 
   if (selectedPeriod?.type === 'D' && dayRange) {
     return <DayLoadCurveChart tenant={tenant} day={periodToDay(selectedPeriod, dayRange)} bounds={dayRange}
@@ -137,7 +146,8 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
               {/*<BarChart width={600} height={400} data={data} margin={{top: 15, right: 15, bottom: 5, left: 0}}>*/}
                 <YAxis yAxisId="left" orientation="left" fontSize={10} unit={" kWh"}/>
                 <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" fontSize={10} unit={""}/>
-                <XAxis dataKey="name" angle={315} tickMargin={5} fontSize={10}/>
+                <XAxis dataKey="name" angle={315} tickMargin={5} fontSize={10} tick={renderTick}/>
+                <YAxis yAxisId="balance" hide/>
                 <Tooltip formatter={tooltipFormater}/>
                 <Legend align={'center'} verticalAlign={'bottom'} height={20} wrapperStyle={{fontSize: "10px"}}/>
                 {/*<Legend content={renderLegend} align={'center'} verticalAlign={'bottom'} height={40} fontSize={"4px"}/>*/}
@@ -147,6 +157,10 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
               {/*</BarChart>*/}
               <Line yAxisId="right" type="monotone" name="Abnehmer" dataKey="cntCons" stroke="#ff7300" />
               <Line yAxisId="right" type="monotone" name="Einspeiser" dataKey="cntProd" stroke="#456035FF" />
+              {/* not drawn (decision 25.10.2026: number only); carries the value of each bar into the tooltip */}
+              {balance &&
+                <Line yAxisId="balance" name="Bilanzdifferenz" dataKey="balance" stroke="none" dot={false}
+                      activeDot={false} legendType="none" isAnimationActive={false}/>}
             </ComposedChart>
             </ResponsiveContainer>
           </div>

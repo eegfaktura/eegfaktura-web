@@ -1,7 +1,7 @@
 import React from "react";
 import {describe, expect, it, vi} from "vitest";
 import {render, screen} from "@testing-library/react";
-import {balanceOf, balanceText, daysOfBar, isBalanced, periodBalance} from "../../../components/dashboard/Balance.functions";
+import {balanceOf, balanceText, balanceTooltip, daysOfBar, isBalanced, periodBalance, unbalancedBars} from "../../../components/dashboard/Balance.functions";
 import {transformData} from "../../../components/dashboard/dashboard.functions";
 import {DayLoadCurveChart} from "../../../components/dashboard/DayCharts.component";
 import LoadSharingComponent from "../../../components/dashboard/LoadSharing.component";
@@ -44,6 +44,14 @@ describe("Bilanzdifferenz", () => {
     expect(periodBalance([{balance: 0, days: 7}, {balance: 20, days: 7}])).toEqual({difference: 20, days: 14})
     expect(periodBalance([{balance: 20, days: 7}, {days: 7}])).toBeUndefined()
     expect(periodBalance([])).toBeUndefined()
+  })
+
+  it("marks the bars whose difference is more than rounding, and formats the tooltip value", () => {
+    const bars = [{name: "21", balance: -7.85, days: 1}, {name: "22", balance: 0.004, days: 1}, {name: "23"},
+      {name: "40 KWo", balance: 0.05, days: 7}]
+    expect([...unbalancedBars(bars)]).toEqual(["21"])
+    expect(balanceTooltip(-7.85, 1)).toBe("-7,850 kWh")
+    expect(balanceTooltip(0.05, 7)).toBe("ausgeglichen")
   })
 
   it("period bars carry it, but not when the report has no surplus", () => {

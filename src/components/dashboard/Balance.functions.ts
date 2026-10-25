@@ -33,6 +33,14 @@ export const formatKwh = (v: number) =>
 export const balanceText = (difference: number, days: number) =>
   isBalanced(difference, days) ? "Bilanz ausgeglichen" : `Bilanzdifferenz ${formatKwh(difference)}`
 
+// Bars whose difference is more than rounding, by their axis name (marked red under the bar).
+export const unbalancedBars = (bars: { name: string, balance?: number, days?: number }[]) =>
+  new Set(bars.filter(b => b.balance !== undefined && !isBalanced(b.balance, b.days ?? 1)).map(b => b.name))
+
+// The value of one bar in the chart tooltip.
+export const balanceTooltip = (difference: number, days: number) =>
+  isBalanced(difference, days) ? "ausgeglichen" : formatKwh(difference)
+
 // The period sum, only when every bar carries the difference (a report without surplus shows nothing, not a part).
 export const periodBalance = (bars: { balance?: number, days?: number }[]) =>
   bars.length > 0 && bars.every(b => b.balance !== undefined)

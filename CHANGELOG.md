@@ -18,7 +18,8 @@ this changelog highlights the changes relevant for overview and operations.
   metering points is missing (negative: probably producers, positive: probably consumers; explained behind a help
   icon, also on touch). Shown as a number only, no extra curve (decision 25.10.2026): in the sums line of the day
   view (also of the "Tagesverlauf" card, which shares it) and under "Zeitraum" in the period views (month, quarter,
-  …). Rounding reads "Bilanz ausgeglichen": below 0.01 kWh per day of the period. For the newest days a difference
+  …). Per bar (a day in the month view, a week or month in longer views): its axis label turns red and bold when the
+  bar does not balance, and the tooltip shows the value. Rounding reads "Bilanz ausgeglichen": below 0.01 kWh per day of the period. For the newest days a difference
   is normal until all data has arrived. energystore already sent the surplus; no backend change.
 
 ### Changed
