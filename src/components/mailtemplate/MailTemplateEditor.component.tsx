@@ -408,7 +408,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
         <input ref={pdfInput} type="file" accept="application/pdf" hidden onChange={onPdfSelected}/>
 
         <MailFileList images={images} attachments={attachments} totalBytes={totalBytes} limits={limits}
-                      usedImageIds={usedImageIds} attachmentId={attachmentId} busy={busy || saving}
+                      usedImageIds={usedImageIds} attachmentId={attachmentId} busy={busy || saving} saving={saving}
                       onAttach={f => {
                         setAttachmentId(f.id)
                         setDirty(true)

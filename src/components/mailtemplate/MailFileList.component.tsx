@@ -13,6 +13,7 @@ interface MailFileListProps {
   usedImageIds: string[]
   attachmentId: string | null
   busy: boolean
+  saving?: boolean   // a save runs: the chips do nothing (the saved version replaces the state)
   onAttach: (f: MailFile) => void
   onRemove: (f: MailFile) => void
   onAddPdf: () => void
@@ -21,7 +22,7 @@ interface MailFileListProps {
 // The limits, the images and the PDF attachment of the mail, each file as a chip with its state.
 const MailFileList: FC<MailFileListProps> = ({
                                                images, attachments, totalBytes, limits, usedImageIds,
-                                               attachmentId, busy, onAttach, onRemove, onAddPdf
+                                               attachmentId, busy, saving, onAttach, onRemove, onAddPdf
                                              }) => {
   const {t} = useLocale("common")
 
@@ -39,9 +40,9 @@ const MailFileList: FC<MailFileListProps> = ({
         // e.g. a fresh draft of another session: attach it instead of deleting it
         <IonIcon icon={attachOutline} aria-label={t("mailtemplates.file_attach", {name: f.filename})}
                  title={t("mailtemplates.file_attach", {name: f.filename})}
-                 onClick={() => !busy && onAttach(f)}/>}
+                 onClick={() => !saving && onAttach(f)}/>}
       <IonIcon icon={closeCircleOutline} aria-label={t("mailtemplates.file_remove", {name: f.filename})}
-               onClick={() => !busy && onRemove(f)}/>
+               onClick={() => !saving && onRemove(f)}/>
     </IonChip>
   )
 
