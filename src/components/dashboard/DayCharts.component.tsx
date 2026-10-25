@@ -5,6 +5,7 @@ import {Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContain
 import {ActiveTenant} from "../../models/eeg.model";
 import {useDayReport} from "./DayView.component";
 import {DayBounds, DayReportState, daySums, formatDay, hasEnergy, shiftDay, toHours} from "./DayView.functions";
+import {BALANCE_HELP, balanceOf, balanceText, isBalanced} from "./Balance.functions";
 
 import "./eeg-card.scss"
 
@@ -45,7 +46,10 @@ const DayCard: FC<DayChartProps & { title: string, state: DayReportState, childr
           {sums && (
             <div style={{fontSize: "12px"}}>
               Produktion {kwh(sums.produced)} · Verbrauch {kwh(sums.consumed)} · Eigendeckung {kwh(sums.distributed)} ·
-              Überschuss {kwh(sums.unused)}
+              Überschuss {kwh(sums.unused)} ·{" "}
+              <span title={BALANCE_HELP} style={isBalanced(balanceOf(sums)) ? undefined : {color: "#F20A5E", fontWeight: "bold"}}>
+                {balanceText(balanceOf(sums))}
+              </span>
             </div>
           )}
         </div>
@@ -86,7 +90,7 @@ const DayState: FC<{ state: DayReportState, onRetry: () => void, children: React
 // hide the Produktion line.
 export const DayLoadCurveChart: FC<DayChartProps> = (props) => {
   const {state, reload} = useDayReport(props.tenant, props.day)
-  const data = state.status === "ok" ? state.quarters : []
+  const data = useMemo(() => state.status === "ok" ? state.quarters.map(q => ({...q, balance: balanceOf(q)})) : [], [state])
   return (
     <DayCard {...props} title="Lastverlauf" state={state}>
       <DayState state={state} onRetry={reload}>
@@ -100,6 +104,8 @@ export const DayLoadCurveChart: FC<DayChartProps> = (props) => {
             <Line name="Verbrauch" type="monotone" dataKey="consumed" stroke="#8884d8" dot={false} strokeWidth={2}/>
             <Line name="Eigendeckung" type="monotone" dataKey="distributed" stroke="#82ca9d" dot={false} strokeWidth={2}/>
             <Line name="Produktion" type="monotone" dataKey="produced" stroke="#2B6860" dot={false} strokeWidth={2}/>
+            <Line name="Bilanzdifferenz" type="monotone" dataKey="balance" stroke="#F20A5E" dot={false} strokeWidth={2}
+                  strokeDasharray="5 3"/>
           </LineChart>
         </ResponsiveContainer>
       </DayState>

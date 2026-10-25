@@ -1,4 +1,5 @@
 import {ReportNamedData} from "../../models/energy.model";
+import {balanceOf} from "./Balance.functions";
 
 export type LoadSharingData = {
   name: string
@@ -7,6 +8,7 @@ export type LoadSharingData = {
   distributed: number
   cntCons: number
   cntProd: number
+  balance?: number   // Bilanzdifferenz (Balance.functions.ts); undefined if the report has no surplus
 }
 
 
@@ -23,6 +25,7 @@ export const transformData = (data:ReportNamedData[] | undefined, nameFunc: (n:s
       distributed: r.distributed,
       cntCons: r.cntConsumer,
       cntProd: r.cntProducer,
+      balance: r.unused === undefined ? undefined : balanceOf({...r, unused: r.unused}),
     } as LoadSharingData
   })
 }

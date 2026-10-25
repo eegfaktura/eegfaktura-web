@@ -12,6 +12,13 @@ this changelog highlights the changes relevant for overview and operations.
 - **Member list filter "Aktive"** (wish from pilot). The filter next to "Periode" also offers "Aktive": members with
   at least one active metering point, showing only their active metering points (status, not the period), like
   "Inaktive" for inactive ones.
+- **Dashboard load curve: "Bilanzdifferenz"** (platform#220). Production − self-coverage (Eigendeckung) − surplus
+  (Überschuss); with complete energy data it is 0, also with multiple participation (checked on pilot data). A
+  difference shows that energy data of single metering points is missing (negative: probably producers, positive:
+  probably consumers; hover text). Day view: in the sums line (also of the "Tagesverlauf" card, which shares it) and
+  as a dashed curve per quarter hour. Period views (month, quarter, …): per bar as a dashed line and as the sum under
+  "Zeitraum". Below 0.01 kWh it reads "Bilanz ausgeglichen" (rounding). energystore already sent the surplus; no
+  backend change.
 
 ### Changed
 - **Dashboard period popover: day picker without arrows** (user feedback on pilot). The row "Tag" only has the date
