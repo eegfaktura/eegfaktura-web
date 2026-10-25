@@ -10,8 +10,15 @@ import {
 import {ParticipantContext} from "../store/hook/ParticipantProvider";
 import {MemberViewContext} from "../store/hook/MemberViewProvider";
 import {EegContext} from "../store/hook/Eeg.provider";
-import {useLocale} from "../store/hook/useLocale";
 import ParticipantDetailsPaneComponent from "../components/participantPane/ParticipantDetailsPane.component";
+import EegLoadStateComponent from "../components/EegLoadState.component";
+
+// declared once at module level: React.lazy inside render creates a new component type on every render,
+// which remounts the pane (flicker, lost local state) — 261024-ca25
+const ParticipantInvoiceDetailsComponent =
+  React.lazy(() => import("../components/participantPane/ParticipantInvoiceDetails.component"))
+const AddMeterPaneComponent =
+  React.lazy(() => import("../components/participantPane/AddMeterPane.component"))
 
 const Participants: FC = () => {
   // const periods = useAppSelector(periodsSelector);
@@ -21,7 +28,6 @@ const Participants: FC = () => {
   const selectedParticipant = useAppSelector(selectedParticipantSelector);
 
   // console.log("PARTICIPANTS:", participants, activePeriod)
-  const {t} = useLocale("error")
   const {
     billingEnabled,
     showAddMeterPane,
@@ -39,16 +45,12 @@ const Participants: FC = () => {
   function showParticipantDetails() {
     if (selectedParticipant) {
       if (showAmount) {
-        const ParticipantInvoiceDetailsComponent =
-          React.lazy(() => import("../components/participantPane/ParticipantInvoiceDetails.component"))
         return (
-          <Suspense fallback = { <div> Invoicing loading ... </div> }>
+          <Suspense fallback = { <div> Abrechnung wird geladen … </div> }>
             <ParticipantInvoiceDetailsComponent />
           </Suspense>
         )
       } else if (showAddMeterPane) {
-        const AddMeterPaneComponent =
-          React.lazy(() => import("../components/participantPane/AddMeterPane.component"))
         return (
           <Suspense fallback = { <div></div> }>
             <AddMeterPaneComponent />
@@ -70,12 +72,7 @@ const Participants: FC = () => {
     }
   }
   if (!eeg || !tenant) {
-    return (
-      <div className="full-screen-center">
-        <div>{t("intern.empty_eeg")}</div>
-        {/*<IonSpinner style={{margin: "auto", height: "48px", width: "48px", color: "black"}}/>*/}
-      </div>
-    )
+    return <EegLoadStateComponent/>
   }
 
   return (

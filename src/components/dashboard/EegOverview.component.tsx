@@ -3,7 +3,10 @@ import {EegParticipant} from "../../models/members.model";
 import {EegTariff} from "../../models/eeg.model";
 import {useAppSelector} from "../../store";
 import {allParticipantsSelector} from "../../store/participant";
+import {selectedPeriodSelector} from "../../store/energy";
+import {periodDisplayString} from "../../util/Helper.util";
 import {countMemberActivity} from "../../util/MemberActivity.util";
+import {countMeters} from "../../util/MeterCount.util";
 
 interface EegOverviewComponentProps {
   participants: EegParticipant[]
@@ -21,30 +24,14 @@ const EegOverviewComponent: FC<EegOverviewComponentProps> = ({participants, rate
   // platform#165: members counted by the current state of their metering points, over all members (not only the
   // ones of the selected period): active = at least one active metering point
   const allParticipants = useAppSelector(allParticipantsSelector)
+  const activePeriod = useAppSelector(selectedPeriodSelector)
   const members = useMemo(() => countMemberActivity(allParticipants), [allParticipants])
 
+  // platform#211: each metering point once, with the tariff of its current participation
   const [consumerCount, producerCount, tariffUsage] = useMemo(() => {
-      const defaultRateCount: Record<string, number> = Object.keys(rateMap).reduce((o, v) => {
-        return {...o, [v]: 0}
-      }, {} as Record<string, number>)
-
-      const s = participants.reduce((r, p) => {
-        p.meters.forEach(m => {
-          m.direction === 'CONSUMPTION' ? r.c += 1 : r.pp += 1
-          if (m.tariff_id) {
-            r.t[m.tariff_id] = r.t[m.tariff_id] + 1
-          }
-        })
-        return r
-      }, {c: 0, pp: 0, t: defaultRateCount})
-
-    return [s.c, s.pp, s.t]
-      // setConsumerCount(s.c)
-      // setProducerCount(s.pp)
-      // setParticipantCount(s.p)
-      // setTariffUssage(s.t)
-
-  }, [participants])
+    const s = countMeters(participants, Object.keys(rateMap))
+    return [s.consumers, s.producers, s.tariffs] as const
+  }, [participants, rateMap])
 
 
   // useEffect(() => {
@@ -109,7 +96,10 @@ const EegOverviewComponent: FC<EegOverviewComponentProps> = ({participants, rate
     <div className="peter" style={{display: "flex", flexFlow: "column", height: "100%", maxHeight: "100%"}}>
       <div className="peter"
            style={{display: "flex", flexFlow: "column", height: "100%", maxHeight: "100%", margin: "20px"}}>
-        <div style={{paddingBottom: "20px", fontSize: "20px"}}>Übersicht EEG</div>
+        <div style={{paddingBottom: "20px"}}>
+          <div style={{fontSize: "20px"}}>Übersicht EEG</div>
+          {activePeriod && <div style={{fontSize: "14px"}}>Zeitraum: {periodDisplayString(activePeriod)}</div>}
+        </div>
         <div
           style={{
             display: "flex",
@@ -122,7 +112,7 @@ const EegOverviewComponent: FC<EegOverviewComponentProps> = ({participants, rate
           }}>
           <div>
             <div style={{display: "flex", flex: "1", padding: "5px 16px", gap: "10px", alignItems: "center"}}>
-              <div style={{flexBasis: "50%"}}>Mitglieder</div>
+              <div style={{flexBasis: "50%"}}>Mitglieder <span style={{fontSize: "12px"}}>(Stand heute)</span></div>
               <div style={{display: "flex", flexFlow: "row", flex: "1"}}>
                 <div style={{display: "flex", flex: "1", padding: "0px 16px", gap: "10px", alignItems: "center"}}>
                   <span>{members.ACTIVE} aktive</span>

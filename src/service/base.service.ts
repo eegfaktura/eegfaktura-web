@@ -130,8 +130,15 @@ class EegBaseService {
           throw new Error(SESSION_EXPIRED)
         }
         default:
-          const errorBody = await response.json().catch(e => response.text())
-          if (isErrorResponse(errorBody)) {
+          // read the body once: a second read after a failed json() throws and hides the real error
+          const errorText = await response.text()
+          let errorBody: unknown = errorText
+          try { errorBody = JSON.parse(errorText) } catch { /* not JSON, keep the text */ }
+          if (isErrorResponse(errorBody) && typeof errorBody.error === "string") {
+            // energystore ({"error": "<text>"}) and Spring ({"error": "<reason phrase>", ...}): the text itself,
+            // not the code lookup, which made "E_undefined_undefined" of it
+            throw new Error(errorBody.error || response.statusText || "Error while fetching data!");
+          } else if (isErrorResponse(errorBody)) {
             throw new Error(determineErrTxt(new ErrorResponse(errorBody.error)));
           } else {
             if (!response || !response.statusText) {
@@ -142,14 +149,6 @@ class EegBaseService {
       }
     }
     return response;
-  }
-
-  protected async handleFilestoreResponse(response: Response) {
-    const data = await response.json()
-    if (data && data.data && data.data.deleteFile && data.data.deleteFile.message) {
-      throw new Error(data.data.deleteFile.message)
-    }
-    return data
   }
 
   protected async handleGQLResponse(response: Response) {

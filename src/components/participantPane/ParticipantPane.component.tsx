@@ -34,6 +34,7 @@ import "./ParticipantPane.component.scss";
 import SlideButtonComponent from "../SlideButton.component";
 import {store, useAppDispatch, useAppSelector} from "../../store";
 import {
+  BILLING_POLL_STOPPED,
   billingSelector,
   fetchEnergyBills,
   fetchParticipantAmounts,
@@ -84,7 +85,7 @@ import DatePickerCoreElement from "../core/elements/DatePickerCore.element";
 import {filterActiveMeter, filterActiveParticipantAndMeter,} from "../../util/FilterHelper.unit";
 import moment from "moment";
 import {Api} from "../../service";
-import {billTotal, buildAllocationMapFromSelected, filterSearchQuery} from "./ParticipantPane.functions";
+import {billTotal, buildAllocationMapFromSelected, downloadWithFeedback, filterSearchQuery} from "./ParticipantPane.functions";
 import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
 import {withOpenProblems} from "./ParticipantPane.functions";
 import {billingTotals, BillingTotals, salesTaxation} from "./BillingTotals.functions";
@@ -96,6 +97,7 @@ import BillingTotalsTable, {
   writeTotalsOpen
 } from "./BillingTotalsTable.component";
 import FilterSegmentComponent from "./FilterSegment.component";
+import {MemberSort, readMemberSort, writeMemberSort} from "./participantSort";
 import {VariableSizeList} from "react-window";
 
 import HeaderFavButtonComponent from "../core/HeaderFavButton.component";
@@ -159,6 +161,7 @@ const ParticipantPaneComponent: FC = () => {
   const [searchQuery, setSearchQuery] = useState<string | undefined>(undefined)
   const [searchActive, setSearchActive] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<string>('period');
+  const [memberSort, setMemberSort] = useState<MemberSort>(readMemberSort);
   const [downloadBillingId, setDownloadBillingId] = useState<string | undefined>();
 
   const [billingDownload, billingDownloadDismiss] = useIonModal(DownloadBillingDialog, {
@@ -273,6 +276,8 @@ const ParticipantPaneComponent: FC = () => {
     if (billingRunStatus === "RUNNING" && billingRun && billingRun.id && !billPolling) {
       dispatcher(resumeEnergyBillsPolling({tenant, billingRunId: billingRun.id}))
         .then((returnValue: any) => {
+          // stopped on a community switch or replaced by a newer poller: nothing to show (261024-ca13)
+          if (returnValue.payload === BILLING_POLL_STOPPED) return
           if (resumeEnergyBillsPolling.rejected.match(returnValue)) {
             errorToast((returnValue.payload as string) || "Abrechnung fehlgeschlagen.");
           }
@@ -295,7 +300,7 @@ const ParticipantPaneComponent: FC = () => {
 
   // list only: metering points with an open problem stay visible in every period, sorted with them
   const listParticipants = useMemo(() => withOpenProblems(participants, allParticipants), [participants, allParticipants])
-  const sortedParticipants1 = sortParticipants({participants: listParticipants, hideProducers, hideConsumers})
+  const sortedParticipants1 = sortParticipants({participants: listParticipants, hideProducers, hideConsumers, memberSort})
 
   const viewEntities = filterParticipant({
     selectedFilter,
@@ -303,8 +308,14 @@ const ParticipantPaneComponent: FC = () => {
     participants: allParticipants,
     hideConsumers,
     hideProducers,
-    hideMeter
+    hideMeter,
+    memberSort
   })
+
+  const onChangeMemberSort = (sort: MemberSort) => {
+    setMemberSort(sort)
+    writeMemberSort(sort)
+  }
 
   const infoToast = (message: string) => {
     toaster({
@@ -570,6 +581,7 @@ const ParticipantPaneComponent: FC = () => {
       // rejected mit Meldung (FAILED.errorSummary bzw. 400/503-Text) — kein
       // abstractText-String-Matching mehr.
       dispatcher(fetchEnergyBills({tenant, invoiceRequest})).then((returnValue: any) => {
+        if (returnValue.payload === BILLING_POLL_STOPPED) return
         if (fetchEnergyBills.rejected.match(returnValue)) {
           setPreviewValid(false);
           // env/billing: a failed asynchronous run shows as runStatus FAILED, the totals hide then (see `totals`)
@@ -612,20 +624,16 @@ const ParticipantPaneComponent: FC = () => {
     }
   }
 
+  const exportBusy = {show: (message: string) => loading({message}), hide: () => dismissLoading()}
+
   async function exportBillingExcel(billingRunId: string) {
-    try {
-      await Api.eegService.exportBillingExcel(tenant, billingRunId);
-    } catch (e) {
-      console.log(e as string);
-    }
+    await downloadWithFeedback(() => Api.eegService.exportBillingExcel(tenant, billingRunId),
+      exportBusy, errorToast, "Excel-Datei");
   }
 
   async function exportBillingArchive(billingRunId: string) {
-    try {
-      await Api.eegService.exportBillingArchive(tenant, billingRunId);
-    } catch (e) {
-      console.log(e as string);
-    }
+    await downloadWithFeedback(() => Api.eegService.exportBillingArchive(tenant, billingRunId),
+      exportBusy, errorToast, "ZIP-Datei");
   }
 
   // const viewPortRef = useRef<HTMLDivElement | null>(null);
@@ -782,7 +790,8 @@ const ParticipantPaneComponent: FC = () => {
               ></IonSearchbar>
             </IonToolbar>
           )}
-          <FilterSegmentComponent selectedOption={selectedFilter} setSelectedOption={setSelectedFilter}/>
+          <FilterSegmentComponent selectedOption={selectedFilter} setSelectedOption={setSelectedFilter}
+                                  memberSort={memberSort} setMemberSort={onChangeMemberSort}/>
           <ParticipantPeriodHeaderComponent
             activePeriod={activePeriod}
             selectAll={selectAll}

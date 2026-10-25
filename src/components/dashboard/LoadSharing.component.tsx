@@ -1,6 +1,6 @@
 import React, {FC, useEffect, useState} from "react";
 import {ReportNamedData, SelectedPeriod} from "../../models/energy.model";
-import {Bar, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
+import {Bar, ComposedChart, LabelList, Legend, Line, ResponsiveContainer, Text, Tooltip, XAxis, YAxis} from "recharts";
 import {periodDisplayString} from "../../util/Helper.util";
 import {IonIcon, IonSpinner, useIonPopover} from "@ionic/react";
 import {ActiveTenant} from "../../models/eeg.model";
@@ -10,7 +10,11 @@ import {settings} from "ionicons/icons";
 
 import './LoadCurveReport.component.scss'
 import {calcXAxisNameV2} from "./LoadCurveReport.functions";
-import {transformData} from "./dashboard.functions";
+import {LoadSharingData, transformData} from "./dashboard.functions";
+import {BALANCE_WARN_COLOR, balanceTooltip, periodBalance, unbalancedBars} from "./Balance.functions";
+import BalanceValue from "./BalanceValue.component";
+import {DayBounds, dayToPeriod, periodToDay} from "./DayView.functions";
+import {DayLoadCurveChart} from "./DayCharts.component";
 import {NameType, ValueType} from "recharts/types/component/DefaultTooltipContent";
 
 interface LoadSharingComponentProps {
@@ -18,19 +22,12 @@ interface LoadSharingComponentProps {
   report: ReportNamedData[] | undefined;
   activePeriod: SelectedPeriod;
   energyDate: { begin: string, end: string };
-}
-
-type LoadSharingData = {
-  name: string
-  consumed: number
-  produced: number
-  distributed: number
-  cntCons?: number
+  dayRange?: DayBounds
 }
 
 const EMPTY_LOAD_CURVE_DATA = {} as LoadSharingData
 
-const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, activePeriod, energyDate}) => {
+const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, activePeriod, energyDate, dayRange}) => {
 
   const [data, setData] = useState<LoadSharingData[]>([EMPTY_LOAD_CURVE_DATA] as LoadSharingData[])
   const [selectedPeriod, setSelectedPeriod] = useState<SelectedPeriod>(activePeriod)
@@ -47,10 +44,15 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
   const [properties, dismiss] = useIonPopover(ChartProperties, {
     periods: energyDate, //{begin: "01.01.2023 00:00:0000", end: moment().format("DD.MM.YYYY HH:mm:ss")},
     selectedPeriod: selectedPeriod,
+    dayRange: dayRange,
     onDismiss: (data: SelectedPeriod, role: string) => { dismiss(data, role)},
   });
 
   const onSelectionChanged = async (selectedPeriod: SelectedPeriod) => {
+    if (selectedPeriod?.type === 'D') {   // "Tag": only this card switches to the day view
+      setSelectedPeriod(selectedPeriod)
+      return
+    }
     if (selectedPeriod) {
       dismissLoading(true)
       Api.energyService.fetchLoadCurveReportV2(tenant, selectedPeriod).then((d) => {
@@ -77,15 +79,42 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
     );
   }
 
-  const tooltipFormater = (arg: ValueType, name: NameType/*, props: Payload<ValueType, NameType>*/) => {
+  const tooltipFormater = (arg: ValueType, name: NameType, props: any) => {
     // console.log("tooltip", arg, name, props)
     switch (name) {
       case 'Abnehmer':
       case 'Einspeiser':
         return Number(arg)
+      case 'Bilanzdifferenz':
+        return balanceTooltip(Number(arg), props?.payload?.days ?? 1)
       default:
         return Number(arg).toFixed(3) + " kWh"
     }
+  }
+
+  const openProperties = (e: any) => properties({
+    event: e,
+    onDidDismiss: (e: CustomEvent) => onSelectionChanged(e.detail.data),
+    cssClass: "property-popover"
+  })
+
+  const balance = periodBalance(data)
+  // per bar: its axis label red and bold, and a "!" above its production bar (recharts drops labels that do not fit,
+  // e.g. 31 days on a narrow card), when the bar's Bilanzdifferenz is more than rounding
+  const unbalanced = unbalancedBars(data)
+  const renderTick = (props: any) => {
+    const marked = unbalanced.has(props.payload.value)
+    return <Text {...props} fill={marked ? BALANCE_WARN_COLOR : props.fill} fontWeight={marked ? "bold" : undefined}>
+      {props.payload.value}</Text>
+  }
+  const renderMark = (props: any) => unbalanced.has(props.value)
+    ? <text className="balance-mark" x={props.x + props.width / 2} y={props.y - 4} textAnchor="middle" fontSize={12}
+            fontWeight="bold" fill={BALANCE_WARN_COLOR}>!</text>
+    : null
+
+  if (selectedPeriod?.type === 'D' && dayRange) {
+    return <DayLoadCurveChart tenant={tenant} day={periodToDay(selectedPeriod, dayRange)} bounds={dayRange}
+                         onDayChange={(d) => setSelectedPeriod(dayToPeriod(d))} onProperties={openProperties}/>
   }
 
   if (!selectedPeriod || loading) {
@@ -104,17 +133,15 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
         fontSize: "24px",
         cursor: "pointer"
       }}>
-        <IonIcon icon={settings} size="32px" color="primary" onClick={(e: any) =>
-          properties({
-            event: e,
-            onDidDismiss: (e: CustomEvent) => onSelectionChanged(e.detail.data),
-            cssClass: "property-popover"
-          })}></IonIcon>
+        <IonIcon icon={settings} size="32px" color="primary" onClick={openProperties}></IonIcon>
       </div>
       <div style={{display: "flex", flexFlow: "column", height: "100%"}}>
         <div style={{textAlign: "center", margin: "6px"}}>
           <div style={{fontSize: "24px"}}>Lastverlauf</div>
           <div style={{fontSize: "14px"}}>Zeitraum: {periodDisplayString(selectedPeriod)}</div>
+          {balance && (
+            <div style={{fontSize: "12px"}}><BalanceValue difference={balance.difference} days={balance.days} marked={balance.marked}/></div>
+          )}
         </div>
         <div style={{display: "flex", flexFlow: "column", height: "100%", margin: "16px"}}>
           <div className={"eeg-card-chart eeg-card-border"}
@@ -124,16 +151,23 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
               {/*<BarChart width={600} height={400} data={data} margin={{top: 15, right: 15, bottom: 5, left: 0}}>*/}
                 <YAxis yAxisId="left" orientation="left" fontSize={10} unit={" kWh"}/>
                 <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" fontSize={10} unit={""}/>
-                <XAxis dataKey="name" angle={315} tickMargin={5} fontSize={10}/>
+                <XAxis dataKey="name" angle={315} tickMargin={5} fontSize={10} tick={renderTick}/>
+                <YAxis yAxisId="balance" hide/>
                 <Tooltip formatter={tooltipFormater}/>
                 <Legend align={'center'} verticalAlign={'bottom'} height={20} wrapperStyle={{fontSize: "10px"}}/>
                 {/*<Legend content={renderLegend} align={'center'} verticalAlign={'bottom'} height={40} fontSize={"4px"}/>*/}
                 <Bar yAxisId="left" name="EEG" stackId="a" dataKey="distributed" fill="#0AF2D3"/>
                 <Bar yAxisId="left" name="EVU" stackId="a" dataKey="consumed" fill="#F20A5E"/>
-                <Bar yAxisId="left" name="Erzeugt" dataKey="produced" fill="#2B6860"/>
+                <Bar yAxisId="left" name="Erzeugt" dataKey="produced" fill="#2B6860">
+                  {balance && <LabelList dataKey="name" content={renderMark}/>}
+                </Bar>
               {/*</BarChart>*/}
               <Line yAxisId="right" type="monotone" name="Abnehmer" dataKey="cntCons" stroke="#ff7300" />
               <Line yAxisId="right" type="monotone" name="Einspeiser" dataKey="cntProd" stroke="#456035FF" />
+              {/* not drawn (decision 25.10.2026: number only); carries the value of each bar into the tooltip */}
+              {balance &&
+                <Line yAxisId="balance" name="Bilanzdifferenz" dataKey="balance" stroke="none" dot={false}
+                      activeDot={false} legendType="none" isAnimationActive={false}/>}
             </ComposedChart>
             </ResponsiveContainer>
           </div>

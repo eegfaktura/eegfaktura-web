@@ -15,6 +15,7 @@ import MemberNameComponent from "./MemberName.component";
 import {useAppSelector} from "../../store";
 import {selectBillById} from "../../store/billing";
 import {billTotal} from "./ParticipantPane.functions";
+import {formatDecimal2} from "../../util/Number.util";
 
 interface MemberProps {
   participant: EegParticipant;
@@ -49,7 +50,7 @@ const MemberComponent: FC<MemberProps> = ( {participant,
   const memberSum = () => {
     if (memberBill) {
       const sum = billTotal(memberBill);
-      return (Math.round(sum * 100) / 100).toFixed(2);
+      return formatDecimal2(Math.round(sum * 100) / 100);
     }
     return 0;
   }

@@ -169,11 +169,11 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
                    onChangePartial={_onChange}
         />
         <InputForm name={"partFact"} label={t("process.partFact.label")} control={control} isNumber={true}
-                   rules={{required:t("warnings.partition-factor_missing"), validate: validatePartFactor || "error message"}}
+                   rules={{required:t("warnings.partition-factor_missing"), validate: validatePartFactor || "Ungültiger Wert"}}
                    type="number" inputmode="numeric" onChangePartial={onChangePartFact} protectedControl={!isChangeable()} error={errors?.partFact}/>
         {allocationMode === 'STATIC' &&
         <InputForm name={"allocationFactor"} label={t("process.allocationFactor.label")} control={control} isNumber={true}
-                   rules={{required:t("warnings.allocation-factor_missing"), validate: validateAllocFactor || "error message"}}
+                   rules={{required:t("warnings.allocation-factor_missing"), validate: validateAllocFactor || "Ungültiger Wert"}}
                    type="number" inputmode="numeric" onChangePartial={_onChange} protectedControl={!isChangeable()} error={errors?.allocationFactor}/>
         }
         {area && area === 'BEG' && <>

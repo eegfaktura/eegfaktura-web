@@ -115,3 +115,21 @@ export const uploadActivationDocuments = (upload: (files: File[]) => Promise<unk
     () => undefined,
     (e) => `Nicht hochgeladen: ${e instanceof Error ? e.message : String(e)}. Die Dokumente können später im Bereich Verträge hochgeladen werden.`)
 }
+
+// A download with a busy overlay (no second click while it runs) and an error toast with the reason (261024-ca14).
+export const downloadWithFeedback = async (
+  download: () => Promise<unknown>,
+  busy: {show: (message: string) => Promise<unknown>, hide: () => Promise<unknown>},
+  failed: (message: string) => void,
+  what: string,
+) => {
+  await busy.show(`${what} wird erstellt ...`)
+  try {
+    await download()
+    await busy.hide()
+  } catch (e) {
+    await busy.hide()
+    const reason = e instanceof Error && e.message ? ` (${e.message})` : ""
+    failed(`Die ${what} konnte nicht erstellt werden.${reason}`)
+  }
+}

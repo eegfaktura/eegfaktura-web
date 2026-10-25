@@ -28,7 +28,204 @@ this changelog highlights the changes relevant for overview and operations.
   default available — or `E_MAIL_TEMPLATE` — default sent instead) show their own text under „E-Mail-Texte:“
   instead of „Mailversand fehlgeschlagen“; failed mails in the same notification are still listed.
 
+## [1.10.1] – 2026-10-25
+
 ### Fixed
+- **Dashboard crashed in 1.10.0** ("Etwas ist schiefgelaufen", `Cannot read properties of undefined (reading
+  'split')`): the hourly report of the "Tagesverlauf" card has no bar names (energystore IntraDay), and the new
+  Bilanzdifferenz read `name.split`. A missing name now counts as one day.
+
+## [1.10.0] – 2026-10-25
+
+### Added
+- **Member list filter "Aktive"** (wish from pilot). The filter next to "Periode" also offers "Aktive": members with
+  at least one active metering point, showing only their active metering points (status, not the period), like
+  "Inaktive" for inactive ones.
+- **Dashboard: period in the upper cards** (user feedback). "Übersicht EEG" and "Übersicht Stromproduktion und
+  Verteilung" show "Zeitraum: …" of the selected period, like the load curve and day curve cards; the footnote names
+  the previous period ("*) vorherige Periode: Okt-Dez 2025"). The member counts are marked "(Stand heute)": they
+  count all members by their current state, not by the period. Metering points and tariffs count the members of
+  the period, each metering point with its current tariff (unchanged). A late answer for the previous period of an
+  earlier selection no longer overwrites the values of the current one.
+- **Dashboard load curve: "Bilanzdifferenz"** (platform#220). Production − self-coverage (Eigendeckung) − surplus
+  (Überschuss); with complete energy data it is 0 (checked on pilot data, also for one EEG with multiple
+  participation; a check on production data is open, platform#220). A difference shows that energy data of single
+  metering points is missing (negative: probably producers, positive: probably consumers; explained behind a help
+  icon, also on touch). Shown as a number only, no extra curve (decision 25.10.2026): in the sums line of the day
+  view (also of the "Tagesverlauf" card, which shares it) and under "Zeitraum" in the period views (month, quarter,
+  …). Per bar (a day in the month view, a week or month in longer views): its axis label turns red and bold and a
+  "!" appears above the bar when the bar does not balance; the tooltip shows the value. The period sum reads
+  "ausgeglichen" only when no bar is marked (gaps of opposite sign can cancel out in the sum). Rounding reads "Bilanz
+  ausgeglichen": below 0.01 kWh per day of the period. For the newest days a difference is normal until all data
+  has arrived. energystore already sent the surplus; no backend change.
+
+### Changed
+- **Metering point chart: the day view opens on the last day with data** (wish Harald). "D" opened on yesterday,
+  which usually has no data yet; it now opens on the metering point's last day with energy data (end of its data
+  range), at most yesterday, also in an earlier selected year. Without a known data end it stays yesterday. Gaps
+  inside the range are not looked for.
+- **Dashboard: community data range without energy meta begins on today's date** (pre-existing error): it used the
+  weekday (e.g. "0.10.2026" on a Sunday) instead of the day of the month.
+- **Dashboard period popover: day picker without arrows** (user feedback on pilot). The row "Tag" only has the date
+  chip to choose a day; stepping day by day stays with the arrows of the card in day mode.
+
+### Security
+- **vitest 4.1.11 → 4.1.12** (Dependabot #133, #134, `@vitest/mocker`, medium, test tooling only; published
+  2026-10-15). Not part of the delivered app.
+
+## [1.9.0] – 2026-10-25
+
+### Added
+- **Member list sorting can be chosen** (platform#214). A sort icon next to the filter ("Periode / Ausstehende")
+  offers "Standard" (the order so far, the default), "Nachname", "Vorname", "Mitgliedsnummer" and "Mitglied seit"
+  (newest or oldest first). Members needing an action (not active, or a metering point not active: open problem or
+  registration in progress) stay on top as before; the chosen sort applies within the groups and also in the
+  filtered views ("Ausstehende", "Inaktive", "Abgewiesene"). Names compare in German collation, member numbers as
+  numbers, empty values last. The choice is kept per browser (localStorage), no backend change.
+- **Day picker in the period popover like the meter chart** (platform#210, feedback from dev). The row "Tag" uses
+  the day picker of the metering-point energy chart (MeterChartNavbar): a date chip ("23. Okt. 2026") opening a
+  calendar, with arrows for the previous / next day; still limited to the energy data range and yesterday.
+- **Dashboard day view per card** (platform#210, feedback from dev). "Tag" in a card's period popover switches only
+  that card (Lastverlauf or Tagesverlauf) to the day view; the other card keeps its period. Each card in day mode has
+  its own gear, arrows and day sums. The day Lastverlauf lines follow the day chart of a metering point (MeterChart:
+  monotone, width 2, no dots, grid); Produktion is drawn on top, so it is no longer hidden under Eigendeckung when the
+  community uses all of its production.
+- **Dashboard day view in the period menu** (platform#210, user feedback). The day view is chosen in the period
+  popover (gear) as a new row "Tag" with a date field, limited to the energy data range and yesterday; any other row
+  returns to the period view with that period. The separate switch "Zeitraum | Tag" is gone; the day view keeps its
+  arrows and day sums and has the same gear to go back.
+- **Dashboard day view** (platform#210, konzept-dashboard-tagesansicht). The day view shows one day for the whole community: "Lastverlauf" with
+  quarter-hour lines Produktion, Verbrauch, Eigendeckung and "Tagesverlauf" with hourly bars EEG, EVU, Produziert,
+  plus the day sums (Produktion, Verbrauch, Eigendeckung, Überschuss), to check whether production matches
+  Eigendeckung plus surplus. Arrows step one day, limited to the community's energy data and yesterday. Data from the existing energystore load-curve report for one day (no energystore change); the hourly
+  bars are summed from the quarter hours (the intra-day report shifts hour 0 to 23, energystore known-errors #26).
+  A metering point with an owner change counts once (sums per stored metering point, not per participation). DST
+  days show 23 / 25 hours. "Zeitraum" is unchanged.
+- **Smart re-request of energy data** (konzept-smart-nachfordern). **Needs the eegfaktura-backend change "smart
+  re-request" (per-meter periods, one-hour lock, live entry) deployed first or together**; an older backend ignores
+  the per-meter periods and requests the whole period for the metering points with gaps or L3 values.
+  - "Zählpunktdaten nachfordern" has a new checkbox "Nur fehlende Daten oder L3-Werte anfordern (Smart)", on by
+    default. It checks the energy data of the selected metering points first and requests only those with gaps or L3
+    values (substitute values), each from its first to its last day missing or with L3 values; a day with L3 values
+    counts like a missing day (decision 24.10.2026). A question names the numbers first ("Bei 214 von 2.380
+    Zählpunkten gibt es fehlende Daten oder L3-Werte (zusammen 1.033 Tage). Diese 214 jetzt anfordern?"). Metering
+    points whose data could not be checked are named there and requested over the whole period only on request;
+    otherwise the message after sending names them as not requested. If nothing could be checked (energystore down
+    or timed out), the question warns that every metering point would be requested for the whole period. Nothing
+    missing and no L3 values: an info ("Für den Zeitraum gibt es keine fehlenden Daten oder L3-Werte, es wird nichts
+    angefordert."), nothing is sent. Metering points not registered or not active in the period are left out with
+    Smart. After an owner change or a new registration every entry of a metering point is checked; it counts as
+    complete only if all entries are, and its gaps are requested as one period from the first to the last missing or
+    L3 day over its entries. A period that reaches today is checked and requested up to yesterday (energy data of
+    today cannot exist yet); the question says so.
+  - Without Smart the request is as before; "Gesamte Gemeinschaft" now asks first with the number of metering
+    points.
+  - Metering points requested in the last hour are skipped by the backend; the dialog names how many and when
+    they are all free again ("3 Zählpunkte wurden in der letzten Stunde schon angefordert, alle wieder frei ab
+    14:40.").
+  - Messages: a running request shows as one entry "Energiedaten-Anforderung läuft" (with "Antwort noch offen"),
+    reloaded every minute while it is shown. Summary and live entry have the new groups "Bereits angefordert" (with
+    "frei ab") and "Keine fehlenden Daten oder L3-Werte (nicht angefordert)". "Datenstand prüfen" also lists the
+    accepted metering points still with L3 values ("Noch mit L3-Werten", with their days).
+
+### Fixed
+- **UX defects from the v2 catalogue, round 3** (eegfaktura-dev 261024-ca18–ca25, user decision: only the cheap and
+  useful parts, the rest is left for the v2 web):
+  - ca25: the invoice details and the add-meter pane no longer remount on every render (React.lazy moved out of render).
+  - ca21: German texts instead of "Something went wrong", "Invoicing loading ...", "Enter text" and the validation
+    fallback "error message"; typo "Zählpunkt inaktiv am/seit".
+  - ca19: the messages page is titled "Nachrichten"; its menu entry shows for admins only (the call behind it is admin-only).
+  - ca23: `<html lang="de">` (only this part).
+  - ca20: amounts on screen in Austrian notation ("12,34 €"), dates as DD.MM.YYYY (meter inactive, notifications);
+    display only, SEPA files and exports are unchanged.
+  - ca18: the member registration asks before unsaved input is lost (leaving, reload, closing the tab); other forms
+    unchanged.
+- Metering-point detail pane showed the raw key `meter.status_text_WARN` for a meter in process state
+  `WARN` (pre-existing). It now reads "Zählpunkt hat eine Warnung, bitte die Prozess History prüfen.";
+  the backend defines `WARN` but no code path on its master sets it, so it only comes from older or
+  manually changed data. The state `ARCHIVED` (set when a meter is archived) had no text either and now
+  reads "Zählpunkt wurde archiviert.". Any other state without a text shows "Zählpunkt-Status <STATE>."
+  instead of the raw key.
+- Metering-point detail pane could show the previous meter's active/inactive state after
+  switching between meters (stale render of the disabled `ion-toggle`, observed on
+  Safari/WebKit; text and toggle even contradicted each other). The meter detail block now
+  remounts per metering point via a React `key`, so every switch renders the selected
+  meter's real state (#101).
+- **Energy data request: "angenommen" does not mean the data is there yet.** The single answer
+  ("Energiedatenanfrage … angenommen") and the summary of a request now say that the grid operator sends the data in
+  own messages afterwards and that it can take a while, with many metering points several hours, until it shows
+  in eegFaktura. The summary points to "Datenstand prüfen" for the current state.
+- **Community switch** (261024-ca13): after switching the community, the members, metering points, selected member,
+  checked members (billing selection), tariffs, energy and billing data of the previous community are cleared at
+  once; until the new community is loaded the lists stay empty instead of showing the old community's entries.
+  Answers to requests of the previous community that arrive after the switch are ignored, and a load of the previous
+  community no longer ends the new community's loading state or sets its period.
+- **GUI defects, second bundle (eegfaktura-dev tracking):**
+  - **A failed save of the EEG settings showed the load text (261024-ca7):** "Fehler beim Laden der
+    EEG-Basisdaten!" or a raw key such as `Bad Gateway_eeg_load`. It now shows "Die Änderung der EEG-Daten konnte
+    nicht gespeichert werden." with the reason. An unknown load error shows "Die EEG-Daten konnten nicht geladen
+    werden." with the reason instead of the raw key; the known load texts stay.
+  - **A failed energy report load was silent (261024-ca6):** the dashboard and the member list just showed no
+    energy. It now shows "Die Energiedaten konnten nicht geladen werden." with the reason (only for the latest
+    request; an older one replaced by a newer one stays quiet). A community without any imported energy data yet
+    (energystore answers "Record doesn't exist") still shows an empty report, without an error.
+  - **Billing ZIP and Excel download without busy state, failures only in the console (261024-ca14, part of
+    261024-ca6):** the buttons "ZIP", "DOWNLOAD" and "EXCEL" of a billing run now show "ZIP-Datei wird erstellt
+    ..." / "Excel-Datei wird erstellt ..." while the file is built (no second click meanwhile) and on failure "Die
+    ZIP-Datei konnte nicht erstellt werden." / "Die Excel-Datei konnte nicht erstellt werden." with the reason.
+  - **Billing settings showed "Änderung gespeichert" together with the error (261024-ca15):** a failed save now
+    shows only "Fehler beim Ändern der Abrechnungseinstellungen.". Deleting the logo asks first ("Soll das Bild
+    für das Logo gelöscht werden?").
+  - **"Tarif löschen" archived at once and ignored metering point tariffs (261024-ca16):** it now asks first
+    ("Soll der Tarif „…“ gelöscht werden?"). A tariff that a metering point still uses is refused like one a
+    member uses; the hint names the members and metering points (at most 10 each, then "und N weitere"). Rule (as
+    in eegfaktura-backend#106): members of any status count; a metering point counts only with its current entry,
+    any status. The old owner's entry after an owner change and archived entries do not count. The web has no flag
+    for this: the current entry is the one with the latest start, archived ones have the process state ARCHIVED,
+    and entries with the same start are left to the backend. Until eegfaktura-backend#106 the backend's
+    own check did not stop the archive; with it the backend refuses a used tariff (400, code 4002) and the toast
+    says "Der Tarif wird noch von Mitgliedern oder Zählpunkten verwendet und kann nicht gelöscht werden." (the
+    former check for a code 900 never matched).
+  - **Start: "Keine aktive EEG geladen" while the EEG loads, blank EEG page after a failed load (261024-ca11):**
+    the member list and the EEG page now show a spinner while the EEG loads, and after a failed load the error
+    with "Erneut versuchen" (loads the community again). An account without any community gets "Ihrem Konto ist
+    keine Gemeinschaft zugeordnet. Bitte wenden Sie sich an den Support." instead of "Keine aktive EEG geladen".
+  - **English crash page without a way back, empty page for an unknown URL (261024-ca12):** a render error
+    shows "Etwas ist schiefgelaufen." with "Neu laden" and "Zur Startseite" instead of "Something went wrong".
+    An unknown URL (e.g. an old bookmark) shows "Diese Seite gibt es nicht." with "Zur Startseite". Still one
+    error boundary for the whole app (no boundary per page), nothing is reported to a server.
+  - **Dashboard without error state (261024-ca26):** after a failed energy load it shows "Die Energiedaten
+    konnten nicht geladen werden." with the reason and "Erneut versuchen" above the charts (the layout and its
+    period selection stay), so empty charts no longer read as "no energy"; while the page code loads a spinner
+    instead of "Dashboard loading ...". The page file is now spelled `Dashboard.page.tsx` (URL unchanged).
+  - **A contract file vanished from the list although the server kept it (261005-ca3):** the delete counted
+    every answer as success (no check of the HTTP status or of GraphQL errors). The file now leaves the list only
+    after the filestore deleted it; otherwise "Die Datei … konnte nicht gelöscht werden." with the reason.
+  - **"Passwort ändern" built the Keycloak URL by hand (261005-ca4):** without state or PKCE and with an
+    unencoded `redirect_uri`, so the way back could fail and leave a spinner. It is now a regular sign-in
+    request (state and PKCE, like the login) with the Keycloak action `UPDATE_PASSWORD`.
+- **Error reasons showed "E_undefined_undefined"** (pre-existing). An error answer whose JSON `error` field is
+  a plain text (energystore, e.g. `{"error": "Record doesn't exist"}`; Spring's error body in billing) was looked
+  up as an error code. The toast now names that text, e.g. "(Internal Server Error)".
+- **Dashboard "Energiemengen – Eingekauft/Verkauft" wrong after an owner change** (support 6611112, 6611148).
+  A metering point with two participations in the period (old and new member) counted the value of one of them
+  twice, e.g. 160 or 10 kWh instead of 5 + 80 = 85 kWh. Each participation now adds its own value once.
+  Billing was not affected.
+- **Dashboard "Übersicht EEG" counted a metering point twice after an owner change** (platform#211). A metering
+  point with two participations in the period (old and new member) counted twice in "Zählpunkte – N aktive",
+  "Abnehmer"/"Einspeiser" and under "Tarife". Each metering point now counts once; under "Tarife" it counts with the
+  tariff of its current participation (the active one before one still being registered, then the newest in the
+  period), so the tariff counts add up to the metering points that have a known tariff. Billing was not affected.
+- **Error messages showed "body stream already read" instead of the real error** (pre-existing). When a server
+  error had no JSON body (e.g. 502 from the ingress), the error handler read the body a second time and the
+  browser's read error replaced the status text. The body is now read once; the toast names e.g. "Bad Gateway".
+- **Messages: a card's data check moved to another card after a reload.** The list keyed its cards by position, so
+  when a newer notification came first, the result of "Datenstand prüfen" showed on the wrong summary. Cards are
+  now keyed by the notification id. More likely since the list reloads every minute while a request runs.
+- **Messages: a failed load went unnoticed** (unhandled promise rejection). It now shows "Die Nachrichten konnten
+  nicht geladen werden." with the reason, once until a load works again (the reload every minute during a running
+  request does not repeat it). Switching the community empties the list first, so a failed load never shows the
+  previous community's messages.
 - **UX defects from Karl's analysis (23.10.2026), ids UX-1 … UX-8:**
   - **Participation factor 0 % was sent as 100 % (UX-4):** "Teilnahmefaktor ändern" sent `partFact || 100`, so
     an entered 0 reached the grid operator as 100 %. The field now accepts 1–100 only (like the meter form) and
@@ -69,6 +266,9 @@ this changelog highlights the changes relevant for overview and operations.
   text and the other places already „Teilnahmefaktor“.
 
 ### Security
+- **vitest 3.2.6 → 4.1.11** (dev dependency, published 2026-08-18). Removes `tinypool` 1.1.1 and its two critical
+  advisories (prototype pollution in worker options, GHSA alerts of 2026-10-17); vitest 4 no longer uses tinypool.
+  Test tooling only, the delivered app is unchanged. All 62 test files / 378 tests pass unchanged.
 - `js-yaml` 3.14.1 → 3.15.2 (via xmlbuilder2) and 4.1.0 → 4.3.2 (build/lint tooling) through `pnpm.overrides`: GHSA-2883-xcg3-v3hh, GHSA-52cp-r559-cp3m, GHSA-5p4m-2wfm-xmqj (CVE-2026-59869, CVE-2026-84375) and two moderate advisories (platform#179).
 - `lodash` 4.17.21 → 4.18.1 (via recharts) through `pnpm.overrides`: GHSA-r5fr-rjxr-66jc (CVE-2026-4800, HIGH) and two moderate advisories (platform#179).
 - `vite` 6.4.3 → 6.4.4 (dev server/build): GHSA-587h-7wmj-h5pm (HIGH) and four moderate/low dev-server advisories; replaces Dependabot PR #173. 6.4.5 follows once it is 7 days old (platform#179).

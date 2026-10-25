@@ -15,6 +15,8 @@ import {ExcelReportRequest} from "../models/reports.model";
 import {ActiveTenant} from "../models/eeg.model";
 import {BillingCheckRequest, BillingCheckResponse} from "../models/billingCheck.model";
 
+const NO_ENERGY_DATA_YET = "Record doesn't exist"
+
 export class EnergyService extends BaseService {
   public constructor(authService: AuthService) {
     super(authService);
@@ -30,7 +32,18 @@ export class EnergyService extends BaseService {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({reportInterval: {type: type, year: year, segment: segment}, participants: participants})
-    }).then(this.handleErrors).then(res => res.json());
+    }).then(async res => {
+      // energystore v1 answers 500 "Record doesn't exist" while no energy data was ever imported for the
+      // community (its metadata is missing): that is an empty report, not a failed load (261024-ca6)
+      if (res.status === 500) {
+        const body = await res.clone().json().catch(() => undefined)
+        if (body?.error === NO_ENERGY_DATA_YET) {
+          return {id: `${type}/${year}/${String(segment).padStart(2, "0")}`, participantReports: [], meta: [],
+            totalProduction: 0, totalConsumption: 0} as EnergyReportResponse
+        }
+      }
+      return this.handleErrors(res).then(r => r.json())
+    });
   }
 
   async fetchLastReportEntryDate(tenant: string, ecId: string, token?: string): Promise<string> {
@@ -104,6 +117,20 @@ export class EnergyService extends BaseService {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(this.calcStartEndTime(selectedPeroid))
+    }).then(this.handleErrors).then(res => res.json());
+  }
+
+  // Load curve of an explicit window; for one day (start 00:00, end 23:45) energystore returns the quarter hours.
+  async fetchLoadCurveRangeV2(tenant: ActiveTenant, start: number, end: number): Promise<ReportNamedData[]> {
+    const token = await this.lookupToken()
+    return await fetch(`${ENERGY_API_SERVER}/eeg/v2/${tenant.ecId}/load-curve-report`, {
+      method: 'POST',
+      headers: {
+        ...this.getSecureHeadersX(token, tenant.rcNr),
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({start, end})
     }).then(this.handleErrors).then(res => res.json());
   }
 

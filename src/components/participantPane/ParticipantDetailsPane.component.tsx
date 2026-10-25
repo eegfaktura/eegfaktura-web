@@ -47,6 +47,7 @@ import {useMoveMeteringPointHook} from "../../store/hook/MoveMeteringPoint.hook"
 import moment from "moment";
 import {useDeleteParticipantMutation} from "../../store/participant/api";
 import {useConfirm} from "../core/useConfirm";
+import {processStateText} from "./meterStatusText";
 
 type DynamicComponentKey = "memberForm" | "meterForm" | "documentForm" | "invoiceForm" | "participantDocumentForm"
 
@@ -194,7 +195,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
   const meterStatusText = (meter: Metering) => {
     return (
       <div>
-        <span>{t(`meter.status_text_${meter.processState}`)}</span>
+        <span>{processStateText(t, meter.processState)}</span>
         {hasStatusCode(meter) && <span> <strong>{t(`meter.status_code_${meter.statusCode}`)}</strong></span>}
       </div>
     )
@@ -206,11 +207,11 @@ const ParticipantDetailsPaneComponent: FC = () => {
       const diff = moment(meter.participantState.inactiveSince).diff(moment(), "days")
       if (diff >= 0) {
         return (
-          <span>Zählpunkt inaktive am <strong>{moment(meter.participantState.inactiveSince).format("DD-MM-YYYY")}</strong></span>
+          <span>Zählpunkt inaktiv am <strong>{moment(meter.participantState.inactiveSince).format("DD.MM.YYYY")}</strong></span>
         )
       }
       return (
-        <span>Zählpunkt inaktive seit <strong>{moment(meter.participantState.inactiveSince).format("DD-MM-YYYY")}</strong></span>
+        <span>Zählpunkt inaktiv seit <strong>{moment(meter.participantState.inactiveSince).format("DD.MM.YYYY")}</strong></span>
       )
     }
 
@@ -239,7 +240,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
   const onDeleteParticipant = (sp: EegParticipant) =>
     confirm("Mitglied löschen",
       `Soll ${sp.firstname} ${sp.lastname} mit allen Zählpunkten gelöscht werden? Das lässt sich nicht rückgängig machen.`,
-      "Löschen", () => deleteParticipant({participantId: sp.id})
+      "Löschen", () => deleteParticipant({tenant: tenant.tenant, participantId: sp.id})
         .unwrap()
         .catch(() => failedToast("Das Mitglied konnte nicht gelöscht werden.")))
 
@@ -395,7 +396,9 @@ const ParticipantDetailsPaneComponent: FC = () => {
             </div>
             <div className={"details-box"}>
               {selectedMeter ? (
-                  <div className="ion-padding" slot="content">
+                  // key erzwingt Remount beim ZP-Wechsel — sonst behält die disabled
+                  // ion-toggle den Zustand des vorher gewählten ZP (Issue #101, Safari)
+                  <div className="ion-padding" slot="content" key={selectedMeter.meteringPoint}>
                     <IonToolbar color="primary">
                       <IonTitle>{formatMeteringPointString(selectedMeter.meteringPoint)}</IonTitle>
                       {isAdmin() && <IonButtons slot="end">

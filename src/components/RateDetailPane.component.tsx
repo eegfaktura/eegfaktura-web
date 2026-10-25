@@ -18,6 +18,12 @@ import {archiveRate, selectedRateSelector, selectRate} from "../store/rate";
 import {allParticipantsSelector} from "../store/participant";
 import {FormProvider, useForm} from "react-hook-form";
 import {useTenant} from "../store/hook/Eeg.provider";
+import {useConfirm} from "./core/useConfirm";
+import {tariffInUseMessage} from "./RateDetailPane.functions";
+import {useLocale} from "../store/hook/useLocale";
+
+// the error key handleErrors builds from the backend's answer {code: 4002, error: "Tariff is currently used"}
+const TARIFF_IN_USE = "E_4002_Tariff is currently used"
 
 interface RateDetailPaneComponentProps {
   onSubmit: (data: EegTariff) => void;
@@ -32,6 +38,8 @@ const RateDetailPaneComponent: FC<RateDetailPaneComponentProps> = ({onSubmit, su
 
   const [presentAlert] = useIonAlert();
   const [showToast] = useIonToast();
+  const confirm = useConfirm();
+  const {t: errorT} = useLocale("error");
 
   const formMethods = useForm<EegTariff>({defaultValues: selectedTariff, values: selectedTariff, mode: 'all'});
 
@@ -42,24 +50,29 @@ const RateDetailPaneComponent: FC<RateDetailPaneComponentProps> = ({onSubmit, su
   const participants = useAppSelector(allParticipantsSelector)
 
   const archiveTariff = () => {
-    if (participants.filter(p => p.tariffId === selectedTariff!.id).length > 0) {
+    if (!selectedTariff) return
+    const inUse = tariffInUseMessage(participants, selectedTariff.id)
+    if (inUse) {
       presentAlert(
         {
           header: 'Tarif löschen nicht möglich',
-          message: 'Der Tarif wird noch von folgenden Teilnehmern verwendet: ' + participants.filter(p => p.tariffId === selectedTariff!.id).map(p => p.firstname + " " + p.lastname).join(', ') + ' und kann daher nicht gelöscht werden.  Bitte weisen Sie den Teilnehmern einen anderen Tarif zu.',
+          message: inUse,
           buttons: [
             {text: 'Abbrechen', role: 'cancel'},
           ]
         }
       )
-    } else if (selectedTariff) {
-
-      dispatcher(archiveRate({rate: selectedTariff, tenant: tenant}))
+    } else {
+      const rate = selectedTariff
+      confirm("Tarif löschen", `Soll der Tarif „${rate.name}“ gelöscht werden?`, "Löschen", () =>
+      dispatcher(archiveRate({rate, tenant: tenant}))
         .unwrap()
         .catch((e) => {
-            if (e.state && e.state === 900) {
+            // backend code 4002 (backend#106): the tariff is still used, handleErrors translated it already
+            const inUse = errorT(TARIFF_IN_USE)
+            if (e?.message === inUse) {
               showToast({
-                message: 'Tarif wird noch benutzt!',
+                message: inUse,
                 duration: 4500,
                 color: "warning"
               })
@@ -71,7 +84,7 @@ const RateDetailPaneComponent: FC<RateDetailPaneComponentProps> = ({onSubmit, su
               })
             }
           }
-        )
+        ))
     }
   }
 

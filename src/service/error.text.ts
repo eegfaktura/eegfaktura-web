@@ -10,6 +10,10 @@ export class ErrorResponse {
   }
 }
 
+// a German error text with the reason of the failure; rejectWithValue's generic "Rejected" is left out
+export const withReason = (text: string, reason: string | undefined) =>
+  reason && reason !== "Rejected" ? `${text} (${reason})` : text
+
 export const determineErrTxt = (error: any): string => {
   if (error instanceof ErrorResponse) {
     return i18n.t("E_" + error.error.code + "_" + error.error.error, { ns: 'error' })

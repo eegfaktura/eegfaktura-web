@@ -1,7 +1,7 @@
 import {EegNotification} from "../models/eeg.model";
 import {ReactNode} from "react";
 import EnergyRequestSummaryComponent from "../components/notification/EnergyRequestSummary.component";
-import {EnergyRequestSummary} from "../components/notification/EnergyRequestSummary.functions";
+import {DATA_DELAY_HINT, EnergyRequestSummary} from "../components/notification/EnergyRequestSummary.functions";
 import {PARTFACT_WINDOW_TEXT} from "./PartFactWindow.util";
 
 
@@ -25,7 +25,7 @@ export function buildNotificationText(type: string, process: string, notificatio
         case 'ANTWORT_PT':
           return <p>Die <strong><u>ENERGIEDATENANFRAGE</u></strong> für die
             Zählpunkte <strong>{n.message.meteringPoint}</strong> wurde
-            angenommen.</p>
+            angenommen.<br/><small>{DATA_DELAY_HINT}</small></p>
         case 'ABLEHNUNG_ECON':
           return <p>Für die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurde die <strong><u>Online-Registrierung</u></strong> abgelehnt. ({n.message.responseCode})</p>
         case 'ABSCHLUSS_ECON':

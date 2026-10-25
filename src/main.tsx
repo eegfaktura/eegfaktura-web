@@ -79,7 +79,7 @@ fetch(globalConfigUrl)
       <React.StrictMode>
         <div className="full-screen-center">
           <div style={{margin: "auto"}}>
-            <p style={{fontSize: "24px"}}>Oops... Something went wrong. Press F5 or refresh your browser!</p>
+            <p style={{fontSize: "24px"}}>Ups … da ist etwas schiefgelaufen. Bitte F5 drücken oder die Seite neu laden.</p>
             <p style={{fontSize: "14px"}}>{e.message}</p>
           </div>
         </div>

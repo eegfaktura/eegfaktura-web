@@ -31,6 +31,7 @@ import {
   evaluateBillingChecks,
   formatDayRanges,
   IncompleteMeter,
+  L3Finding,
   kWhDiff,
 } from "./BillingCheck.functions";
 
@@ -49,6 +50,8 @@ const date = (t: number) => moment(t).format("DD.MM.YYYY")
 const dateTime = (t: number) => moment(t).format("DD.MM.YYYY HH:mm")
 const meterLabel = (m: CheckedMeter) =>
   `${m.participantName} – ${m.equipmentName ? m.equipmentName + " – " : ""}${m.meteringPoint}`
+
+export const l3Text = (f: L3Finding) => `${meterLabel(f.meter)}: L3-Werte (${formatDayRanges([...f.days].sort())})`
 
 export const incompleteText = (m: IncompleteMeter) => {
   if (m.firstData === null || m.lastData === null) {
