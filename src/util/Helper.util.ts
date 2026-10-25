@@ -160,16 +160,28 @@ export const getPreviousPeriod = (period: SelectedPeriod) => {
   return prePeriod
 }
 
+// The last day with energy data of a range ("DD.MM.YYYY HH:mm:ss"), local 00:00; undefined if it has no end.
+const lastDataDay = (cpPeriod?: CpPeriodType): Date | undefined => {
+  if (!cpPeriod || !cpPeriod.end) return undefined
+  const [day, month, year] = splitDate(cpPeriod.end)
+  return (day && month && year) ? new Date(year, month - 1, day) : undefined
+}
+
 export const createNewPeriod = (period: SelectedPeriod | undefined, target: ReportType, currentSegmentIdx: number, cpPeriod?: CpPeriodType) => {
   if (period !== undefined) {
     switch (target) {
       case 'D': {
         // Current period: default to yesterday, not today — today's 15-minute
         // data is still incomplete, so open on the last fully-recorded day.
+        // If the data ends earlier (cpPeriod.end, energy data usually arrives a
+        // few days late), open on that last day with data instead.
         const yesterday = new Date()
         yesterday.setDate(yesterday.getDate() - 1)
         if (yesterday.getFullYear() === period.year) {
-          return {type: target, year: period.year, segment: dateToDayOfYear(yesterday)}
+          const last = lastDataDay(cpPeriod)
+          const day = last && last.getTime() < new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate()).getTime()
+            ? last : yesterday
+          return {type: target, year: day.getFullYear(), segment: dateToDayOfYear(day)}
         }
         // A non-current billing period: open on its first day (period start),
         // not 1 January.

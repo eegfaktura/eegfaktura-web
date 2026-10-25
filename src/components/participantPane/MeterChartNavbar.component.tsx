@@ -1,4 +1,4 @@
-import React, {FC, useCallback, useEffect, useState} from "react";
+import React, {FC, useCallback, useEffect, useMemo, useState} from "react";
 import {IonButton, IonButtons, IonDatetime, IonDatetimeButton, IonIcon, IonModal} from "@ionic/react";
 import {chevronBack, chevronForward} from "ionicons/icons";
 import {createNewPeriod, dateToDayOfYear, dayOfYearToDate, splitDate, toLocalISODate} from "../../util/Helper.util";
@@ -8,7 +8,8 @@ import {
 } from "../../models/energy.model";
 import PeriodSelectorElement from "../core/PeriodSelector.element";
 import {useAppSelector} from "../../store";
-import {periodsSelector} from "../../store/energy";
+import {periodsSelector, selectMeta} from "../../store/energy";
+import {CpPeriodType} from "../../models/reports.model";
 
 interface MeterChartNavbarComponentProps {
   selectedMeterId: string
@@ -18,6 +19,10 @@ interface MeterChartNavbarComponentProps {
 
 const MeterChartNavbarComponent: FC<MeterChartNavbarComponentProps> = ({selectedMeterId, activePeriod, onSelectionChanged}) => {
   const periods = useAppSelector(periodsSelector);
+  // the data range of this metering point: the day view opens on its last day with data
+  const meterMeta = useAppSelector(useMemo(() => selectMeta(selectedMeterId), [selectedMeterId]))
+  const meterPeriod: CpPeriodType | undefined = meterMeta && meterMeta.period_end
+    ? {begin: meterMeta.period_start, end: meterMeta.period_end} : undefined
 
   const [selectedPeriod, setSelectedPeriod] = useState<SelectedPeriod|undefined>(activePeriod)
   const [lastSegmentIdx, setLastSegmentIdx] = useState<number>(1)
@@ -94,7 +99,7 @@ const MeterChartNavbarComponent: FC<MeterChartNavbarComponentProps> = ({selected
           {(["Y", "YH", "YQ", "YM", "D"] as ('YH' | "YQ" | 'YM' | 'Y' | 'D')[]).map((p, i) => (
             <IonButton
               key={i}
-              onClick={() => onChangePeriod(createNewPeriod(selectedPeriod, p, lastSegmentIdx, periods))}
+              onClick={() => onChangePeriod(createNewPeriod(selectedPeriod, p, lastSegmentIdx, p === 'D' && meterPeriod ? meterPeriod : periods))}
               shape="round"
               size="small"
               className="stateButton"

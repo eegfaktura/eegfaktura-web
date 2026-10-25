@@ -14,6 +14,9 @@ this changelog highlights the changes relevant for overview and operations.
   "Inaktive" for inactive ones.
 
 ### Changed
+- **Metering point chart: the day view opens on the last day with data** (wish Harald). "D" opened on yesterday,
+  which usually has no data yet; it now opens on the metering point's last day with energy data (end of its data
+  range), at most yesterday. Gaps inside the range are not looked for.
 - **Dashboard period popover: day picker without arrows** (user feedback on pilot). The row "Tag" only has the date
   chip to choose a day; stepping day by day stays with the arrows of the card in day mode.
 
