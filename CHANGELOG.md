@@ -24,7 +24,8 @@ this changelog highlights the changes relevant for overview and operations.
   stored version with `useDefault`, so they show a hand-made template that still applies), save with version check (409 → „wurde inzwischen geändert“, reload; 400 messages
   shown), reset to the default. With unsaved edits, the back button, the side menu, browser back, a reload and
   closing the tab ask first. While a save runs, subject, text, toolbar and placeholder pickers are locked, so
-  nothing typed meanwhile is replaced by the saved version. The page and the editor load as a separate chunk (~138 kB gzip), the main
+  nothing typed meanwhile is replaced by the saved version. A community switch also clears the list's load errors of the
+  previous community. The page and the editor load as a separate chunk (~138 kB gzip), the main
   bundle grows by ~2 kB gzip. Needs backend and billing with the mail template API.
 - Messages: the backend's notices about customised mails (`Mail` with message code `I_MAIL_TEMPLATE_DEFAULT` — new
   default available — or `E_MAIL_TEMPLATE` — default sent instead) show their own text under „E-Mail-Texte:“

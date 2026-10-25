@@ -43,6 +43,7 @@ const MailTemplatesPage: FC = () => {
   useEffect(() => {
     setSelected(undefined)
     setItems(undefined)
+    setFailed([])
     loadList()
   }, [tenant, admin])
 

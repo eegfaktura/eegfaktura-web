@@ -35,4 +35,18 @@ describe("MailTemplatesPage", () => {
     expect(screen.queryByText("Mail der alten EEG")).toBeNull()
     expect(screen.getByText("Mail der neuen EEG")).toBeTruthy()
   })
+
+  it("does not show the previous community's load failure for the next one", async () => {
+    const fetchList = vi.fn((tenant: string) => tenant === "RC100100"
+      ? Promise.resolve({items: [item("zp-active", "Mail der alten EEG")], failed: ["billing" as const]})
+      : new Promise<MailTemplateList>(() => undefined))
+    Api.mailTemplateService = {fetchList} as unknown as typeof Api.mailTemplateService
+
+    const {rerender} = renderWithProviders(page("RC100100"))
+    await waitFor(() => expect(screen.getByText("Mail der alten EEG")).toBeTruthy())
+    expect(screen.getByText("Die Rechnungs-Mail konnte nicht geladen werden.")).toBeTruthy()
+    rerender(page("RC200200"))
+    await waitFor(() => expect(screen.queryByText("Mail der alten EEG")).toBeNull())
+    expect(screen.queryByText("Die Rechnungs-Mail konnte nicht geladen werden.")).toBeNull()
+  })
 })
