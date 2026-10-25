@@ -17,6 +17,10 @@ this changelog highlights the changes relevant for overview and operations.
 - **Dashboard period popover: day picker without arrows** (user feedback on pilot). The row "Tag" only has the date
   chip to choose a day; stepping day by day stays with the arrows of the card in day mode.
 
+### Security
+- **vitest 4.1.11 → 4.1.12** (Dependabot #133, #134, `@vitest/mocker`, medium, test tooling only; published
+  2026-10-15). Not part of the delivered app.
+
 ## [1.9.0] – 2026-10-25
 
 ### Added
