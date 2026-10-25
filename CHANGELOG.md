@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.10.0] – 2026-10-25
+
 ### Added
 - **Member list filter "Aktive"** (wish from pilot). The filter next to "Periode" also offers "Aktive": members with
   at least one active metering point, showing only their active metering points (status, not the period), like
