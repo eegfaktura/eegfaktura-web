@@ -9,6 +9,7 @@ import {IonContent, IonIcon, IonPopover} from "@ionic/react";
 import {helpCircleOutline} from "ionicons/icons";
 import {Api} from "../../service";
 import {useTenant} from "../../store/hook/Eeg.provider";
+import {TradedSummary, tradedSummary} from "./EnergyOverview.functions";
 
 interface OverviewComponentProps {
   consumed: PieSeriesType
@@ -30,7 +31,7 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
   const [preProducedEnergy, setPreProducedEnergy] = useState<number>(0)
   const [preConsumedEnergy, setPreConsumedEnergy] = useState<number>(0)
   const [preDistributedEnergy, setPreDistributedEnergy] = useState<number>(0)
-  const [traded, setTraded] = useState<{taken: number, spent: number}>({taken: 0, spent: 0})
+  const [traded, setTraded] = useState<TradedSummary>({taken: 0, spent: 0, withoutTariff: 0, withoutTariffKwh: 0})
 
   const [producedEnergy, consumedEnergy, distributedEnergy] = [produced.value, consumed.value, allocated.value]
 
@@ -65,23 +66,7 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
   }, [activePeriod]);
 
   const calculateSummary = () => {
-    let consumerSum = 0
-    let producerSum = 0
-
-    meterGroup.forEach((m,i) => {
-      if (rates[m.meter.tariff_id]) {
-        if (m.utilization === undefined || isNaN(m.utilization)) {
-          console.error("Meter has invalid energy values!", i, m)
-        } else {
-          if (m.meter.direction === "CONSUMPTION") {
-            consumerSum += m.utilization
-          } else {
-            producerSum += m.utilization
-          }
-        }
-      }
-    })
-    setTraded({taken: consumerSum, spent: producerSum})
+    setTraded(tradedSummary(meterGroup, rates))
   }
 
   const renderKWH = (kwh:number): string => {
@@ -201,6 +186,14 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
                   </div>
                 </div>
               </div>
+              {/* only once the tariffs are loaded: before, every metering point would read "ohne Tarif" */}
+              {traded.withoutTariff > 0 && Object.keys(rates).length > 0 && (
+                <div style={{padding: "5px 16px", fontSize: "11px"}}>
+                  {traded.withoutTariff === 1
+                    ? `1 Zählpunkt ohne gültigen Tarif ist hier nicht enthalten (${renderKWH(traded.withoutTariffKwh)}).`
+                    : `${traded.withoutTariff} Zählpunkte ohne gültigen Tarif sind hier nicht enthalten (${renderKWH(traded.withoutTariffKwh)}).`}
+                </div>
+              )}
             </div>
 
           </div>

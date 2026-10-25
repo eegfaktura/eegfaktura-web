@@ -13,6 +13,11 @@ this changelog highlights the changes relevant for overview and operations.
   "Verteilt" now is the energy distributed in the community (also for the previous period); the bar still shows
   distributed / consumption. Before, "Verteilt" could read larger than "Produziert" (pilot 25.10.2026: 8480 kWh
   next to 2801 kWh).
+- **"Energiemengen": metering points without a valid tariff are named** (pilot 25.10.2026). "Eingekauft" and
+  "Verkauft" count only metering points with a tariff of the community; a note now says how many metering points
+  with energy in the period have none (or an archived one) and how much energy that is (e.g. "1 Zählpunkt ohne
+  gültigen Tarif ist hier nicht enthalten (224.386 kWh)") — a consumer without tariff gets energy from the community
+  that is not billed. Shown once the tariffs are loaded; metering points without energy are not counted.
 
 ## [1.10.1] – 2026-10-25
 
