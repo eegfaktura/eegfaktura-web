@@ -8,6 +8,20 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **Dashboard "Übersicht Stromproduktion": "Verteilt" showed the total consumption** (pre-existing). The number next to
+  "Verteilt" now is the energy distributed in the community (also for the previous period); the bar still shows
+  distributed / consumption. Before, "Verteilt" could read larger than "Produziert" (pilot 25.10.2026: 8480 kWh
+  next to 2801 kWh).
+- **"Energiemengen": metering points without a valid tariff are named** (pilot 25.10.2026). "Eingekauft" and
+  "Verkauft" count only metering points with a tariff of the community; a note now says how many metering points
+  with energy in the period have none (or an archived one) and how much energy that is (e.g. "1 Zählpunkt ohne
+  gültigen Tarif ist hier nicht enthalten (224.386 kWh)") — a consumer without tariff gets energy from the community
+  that is not billed. Shown once the tariffs are loaded; metering points without energy are not counted.
+- Member registration (ca18, 1.10.0): after leaving the form with unsaved input through the menu, every later
+  page change asked again ("Die Eingaben sind noch nicht gespeichert"), because the hidden page stays mounted. The
+  question now only comes while the form is shown.
+
 ### Added
 - **„E-Mail-Texte“: EEG admins edit the member mails themselves** (konzept-mail-texte-editierbar.md). New page
   `/page/mailtemplates`, reached from the card „E-Mail-Texte“ on the EEG page, left column below „Netzbetreiber“ (admins only). One list of the four mails —
@@ -31,11 +45,6 @@ this changelog highlights the changes relevant for overview and operations.
 - Messages: the backend's notices about customised mails (`Mail` with message code `I_MAIL_TEMPLATE_DEFAULT` — new
   default available — or `E_MAIL_TEMPLATE` — default sent instead) show their own text under „E-Mail-Texte:“
   instead of „Mailversand fehlgeschlagen“; failed mails in the same notification are still listed.
-
-### Fixed
-- Member registration (ca18, 1.10.0): after leaving the form with unsaved input through the menu, every later
-  page change asked again ("Die Eingaben sind noch nicht gespeichert"), because the hidden page stays mounted. The
-  question now only comes while the form is shown.
 
 ## [1.10.1] – 2026-10-25
 

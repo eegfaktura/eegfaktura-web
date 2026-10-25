@@ -15,7 +15,7 @@ import {SelectedPeriod} from "../../../models/energy.model";
 // Both upper dashboard cards name the period their values belong to (as the load curve and day curve cards do).
 
 const eegContext = {tenant: "RC100100", isFetching: false, getTenants: () => []} as unknown as EegState
-const series = (name: string) => ({name, value: 0, fill: ""}) as PieSeriesType
+const series = (name: string, value = 0) => ({name, value, fill: ""}) as PieSeriesType
 
 const newStore = (period?: SelectedPeriod) => {
   const store = configureStore({reducer, middleware: (d) => d({serializableCheck: false})})
@@ -65,6 +65,14 @@ describe("period of the upper dashboard cards", () => {
     expect(screen.getByText("*) vorherige Periode: Apr-Jun 2026")).toBeTruthy()
     expect(screen.queryByText("999.000 kWh *)")).toBeNull()
     expect(screen.getByText("222.000 kWh *)")).toBeTruthy()
+  })
+
+  it("'Verteilt' shows the distributed energy, not the total consumption", () => {
+    render(tree(newStore({type: "YQ", year: 2026, segment: 4}),
+      <EnergyOverviewComponent consumed={series("c", 8480.381)} produced={series("p", 2801.316)}
+                               allocated={series("a", 1273.994)} rates={{}}/>))
+    expect(screen.getByText("1273.994 kWh")).toBeTruthy()
+    expect(screen.queryByText("8480.381 kWh")).toBeNull()
   })
 
   it("without a selected period no period line is shown", () => {
