@@ -11,7 +11,8 @@ import {settings} from "ionicons/icons";
 import './LoadCurveReport.component.scss'
 import {calcXAxisNameV2} from "./LoadCurveReport.functions";
 import {LoadSharingData, transformData} from "./dashboard.functions";
-import {BALANCE_HELP, balanceText, isBalanced} from "./Balance.functions";
+import {BALANCE_LINE_COLOR, periodBalance} from "./Balance.functions";
+import BalanceValue from "./BalanceValue.component";
 import {DayBounds, dayToPeriod, periodToDay} from "./DayView.functions";
 import {DayLoadCurveChart} from "./DayCharts.component";
 import {NameType, ValueType} from "recharts/types/component/DefaultTooltipContent";
@@ -95,9 +96,7 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
     cssClass: "property-popover"
   })
 
-  // the sum over the bars; undefined while no bar carries a difference (report without surplus)
-  const withBalance = data.filter(d => d.balance !== undefined)
-  const periodBalance = withBalance.length > 0 ? withBalance.reduce((s, d) => s + d.balance!, 0) : undefined
+  const balance = periodBalance(data)
 
   if (selectedPeriod?.type === 'D' && dayRange) {
     return <DayLoadCurveChart tenant={tenant} day={periodToDay(selectedPeriod, dayRange)} bounds={dayRange}
@@ -126,11 +125,8 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
         <div style={{textAlign: "center", margin: "6px"}}>
           <div style={{fontSize: "24px"}}>Lastverlauf</div>
           <div style={{fontSize: "14px"}}>Zeitraum: {periodDisplayString(selectedPeriod)}</div>
-          {periodBalance !== undefined && (
-            <div title={BALANCE_HELP}
-                 style={{fontSize: "12px", ...(isBalanced(periodBalance) ? {} : {color: "#F20A5E", fontWeight: "bold"})}}>
-              {balanceText(periodBalance)}
-            </div>
+          {balance && (
+            <div style={{fontSize: "12px"}}><BalanceValue difference={balance.difference} produced={balance.produced}/></div>
           )}
         </div>
         <div style={{display: "flex", flexFlow: "column", height: "100%", margin: "16px"}}>
@@ -151,8 +147,8 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
               {/*</BarChart>*/}
               <Line yAxisId="right" type="monotone" name="Abnehmer" dataKey="cntCons" stroke="#ff7300" />
               <Line yAxisId="right" type="monotone" name="Einspeiser" dataKey="cntProd" stroke="#456035FF" />
-              {periodBalance !== undefined &&
-                <Line yAxisId="left" type="monotone" name="Bilanzdifferenz" dataKey="balance" stroke="#F20A5E"
+              {balance &&
+                <Line yAxisId="left" type="monotone" name="Bilanzdifferenz" dataKey="balance" stroke={BALANCE_LINE_COLOR}
                       strokeDasharray="5 3"/>}
             </ComposedChart>
             </ResponsiveContainer>

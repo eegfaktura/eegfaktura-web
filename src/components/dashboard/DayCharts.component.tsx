@@ -5,7 +5,8 @@ import {Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContain
 import {ActiveTenant} from "../../models/eeg.model";
 import {useDayReport} from "./DayView.component";
 import {DayBounds, DayReportState, daySums, formatDay, hasEnergy, shiftDay, toHours} from "./DayView.functions";
-import {BALANCE_HELP, balanceOf, balanceText, isBalanced} from "./Balance.functions";
+import {BALANCE_LINE_COLOR, balanceOf} from "./Balance.functions";
+import BalanceValue from "./BalanceValue.component";
 
 import "./eeg-card.scss"
 
@@ -47,9 +48,7 @@ const DayCard: FC<DayChartProps & { title: string, state: DayReportState, childr
             <div style={{fontSize: "12px"}}>
               Produktion {kwh(sums.produced)} · Verbrauch {kwh(sums.consumed)} · Eigendeckung {kwh(sums.distributed)} ·
               Überschuss {kwh(sums.unused)} ·{" "}
-              <span title={BALANCE_HELP} style={isBalanced(balanceOf(sums)) ? undefined : {color: "#F20A5E", fontWeight: "bold"}}>
-                {balanceText(balanceOf(sums))}
-              </span>
+              <BalanceValue difference={balanceOf(sums)} produced={sums.produced}/>
             </div>
           )}
         </div>
@@ -104,7 +103,7 @@ export const DayLoadCurveChart: FC<DayChartProps> = (props) => {
             <Line name="Verbrauch" type="monotone" dataKey="consumed" stroke="#8884d8" dot={false} strokeWidth={2}/>
             <Line name="Eigendeckung" type="monotone" dataKey="distributed" stroke="#82ca9d" dot={false} strokeWidth={2}/>
             <Line name="Produktion" type="monotone" dataKey="produced" stroke="#2B6860" dot={false} strokeWidth={2}/>
-            <Line name="Bilanzdifferenz" type="monotone" dataKey="balance" stroke="#F20A5E" dot={false} strokeWidth={2}
+            <Line name="Bilanzdifferenz" type="monotone" dataKey="balance" stroke={BALANCE_LINE_COLOR} dot={false} strokeWidth={2}
                   strokeDasharray="5 3"/>
           </LineChart>
         </ResponsiveContainer>
