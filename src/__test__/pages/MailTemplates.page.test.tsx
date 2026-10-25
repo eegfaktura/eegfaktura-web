@@ -1,5 +1,5 @@
 import {describe, expect, it, vi} from "vitest";
-import {screen, waitFor} from "@testing-library/react";
+import {fireEvent, screen, waitFor} from "@testing-library/react";
 import React from "react";
 import "../../util/I18n";
 import {renderWithProviders} from "../test-utils";
@@ -7,6 +7,13 @@ import MailTemplatesPage from "../../pages/MailTemplates.page";
 import {EegContext, EegState} from "../../store/hook/Eeg.provider";
 import {Api} from "../../service";
 import {MailTemplateList} from "../../service/mailtemplate.service";
+
+// the editor is replaced by a stub that keeps the onChanged it got (an editor of the previous community may still
+// call it when its save ends after the switch)
+const editorProps = vi.hoisted(() => ({onChanged: undefined as undefined | (() => void)}))
+vi.mock("../../components/mailtemplate/MailTemplateEditor.component", () => ({
+  default: (props: any) => { editorProps.onChanged = props.onChanged; return null },
+}))
 
 const item = (key: string, name: string) => ({
   key, name, description: "", customized: false, defaultChanged: false, source: "backend" as const,
@@ -48,5 +55,23 @@ describe("MailTemplatesPage", () => {
     rerender(page("RC200200"))
     await waitFor(() => expect(screen.queryByText("Mail der alten EEG")).toBeNull())
     expect(screen.queryByText("Die Rechnungs-Mail konnte nicht geladen werden.")).toBeNull()
+  })
+
+  it("a save of the previous community's editor that ends after the switch does not reload its list", async () => {
+    const fetchList = vi.fn((tenant: string) => Promise.resolve({
+      items: [item("zp-active", tenant === "RC100100" ? "Mail der alten EEG" : "Mail der neuen EEG")], failed: []}))
+    Api.mailTemplateService = {fetchList} as unknown as typeof Api.mailTemplateService
+
+    const {rerender} = renderWithProviders(page("RC100100"))
+    fireEvent.click(await screen.findByText("Mail der alten EEG"))
+    const staleOnChanged = editorProps.onChanged!
+    rerender(page("RC200200"))
+    await waitFor(() => expect(screen.getByText("Mail der neuen EEG")).toBeTruthy())
+    const calls = fetchList.mock.calls.length
+
+    staleOnChanged()
+    await new Promise(r => setTimeout(r, 0))
+    expect(fetchList.mock.calls.length).toBe(calls)
+    expect(screen.getByText("Mail der neuen EEG")).toBeTruthy()
   })
 })

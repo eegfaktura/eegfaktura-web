@@ -39,9 +39,9 @@ const MailFileList: FC<MailFileListProps> = ({
         // e.g. a fresh draft of another session: attach it instead of deleting it
         <IonIcon icon={attachOutline} aria-label={t("mailtemplates.file_attach", {name: f.filename})}
                  title={t("mailtemplates.file_attach", {name: f.filename})}
-                 onClick={() => onAttach(f)}/>}
+                 onClick={() => !busy && onAttach(f)}/>}
       <IonIcon icon={closeCircleOutline} aria-label={t("mailtemplates.file_remove", {name: f.filename})}
-               onClick={() => onRemove(f)}/>
+               onClick={() => !busy && onRemove(f)}/>
     </IonChip>
   )
 

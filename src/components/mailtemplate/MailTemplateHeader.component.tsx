@@ -36,7 +36,7 @@ const MailTemplateHeader: FC<MailTemplateHeaderProps> = ({
           <IonButton size="small" fill="outline" disabled={busy} onClick={onViewDefault}>
             {t("mailtemplates.default_view")}
           </IonButton>
-          <IonButton size="small" fill="outline" onClick={onApplyDefault}>{t("mailtemplates.default_apply")}</IonButton>
+          <IonButton size="small" fill="outline" disabled={busy} onClick={onApplyDefault}>{t("mailtemplates.default_apply")}</IonButton>
         </div>
       )}
       {loadError && (
@@ -48,7 +48,7 @@ const MailTemplateHeader: FC<MailTemplateHeaderProps> = ({
       {conflict && (
         <div className="mail-template-notice" role="alert">
           <IonText color="danger"><p>{t("mailtemplates.conflict")}</p></IonText>
-          <IonButton size="small" onClick={onReloadAfterConflict}>{t("mailtemplates.reload")}</IonButton>
+          <IonButton size="small" disabled={busy} onClick={onReloadAfterConflict}>{t("mailtemplates.reload")}</IonButton>
         </div>
       )}
     </>

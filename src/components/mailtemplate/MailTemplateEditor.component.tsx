@@ -378,7 +378,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
       <UnsavedChangesGuard dirty={dirty}/>
       <IonButton fill="clear" onClick={onClickClose}>{t("mailtemplates.back")}</IonButton>
       {!template && <p>{t("mailtemplates.loading")}</p>}
-      {template && <MailTemplateHeader template={template} source={source} busy={busy} loadError={loadError}
+      {template && <MailTemplateHeader template={template} source={source} busy={busy || saving} loadError={loadError}
                                        conflict={conflict} onApplyDefault={onApplyDefault}
                                        onViewDefault={() => onPreview({subject: template.defaultSubject, bodyHtml: template.defaultBodyHtml})}
                                        onReloadAfterError={onReloadAfterError} onReloadAfterConflict={() => load()}/>}
@@ -408,7 +408,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
         <input ref={pdfInput} type="file" accept="application/pdf" hidden onChange={onPdfSelected}/>
 
         <MailFileList images={images} attachments={attachments} totalBytes={totalBytes} limits={limits}
-                      usedImageIds={usedImageIds} attachmentId={attachmentId} busy={busy}
+                      usedImageIds={usedImageIds} attachmentId={attachmentId} busy={busy || saving}
                       onAttach={f => {
                         setAttachmentId(f.id)
                         setDirty(true)

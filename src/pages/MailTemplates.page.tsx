@@ -26,8 +26,11 @@ const MailTemplatesPage: FC = () => {
 
   // only the latest request may set the list: a slow answer for the previous community is dropped
   const request = useRef(0)
+  // an editor of the previous community may still call its loadList after a save that ended after the switch
+  const currentTenant = useRef(tenant)
+  currentTenant.current = tenant
   const loadList = () => {
-    if (!tenant || !admin) return
+    if (!tenant || !admin || tenant !== currentTenant.current) return
     const current = ++request.current
     Api.mailTemplateService.fetchList(tenant).then(r => {
       if (current !== request.current) return
