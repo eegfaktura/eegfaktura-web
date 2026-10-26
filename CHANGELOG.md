@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.11.0] – 2026-10-26
+
 ### Fixed
 - **Dashboard "Übersicht Stromproduktion": "Verteilt" showed the total consumption** (pre-existing). The number next to
   "Verteilt" now is the energy distributed in the community (also for the previous period); the bar still shows
