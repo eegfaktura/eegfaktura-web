@@ -355,6 +355,7 @@
       "image_medium_short": "Mittel",
       "image_large_short": "Groß"
     },
+    "fixed_footer": "Wird immer angehängt:",
     "error": "Fehler: {{message}}"
   }
 }

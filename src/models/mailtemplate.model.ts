@@ -61,6 +61,8 @@ export interface MailTemplate {
   files: MailFile[]
   attachmentFileId?: string | null
   limits: MailTemplateLimits
+  // footer the service appends to every mail (not editable, not part of the text); absent on older services
+  fixedFooter?: string
 }
 
 export interface MailTemplateDraft {

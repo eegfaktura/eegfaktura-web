@@ -415,6 +415,8 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
                                    onPick={onInsertPlaceholder}/>}
         </div>
         <EditorContent editor={editor} className="mail-editor"/>
+        {template?.fixedFooter &&
+          <p className="mail-fixed-footer">{t("mailtemplates.fixed_footer")} {template.fixedFooter}</p>}
         <input ref={imageInput} type="file" accept="image/png,image/jpeg" hidden onChange={onImageSelected}/>
         <input ref={pdfInput} type="file" accept="application/pdf" hidden onChange={onPdfSelected}/>
 
