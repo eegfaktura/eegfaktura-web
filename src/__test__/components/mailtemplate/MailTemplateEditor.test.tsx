@@ -206,7 +206,7 @@ describe("MailTemplateEditor save errors", () => {
   })
 })
 
-describe("MailTemplateEditor useDefault", () => {
+describe("MailTemplateEditor preview of the standard text", () => {
   const setup = (customized: boolean) => {
     const preview = vi.fn().mockResolvedValue({subject: "S", html: "<p>x</p>"})
     const sendTest = vi.fn().mockResolvedValue("admin@example.at")
@@ -219,28 +219,29 @@ describe("MailTemplateEditor useDefault", () => {
     return {preview, sendTest}
   }
 
-  it("is sent for the standard text (switch off), not for an own text", async () => {
+  it("with the switch off, preview and test mail use the locked standard text", async () => {
     const {preview, sendTest} = setup(false)
     await waitFor(() => expect(screen.getByText("Verschickt wird der Standardtext von eegfaktura.")).toBeTruthy())
     fireEvent.click(screen.getByText("Vorschau"))
     await waitFor(() => expect(preview).toHaveBeenCalledTimes(1))
-    expect(preview.mock.calls[0][3].useDefault).toBe(true)
+    expect(preview.mock.calls[0][3].subject).toBe("Dein Zählpunkt ist aktiv")
+    expect(preview.mock.calls[0][3]).not.toHaveProperty("useDefault")
     fireEvent.click(screen.getByText("Testmail an mich"))
     await waitFor(() => expect(sendTest).toHaveBeenCalledTimes(1))
-    expect(sendTest.mock.calls[0][4].useDefault).toBe(true)
+    expect(sendTest.mock.calls[0][4].subject).toBe("Dein Zählpunkt ist aktiv")
 
     fireEvent(document.querySelector("ion-toggle")!, new CustomEvent("ionChange", {detail: {checked: true}}))
     fireEvent.click(screen.getByText("Vorschau"))
     await waitFor(() => expect(preview).toHaveBeenCalledTimes(2))
-    expect(preview.mock.calls[1][3].useDefault).toBeUndefined()
+    expect(preview.mock.calls[1][3]).not.toHaveProperty("useDefault")
   })
 
-  it("is not sent for a stored version", async () => {
+  it("a stored version previews its own text", async () => {
     const {preview} = setup(true)
     await waitFor(() => expect(screen.getByText(/Verschickt wird eure eigene Fassung/)).toBeTruthy())
     fireEvent.click(screen.getByText("Vorschau"))
     await waitFor(() => expect(preview).toHaveBeenCalledTimes(1))
-    expect(preview.mock.calls[0][3].useDefault).toBeUndefined()
+    expect(preview.mock.calls[0][3]).not.toHaveProperty("useDefault")
   })
 })
 

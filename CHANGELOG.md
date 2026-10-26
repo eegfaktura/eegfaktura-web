@@ -18,7 +18,8 @@ this changelog highlights the changes relevant for overview and operations.
   deletes it (with its images and PDF, as the former reset), with unsaved edits only it discards them and deletes the
   drafts uploaded since. The list shows a label „Standard“ or „Eigener Text“ per mail instead of the grey status text.
   The notice for hand-made templates on the volume (`legacyTemplateActive`) is gone: backend no longer uses them (see
-  the backend change); the field is ignored if a service still sends it.
+  the backend change); the field is ignored if a service still sends it. Preview and test mail no longer send
+  `useDefault` (the locked standard text is the draft). Needs eegfaktura-backend 1.9.0 (or later).
 
 ## [1.11.0] – 2026-10-26
 

@@ -70,7 +70,6 @@ export interface MailTemplateDraft {
   attachmentFileId?: string | null
   // preview/test only: the standard text of a mail without stored version (switch "Eigenen Text verwenden" off).
   // billing ignores it.
-  useDefault?: boolean
 }
 
 export interface MailPreview {

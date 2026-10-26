@@ -72,7 +72,8 @@ describe("MailTemplateEditor switch „Eigenen Text verwenden“", () => {
 
     fireEvent.click(screen.getByText("Vorschau"))
     await waitFor(() => expect(preview).toHaveBeenCalled())
-    expect(preview.mock.calls[0][3]).toMatchObject({subject: "Dein Zählpunkt ist aktiv", useDefault: true})
+    expect(preview.mock.calls[0][3]).toMatchObject({subject: "Dein Zählpunkt ist aktiv"})
+    expect(preview.mock.calls[0][3]).not.toHaveProperty("useDefault")
   })
 
   it("switching on unlocks a copy of the default, says it is not saved yet and is not dirty", async () => {

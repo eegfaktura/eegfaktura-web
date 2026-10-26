@@ -146,7 +146,8 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
     ({subject, bodyHtml: toMailHtml(editor ? editor.getHTML() : ""), attachmentFileId: attachmentId})
 
   // preview/test with the switch off: the standard text, as the members get it
-  const previewDraft = (): MailTemplateDraft => ownText ? draft() : {...draft(), useDefault: true}
+  // with the switch off the locked subject and text are the default, so the draft is the default
+  const previewDraft = (): MailTemplateDraft => draft()
 
   const run = async (action: () => Promise<void>) => {
     setBusy(true)

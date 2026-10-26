@@ -96,15 +96,13 @@ describe("MailTemplateService", () => {
     expect(JSON.parse(init(1).body as string)).toEqual({subject: "S", bodyHtml: "<p>x</p>", attachmentFileId: null})
   })
 
-  it("sends useDefault only when set", async () => {
+  it("preview and test mail send only the draft (no useDefault since the volume templates are gone)", async () => {
     fetchMock.mockResolvedValue(reply({subject: "S", html: "", sentTo: "a@b.at"}))
     const svc = new MailTemplateService(authService)
-    await svc.preview("backend", "RC100100", "consent-request", {subject: "S", bodyHtml: "<p>x</p>", useDefault: true})
-    await svc.sendTest("backend", "RC100100", "consent-request", "me", {subject: "S", bodyHtml: "<p>x</p>", useDefault: true})
     await svc.preview("backend", "RC100100", "consent-request", {subject: "S", bodyHtml: "<p>x</p>"})
-    expect(JSON.parse(init(0).body as string).useDefault).toBe(true)
-    expect(JSON.parse(init(1).body as string).useDefault).toBe(true)
-    expect(JSON.parse(init(2).body as string)).not.toHaveProperty("useDefault")
+    await svc.sendTest("backend", "RC100100", "consent-request", "me", {subject: "S", bodyHtml: "<p>x</p>"})
+    expect(JSON.parse(init(0).body as string)).not.toHaveProperty("useDefault")
+    expect(JSON.parse(init(1).body as string)).not.toHaveProperty("useDefault")
   })
 
   it("uploads a file as multipart with field kind", async () => {
