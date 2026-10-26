@@ -40,7 +40,7 @@ describe("sortMembers", () => {
 
   it("sorts members without metering points (meters null from the backend) without crashing", () => {
     const none = member("none", {meters: null as unknown as EegParticipant["meters"], participantNumber: "1"})
-    const sorted = sortMembers([member("a", {participantNumber: "2"}), none])
+    const sorted = sortMembers([member("a", {participantNumber: "2"}), none], "participantNumber")
     expect(ids(sorted)).toContain("none")
     expect(sorted.find(p => p.id === "none")!.meters).toEqual([])
   })
