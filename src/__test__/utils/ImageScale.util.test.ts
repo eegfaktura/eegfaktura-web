@@ -1,4 +1,4 @@
-import {describe, expect, it} from "vitest";
+import {afterEach, describe, expect, it, vi} from "vitest";
 import {downscaleImage, scaledSize} from "../../util/ImageScale.util";
 
 describe("scaledSize", () => {
@@ -16,5 +16,46 @@ describe("downscaleImage", () => {
   it("passes other types through unchanged (the service rejects them)", async () => {
     const f = new File(["x"], "a.gif", {type: "image/gif"})
     expect(await downscaleImage(f)).toBe(f)
+  })
+
+  // jsdom has neither createImageBitmap nor a canvas: record what is drawn and encoded
+  const fakeCanvas = (bitmapWidth: number, bitmapHeight: number) => {
+    const close = vi.fn()
+    vi.stubGlobal("createImageBitmap", vi.fn(async () => ({width: bitmapWidth, height: bitmapHeight, close})))
+    const drawImage = vi.fn()
+    const encoded = new Blob(["re-encoded"], {type: "image/jpeg"})
+    const canvas = {
+      width: 0, height: 0, getContext: () => ({drawImage}),
+      toBlob: vi.fn((cb: (b: Blob) => void, _type: string, _quality: number) => cb(encoded)),
+    }
+    const createElement = document.createElement.bind(document)
+    vi.spyOn(document, "createElement").mockImplementation(((tag: string) =>
+      tag === "canvas" ? canvas : createElement(tag)) as typeof document.createElement)
+    return {canvas, drawImage, encoded, close}
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  it("re-encodes a small JPEG at the same size (drops EXIF/GPS)", async () => {
+    const {canvas, drawImage, encoded, close} = fakeCanvas(640, 480)
+    const f = new File(["jpeg with exif"], "foto.jpg", {type: "image/jpeg"})
+    const result = await downscaleImage(f)
+    expect(result).toBe(encoded)
+    expect(result).not.toBe(f)
+    expect([canvas.width, canvas.height]).toEqual([640, 480])
+    expect(drawImage).toHaveBeenCalledWith(expect.anything(), 0, 0, 640, 480)
+    expect(canvas.toBlob).toHaveBeenCalledWith(expect.any(Function), "image/jpeg", 0.9)
+    expect(close).toHaveBeenCalled()
+  })
+
+  it("re-encodes a PNG as PNG and scales a wider one to 1200 px", async () => {
+    const {canvas, encoded} = fakeCanvas(2400, 1000)
+    const result = await downscaleImage(new File(["png"], "a.png", {type: "image/png"}))
+    expect(result).toBe(encoded)
+    expect([canvas.width, canvas.height]).toEqual([1200, 500])
+    expect(canvas.toBlob).toHaveBeenCalledWith(expect.any(Function), "image/png", 0.9)
   })
 })
