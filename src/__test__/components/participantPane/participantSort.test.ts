@@ -38,6 +38,13 @@ describe("sortMembers", () => {
     expect(ids(sortMembers(list, "participantNumber"))).toEqual(["newOpen", "newOk", "activeOpen", "ok1", "ok2"])
   })
 
+  it("sorts members without metering points (meters null from the backend) without crashing", () => {
+    const none = member("none", {meters: null as unknown as EegParticipant["meters"], participantNumber: "1"})
+    const sorted = sortMembers([member("a", {participantNumber: "2"}), none])
+    expect(ids(sorted)).toContain("none")
+    expect(sorted.find(p => p.id === "none")!.meters).toEqual([])
+  })
+
   it("does not change the given array", () => {
     const list = [member("b", {lastname: "B"}), member("a", {lastname: "A"})]
     sortMembers(list, "lastname")

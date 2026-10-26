@@ -64,14 +64,14 @@ const compareBy: Record<MemberSort, Compare> = {
 // The groups of the former list order: members that are not active first, then members with a metering point that is
 // not active (open problem, registration in progress), then the rest.
 const actionRank = (p: EegParticipant) =>
-  (p.status === "ACTIVE" ? 2 : 0) + (p.meters.every(m => m.processState === "ACTIVE") ? 1 : 0)
+  (p.status === "ACTIVE" ? 2 : 0) + ((p.meters ?? []).every(m => m.processState === "ACTIVE") ? 1 : 0)
 
 const directionRank = (m: Metering) => m.direction === "GENERATION" ? 1 : 0
 
 /** Consumers before producers, the order within each direction unchanged. The same member when nothing moves. */
 export const consumersFirst = (p: EegParticipant): EegParticipant => {
   const meters = [...(p.meters ?? [])].sort((a, b) => directionRank(a) - directionRank(b))
-  return meters.every((m, i) => m === p.meters[i]) ? p : {...p, meters}
+  return p.meters && meters.every((m, i) => m === p.meters[i]) ? p : {...p, meters}
 }
 
 /**
