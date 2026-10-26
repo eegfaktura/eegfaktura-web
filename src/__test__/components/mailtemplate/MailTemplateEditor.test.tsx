@@ -41,20 +41,23 @@ describe("MailTemplateEditor", () => {
     expect(saveTemplate).toHaveBeenCalledWith("backend", "RC100100", "zp-active",
       {subject: "Alt", bodyHtml: '<p>Hallo <span data-ph="member.firstName">Vorname</span></p>', attachmentFileId: null}, 3)
     expect((screen.getByText("Speichern").closest("ion-button") as any).disabled).toBe(true)
+    // the switch is locked too: switching off would delete the other admin's newer version without a version check
+    expect((document.querySelector("ion-toggle") as any).disabled).toBe(true)
 
     fireEvent.click(screen.getByText("Neu laden"))
     await waitFor(() => expect(screen.queryByRole("alert")).toBeNull())
     expect(fetchTemplate).toHaveBeenCalledTimes(2)
     expect((screen.getByText("Speichern").closest("ion-button") as any).disabled).toBe(false)
+    expect((document.querySelector("ion-toggle") as any).disabled).toBe(false)
   })
 
   it("disables the test mail to the community without an EEG address and hides attachments without limit", async () => {
-    const tpl = {...template(0, "S"), limits: {...template(0, "S").limits, maxAttachments: 0}}
+    const tpl = {...template(3, "S"), limits: {...template(3, "S").limits, maxAttachments: 0}}
     Api.mailTemplateService = {fetchTemplate: vi.fn().mockResolvedValue(tpl), fetchFile: vi.fn()} as unknown as typeof Api.mailTemplateService
 
     render(<MailTemplateEditor tenant="RC100100" source="billing" templateKey="billing-document"
                                onClose={vi.fn()} onChanged={vi.fn()}/>)
-    await waitFor(() => expect(screen.getByText("Standard")).toBeTruthy())
+    await waitFor(() => expect(screen.getByText(/Verschickt wird eure eigene Fassung/)).toBeTruthy())
     expect((screen.getByText("Testmail an die Gemeinschaft").closest("ion-button") as any).disabled).toBe(true)
     expect((screen.getByText("Testmail an mich").closest("ion-button") as any).disabled).toBe(false)
     expect(screen.queryByText("PDF anhängen")).toBeNull()
@@ -191,18 +194,6 @@ describe("MailTemplateEditor subject placeholder", () => {
   })
 })
 
-describe("MailTemplateEditor legacy template", () => {
-  it("shows the hint for a hand-made template and keeps saving possible", async () => {
-    Api.mailTemplateService = {
-      fetchTemplate: vi.fn().mockResolvedValue({...template(0, "S"), legacyTemplateActive: true}), fetchFile: vi.fn(),
-    } as unknown as typeof Api.mailTemplateService
-    render(<MailTemplateEditor tenant="RC100100" source="backend" templateKey="consent-request"
-                               onClose={vi.fn()} onChanged={vi.fn()}/>)
-    await waitFor(() => expect(screen.getByText(/gilt derzeit eine individuell eingerichtete Vorlage/)).toBeTruthy())
-    expect((screen.getByText("Speichern").closest("ion-button") as any).disabled).toBe(false)
-  })
-})
-
 describe("MailTemplateEditor save errors", () => {
   it("shows the 400 messages of the service next to the form", async () => {
     Api.mailTemplateService = {
@@ -218,12 +209,12 @@ describe("MailTemplateEditor save errors", () => {
   })
 })
 
-describe("MailTemplateEditor useDefault", () => {
+describe("MailTemplateEditor preview of the standard text", () => {
   const setup = (customized: boolean) => {
     const preview = vi.fn().mockResolvedValue({subject: "S", html: "<p>x</p>"})
     const sendTest = vi.fn().mockResolvedValue("admin@example.at")
     Api.mailTemplateService = {
-      fetchTemplate: vi.fn().mockResolvedValue({...template(customized ? 3 : 0, "S"), legacyTemplateActive: !customized}),
+      fetchTemplate: vi.fn().mockResolvedValue(template(customized ? 3 : 0, "S")),
       fetchFile: vi.fn(), preview, sendTest,
     } as unknown as typeof Api.mailTemplateService
     render(<MailTemplateEditor tenant="RC100100" source="backend" templateKey="consent-request"
@@ -231,33 +222,33 @@ describe("MailTemplateEditor useDefault", () => {
     return {preview, sendTest}
   }
 
-  it("is sent for the unchanged default without stored version, not after an edit", async () => {
+  it("with the switch off, preview and test mail use the locked standard text", async () => {
     const {preview, sendTest} = setup(false)
-    await waitFor(() => expect(screen.getByText("Standard")).toBeTruthy())
+    await waitFor(() => expect(screen.getByText("Verschickt wird der Standardtext von eegfaktura.")).toBeTruthy())
     fireEvent.click(screen.getByText("Vorschau"))
     await waitFor(() => expect(preview).toHaveBeenCalledTimes(1))
-    expect(preview.mock.calls[0][3].useDefault).toBe(true)
+    expect(preview.mock.calls[0][3].subject).toBe("Dein Zählpunkt ist aktiv")
+    expect(preview.mock.calls[0][3]).not.toHaveProperty("useDefault")
     fireEvent.click(screen.getByText("Testmail an mich"))
     await waitFor(() => expect(sendTest).toHaveBeenCalledTimes(1))
-    expect(sendTest.mock.calls[0][4].useDefault).toBe(true)
+    expect(sendTest.mock.calls[0][4].subject).toBe("Dein Zählpunkt ist aktiv")
 
-    fireEvent(screen.getByText("Speichern").closest("ion-card")!.querySelector("ion-input")!,
-      new CustomEvent("ionInput", {detail: {value: "Geändert"}}))
+    fireEvent(document.querySelector("ion-toggle")!, new CustomEvent("ionChange", {detail: {checked: true}}))
     fireEvent.click(screen.getByText("Vorschau"))
     await waitFor(() => expect(preview).toHaveBeenCalledTimes(2))
-    expect(preview.mock.calls[1][3].useDefault).toBeUndefined()
+    expect(preview.mock.calls[1][3]).not.toHaveProperty("useDefault")
   })
 
-  it("is not sent for a stored version", async () => {
+  it("a stored version previews its own text", async () => {
     const {preview} = setup(true)
-    await waitFor(() => expect(screen.getByText(/Angepasst/)).toBeTruthy())
+    await waitFor(() => expect(screen.getByText(/Verschickt wird eure eigene Fassung/)).toBeTruthy())
     fireEvent.click(screen.getByText("Vorschau"))
     await waitFor(() => expect(preview).toHaveBeenCalledTimes(1))
-    expect(preview.mock.calls[0][3].useDefault).toBeUndefined()
+    expect(preview.mock.calls[0][3]).not.toHaveProperty("useDefault")
   })
 })
 
-describe("MailTemplateEditor reload/reset errors", () => {
+describe("MailTemplateEditor reload errors", () => {
   it("shows a failed reload above the loaded version", async () => {
     const fetchTemplate = vi.fn()
       .mockResolvedValueOnce(template(3, "Alt"))

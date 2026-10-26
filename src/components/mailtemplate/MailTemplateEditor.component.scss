@@ -8,13 +8,30 @@
   }
 
   & .mail-template-description,
-  & .mail-template-status {
+  & .mail-text-status {
     padding-left: 10px;
     margin: 4px 0;
   }
 
   & ion-card {
     padding: 10px;
+  }
+}
+
+.mail-template-status-box {
+  margin: 8px 0;
+  padding: 8px 12px;
+  border-left: 4px solid var(--ion-color-primary);
+  border-radius: 4px;
+  background: rgba(var(--ion-color-primary-rgb), 0.12);
+
+  & p {
+    margin: 4px 0;
+  }
+
+  &.own {
+    border-left-color: var(--ion-color-success-shade);
+    background: rgba(var(--ion-color-success-rgb), 0.18);
   }
 }
 

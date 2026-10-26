@@ -1,5 +1,5 @@
 import React, {FC, useEffect, useRef, useState} from "react";
-import {IonCard, IonContent, IonItem, IonLabel, IonList, IonPage, IonText} from "@ionic/react";
+import {IonBadge, IonCard, IonContent, IonItem, IonLabel, IonList, IonPage, IonText} from "@ionic/react";
 import {useAccessGroups, useTenant} from "../store/hook/Eeg.provider";
 import {useAppSelector} from "../store";
 import {eegSelector} from "../store/eeg";
@@ -7,7 +7,7 @@ import {useLocale} from "../store/hook/useLocale";
 import {Api} from "../service";
 import {MailTemplateListItem, MailTemplateSource} from "../models/mailtemplate.model";
 import MailTemplateEditor from "../components/mailtemplate/MailTemplateEditor.component";
-import {statusText} from "../components/mailtemplate/mailTemplate.util";
+import {savedText} from "../components/mailtemplate/mailTemplate.util";
 
 import "./Eeg.page.scss"
 
@@ -74,8 +74,11 @@ const MailTemplatesPage: FC = () => {
                       <IonLabel className="ion-text-wrap">
                         <h2>{item.name}</h2>
                         <p>{item.description}</p>
-                        <p>{statusText(t, item)}</p>
-                        {item.defaultChanged &&
+                        <IonBadge color={item.customized ? "success" : "medium"}>
+                          {t(item.customized ? "mailtemplates.status_own_label" : "mailtemplates.status_default")}
+                        </IonBadge>
+                        {item.customized && <p>{savedText(t, item, "status_customized")}</p>}
+                        {item.customized && item.defaultChanged &&
                           <IonText color="warning"><p>{t("mailtemplates.default_changed")}</p></IonText>}
                       </IonLabel>
                     </IonItem>

@@ -2,7 +2,7 @@ import React, {FC} from "react";
 import {IonButton, IonText} from "@ionic/react";
 import {MailTemplate, MailTemplateSource} from "../../models/mailtemplate.model";
 import {useLocale} from "../../store/hook/useLocale";
-import {statusText} from "./mailTemplate.util";
+import MailTextStatus from "./MailTextStatus.component";
 
 interface MailTemplateHeaderProps {
   template: MailTemplate
@@ -10,15 +10,20 @@ interface MailTemplateHeaderProps {
   busy: boolean
   loadError?: string
   conflict: boolean
+  ownText: boolean
+  // remounts the switch (see useOwnTextSwitch)
+  switchKey: number
+  onSwitch: (on: boolean) => void
   onViewDefault: () => void
   onApplyDefault: () => void
   onReloadAfterError: () => void
   onReloadAfterConflict: () => void
 }
 
-// Name, description and status of the mail, with the notices above the editor.
+// Name, description, the switch with the status of the mail, and the notices above the editor.
 const MailTemplateHeader: FC<MailTemplateHeaderProps> = ({
-                                                           template, source, busy, loadError, conflict, onViewDefault,
+                                                           template, source, busy, loadError, conflict, ownText,
+                                                           switchKey, onSwitch, onViewDefault,
                                                            onApplyDefault, onReloadAfterError, onReloadAfterConflict
                                                          }) => {
   const {t} = useLocale("common")
@@ -26,11 +31,9 @@ const MailTemplateHeader: FC<MailTemplateHeaderProps> = ({
     <>
       <div className="header">{template.name}</div>
       <p className="mail-template-description">{template.description}</p>
-      <p className="mail-template-status">{statusText(t, template)}</p>
+      <MailTextStatus key={switchKey} template={template} ownText={ownText} disabled={busy || conflict} onSwitch={onSwitch}/>
       {source === "billing" && <IonText color="medium"><p>{t("mailtemplates.billing_pdf_hint")}</p></IonText>}
-      {template.legacyTemplateActive &&
-        <IonText color="warning"><p className="mail-template-notice">{t("mailtemplates.legacy_active")}</p></IonText>}
-      {template.defaultChanged && (
+      {template.customized && template.defaultChanged && (
         <div className="mail-template-notice">
           <IonText color="warning"><p>{t("mailtemplates.default_changed")}</p></IonText>
           <IonButton size="small" fill="outline" disabled={busy} onClick={onViewDefault}>
