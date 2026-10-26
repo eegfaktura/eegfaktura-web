@@ -26,7 +26,7 @@ describe("downscaleImage", () => {
     const encoded = new Blob(["re-encoded"], {type: "image/jpeg"})
     const canvas = {
       width: 0, height: 0, getContext: () => ({drawImage}),
-      toBlob: vi.fn((cb: (b: Blob) => void, _type: string, _quality: number) => cb(encoded)),
+      toBlob: vi.fn((cb: (b: Blob) => void, _type: string, _quality?: number) => cb(encoded)),
     }
     const createElement = document.createElement.bind(document)
     vi.spyOn(document, "createElement").mockImplementation(((tag: string) =>
@@ -47,7 +47,7 @@ describe("downscaleImage", () => {
     expect(result).not.toBe(f)
     expect([canvas.width, canvas.height]).toEqual([640, 480])
     expect(drawImage).toHaveBeenCalledWith(expect.anything(), 0, 0, 640, 480)
-    expect(canvas.toBlob).toHaveBeenCalledWith(expect.any(Function), "image/jpeg", 0.9)
+    expect(canvas.toBlob).toHaveBeenCalledWith(expect.any(Function), "image/jpeg", 0.8)
     expect(close).toHaveBeenCalled()
   })
 
@@ -56,6 +56,6 @@ describe("downscaleImage", () => {
     const result = await downscaleImage(new File(["png"], "a.png", {type: "image/png"}))
     expect(result).toBe(encoded)
     expect([canvas.width, canvas.height]).toEqual([1200, 500])
-    expect(canvas.toBlob).toHaveBeenCalledWith(expect.any(Function), "image/png", 0.9)
+    expect(canvas.toBlob).toHaveBeenCalledWith(expect.any(Function), "image/png", undefined)
   })
 })
