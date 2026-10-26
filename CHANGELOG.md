@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.13.0] – 2026-10-26
+
 ### Added
 - **„E-Mail-Texte“: font size, image size, pasting images, fixed footer.** A toolbar group „Schriftgröße“ sets
   Klein / Normal / Groß on the paragraph(s), heading(s) or list item(s) at the cursor (stored as
