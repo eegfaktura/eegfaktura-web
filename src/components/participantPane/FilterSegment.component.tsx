@@ -3,7 +3,8 @@ import {
   IonIcon,
   IonItem,
   IonLabel,
-  useIonAlert
+  useIonAlert,
+  useIonPopover
 } from "@ionic/react";
 import cn from "classnames";
 
@@ -11,21 +12,33 @@ import './FilterSegment.component.scss'
 import {eegFilterList} from "../../eegIcons";
 import {useLocale} from "../../store/hook/useLocale";
 import {swapVertical} from "ionicons/icons";
-import {MEMBER_SORT_OPTIONS, MemberSort} from "./participantSort";
+import {MemberSort} from "./participantSort";
+import {DEFAULT_MEMBER_FILTER, MEMBER_FILTER_OPTIONS, MemberFilter} from "./memberFilter.functions";
+import MemberSortPopover from "./MemberSortPopover.component";
 
 
 interface FilterSegmentProps {
   selectedOption: string;
   setSelectedOption: (option: string) => void;
   memberSort: MemberSort;
-  setMemberSort: (sort: MemberSort) => void;
+  actionFirst: boolean;
+  setMemberSort: (sort: MemberSort, actionFirst: boolean) => void;
 }
 
-const FilterSegmentComponent: FC<FilterSegmentProps> = ({selectedOption, setSelectedOption, memberSort, setMemberSort}) => {
+const FilterSegmentComponent: FC<FilterSegmentProps> = ({selectedOption, setSelectedOption, memberSort, actionFirst, setMemberSort}) => {
   const [filterAlert] = useIonAlert();
   const [selectedMenuItem, setSelectedMenuItem] = useState<number>(0)
-  const [selectOption, setSelectOption] = useState<string>('init');
+  const [selectOption, setSelectOption] = useState<MemberFilter>(DEFAULT_MEMBER_FILTER);
   const {t} = useLocale("common")
+  const [sortPopover, dismissSortPopover] = useIonPopover(MemberSortPopover, {
+    memberSort,
+    actionFirst,
+    onApply: (sort: MemberSort, first: boolean) => {
+      setMemberSort(sort, first)
+      dismissSortPopover()
+    },
+    onDismiss: () => dismissSortPopover(),
+  })
 
   useEffect(() => {
     switch(selectedOption) {
@@ -34,7 +47,7 @@ const FilterSegmentComponent: FC<FilterSegmentProps> = ({selectedOption, setSele
         break;
       default:
         setSelectedMenuItem(1)
-        setSelectOption(selectedOption);
+        setSelectOption(selectedOption as MemberFilter);
     }
   }, [selectedOption]);
 
@@ -56,22 +69,18 @@ const FilterSegmentComponent: FC<FilterSegmentProps> = ({selectedOption, setSele
   const onClickFilter = (e: React.MouseEvent<HTMLIonIconElement, MouseEvent>) => {
     filterAlert({
       header: t('meterlist.filter_header'),
-      inputs: [
-        {label: t('meterlist.filter_text_active'), type: 'radio', value: 'active', checked: selectOption === 'active'},
-        {label: t('meterlist.filter_text_init'), type: 'radio', value: 'init', checked: selectOption === 'init'},
-        {label: t('meterlist.filter_text_inactive'), type: 'radio', value: 'inactive', checked: selectOption === 'inactive'},
-        {label: t('meterlist.filter_text_rejected'), type: 'radio', value: 'rejected', checked: selectOption === 'rejected'},
-      ],
+      inputs: MEMBER_FILTER_OPTIONS.map(o =>
+        ({label: t('meterlist.filter_text_' + o), type: 'radio' as const, value: o, checked: selectOption === o})),
       buttons: [
         {
-          text: 'Cancel',
+          text: t('meterlist.cancel'),
           role: 'cancel',
           handler: () => {
             // console.log('Alert canceled');
           },
         },
         {
-          text: 'Select',
+          text: t('meterlist.apply'),
           role: 'confirm',
           handler: (value: string) => {
             onSelectOptionClick(value);
@@ -83,17 +92,8 @@ const FilterSegmentComponent: FC<FilterSegmentProps> = ({selectedOption, setSele
     e.preventDefault()
   }
 
-  const onClickSort = () => {
-    filterAlert({
-      header: t('meterlist.sort_header'),
-      message: t('meterlist.sort_message'),
-      inputs: MEMBER_SORT_OPTIONS.map(o =>
-        ({label: t('meterlist.sort_' + o), type: 'radio' as const, value: o, checked: memberSort === o})),
-      buttons: [
-        {text: 'Cancel', role: 'cancel'},
-        {text: 'Select', role: 'confirm', handler: (value: MemberSort) => setMemberSort(value)},
-      ]
-    })
+  const onClickSort = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    sortPopover({event: e.nativeEvent, side: "bottom", alignment: "end"})
   }
 
   const sortLabel = t('meterlist.sort_header') + ' ' + t('meterlist.sort_' + memberSort)

@@ -36,6 +36,32 @@ this changelog highlights the changes relevant for overview and operations.
   `font-size`/`text-align` declaration of a style, as the browser does. Needs eegfaktura-backend and
   eegfaktura-billing with the link rules for the numbers; without them nothing is shown.
 
+### Changed
+- **Member list sorting: fixed sorts only, default „Mitgliedsnummer“** (platform#214, feedback on 1.9.0). „Standard“
+  (the unordered backend order) is gone; without a stored choice, or with the stored „Standard“, the list is sorted by
+  member number (numbers compared as numbers, also in „A006“). A stored other choice is kept. New sorts: „Aktiviert
+  seit“ (earliest „Aktiv seit“ of the member's metering points, newest first, members without one last),
+  „Einzugsart“ (CORE, B2B, Kein SEPA, none; then by last name) and „Ort“ (city of the residence address, German
+  collation, empty last; then by last name). The sort choice is a small popover instead of an alert, because it now
+  also has the checkbox „Mitglieder mit nötiger Aktion oben“ (default on, kept per browser like the sort); off, the
+  sort runs over all members without the action groups. Its buttons read „Abbrechen“ / „Übernehmen“.
+- **Metering points of a member: consumers before producers** (platform#214), the order within each direction
+  unchanged; in all views.
+- **Member list filters „Alle“, „Aktive“, „Inaktive“** (platform#214) replace „Aktive“, „Ausstehende“, „Inaktive“ and
+  „Abgewiesene“. „Alle“ shows every metering point, „Aktive“ the active ones (status ACTIVE, the rule of the
+  dashboard count), „Inaktive“ every other one (registration in progress, rejected, invalid, revoked, left) and also an active one
+  whose process needs action (e.g. a revocation running or rejected) — such a point is under both. A member
+  is listed with exactly the matching metering points and not at all without one, so „Ausstehende“ no longer lists
+  members without such a metering point; members waiting for admission (status NEW / PENDING) are listed under
+  „Alle“ and „Inaktive“ also without one. The filtered views are sorted with the chosen sort (on all metering points
+  of a member); the Erzeuger / Verbraucher toggles still apply. The default filter is „Inaktive“ (it replaces
+  „Ausstehende“ as the view of what needs a look). The filter alert buttons read „Abbrechen“ / „Übernehmen“ instead
+  of „Cancel“ / „Select“. No backend change.
+
+### Fixed
+- Member list: sorting no longer crashes for a member without metering points (the backend can send `meters: null`;
+  pre-existing, found in the review of platform#214).
+
 ## [1.12.0] – 2026-10-26
 
 ### Changed
