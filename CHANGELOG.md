@@ -8,6 +8,18 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **„E-Mail-Texte“: switch „Eigenen Text verwenden“ instead of „Auf Standard zurücksetzen“.** Off (standard): a
+  coloured status box says „Verschickt wird der Standardtext von eegfaktura.“; subject, text, toolbar and
+  placeholder pickers show the standard text and are locked, the image/PDF section is hidden; preview and test mails
+  still work (with the standard text). On: the editor starts from a copy of the standard text, the box adds „Noch
+  nicht gespeichert – verschickt wird weiterhin der Standardtext.“ until it is saved; a saved own version shows a green
+  box „Verschickt wird eure eigene Fassung (gespeichert am … von …).“ Switching off asks first: with a saved version it
+  deletes it (with its images and PDF, as the former reset), with unsaved edits only it discards them and deletes the
+  drafts uploaded since. The list shows a label „Standard“ or „Eigener Text“ per mail instead of the grey status text.
+  The notice for hand-made templates on the volume (`legacyTemplateActive`) is gone: backend no longer uses them (see
+  the backend change); the field is ignored if a service still sends it.
+
 ## [1.11.0] – 2026-10-26
 
 ### Fixed

@@ -74,4 +74,20 @@ describe("MailTemplatesPage", () => {
     expect(fetchList.mock.calls.length).toBe(calls)
     expect(screen.getByText("Mail der neuen EEG")).toBeTruthy()
   })
+
+  it("labels each mail „Standard“ or „Eigener Text“, with the date of the saved version", async () => {
+    const fetchList = vi.fn().mockResolvedValue({items: [
+      item("zp-active", "Mail Standard"),
+      {...item("zp-inactive", "Mail eigen"), customized: true, updatedAt: "2026-10-22T10:00:00Z", updatedBy: "admin"},
+    ], failed: []})
+    Api.mailTemplateService = {fetchList} as unknown as typeof Api.mailTemplateService
+
+    const {container} = renderWithProviders(page("RC100100"))
+    await waitFor(() => expect(screen.getByText("Mail eigen")).toBeTruthy())
+    const badges = Array.from(container.querySelectorAll("ion-badge"))
+    expect(badges.map(b => [b.textContent, b.getAttribute("color")]))
+      .toEqual([["Standard", "medium"], ["Eigener Text", "success"]])
+    expect(screen.getByText(/^Angepasst \(am 22\.10\.2026 [0-9:]+ von admin\)$/)).toBeTruthy()
+    expect(screen.queryAllByText(/Angepasst/)).toHaveLength(1)
+  })
 })

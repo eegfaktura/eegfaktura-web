@@ -5,13 +5,12 @@ export const formatBytes = (bytes: number) =>
     ? `${(bytes / (1024 * 1024)).toLocaleString("de-AT", {maximumFractionDigits: 1})} MB`
     : `${Math.round(bytes / 1024).toLocaleString("de-AT")} KB`
 
-// "Standard" or "Angepasst (am … von …)", for the list and the editor
-export const statusText = (t: (key: string, options?: Record<string, unknown>) => string,
-                           s: { customized: boolean, updatedAt?: string | null, updatedBy?: string | null }) =>
-  s.customized
-    ? t(s.updatedBy ? "mailtemplates.status_customized" : "mailtemplates.status_customized_nouser",
-      {date: s.updatedAt ? moment(s.updatedAt).format("DD.MM.YYYY HH:mm") : "", user: s.updatedBy})
-    : t("mailtemplates.status_default")
+// "… (am {date} von {user})" of a saved own version, for the list ("status_customized") and the status box ("status_own")
+export const savedText = (t: (key: string, options?: Record<string, unknown>) => string,
+                          s: { updatedAt?: string | null, updatedBy?: string | null },
+                          key: "status_customized" | "status_own") =>
+  t(`mailtemplates.${key}${s.updatedBy ? "" : "_nouser"}`,
+    {date: s.updatedAt ? moment(s.updatedAt).format("DD.MM.YYYY HH:mm") : "", user: s.updatedBy})
 
 export const MAX_SUBJECT_CHARS = 200
 

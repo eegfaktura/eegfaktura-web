@@ -39,6 +39,7 @@ import MailPreviewCard from "./MailPreviewCard.component";
 import MailTemplateHeader from "./MailTemplateHeader.component";
 import MailPlaceholderPicker from "./MailPlaceholderPicker.component";
 import UnsavedChangesGuard from "../core/UnsavedChangesGuard.component";
+import {useOwnTextSwitch} from "./useOwnTextSwitch";
 
 import "./MailTemplateEditor.component.scss"
 
@@ -91,17 +92,33 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
     onUpdate: () => setDirty(true),
   })
 
+  const {ownText, setOwnText, switchKey, onSwitch} = useOwnTextSwitch({
+    template, editor, dirty, saving, files, run: action => run(action), show: tpl => show(tpl),
+    deleteDraft: id => service.deleteFile(source, tenant, templateKey, id),
+    onDelete: () => run(async () => {
+      await service.resetTemplate(source, tenant, templateKey)
+      onChanged()
+      if (await load()) toast(t("mailtemplates.reset_done"), "success")
+    }),
+  })
+
   const toast = (message: string, color: "success" | "danger") =>
     toaster({message, duration: 3500, position: "bottom", color})
 
-  const apply = (tpl: MailTemplate) => {
-    setTemplate(tpl)
-    setSubject(tpl.subject)
+  // shows the saved own version, or the standard text (switch off) when there is none
+  const show = (tpl: MailTemplate) => {
+    setOwnText(tpl.customized)
+    setSubject(tpl.customized ? tpl.subject : tpl.defaultSubject)
     setFiles(tpl.files || [])
     setAttachmentId(tpl.attachmentFileId ?? null)
     setRemovedIds([])
-    if (editor) setContentWithoutHistory(editor, tpl.bodyHtml || "")
+    if (editor) setContentWithoutHistory(editor, (tpl.customized ? tpl.bodyHtml : tpl.defaultBodyHtml) || "")
     setDirty(false)
+  }
+
+  const apply = (tpl: MailTemplate) => {
+    setTemplate(tpl)
+    show(tpl)
     setConflict(false)
   }
 
@@ -128,10 +145,8 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
   const draft = (): MailTemplateDraft =>
     ({subject, bodyHtml: toMailHtml(editor ? editor.getHTML() : ""), attachmentFileId: attachmentId})
 
-  // preview/test of the unchanged default of a mail without stored version: let the backend show what
-  // members actually get (hand-made template while legacyTemplateActive)
-  const previewDraft = (): MailTemplateDraft =>
-    template && !template.customized && !dirty ? {...draft(), useDefault: true} : draft()
+  // preview/test with the switch off: the standard text, as the members get it
+  const previewDraft = (): MailTemplateDraft => ownText ? draft() : {...draft(), useDefault: true}
 
   const run = async (action: () => Promise<void>) => {
     setBusy(true)
@@ -148,7 +163,6 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
     if (!template) return
     setSaveErrors([])
     setSaving(true)
-    editor?.setEditable(false, false)
     try {
       apply(await service.saveTemplate(source, tenant, templateKey, draft(), template.version))
       toast(t("mailtemplates.saved"), "success")
@@ -164,28 +178,8 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
       }
       throw e
     } finally {
-      editor?.setEditable(true, false)
       setSaving(false)
     }
-  })
-
-  const onReset = () => presentAlert({
-    header: t("mailtemplates.reset_confirm_header"),
-    message: t("mailtemplates.reset_confirm_message"),
-    buttons: [
-      {text: t("mailtemplates.cancel"), role: "cancel"},
-      {
-        text: t("mailtemplates.reset"), role: "destructive", handler: () => {
-          run(async () => {
-            await service.resetTemplate(source, tenant, templateKey)
-            onChanged()
-            if (await load()) {
-              toast(t("mailtemplates.reset_done"), "success")
-            }
-          })
-        }
-      },
-    ],
   })
 
   // runs the action directly, or after confirming that unsaved edits are discarded
@@ -379,51 +373,49 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
       <IonButton fill="clear" onClick={onClickClose}>{t("mailtemplates.back")}</IonButton>
       {!template && <p>{t("mailtemplates.loading")}</p>}
       {template && <MailTemplateHeader template={template} source={source} busy={busy || saving} loadError={loadError}
-                                       conflict={conflict} onApplyDefault={onApplyDefault}
+                                       conflict={conflict} ownText={ownText} switchKey={switchKey} onSwitch={onSwitch}
+                                       onApplyDefault={onApplyDefault}
                                        onViewDefault={() => onPreview({subject: template.defaultSubject, bodyHtml: template.defaultBodyHtml})}
                                        onReloadAfterError={onReloadAfterError} onReloadAfterConflict={() => load()}/>}
 
       <IonCard color="eeglight" className={template ? "" : "ion-hide"}>
         <div className="mail-editor-row">
           <IonInput ref={subjectInput} label={t("mailtemplates.subject")} labelPlacement="floating" fill="outline"
-                    maxlength={MAX_SUBJECT_CHARS} className="mail-subject" disabled={saving}
+                    maxlength={MAX_SUBJECT_CHARS} className="mail-subject" disabled={saving || !ownText}
                     value={subject} onIonInput={e => {
             setSubject(String(e.detail.value ?? ""));
             setDirty(true)
           }}/>
           {template && template.placeholders.some(p => !p.block) &&
-            <MailPlaceholderPicker key={`subject-${pickerRound}`} target="subject" placeholders={template.placeholders} disabled={saving}
+            <MailPlaceholderPicker key={`subject-${pickerRound}`} target="subject" placeholders={template.placeholders} disabled={saving || !ownText}
                                    onPick={ph => onInsertSubjectPlaceholder(ph.key)}/>}
         </div>
         <div className="mail-editor-row">
-          {editor && <MailEditorToolbar editor={editor} onLink={onLink} disabled={saving}
+          {editor && <MailEditorToolbar editor={editor} onLink={onLink} disabled={saving || !ownText}
                                         onImage={() => imageInput.current?.click()}
                                         imageDisabled={busy || !limits || images.length >= limits.maxImages}/>}
           {template && template.placeholders.length > 0 &&
-            <MailPlaceholderPicker key={`body-${pickerRound}`} target="body" placeholders={template.placeholders} disabled={saving}
+            <MailPlaceholderPicker key={`body-${pickerRound}`} target="body" placeholders={template.placeholders} disabled={saving || !ownText}
                                    onPick={onInsertPlaceholder}/>}
         </div>
         <EditorContent editor={editor} className="mail-editor"/>
         <input ref={imageInput} type="file" accept="image/png,image/jpeg" hidden onChange={onImageSelected}/>
         <input ref={pdfInput} type="file" accept="application/pdf" hidden onChange={onPdfSelected}/>
 
-        <MailFileList images={images} attachments={attachments} totalBytes={totalBytes} limits={limits}
+        {ownText && <MailFileList images={images} attachments={attachments} totalBytes={totalBytes} limits={limits}
                       usedImageIds={usedImageIds} attachmentId={attachmentId} busy={busy || saving} saving={saving}
                       onAttach={f => {
                         setAttachmentId(f.id)
                         setDirty(true)
                       }}
-                      onRemove={onRemoveFile} onAddPdf={() => pdfInput.current?.click()}/>
+                      onRemove={onRemoveFile} onAddPdf={() => pdfInput.current?.click()}/>}
 
         <div className="mail-template-actions">
-          <IonButton disabled={busy || conflict} onClick={onSave}>{t("mailtemplates.save")}</IonButton>
+          <IonButton disabled={busy || conflict || !ownText} onClick={onSave}>{t("mailtemplates.save")}</IonButton>
           <IonButton fill="outline" disabled={busy} onClick={() => onPreview(previewDraft())}>{t("mailtemplates.preview")}</IonButton>
           <IonButton fill="outline" disabled={busy} onClick={() => onTest("me")}>{t("mailtemplates.test_me")}</IonButton>
           <IonButton fill="outline" disabled={busy || !eegEmail} title={eegEmail ? undefined : t("mailtemplates.test_eeg_missing")}
                      onClick={() => onTest("eeg")}>{t("mailtemplates.test_eeg")}</IonButton>
-          <IonButton fill="clear" color="danger" disabled={busy || !template?.customized} onClick={onReset}>
-            {t("mailtemplates.reset")}
-          </IonButton>
         </div>
         {!eegEmail && <IonText color="medium"><p>{t("mailtemplates.test_eeg_missing")}</p></IonText>}
         {saveErrors.length > 0 && (
