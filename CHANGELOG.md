@@ -8,6 +8,10 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- Member list: sorting no longer crashes for a member without metering points (the backend can send `meters: null`;
+  pre-existing, found in the review of platform#214).
+
 ### Changed
 - **Member list sorting: fixed sorts only, default „Mitgliedsnummer“** (platform#214, feedback on 1.9.0). „Standard“
   (the unordered backend order) is gone; without a stored choice, or with the stored „Standard“, the list is sorted by
