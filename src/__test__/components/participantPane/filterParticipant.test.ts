@@ -63,6 +63,12 @@ describe("filterParticipant 'all' / 'active' / 'inactive' (platform#214)", () =>
       ["mixed:AT2,AT3", "onlyRejected:AT4", "left:AT5", "waiting:", "newWithMeter:AT7"])
   })
 
+  it("an active metering point that needs action is under 'Aktive' and under 'Inaktive' (decided 2026-10-26)", () => {
+    const revoking = [member("revoking", [meter("AT8", "ACTIVE", "CONSUMPTION", "REVOKED"), meter("AT9", "ACTIVE")])]
+    expect(view(run("inactive", revoking))).toEqual(["revoking:AT8"])
+    expect(view(run("active", revoking))).toEqual(["revoking:AT8,AT9"])
+  })
+
   it("a member with only a rejected metering point is under 'Inaktive' with it, not under 'Aktive'", () => {
     const rejected = [member("onlyRejected", [meter("AT4", "INIT", "CONSUMPTION", "REJECTED")])]
     expect(view(run("inactive", rejected))).toEqual(["onlyRejected:AT4"])

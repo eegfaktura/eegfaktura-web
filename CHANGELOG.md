@@ -25,7 +25,8 @@ this changelog highlights the changes relevant for overview and operations.
   unchanged; in all views.
 - **Member list filters „Alle“, „Aktive“, „Inaktive“** (platform#214) replace „Aktive“, „Ausstehende“, „Inaktive“ and
   „Abgewiesene“. „Alle“ shows every metering point, „Aktive“ the active ones (status ACTIVE, the rule of the
-  dashboard count), „Inaktive“ every other one (registration in progress, rejected, invalid, revoked, left). A member
+  dashboard count), „Inaktive“ every other one (registration in progress, rejected, invalid, revoked, left) and also an active one
+  whose process needs action (e.g. a revocation running or rejected) — such a point is under both. A member
   is listed with exactly the matching metering points and not at all without one, so „Ausstehende“ no longer lists
   members without such a metering point; members waiting for admission (status NEW / PENDING) are listed under
   „Alle“ and „Inaktive“ also without one. The filtered views are sorted with the chosen sort (on all metering points

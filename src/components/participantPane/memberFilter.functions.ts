@@ -14,13 +14,18 @@ export const DEFAULT_MEMBER_FILTER: MemberFilter = 'inactive'
 // progress, rejected, invalid, revoked, left) is shown under "Inaktive", where the metering point shows its reason.
 export const isActiveMeter = (m: Metering) => m.status === 'ACTIVE'
 
+// An active metering point whose process is not active (revocation running or rejected, invalid …) needs action — the
+// rule of "Aktion nötig" (participantSort). It is shown under "Aktive" and under "Inaktive" (decided 2026-10-26), so the
+// attention view finds every metering point that needs a look.
+const needsAction = (m: Metering) => m.processState !== undefined && m.processState !== 'ACTIVE'
+
 // A member waiting for admission is listed under "Alle" and "Inaktive" even without a matching metering point.
 const waitsForAdmission = (p: EegParticipant) => p.status === 'NEW' || p.status === 'PENDING'
 
 const matches: Record<MemberFilter, (m: Metering) => boolean> = {
   all: () => true,
   active: isActiveMeter,
-  inactive: m => !isActiveMeter(m),
+  inactive: m => !isActiveMeter(m) || needsAction(m),
 }
 
 /**
