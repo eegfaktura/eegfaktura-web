@@ -31,7 +31,7 @@ const MailTemplateHeader: FC<MailTemplateHeaderProps> = ({
     <>
       <div className="header">{template.name}</div>
       <p className="mail-template-description">{template.description}</p>
-      <MailTextStatus key={switchKey} template={template} ownText={ownText} disabled={busy} onSwitch={onSwitch}/>
+      <MailTextStatus key={switchKey} template={template} ownText={ownText} disabled={busy || conflict} onSwitch={onSwitch}/>
       {source === "billing" && <IonText color="medium"><p>{t("mailtemplates.billing_pdf_hint")}</p></IonText>}
       {template.customized && template.defaultChanged && (
         <div className="mail-template-notice">

@@ -41,11 +41,14 @@ describe("MailTemplateEditor", () => {
     expect(saveTemplate).toHaveBeenCalledWith("backend", "RC100100", "zp-active",
       {subject: "Alt", bodyHtml: '<p>Hallo <span data-ph="member.firstName">Vorname</span></p>', attachmentFileId: null}, 3)
     expect((screen.getByText("Speichern").closest("ion-button") as any).disabled).toBe(true)
+    // the switch is locked too: switching off would delete the other admin's newer version without a version check
+    expect((document.querySelector("ion-toggle") as any).disabled).toBe(true)
 
     fireEvent.click(screen.getByText("Neu laden"))
     await waitFor(() => expect(screen.queryByRole("alert")).toBeNull())
     expect(fetchTemplate).toHaveBeenCalledTimes(2)
     expect((screen.getByText("Speichern").closest("ion-button") as any).disabled).toBe(false)
+    expect((document.querySelector("ion-toggle") as any).disabled).toBe(false)
   })
 
   it("disables the test mail to the community without an EEG address and hides attachments without limit", async () => {
