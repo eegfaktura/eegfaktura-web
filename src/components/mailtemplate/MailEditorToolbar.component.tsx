@@ -3,6 +3,7 @@ import {IonButton, IonIcon} from "@ionic/react";
 import {imageOutline, linkOutline, listOutline} from "ionicons/icons";
 import {Editor, useEditorState} from "@tiptap/react";
 import {useLocale} from "../../store/hook/useLocale";
+import MailSizeControls from "./MailSizeControls.component";
 
 interface ToolbarProps {
   editor: Editor
@@ -51,6 +52,7 @@ const MailEditorToolbar: FC<ToolbarProps> = ({editor, onLink, onImage, imageDisa
       {button("align_left", "⇤", state.left, () => chain().setTextAlign("left").run())}
       {button("align_center", "↔", state.center, () => chain().setTextAlign("center").run())}
       {button("align_right", "⇥", state.right, () => chain().setTextAlign("right").run())}
+      <MailSizeControls editor={editor} disabled={disabled}/>
       {button("image", <IonIcon icon={imageOutline}/>, false, onImage, imageDisabled)}
     </div>
   )

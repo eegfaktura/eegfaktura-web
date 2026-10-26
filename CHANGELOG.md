@@ -8,9 +8,33 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
-### Fixed
-- Member list: sorting no longer crashes for a member without metering points (the backend can send `meters: null`;
-  pre-existing, found in the review of platform#214).
+### Added
+- **„E-Mail-Texte“: font size, image size, pasting images, fixed footer.** A toolbar group „Schriftgröße“ sets
+  Klein / Normal / Groß on the paragraph(s), heading(s) or list item(s) at the cursor (stored as
+  `style="font-size: 13px"` / no style / `font-size: 20px`, combinable with the alignment); the client-side copy of
+  the HTML policy keeps exactly these two values and drops other sizes, as the services do with
+  `mail-html-policy.json` version 2. A selected image gets „Bildgröße“ Klein / Mittel / Groß (`width` 200 / 400 /
+  600); a newly inserted image keeps its size as before. Pasting or dropping a PNG/JPEG file into the text uploads
+  it like „Bild einfügen“ (same limits, 1200 px downscaling, draft until saved) and inserts it at the cursor or
+  drop position; only with „Eigenen Text verwenden“ on. Copied text that comes with a picture of itself (e.g. from
+  Word) is still pasted as text, other pasted content is unchanged (`data:` images are still dropped). Below the
+  text a grey line „Wird immer angehängt: …“ shows the new optional field `fixedFooter` of the mail-template
+  definition (the footer the services append to every mail); nothing is shown when a service does not send it.
+  Needs eegfaktura-backend and eegfaktura-billing with policy version 2 to save font sizes (an older service drops
+  them); deploy them before or together with this version.
+- **„E-Mail-Texte“: link rules, no PDF where none is allowed, images without metadata.** When the mail-template
+  definition's `limits` carry the new optional numbers `maxLinks` and `maxLinkDomains`, the editor shows „Links:
+  höchstens 3, zu höchstens 2 Domains; keine Kurz-Links, keine IP-Adressen“ next to the image limits, and the link
+  dialog refuses a new link once the text holds `maxLinks` links („Höchstens 3 Links pro Mail.“). The services check
+  the rules on save, preview and test mail; their 400 messages appear in the „Nicht gespeichert:“ list as before.
+  The „PDF-Anhang“ section is hidden for every mail whose `maxAttachments` is 0 (member mails now too), and a PDF
+  stored before is no longer sent with the save (it would be refused). Every JPEG is drawn anew in the browser
+  before the upload (quality 0.8, at most 1200 px wide), so EXIF/GPS data of photos no longer leaves the browser;
+  a PNG is only redrawn when wider than 1200 px (an optimised logo would grow), the services re-encode every image.
+  An image the browser can not draw gets a clear message, and an image pasted while an upload or save still runs
+  gets „Bitte warten …“ instead of vanishing. The client copy of the HTML policy now keeps the last
+  `font-size`/`text-align` declaration of a style, as the browser does. Needs eegfaktura-backend and
+  eegfaktura-billing with the link rules for the numbers; without them nothing is shown.
 
 ### Changed
 - **Member list sorting: fixed sorts only, default „Mitgliedsnummer“** (platform#214, feedback on 1.9.0). „Standard“
@@ -33,6 +57,10 @@ this changelog highlights the changes relevant for overview and operations.
   of a member); the Erzeuger / Verbraucher toggles still apply. The default filter is „Inaktive“ (it replaces
   „Ausstehende“ as the view of what needs a look). The filter alert buttons read „Abbrechen“ / „Übernehmen“ instead
   of „Cancel“ / „Select“. No backend change.
+
+### Fixed
+- Member list: sorting no longer crashes for a member without metering points (the backend can send `meters: null`;
+  pre-existing, found in the review of platform#214).
 
 ## [1.12.0] – 2026-10-26
 

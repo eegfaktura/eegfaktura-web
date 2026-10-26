@@ -41,6 +41,9 @@ export interface MailTemplateLimits {
   maxAttachments: number
   maxAttachmentBytes: number
   maxTotalBytes: number
+  // link rules of the service (links per mail, different domains); absent on older services
+  maxLinks?: number
+  maxLinkDomains?: number
 }
 
 export interface MailTemplate {
@@ -61,6 +64,8 @@ export interface MailTemplate {
   files: MailFile[]
   attachmentFileId?: string | null
   limits: MailTemplateLimits
+  // footer the service appends to every mail (not editable, not part of the text); absent on older services
+  fixedFooter?: string
 }
 
 export interface MailTemplateDraft {

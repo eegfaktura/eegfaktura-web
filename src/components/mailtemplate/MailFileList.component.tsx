@@ -54,6 +54,8 @@ const MailFileList: FC<MailFileListProps> = ({
           {limits.maxAttachments > 0 &&
             <p>{t("mailtemplates.limits_attachment", {max: limits.maxAttachments, size: formatBytes(limits.maxAttachmentBytes)})}</p>}
           <p>{t("mailtemplates.limits_total", {total: formatBytes(totalBytes), max: formatBytes(limits.maxTotalBytes)})}</p>
+          {limits.maxLinks != null && limits.maxLinkDomains != null &&
+            <p>{t("mailtemplates.limits_links", {max: limits.maxLinks, domains: limits.maxLinkDomains})}</p>}
         </IonText>
       </div>}
 

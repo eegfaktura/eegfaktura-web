@@ -30,9 +30,11 @@ import {
   setContentWithoutHistory,
   toMailHtml
 } from "./mailEditor.extensions";
-import {downscaleImage} from "../../util/ImageScale.util";
+import {downscaleImage, ImageProcessError} from "../../util/ImageScale.util";
 import {useLocale} from "../../store/hook/useLocale";
-import {createBlobUrlCache, errorMessage, formatBytes, insertAtCursor, MAX_SUBJECT_CHARS} from "./mailTemplate.util";
+import {
+  createBlobUrlCache, errorMessage, formatBytes, insertAtCursor, linkLimitReached, MAX_SUBJECT_CHARS
+} from "./mailTemplate.util";
 import MailEditorToolbar from "./MailEditorToolbar.component";
 import MailFileList from "./MailFileList.component";
 import MailPreviewCard from "./MailPreviewCard.component";
@@ -40,6 +42,7 @@ import MailTemplateHeader from "./MailTemplateHeader.component";
 import MailPlaceholderPicker from "./MailPlaceholderPicker.component";
 import UnsavedChangesGuard from "../core/UnsavedChangesGuard.component";
 import {useOwnTextSwitch} from "./useOwnTextSwitch";
+import {InsertImage, insertUploadedImage, mailImageEditorProps} from "./mailImagePaste";
 
 import "./MailTemplateEditor.component.scss"
 
@@ -80,6 +83,11 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
   const imageInput = useRef<HTMLInputElement>(null)
   const pdfInput = useRef<HTMLInputElement>(null)
   const subjectInput = useRef<HTMLIonInputElement>(null)
+  // pasted or dropped images: the editor props are fixed, the upload sees the current state
+  const insertImage = useRef<InsertImage>(() => undefined)
+  // set at once (not with the next render), so a second paste or drop right after the first sees them
+  const busyNow = useRef(false)
+  const imageCount = useRef(0)
 
   // blob URLs of the images shown in the editor, fetched with the bearer token
   const blobUrls = useMemo(() => createBlobUrlCache(id => service.fetchFile(source, tenant, templateKey, id)), [])
@@ -90,6 +98,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
     extensions,
     content: "",
     onUpdate: () => setDirty(true),
+    editorProps: mailImageEditorProps(() => insertImage.current),
   })
 
   const {ownText, setOwnText, switchKey, onSwitch} = useOwnTextSwitch({
@@ -146,8 +155,11 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
     }
   }, [editor, tenant, source, templateKey])
 
+  // a PDF stored before the mail lost its attachment (maxAttachments 0) is hidden and not sent again,
+  // otherwise the save would be refused without a way to remove it in the editor
   const draft = (): MailTemplateDraft =>
-    ({subject, bodyHtml: toMailHtml(editor ? editor.getHTML() : ""), attachmentFileId: attachmentId})
+    ({subject, bodyHtml: toMailHtml(editor ? editor.getHTML() : ""),
+      attachmentFileId: limits?.maxAttachments === 0 ? null : attachmentId})
 
   // preview/test with the switch off: the standard text exactly as stored, not as the editor re-serialises it
   const previewDraft = (): MailTemplateDraft => !ownText && template
@@ -156,11 +168,13 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
 
   const run = async (action: () => Promise<void>) => {
     setBusy(true)
+    busyNow.current = true
     try {
       await action()
     } catch (e) {
       toast(t("mailtemplates.error", {message: errorMessage(e)}), "danger")
     } finally {
+      busyNow.current = false
       setBusy(false)
     }
   }
@@ -263,6 +277,10 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
         {
           text: t("mailtemplates.link_apply"), handler: (values: { href: string }) => {
             const href = (values.href || "").trim()
+            if (href && !current && linkLimitReached(editor.getHTML(), limits?.maxLinks)) {
+              toast(t("mailtemplates.link_limit", {max: limits?.maxLinks}), "danger")
+              return false
+            }
             if (!href || /^(https:|mailto:)/i.test(href)) {
               applyLink(editor, href)
             } else {
@@ -298,24 +316,44 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
     }
   }
 
-  const onImageSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ""
-    if (!file || !limits) return
+  // toolbar „Bild einfügen“, paste and drop; pos undefined = at the cursor
+  const uploadImage: InsertImage = (file, pos) => {
+    if (!limits) return
+    // another upload, save, … still runs (e.g. a second paste right after the first)
+    if (busyNow.current) {
+      toast(t("mailtemplates.image_busy"), "danger")
+      return
+    }
+    const doc = editor?.state.doc
     run(async () => {
-      if (images.length >= limits.maxImages) {
+      if (imageCount.current >= limits.maxImages) {
         throw new Error(t("mailtemplates.image_limit", {max: limits.maxImages}))
       }
-      const scaled = await downscaleImage(file)
+      const scaled = await downscaleImage(file).catch(e => {
+        throw e instanceof ImageProcessError ? new Error(t("mailtemplates.image_unreadable")) : e
+      })
       if (scaled.size > limits.maxImageBytes) {
         throw new Error(t("mailtemplates.image_too_large", {max: formatBytes(limits.maxImageBytes)}))
       }
       checkTotal(scaled.size)
       const uploaded = await service.uploadFile(source, tenant, templateKey, scaled, file.name, "image")
       blobUrls.put(uploaded.id, scaled)
+      imageCount.current++
       setFiles(fs => [...fs, uploaded])
-      editor?.chain().focus().setImage({src: `${MAILFILE_PREFIX}${uploaded.id}`, alt: file.name}).run()
+      if (editor) insertUploadedImage(editor, {src: `${MAILFILE_PREFIX}${uploaded.id}`, alt: file.name}, pos, doc)
     })
+  }
+  useEffect(() => {
+    insertImage.current = uploadImage
+  })
+  useEffect(() => {
+    imageCount.current = images.length
+  }, [images.length])
+
+  const onImageSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (file) uploadImage(file)
   }
 
   const onPdfSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -405,6 +443,8 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
                                    onPick={onInsertPlaceholder}/>}
         </div>
         <EditorContent editor={editor} className="mail-editor"/>
+        {template?.fixedFooter &&
+          <p className="mail-fixed-footer">{t("mailtemplates.fixed_footer")} {template.fixedFooter}</p>}
         <input ref={imageInput} type="file" accept="image/png,image/jpeg" hidden onChange={onImageSelected}/>
         <input ref={pdfInput} type="file" accept="application/pdf" hidden onChange={onPdfSelected}/>
 

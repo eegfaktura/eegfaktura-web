@@ -5,15 +5,25 @@ export const MAX_MAIL_IMAGE_WIDTH = 1200
 export const scaledSize = (width: number, height: number, maxWidth = MAX_MAIL_IMAGE_WIDTH) =>
   width <= maxWidth ? {width, height} : {width: maxWidth, height: Math.max(1, Math.round(height * maxWidth / width))}
 
-// Returns the file unchanged when it is not wider than maxWidth or not PNG/JPEG
-// (the service rejects other types); otherwise a PNG/JPEG of the same type, maxWidth wide.
+// A JPEG (camera/phone photo, may carry EXIF/GPS) is always drawn anew, quality 0.8, at most maxWidth wide.
+// A PNG is only redrawn when it is wider than maxWidth: redrawing would turn an optimised palette PNG (logo)
+// into a much larger 32-bit one. The service re-encodes every image anyway (metadata of PNGs is dropped there).
+// Other types are returned unchanged (the service rejects them). Throws ImageProcessError when the browser can
+// not draw the image (e.g. a very long screenshot beyond its canvas limit).
+export class ImageProcessError extends Error {}
+
 export const downscaleImage = async (file: File, maxWidth = MAX_MAIL_IMAGE_WIDTH): Promise<Blob> => {
   if (file.type !== "image/png" && file.type !== "image/jpeg") {
     return file
   }
-  const bitmap = await createImageBitmap(file)
+  let bitmap: ImageBitmap
   try {
-    if (bitmap.width <= maxWidth) {
+    bitmap = await createImageBitmap(file)
+  } catch (e) {
+    throw new ImageProcessError(String(e))
+  }
+  try {
+    if (file.type === "image/png" && bitmap.width <= maxWidth) {
       return file
     }
     const {width, height} = scaledSize(bitmap.width, bitmap.height, maxWidth)
@@ -26,7 +36,8 @@ export const downscaleImage = async (file: File, maxWidth = MAX_MAIL_IMAGE_WIDTH
     }
     ctx.drawImage(bitmap, 0, 0, width, height)
     return await new Promise<Blob>((resolve, reject) =>
-      canvas.toBlob(b => b ? resolve(b) : reject(new Error("toBlob")), file.type, 0.9))
+      canvas.toBlob(b => b ? resolve(b) : reject(new ImageProcessError("toBlob")), file.type,
+        file.type === "image/jpeg" ? 0.8 : undefined))
   } finally {
     bitmap.close()
   }

@@ -313,6 +313,8 @@
     "test_sent": "Testmail gesendet an {{address}}",
     "images": "Bilder",
     "image_too_large": "Das Bild ist zu groß (höchstens {{max}}).",
+    "image_busy": "Bitte warten – es wird gerade noch etwas hochgeladen oder gespeichert.",
+    "image_unreadable": "Das Bild konnte nicht verarbeitet werden (zu groß oder beschädigt). Bitte ein kleineres PNG- oder JPEG-Bild verwenden.",
     "image_limit": "Höchstens {{max}} Bilder je Mail.",
     "attachment": "PDF-Anhang",
     "attachment_add": "PDF anhängen",
@@ -327,10 +329,12 @@
     "limits_images": "Bilder: {{count}} von höchstens {{max}}, je höchstens {{size}} (PNG/JPEG; breitere Bilder werden auf 1200 px verkleinert)",
     "limits_attachment": "PDF-Anhang: höchstens {{max}}, je höchstens {{size}}",
     "limits_total": "Alle Dateien zusammen: {{total}} von höchstens {{max}}",
+    "limits_links": "Links: höchstens {{max}}, zu höchstens {{domains}} Domains; keine Kurz-Links, keine IP-Adressen",
     "total_too_large": "Alle Dateien zusammen dürfen höchstens {{max}} groß sein.",
     "link_header": "Link",
     "link_message": "Adresse (https://… oder mailto:…). Leer lassen, um den Link zu entfernen.",
     "link_invalid": "Nur Links mit https:// oder mailto: sind erlaubt.",
+    "link_limit": "Höchstens {{max}} Links pro Mail.",
     "link_apply": "Übernehmen",
     "toolbar": {
       "bold": "Fett",
@@ -345,8 +349,20 @@
       "align_left": "Linksbündig",
       "align_center": "Zentriert",
       "align_right": "Rechtsbündig",
-      "image": "Bild einfügen"
+      "image": "Bild einfügen",
+      "font_size": "Schriftgröße",
+      "font_small": "Schriftgröße: Klein",
+      "font_normal": "Schriftgröße: Normal",
+      "font_large": "Schriftgröße: Groß",
+      "image_size": "Bildgröße",
+      "image_small": "Bildgröße: Klein",
+      "image_medium": "Bildgröße: Mittel",
+      "image_large": "Bildgröße: Groß",
+      "image_small_short": "Klein",
+      "image_medium_short": "Mittel",
+      "image_large_short": "Groß"
     },
+    "fixed_footer": "Wird immer angehängt:",
     "error": "Fehler: {{message}}"
   }
 }

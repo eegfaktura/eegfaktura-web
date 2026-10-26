@@ -67,6 +67,19 @@
   }
 }
 
+.mail-editor-toolbar-group {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 6px;
+}
+
+.mail-fixed-footer {
+  margin: 6px 0 0;
+  padding: 0 12px;
+  font-size: 0.85em;
+  color: var(--ion-color-medium);
+}
+
 .mail-editor {
   margin-top: 8px;
 
