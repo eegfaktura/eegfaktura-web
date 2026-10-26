@@ -160,6 +160,15 @@ describe("toMailHtml", () => {
     expect(toMailHtml('<span>a</span><div>b</div><code>c</code>')).toBe("abc")
     expect(toMailHtml('<img src="data:image/png;base64,AAAA">')).toBe("")
     expect(toMailHtml('<img src="mailfile:0b5e0b5e-0b5e-4b5e-8b5e-0b5e0b5e0b5e" width="300" height="20" title="t">')).toBe('<img src="mailfile:0b5e0b5e-0b5e-4b5e-8b5e-0b5e0b5e0b5e" width="300">')
+    expect(toMailHtml('<p style="font-size:13px">a</p><h2 style="FONT-SIZE: 20PX">b</h2><ul><li style="font-size:20px">c</li></ul>'))
+      .toBe('<p style="font-size: 13px">a</p><h2 style="font-size: 20px">b</h2><ul><li style="font-size: 20px">c</li></ul>')
+    expect(toMailHtml('<p style="font-size:20px;color:red;text-align:right">a</p>'))
+      .toBe('<p style="text-align: right; font-size: 20px">a</p>')
+    expect(toMailHtml('<p style="font-size:30px">a</p><p style="font-size:1em">b</p><p style="font-size:13pt;text-align:left">c</p>'))
+      .toBe('<p>a</p><p>b</p><p style="text-align: left">c</p>')
+    expect(toMailHtml('<blockquote style="font-size:20px">a</blockquote><a href="https://x.at" style="font-size:20px">b</a>'))
+      .toBe('<blockquote>a</blockquote><a href="https://x.at">b</a>')
+    expect(toMailHtml('<span style="font-size:20px">a</span><div style="font-size:13px">b</div>')).toBe("ab")
   })
 
   it("extracts the file id from a mailfile reference", () => {

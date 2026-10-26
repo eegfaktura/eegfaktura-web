@@ -342,7 +342,18 @@
       "align_left": "Linksbündig",
       "align_center": "Zentriert",
       "align_right": "Rechtsbündig",
-      "image": "Bild einfügen"
+      "image": "Bild einfügen",
+      "font_size": "Schriftgröße",
+      "font_small": "Schriftgröße: Klein",
+      "font_normal": "Schriftgröße: Normal",
+      "font_large": "Schriftgröße: Groß",
+      "image_size": "Bildgröße",
+      "image_small": "Bildgröße: Klein",
+      "image_medium": "Bildgröße: Mittel",
+      "image_large": "Bildgröße: Groß",
+      "image_small_short": "Klein",
+      "image_medium_short": "Mittel",
+      "image_large_short": "Groß"
     },
     "error": "Fehler: {{message}}"
   }

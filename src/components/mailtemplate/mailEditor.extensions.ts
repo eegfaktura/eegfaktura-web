@@ -4,12 +4,13 @@ import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import Image from "@tiptap/extension-image";
+import {ALLOWED_FONT_SIZES, MailFontSize} from "./mailEditor.sizes";
 
 // Editor model of the editable member mails (konzept-mail-texte-editierbar.md, section H).
 // The stored HTML may only contain:
 //   p, br, strong, b, em, i, u, h1-h3, ul, ol, li, blockquote, a[href https:|mailto:],
 //   img[src mailfile:, alt, width], span[data-ph], div[data-ph];
-//   style only "text-align: left|center|right" on p, h1-h3, li.
+//   style only "text-align: left|center|right" and "font-size: 13px|20px" on p, h1-h3, li.
 // The services sanitise again (mail-html-policy.json); toMailHtml keeps the editor output inside
 // that list so a save is not changed behind the user's back.
 
@@ -136,6 +137,7 @@ export const mailEditorExtensions = (resolveImage: (id: string) => Promise<strin
     isAllowedUri: (url) => /^(https:|mailto:)/i.test(url.trim()),
   }),
   TextAlign.configure({types: ["heading", "paragraph"], alignments: ["left", "center", "right"]}),
+  MailFontSize,
   createMailImage(resolveImage),
   MailDocument,
   PlaceholderInline,
@@ -217,9 +219,14 @@ const cleanElement = (el: Element) => {
   }
   const style = el.getAttribute("style")
   if (style !== null) {
-    const m = /(?:^|;)\s*text-align\s*:\s*(left|center|right)\s*(?:;|$)/i.exec(style)
-    if (m) {
-      el.setAttribute("style", `text-align: ${m[1].toLowerCase()}`)
+    const align = /(?:^|;)\s*text-align\s*:\s*(left|center|right)\s*(?:;|$)/i.exec(style)
+    const size = /(?:^|;)\s*font-size\s*:\s*(\d+px)\s*(?:;|$)/i.exec(style)
+    const kept = [
+      align ? `text-align: ${align[1].toLowerCase()}` : "",
+      size && ALLOWED_FONT_SIZES.includes(size[1].toLowerCase()) ? `font-size: ${size[1].toLowerCase()}` : "",
+    ].filter(d => d)
+    if (kept.length > 0) {
+      el.setAttribute("style", kept.join("; "))
     } else {
       el.removeAttribute("style")
     }
