@@ -334,7 +334,9 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
       if (editor) insertUploadedImage(editor, {src: `${MAILFILE_PREFIX}${uploaded.id}`, alt: file.name}, pos, doc)
     })
   }
-  insertImage.current = uploadImage
+  useEffect(() => {
+    insertImage.current = uploadImage
+  })
   useEffect(() => {
     imageCount.current = images.length
   }, [images.length])
