@@ -204,6 +204,12 @@ const unwrap = (el: Element) => {
   el.replaceWith(...Array.from(el.childNodes))
 }
 
+// The value of the last declaration of a property (the one the browser applies), lower case; "" without one.
+const lastDeclaration = (style: string, property: string) => {
+  const values = Array.from(style.matchAll(new RegExp(`(?:^|;)\\s*${property}\\s*:([^;]*)`, "gi")))
+  return values.length > 0 ? values[values.length - 1][1].trim().toLowerCase() : ""
+}
+
 const cleanElement = (el: Element) => {
   Array.from(el.children).forEach(cleanElement)
   const tag = el.tagName.toLowerCase()
@@ -219,11 +225,11 @@ const cleanElement = (el: Element) => {
   }
   const style = el.getAttribute("style")
   if (style !== null) {
-    const align = /(?:^|;)\s*text-align\s*:\s*(left|center|right)\s*(?:;|$)/i.exec(style)
-    const size = /(?:^|;)\s*font-size\s*:\s*(\d+px)\s*(?:;|$)/i.exec(style)
+    const align = lastDeclaration(style, "text-align")
+    const size = lastDeclaration(style, "font-size")
     const kept = [
-      align ? `text-align: ${align[1].toLowerCase()}` : "",
-      size && ALLOWED_FONT_SIZES.includes(size[1].toLowerCase()) ? `font-size: ${size[1].toLowerCase()}` : "",
+      ["left", "center", "right"].includes(align) ? `text-align: ${align}` : "",
+      ALLOWED_FONT_SIZES.includes(size) ? `font-size: ${size}` : "",
     ].filter(d => d)
     if (kept.length > 0) {
       el.setAttribute("style", kept.join("; "))

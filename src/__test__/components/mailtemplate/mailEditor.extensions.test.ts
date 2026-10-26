@@ -169,6 +169,10 @@ describe("toMailHtml", () => {
     expect(toMailHtml('<blockquote style="font-size:20px">a</blockquote><a href="https://x.at" style="font-size:20px">b</a>'))
       .toBe('<blockquote>a</blockquote><a href="https://x.at">b</a>')
     expect(toMailHtml('<span style="font-size:20px">a</span><div style="font-size:13px">b</div>')).toBe("ab")
+    // the last declaration counts, as in the browser
+    expect(toMailHtml('<p style="font-size:30px; font-size:13px; text-align:left; text-align:center">a</p>'))
+      .toBe('<p style="text-align: center; font-size: 13px">a</p>')
+    expect(toMailHtml('<p style="font-size:13px; font-size:30px; text-align:right; text-align:justify">a</p>')).toBe("<p>a</p>")
   })
 
   it("extracts the file id from a mailfile reference", () => {
