@@ -47,7 +47,9 @@ export const setFontSize = (editor: Editor, size: FontSize) => {
 }
 
 export const activeFontSize = (editor: Editor): FontSize => {
+  // a list item can carry the size itself (<li style="font-size: …">, from stored HTML)
   const value = editor.getAttributes("paragraph").fontSize || editor.getAttributes("heading").fontSize
+    || editor.getAttributes("listItem").fontSize
   return value === FONT_SIZE_VALUES.small ? "small" : value === FONT_SIZE_VALUES.large ? "large" : "normal"
 }
 

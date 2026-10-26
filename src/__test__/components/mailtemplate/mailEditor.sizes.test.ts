@@ -42,6 +42,7 @@ describe("mail editor font size", () => {
     const e = editor('<ul><li style="font-size:20px"><p>x</p></li></ul>')
     expect(html(e)).toBe('<ul><li style="font-size: 20px"><p>x</p></li></ul>')
     e.commands.setTextSelection(3)
+    expect(activeFontSize(e)).toBe("large")
     setFontSize(e, "small")
     // the empty paragraph after the list is the editor's usual trailing paragraph
     expect(html(e)).toBe('<ul><li><p style="font-size: 13px">x</p></li></ul><p></p>')
