@@ -40,6 +40,7 @@ import MailTemplateHeader from "./MailTemplateHeader.component";
 import MailPlaceholderPicker from "./MailPlaceholderPicker.component";
 import UnsavedChangesGuard from "../core/UnsavedChangesGuard.component";
 import {useOwnTextSwitch} from "./useOwnTextSwitch";
+import {InsertImage, mailImageEditorProps} from "./mailImagePaste";
 
 import "./MailTemplateEditor.component.scss"
 
@@ -80,6 +81,8 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
   const imageInput = useRef<HTMLInputElement>(null)
   const pdfInput = useRef<HTMLInputElement>(null)
   const subjectInput = useRef<HTMLIonInputElement>(null)
+  // pasted or dropped images: the editor props are fixed, the upload sees the current state
+  const insertImage = useRef<InsertImage>(() => undefined)
 
   // blob URLs of the images shown in the editor, fetched with the bearer token
   const blobUrls = useMemo(() => createBlobUrlCache(id => service.fetchFile(source, tenant, templateKey, id)), [])
@@ -90,6 +93,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
     extensions,
     content: "",
     onUpdate: () => setDirty(true),
+    editorProps: mailImageEditorProps(() => insertImage.current),
   })
 
   const {ownText, setOwnText, switchKey, onSwitch} = useOwnTextSwitch({
@@ -298,10 +302,9 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
     }
   }
 
-  const onImageSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ""
-    if (!file || !limits) return
+  // toolbar „Bild einfügen“, paste and drop; pos undefined = at the cursor
+  const uploadImage: InsertImage = (file, pos) => {
+    if (!limits) return
     run(async () => {
       if (images.length >= limits.maxImages) {
         throw new Error(t("mailtemplates.image_limit", {max: limits.maxImages}))
@@ -314,8 +317,15 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
       const uploaded = await service.uploadFile(source, tenant, templateKey, scaled, file.name, "image")
       blobUrls.put(uploaded.id, scaled)
       setFiles(fs => [...fs, uploaded])
-      editor?.chain().focus().setImage({src: `${MAILFILE_PREFIX}${uploaded.id}`, alt: file.name}).run()
+      editor?.chain().focus(pos).setImage({src: `${MAILFILE_PREFIX}${uploaded.id}`, alt: file.name}).run()
     })
+  }
+  insertImage.current = uploadImage
+
+  const onImageSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (file) uploadImage(file)
   }
 
   const onPdfSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
