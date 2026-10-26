@@ -42,7 +42,7 @@ import MailTemplateHeader from "./MailTemplateHeader.component";
 import MailPlaceholderPicker from "./MailPlaceholderPicker.component";
 import UnsavedChangesGuard from "../core/UnsavedChangesGuard.component";
 import {useOwnTextSwitch} from "./useOwnTextSwitch";
-import {InsertImage, mailImageEditorProps} from "./mailImagePaste";
+import {InsertImage, insertUploadedImage, mailImageEditorProps} from "./mailImagePaste";
 
 import "./MailTemplateEditor.component.scss"
 
@@ -317,6 +317,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
   const uploadImage: InsertImage = (file, pos) => {
     // another upload, save, … still runs (e.g. a second paste right after the first)
     if (!limits || busyNow.current) return
+    const doc = editor?.state.doc
     run(async () => {
       if (imageCount.current >= limits.maxImages) {
         throw new Error(t("mailtemplates.image_limit", {max: limits.maxImages}))
@@ -330,7 +331,7 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
       blobUrls.put(uploaded.id, scaled)
       imageCount.current++
       setFiles(fs => [...fs, uploaded])
-      editor?.chain().focus(pos).setImage({src: `${MAILFILE_PREFIX}${uploaded.id}`, alt: file.name}).run()
+      if (editor) insertUploadedImage(editor, {src: `${MAILFILE_PREFIX}${uploaded.id}`, alt: file.name}, pos, doc)
     })
   }
   insertImage.current = uploadImage

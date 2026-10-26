@@ -1,3 +1,5 @@
+import {Editor} from "@tiptap/react";
+import {Node} from "@tiptap/pm/model";
 import {EditorView} from "@tiptap/pm/view";
 
 // Pasting or dropping an image file goes through the same upload as „Bild einfügen“
@@ -29,3 +31,10 @@ export const mailImageEditorProps = (insertImage: () => InsertImage) => ({
     return true
   },
 })
+
+// Inserts the uploaded image. The drop position only holds while the text is unchanged (doc = the text at
+// the drop); otherwise, and for paste or „Bild einfügen“, the image goes to the cursor.
+export const insertUploadedImage = (editor: Editor, image: { src: string, alt: string }, pos?: number, doc?: Node) => {
+  const at = pos !== undefined && editor.state.doc === doc ? pos : undefined
+  return editor.chain().focus(at).setImage(image).run()
+}

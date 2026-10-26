@@ -125,6 +125,23 @@ describe("MailTemplateEditor paste and drop of images", () => {
     expect(await savedBody(saveTemplate)).toBe(`<p><img src="mailfile:${UPLOADED}" alt="bild.png">Hallo</p>`)
   })
 
+  it("puts a dropped image at the cursor when the text changed during the upload", async () => {
+    const {uploadFile, saveTemplate, pm} = setup(template(true))
+    let finish: () => void = () => undefined
+    uploadFile.mockReturnValueOnce(new Promise(r => finish = () =>
+      r({id: UPLOADED, kind: "image", filename: "bild.png", mimeType: "image/png", size: 3, committed: false})))
+    await waitFor(() => expect(pm().getAttribute("contenteditable")).toBe("true"))
+    const editor = (pm() as any).editor
+    vi.spyOn(editor.view, "posAtCoords").mockReturnValue({pos: 1, inside: -1})
+    fireEvent.drop(pm(), {dataTransfer: clipboard([png()]), clientX: 1, clientY: 1})
+    await waitFor(() => expect(uploadFile).toHaveBeenCalledTimes(1))
+    // typed before "Hallo" meanwhile; the cursor ends after "Neu "
+    act(() => editor.commands.insertContentAt(1, "Neu "))
+    await act(async () => finish())
+    await waitFor(() => expect(screen.getByText(/bild\.png/)).toBeTruthy())
+    expect(await savedBody(saveTemplate)).toBe(`<p>Neu <img src="mailfile:${UPLOADED}" alt="bild.png">Hallo</p>`)
+  })
+
   it("pastes text as before, also when it comes with a picture of itself", async () => {
     const {uploadFile, saveTemplate, pm} = setup(template(true))
     await waitFor(() => expect(pm().getAttribute("contenteditable")).toBe("true"))
