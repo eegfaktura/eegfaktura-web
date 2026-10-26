@@ -155,8 +155,11 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
     }
   }, [editor, tenant, source, templateKey])
 
+  // a PDF stored before the mail lost its attachment (maxAttachments 0) is hidden and not sent again,
+  // otherwise the save would be refused without a way to remove it in the editor
   const draft = (): MailTemplateDraft =>
-    ({subject, bodyHtml: toMailHtml(editor ? editor.getHTML() : ""), attachmentFileId: attachmentId})
+    ({subject, bodyHtml: toMailHtml(editor ? editor.getHTML() : ""),
+      attachmentFileId: limits?.maxAttachments === 0 ? null : attachmentId})
 
   // preview/test with the switch off: the standard text exactly as stored, not as the editor re-serialises it
   const previewDraft = (): MailTemplateDraft => !ownText && template

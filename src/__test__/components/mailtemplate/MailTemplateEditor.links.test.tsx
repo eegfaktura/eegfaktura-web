@@ -24,9 +24,9 @@ const template = (limits: MailTemplateLimits): MailTemplate => ({
   placeholders: [], files: [], limits,
 })
 
-const open = async (limits: MailTemplateLimits, saveTemplate = vi.fn()) => {
+const open = async (limits: MailTemplateLimits, saveTemplate = vi.fn(), tpl = template(limits)) => {
   Api.mailTemplateService = {
-    fetchTemplate: vi.fn().mockResolvedValue(template(limits)), fetchFile: vi.fn(), saveTemplate,
+    fetchTemplate: vi.fn().mockResolvedValue(tpl), fetchFile: vi.fn(), saveTemplate,
   } as unknown as typeof Api.mailTemplateService
   render(<MailTemplateEditor tenant="RC100100" source="backend" templateKey="zp-active" eegEmail="eeg@example.at"
                              onClose={vi.fn()} onChanged={vi.fn()}/>)
@@ -52,6 +52,14 @@ describe("MailTemplateEditor link rules", () => {
     expect(screen.queryByText("PDF anhängen")).toBeNull()
     expect(screen.queryByText("PDF-Anhang")).toBeNull()
     expect(screen.queryByText(/^PDF-Anhang:/)).toBeNull()
+  })
+
+  it("does not send a PDF stored before at maxAttachments 0, so the save is not refused", async () => {
+    const saveTemplate = vi.fn().mockImplementation(async () => template(LIMITS))
+    await open(LIMITS, saveTemplate, {...template(LIMITS), attachmentFileId: "pdf-1"})
+    fireEvent.click(screen.getByText("Speichern"))
+    await waitFor(() => expect(saveTemplate).toHaveBeenCalled())
+    expect(saveTemplate.mock.calls[0][3].attachmentFileId).toBeNull()
   })
 
   it("lists the service's 400 link messages under „Nicht gespeichert:“", async () => {
