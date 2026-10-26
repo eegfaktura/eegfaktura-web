@@ -93,12 +93,16 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
   })
 
   const {ownText, setOwnText, switchKey, onSwitch} = useOwnTextSwitch({
-    template, editor, dirty, saving, files, run: action => run(action), show: tpl => show(tpl),
+    template, editor, dirty, saving, files, keepFiles: failed => setFiles(fs => [...fs, ...failed]),
+    run: action => run(action), show: tpl => show(tpl),
     deleteDraft: id => service.deleteFile(source, tenant, templateKey, id),
     onDelete: () => run(async () => {
       await service.resetTemplate(source, tenant, templateKey)
       onChanged()
       if (await load()) toast(t("mailtemplates.reset_done"), "success")
+      // deleted, but the reload failed: the standard text is sent now, so show it (the load error stays visible)
+      else if (template) apply({...template, customized: false, version: 0, files: [], attachmentFileId: null,
+        updatedAt: null, updatedBy: null})
     }),
   })
 
@@ -145,9 +149,10 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
   const draft = (): MailTemplateDraft =>
     ({subject, bodyHtml: toMailHtml(editor ? editor.getHTML() : ""), attachmentFileId: attachmentId})
 
-  // preview/test with the switch off: the standard text, as the members get it
-  // with the switch off the locked subject and text are the default, so the draft is the default
-  const previewDraft = (): MailTemplateDraft => draft()
+  // preview/test with the switch off: the standard text exactly as stored, not as the editor re-serialises it
+  const previewDraft = (): MailTemplateDraft => !ownText && template
+    ? {subject: template.defaultSubject, bodyHtml: template.defaultBodyHtml, attachmentFileId: null}
+    : draft()
 
   const run = async (action: () => Promise<void>) => {
     setBusy(true)

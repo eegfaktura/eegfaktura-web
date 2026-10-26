@@ -173,4 +173,46 @@ describe("MailTemplateEditor switch „Eigenen Text verwenden“", () => {
     setup({fetchTemplate: vi.fn().mockResolvedValue({...template(true), updatedBy: null})})
     await waitFor(() => expect(screen.getByText(/^Verschickt wird eure eigene Fassung \(gespeichert am 22\.10\.2026 [0-9:]+\)\.$/)).toBeTruthy())
   })
+
+  it("with the switch off, preview sends the stored standard text, not the editor's re-serialisation", async () => {
+    const preview = vi.fn().mockResolvedValue({subject: "S", html: "<p>x</p>"})
+    const raw = '<p data-extra="1">Standard</p>'
+    setup({fetchTemplate: vi.fn().mockResolvedValue({...template(false), defaultBodyHtml: raw}), preview})
+    await waitFor(() => expect(screen.getByText(STANDARD)).toBeTruthy())
+    fireEvent.click(screen.getByText("Vorschau"))
+    await waitFor(() => expect(preview).toHaveBeenCalled())
+    expect(preview.mock.calls[0][3]).toEqual({subject: "Dein Zählpunkt ist aktiv", bodyHtml: raw, attachmentFileId: null})
+  })
+
+  it("deleted, but the reload failed: shows the standard text that is sent now", async () => {
+    const fetchTemplate = vi.fn().mockResolvedValueOnce(template(true)).mockRejectedValue(new Error("offline"))
+    const resetTemplate = vi.fn().mockResolvedValue(undefined)
+    const e = setup({fetchTemplate, resetTemplate})
+    await waitFor(() => expect(screen.getByText(/Verschickt wird eure eigene Fassung/)).toBeTruthy())
+    e.toggle(false)
+    await answer("confirm")
+    await waitFor(() => expect(screen.getByText(STANDARD)).toBeTruthy())
+    expect(screen.queryByText(/Verschickt wird eure eigene Fassung/)).toBeNull()
+    expect(e.editable()).toBe("false")
+    expect(e.subject().value).toBe("Dein Zählpunkt ist aktiv")
+  })
+
+  it("discarding keeps a draft whose deletion failed in the list", async () => {
+    const DRAFT = "66666666-6666-4666-8666-666666666666"
+    const uploadFile = vi.fn().mockResolvedValue(
+      {id: DRAFT, kind: "attachment", filename: "neu.pdf", mimeType: "application/pdf", size: 1024, committed: false})
+    const deleteFile = vi.fn().mockRejectedValue(new Error("nicht erreichbar"))
+    const e = setup({fetchTemplate: vi.fn().mockResolvedValue(template(false)), uploadFile, deleteFile})
+    await waitFor(() => expect(screen.getByText(STANDARD)).toBeTruthy())
+    e.toggle(true)
+    await waitFor(() => expect(e.editable()).toBe("true"))
+    fireEvent.change(e.pdfInput(), {target: {files: [new File(["%PDF"], "neu.pdf", {type: "application/pdf"})]}})
+    await waitFor(() => expect(screen.getByText(/neu\.pdf/)).toBeTruthy())
+    e.toggle(false)
+    await answer("confirm")
+    await waitFor(() => expect(deleteFile).toHaveBeenCalled())
+    // the file section is hidden with the switch off; switched on again, the draft is still listed
+    e.toggle(true)
+    await waitFor(() => expect(screen.getByText(/neu\.pdf/)).toBeTruthy())
+  })
 })

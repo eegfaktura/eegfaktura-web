@@ -78,7 +78,7 @@ const MailTemplatesPage: FC = () => {
                           {t(item.customized ? "mailtemplates.status_own_label" : "mailtemplates.status_default")}
                         </IonBadge>
                         {item.customized && <p>{savedText(t, item, "status_customized")}</p>}
-                        {item.defaultChanged &&
+                        {item.customized && item.defaultChanged &&
                           <IonText color="warning"><p>{t("mailtemplates.default_changed")}</p></IonText>}
                       </IonLabel>
                     </IonItem>

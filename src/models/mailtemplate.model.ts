@@ -68,8 +68,6 @@ export interface MailTemplateDraft {
   bodyHtml: string
   // PDF chosen in the editor; preview and test mail use it (null/absent = no PDF)
   attachmentFileId?: string | null
-  // preview/test only: the standard text of a mail without stored version (switch "Eigenen Text verwenden" off).
-  // billing ignores it.
 }
 
 export interface MailPreview {

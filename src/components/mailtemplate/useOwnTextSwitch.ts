@@ -11,6 +11,8 @@ interface OwnTextSwitchArgs {
   saving: boolean
   // the files shown in the editor, with the drafts uploaded since the template was loaded
   files: MailFile[]
+  // shows the drafts whose deletion failed again in the file list
+  keepFiles: (failed: MailFile[]) => void
   // runs an action with the editor's busy state and error toast
   run: (action: () => Promise<void>) => Promise<void>
   // shows the template as loaded (without saved version: the standard text, switch off)
@@ -22,7 +24,7 @@ interface OwnTextSwitchArgs {
 
 // The switch „Eigenen Text verwenden“: off = the standard text is sent, the editor is locked.
 export const useOwnTextSwitch = (
-  {template, editor, dirty, saving, files, run, show, deleteDraft, onDelete}: OwnTextSwitchArgs) => {
+  {template, editor, dirty, saving, files, keepFiles, run, show, deleteDraft, onDelete}: OwnTextSwitchArgs) => {
   const {t} = useLocale("common")
   const [presentAlert] = useIonAlert()
   const [ownText, setOwnText] = useState(false)
@@ -48,7 +50,13 @@ export const useOwnTextSwitch = (
     show(template)
     if (drafts.length > 0) {
       run(async () => {
-        for (const f of drafts) await deleteDraft(f.id)
+        const results = await Promise.allSettled(drafts.map(f => deleteDraft(f.id)))
+        const failed = drafts.filter((_, i) => results[i].status === "rejected")
+        if (failed.length > 0) {
+          // still on the service: keep them visible, so they can be removed later
+          keepFiles(failed)
+          throw (results.find(r => r.status === "rejected") as PromiseRejectedResult).reason
+        }
       })
     }
   }
