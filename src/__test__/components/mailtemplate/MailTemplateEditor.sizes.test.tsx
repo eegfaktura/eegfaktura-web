@@ -136,6 +136,21 @@ describe("MailTemplateEditor paste and drop of images", () => {
     expect(await savedBody(saveTemplate)).toContain("Welt aus Word")
   })
 
+  it("ignores a second paste while the first upload runs", async () => {
+    const {uploadFile, saveTemplate, pm} = setup(template(true))
+    let finish: () => void = () => undefined
+    uploadFile.mockReturnValueOnce(new Promise(r => finish = () =>
+      r({id: UPLOADED, kind: "image", filename: "bild.png", mimeType: "image/png", size: 3, committed: false})))
+    await waitFor(() => expect(pm().getAttribute("contenteditable")).toBe("true"))
+    fireEvent.paste(pm(), {clipboardData: clipboard([png()])})
+    fireEvent.paste(pm(), {clipboardData: clipboard([png()])})
+    await waitFor(() => expect(uploadFile).toHaveBeenCalledTimes(1))
+    await act(async () => finish())
+    await waitFor(() => expect(screen.getByText(/bild\.png/)).toBeTruthy())
+    expect(uploadFile).toHaveBeenCalledTimes(1)
+    expect((await savedBody(saveTemplate)).match(/<img/g)).toHaveLength(1)
+  })
+
   it("does not upload with the own text switched off", async () => {
     const {uploadFile, pm} = setup(template(false))
     await waitFor(() => expect(screen.getByText("Verschickt wird der Standardtext von eegfaktura.")).toBeTruthy())

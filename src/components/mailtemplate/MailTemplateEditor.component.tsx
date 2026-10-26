@@ -85,6 +85,9 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
   const subjectInput = useRef<HTMLIonInputElement>(null)
   // pasted or dropped images: the editor props are fixed, the upload sees the current state
   const insertImage = useRef<InsertImage>(() => undefined)
+  // set at once (not with the next render), so a second paste or drop right after the first sees them
+  const busyNow = useRef(false)
+  const imageCount = useRef(0)
 
   // blob URLs of the images shown in the editor, fetched with the bearer token
   const blobUrls = useMemo(() => createBlobUrlCache(id => service.fetchFile(source, tenant, templateKey, id)), [])
@@ -162,11 +165,13 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
 
   const run = async (action: () => Promise<void>) => {
     setBusy(true)
+    busyNow.current = true
     try {
       await action()
     } catch (e) {
       toast(t("mailtemplates.error", {message: errorMessage(e)}), "danger")
     } finally {
+      busyNow.current = false
       setBusy(false)
     }
   }
@@ -310,9 +315,10 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
 
   // toolbar „Bild einfügen“, paste and drop; pos undefined = at the cursor
   const uploadImage: InsertImage = (file, pos) => {
-    if (!limits) return
+    // another upload, save, … still runs (e.g. a second paste right after the first)
+    if (!limits || busyNow.current) return
     run(async () => {
-      if (images.length >= limits.maxImages) {
+      if (imageCount.current >= limits.maxImages) {
         throw new Error(t("mailtemplates.image_limit", {max: limits.maxImages}))
       }
       const scaled = await downscaleImage(file)
@@ -322,11 +328,15 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
       checkTotal(scaled.size)
       const uploaded = await service.uploadFile(source, tenant, templateKey, scaled, file.name, "image")
       blobUrls.put(uploaded.id, scaled)
+      imageCount.current++
       setFiles(fs => [...fs, uploaded])
       editor?.chain().focus(pos).setImage({src: `${MAILFILE_PREFIX}${uploaded.id}`, alt: file.name}).run()
     })
   }
   insertImage.current = uploadImage
+  useEffect(() => {
+    imageCount.current = images.length
+  }, [images.length])
 
   const onImageSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
