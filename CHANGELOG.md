@@ -8,6 +8,12 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **Process metering point selections show the direction.** „Teilnahmefaktor ändern“, „Zählpunkt anmelden“,
+  „Zählpunkt abmelden“ and „Zählpunktdaten nachfordern“ now label each metering point with „Verbraucher“ or
+  „Erzeuger“ (the terms of the meter form), then the equipment name when set, then the number. „Zählpunktdaten
+  nachfordern“ uses the shared label helper instead of its own copy (eegfaktura-platform#222).
+
 ## [1.13.0] – 2026-10-26
 
 ### Added

@@ -144,7 +144,7 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
               return {value: p.id, label: JoinStrings(" ", " - ", p.participantNumber, (p.lastname ? p.lastname : ""), p.firstname)} as SelectOptions
             })} label={t("participant")} rules={{required: true}}/>
             <SelectForm control={control} name={"meteringPoints"} options={useableMeters.map((p) => {
-              return {key: p.meteringPoint, value: meteringDisplayName(p)}
+              return {key: p.meteringPoint, value: meteringDisplayName(p, t)}
             })} label={t("metering")} selectInterface={"popover"} multiple={true} rules={{required: true}}/>
             <InputForm name="reason" label={t("process.revokeMeter.reason")} control={control}/>
             <div className="form-element">
