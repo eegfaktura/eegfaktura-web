@@ -41,6 +41,9 @@ export interface MailTemplateLimits {
   maxAttachments: number
   maxAttachmentBytes: number
   maxTotalBytes: number
+  // link rules of the service (links per mail, different domains); absent on older services
+  maxLinks?: number
+  maxLinkDomains?: number
 }
 
 export interface MailTemplate {

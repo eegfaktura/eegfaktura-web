@@ -32,7 +32,9 @@ import {
 } from "./mailEditor.extensions";
 import {downscaleImage} from "../../util/ImageScale.util";
 import {useLocale} from "../../store/hook/useLocale";
-import {createBlobUrlCache, errorMessage, formatBytes, insertAtCursor, MAX_SUBJECT_CHARS} from "./mailTemplate.util";
+import {
+  createBlobUrlCache, errorMessage, formatBytes, insertAtCursor, linkLimitReached, MAX_SUBJECT_CHARS
+} from "./mailTemplate.util";
 import MailEditorToolbar from "./MailEditorToolbar.component";
 import MailFileList from "./MailFileList.component";
 import MailPreviewCard from "./MailPreviewCard.component";
@@ -267,6 +269,10 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
         {
           text: t("mailtemplates.link_apply"), handler: (values: { href: string }) => {
             const href = (values.href || "").trim()
+            if (href && !current && linkLimitReached(editor.getHTML(), limits?.maxLinks)) {
+              toast(t("mailtemplates.link_limit", {max: limits?.maxLinks}), "danger")
+              return false
+            }
             if (!href || /^(https:|mailto:)/i.test(href)) {
               applyLink(editor, href)
             } else {

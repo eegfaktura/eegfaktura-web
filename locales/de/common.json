@@ -324,10 +324,12 @@
     "limits_images": "Bilder: {{count}} von höchstens {{max}}, je höchstens {{size}} (PNG/JPEG; breitere Bilder werden auf 1200 px verkleinert)",
     "limits_attachment": "PDF-Anhang: höchstens {{max}}, je höchstens {{size}}",
     "limits_total": "Alle Dateien zusammen: {{total}} von höchstens {{max}}",
+    "limits_links": "Links: höchstens {{max}}, zu höchstens {{domains}} Domains; keine Kurz-Links, keine IP-Adressen",
     "total_too_large": "Alle Dateien zusammen dürfen höchstens {{max}} groß sein.",
     "link_header": "Link",
     "link_message": "Adresse (https://… oder mailto:…). Leer lassen, um den Link zu entfernen.",
     "link_invalid": "Nur Links mit https:// oder mailto: sind erlaubt.",
+    "link_limit": "Höchstens {{max}} Links pro Mail.",
     "link_apply": "Übernehmen",
     "toolbar": {
       "bold": "Fett",

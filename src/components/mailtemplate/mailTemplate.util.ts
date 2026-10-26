@@ -14,6 +14,10 @@ export const savedText = (t: (key: string, options?: Record<string, unknown>) =>
 
 export const MAX_SUBJECT_CHARS = 200
 
+// A new link would exceed the service's link limit (the service checks again on save).
+export const linkLimitReached = (html: string, maxLinks?: number) =>
+  maxLinks != null && new DOMParser().parseFromString(html, "text/html").querySelectorAll("a[href]").length >= maxLinks
+
 export const insertAtCursor = (text: string, insert: string, start?: number | null, end?: number | null) => {
   const from = start ?? text.length
   const to = end ?? from
