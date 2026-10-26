@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.12.0] – 2026-10-26
+
 ### Changed
 - **„E-Mail-Texte“: switch „Eigenen Text verwenden“ instead of „Auf Standard zurücksetzen“.** Off (standard): a
   coloured status box says „Verschickt wird der Standardtext von eegfaktura.“; subject, text, toolbar and
