@@ -8,6 +8,21 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **„E-Mail-Texte“: font size, image size, pasting images, fixed footer.** A toolbar group „Schriftgröße“ sets
+  Klein / Normal / Groß on the paragraph(s), heading(s) or list item(s) at the cursor (stored as
+  `style="font-size: 13px"` / no style / `font-size: 20px`, combinable with the alignment); the client-side copy of
+  the HTML policy keeps exactly these two values and drops other sizes, as the services do with
+  `mail-html-policy.json` version 2. A selected image gets „Bildgröße“ Klein / Mittel / Groß (`width` 200 / 400 /
+  600); a newly inserted image keeps its size as before. Pasting or dropping a PNG/JPEG file into the text uploads
+  it like „Bild einfügen“ (same limits, 1200 px downscaling, draft until saved) and inserts it at the cursor or
+  drop position; only with „Eigenen Text verwenden“ on. Copied text that comes with a picture of itself (e.g. from
+  Word) is still pasted as text, other pasted content is unchanged (`data:` images are still dropped). Below the
+  text a grey line „Wird immer angehängt: …“ shows the new optional field `fixedFooter` of the mail-template
+  definition (the footer the services append to every mail); nothing is shown when a service does not send it.
+  Needs eegfaktura-backend and eegfaktura-billing with policy version 2 to save font sizes (an older service drops
+  them); deploy them before or together with this version.
+
 ## [1.12.0] – 2026-10-26
 
 ### Changed
