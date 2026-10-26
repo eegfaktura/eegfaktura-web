@@ -25,3 +25,18 @@ export const countMemberActivity = (participants: EegParticipant[]): Record<Memb
     r[memberActivity(p)] += 1
     return r
   }, {ACTIVE: 0, PENDING: 0, INACTIVE: 0} as Record<MemberActivity, number>)
+
+// Membership fees of the active members (platform#223, the dashboard's "Tarife"): the active members (as counted
+// above and listed by the member filter "Aktive") per membership-fee tariff (EegParticipant.tariffId), and the active
+// members without one.
+export type MemberFeeCount = {tariffs: Record<string, number>, withoutFee: number}
+
+export const countMemberFees = (participants: EegParticipant[]): MemberFeeCount =>
+  participants.filter(p => memberActivity(p) === 'ACTIVE').reduce((r, p) => {
+    if (p.tariffId) {
+      r.tariffs[p.tariffId] = (r.tariffs[p.tariffId] ?? 0) + 1
+    } else {
+      r.withoutFee += 1
+    }
+    return r
+  }, {tariffs: {}, withoutFee: 0} as MemberFeeCount)

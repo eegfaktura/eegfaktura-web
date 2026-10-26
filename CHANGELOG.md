@@ -13,6 +13,10 @@ this changelog highlights the changes relevant for overview and operations.
   „Zählpunkt abmelden“ and „Zählpunktdaten nachfordern“ now label each metering point with „Verbraucher“ or
   „Erzeuger“ (the terms of the meter form), then the equipment name when set, then the number. „Zählpunktdaten
   nachfordern“ uses the shared label helper instead of its own copy (eegfaktura-platform#222).
+- **Dashboard „Tarife“ shows the membership fees.** Below the metering point tariffs (counted as before) each
+  membership-fee tariff is listed with the number of active members that have it (active as in the member count
+  above and the member list filter „Aktive“: at least one active metering point, all members as of today), plus a
+  line „ohne Mitgliedsbeitrag“ when active members have none (eegfaktura-platform#223).
 
 ## [1.13.0] – 2026-10-26
 
