@@ -97,7 +97,7 @@ import BillingTotalsTable, {
   writeTotalsOpen
 } from "./BillingTotalsTable.component";
 import FilterSegmentComponent from "./FilterSegment.component";
-import {MemberSort, readMemberSort, writeMemberSort} from "./participantSort";
+import {MemberSort, readActionFirst, readMemberSort, writeActionFirst, writeMemberSort} from "./participantSort";
 import {VariableSizeList} from "react-window";
 
 import HeaderFavButtonComponent from "../core/HeaderFavButton.component";
@@ -162,6 +162,7 @@ const ParticipantPaneComponent: FC = () => {
   const [searchActive, setSearchActive] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<string>('period');
   const [memberSort, setMemberSort] = useState<MemberSort>(readMemberSort);
+  const [actionFirst, setActionFirst] = useState<boolean>(readActionFirst);
   const [downloadBillingId, setDownloadBillingId] = useState<string | undefined>();
 
   const [billingDownload, billingDownloadDismiss] = useIonModal(DownloadBillingDialog, {
@@ -300,7 +301,7 @@ const ParticipantPaneComponent: FC = () => {
 
   // list only: metering points with an open problem stay visible in every period, sorted with them
   const listParticipants = useMemo(() => withOpenProblems(participants, allParticipants), [participants, allParticipants])
-  const sortedParticipants1 = sortParticipants({participants: listParticipants, hideProducers, hideConsumers, memberSort})
+  const sortedParticipants1 = sortParticipants({participants: listParticipants, memberSort, actionFirst})
 
   const viewEntities = filterParticipant({
     selectedFilter,
@@ -309,12 +310,15 @@ const ParticipantPaneComponent: FC = () => {
     hideConsumers,
     hideProducers,
     hideMeter,
-    memberSort
+    memberSort,
+    actionFirst
   })
 
-  const onChangeMemberSort = (sort: MemberSort) => {
+  const onChangeMemberSort = (sort: MemberSort, first: boolean) => {
     setMemberSort(sort)
     writeMemberSort(sort)
+    setActionFirst(first)
+    writeActionFirst(first)
   }
 
   const infoToast = (message: string) => {
@@ -791,7 +795,7 @@ const ParticipantPaneComponent: FC = () => {
             </IonToolbar>
           )}
           <FilterSegmentComponent selectedOption={selectedFilter} setSelectedOption={setSelectedFilter}
-                                  memberSort={memberSort} setMemberSort={onChangeMemberSort}/>
+                                  memberSort={memberSort} actionFirst={actionFirst} setMemberSort={onChangeMemberSort}/>
           <ParticipantPeriodHeaderComponent
             activePeriod={activePeriod}
             selectAll={selectAll}
