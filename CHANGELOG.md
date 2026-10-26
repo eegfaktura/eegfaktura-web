@@ -22,6 +22,16 @@ this changelog highlights the changes relevant for overview and operations.
   definition (the footer the services append to every mail); nothing is shown when a service does not send it.
   Needs eegfaktura-backend and eegfaktura-billing with policy version 2 to save font sizes (an older service drops
   them); deploy them before or together with this version.
+- **„E-Mail-Texte“: link rules, no PDF where none is allowed, images without metadata.** When the mail-template
+  definition's `limits` carry the new optional numbers `maxLinks` and `maxLinkDomains`, the editor shows „Links:
+  höchstens 3, zu höchstens 2 Domains; keine Kurz-Links, keine IP-Adressen“ next to the image limits, and the link
+  dialog refuses a new link once the text holds `maxLinks` links („Höchstens 3 Links pro Mail.“). The services check
+  the rules on save, preview and test mail; their 400 messages appear in the „Nicht gespeichert:“ list as before.
+  The „PDF-Anhang“ section is hidden for every mail whose `maxAttachments` is 0 (member mails now too). Every
+  PNG/JPEG is drawn anew in the browser before the upload (same type, JPEG quality 0.8, still at most 1200 px
+  wide), so EXIF/GPS data no longer leaves the browser. The client copy of the HTML policy now keeps the last
+  `font-size`/`text-align` declaration of a style, as the browser does. Needs eegfaktura-backend and
+  eegfaktura-billing with the link rules for the numbers; without them nothing is shown.
 
 ## [1.12.0] – 2026-10-26
 
