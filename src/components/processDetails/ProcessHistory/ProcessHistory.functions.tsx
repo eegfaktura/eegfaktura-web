@@ -3,6 +3,11 @@ import React from "react";
 import {IonIcon} from "@ionic/react";
 import {chevronForwardOutline} from "ionicons/icons";
 import {GroupBy} from "../../../util/Helper.util";
+import moment from "moment";
+
+// Dates and times of the process history in German format (platform#224), in local time like the other dates of the app.
+export const formatHistoryDate = (d: Date) => moment(d).format("DD.MM.YYYY")
+export const formatHistoryTime = (d: Date) => moment(d).format("HH:mm:ss")
 
 const renderTableWithConversationId = (headers: string[], e: EdaHistory[]) => {
   return (
@@ -30,11 +35,11 @@ const renderTableWithConversationId = (headers: string[], e: EdaHistory[]) => {
             <React.Fragment key={"line_item" + ii}>
                 <span style={{gridColumnStart: "1"}}>
                   <div>
-                    <div style={{fontSize: "0.9em"}}>{h.date.toDateString()}</div>
+                    <div style={{fontSize: "0.9em"}}>{formatHistoryDate(h.date)}</div>
 {/*
                     <div style={{fontSize: "0.8em"}}>{h.date.toLocaleTimeString()}</div>
 */}
-                    <div style={{fontSize: "0.8em"}}>{h.date.toTimeString()}</div>
+                    <div style={{fontSize: "0.8em"}}>{formatHistoryTime(h.date)}</div>
                   </div>
                 </span>
               <span style={{gridColumnStart: "2", margin: "auto 0"}}>{h.processType}</span>
@@ -113,10 +118,13 @@ export const renderAccordionBody = (p: string, v: EdaHistory[]) => {
               }}><strong>{"Energiedaten bis:"}</strong></span>
             {v.map((h, i) => (
               <React.Fragment key={"line" + p + i}>
-                <span style={{gridColumnStart: "1"}}>{h.date.toDateString()}</span>
-                <span style={{gridColumnStart: "2"}}>{(h.meteringFrom ? h.meteringFrom.toDateString() : "-")}</span>
+                <span style={{gridColumnStart: "1"}}>
+                  <div style={{fontSize: "0.9em"}}>{formatHistoryDate(h.date)}</div>
+                  <div style={{fontSize: "0.8em"}}>{formatHistoryTime(h.date)}</div>
+                </span>
+                <span style={{gridColumnStart: "2"}}>{(h.meteringFrom ? formatHistoryDate(h.meteringFrom) : "-")}</span>
                 <span style={{gridColumnStart: "3"}}><IonIcon icon={chevronForwardOutline} size="small"/> </span>
-                <span style={{gridColumnStart: "4"}}>{(h.meteringTo ? h.meteringTo.toDateString() : "-")}</span>
+                <span style={{gridColumnStart: "4"}}>{(h.meteringTo ? formatHistoryDate(h.meteringTo) : "-")}</span>
               </React.Fragment>
             ))}
           </div>

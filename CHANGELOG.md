@@ -17,6 +17,10 @@ this changelog highlights the changes relevant for overview and operations.
   membership-fee tariff is listed with the number of active members that have it (active as in the member count
   above and the member list filter „Aktive“: at least one active metering point, all members as of today), plus a
   line „ohne Mitgliedsbeitrag“ when active members have none (eegfaktura-platform#223).
+- **Process history: time for „Versenden von Energiedaten“, German date format.** „Abgewickelt am:“ of „Versenden von
+  Energiedaten“ now shows the time below the date like the other tables. All dates of the process history („Abgewickelt
+  am:“, „Energiedaten von/bis“, consent end, requested period) are shown as DD.MM.YYYY instead of e.g. „Tue Oct 27
+  2026“, times as HH:mm:ss instead of „09:15:00 GMT+0100 (…)“ (eegfaktura-platform#224).
 
 ## [1.13.0] – 2026-10-26
 
