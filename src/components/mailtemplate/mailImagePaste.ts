@@ -17,8 +17,10 @@ export type InsertImage = (file: File, pos?: number) => void
 export const mailImageEditorProps = (insertImage: () => InsertImage) => ({
   handlePaste: (view: EditorView, event: ClipboardEvent) => {
     const file = imageFileOf(event.clipboardData)
-    // copied text (e.g. from Word) can come with a picture of itself: paste the text as before
-    if (!file || !view.editable || event.clipboardData?.getData("text/plain")) return false
+    // copied text (e.g. from Word) can come with a picture of itself: paste the text as before;
+    // a file copied in Explorer/Finder may come with its name as text: that is an image paste
+    const text = event.clipboardData?.getData("text/plain")?.trim()
+    if (!file || !view.editable || (text && text !== file.name)) return false
     event.preventDefault()
     insertImage()(file)
     return true

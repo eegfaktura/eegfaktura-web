@@ -125,6 +125,17 @@ describe("MailTemplateEditor paste and drop of images", () => {
     expect(await savedBody(saveTemplate)).toBe(`<p><img src="mailfile:${UPLOADED}" alt="bild.png">Hallo</p>`)
   })
 
+  it("uploads a file copied in Explorer/Finder that comes with its name as text", async () => {
+    const {uploadFile, saveTemplate, pm} = setup(template(true))
+    await waitFor(() => expect(pm().getAttribute("contenteditable")).toBe("true"))
+    fireEvent.paste(pm(), {clipboardData: clipboard([png()], "bild.png")})
+    await waitFor(() => expect(uploadFile).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(screen.getByText(/bild\.png/)).toBeTruthy())
+    const body = await savedBody(saveTemplate)
+    expect(body).toContain(`<img src="mailfile:${UPLOADED}" alt="bild.png">`)
+    expect(body).not.toContain("bild.pngHallo")
+  })
+
   it("puts a dropped image at the cursor when the text changed during the upload", async () => {
     const {uploadFile, saveTemplate, pm} = setup(template(true))
     let finish: () => void = () => undefined
