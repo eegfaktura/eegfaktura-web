@@ -22,6 +22,11 @@ this changelog highlights the changes relevant for overview and operations.
   am:“, „Energiedaten von/bis“, consent end, requested period) are shown as DD.MM.YYYY instead of e.g. „Tue Oct 27
   2026“, times as HH:mm:ss instead of „09:15:00 GMT+0100 (…)“ (eegfaktura-platform#224).
 
+### Fixed
+- **Member list sort popover: long texts are no longer cut off.** Options such as „Mitglieder mit nötiger Aktion
+  oben“ or „Mitglied seit (neueste zuerst)“ ended in „…“ in the narrow popover; they now wrap onto a second line
+  (also on mobile).
+
 ## [1.13.0] – 2026-10-26
 
 ### Added
