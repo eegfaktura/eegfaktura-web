@@ -27,9 +27,12 @@ this changelog highlights the changes relevant for overview and operations.
   höchstens 3, zu höchstens 2 Domains; keine Kurz-Links, keine IP-Adressen“ next to the image limits, and the link
   dialog refuses a new link once the text holds `maxLinks` links („Höchstens 3 Links pro Mail.“). The services check
   the rules on save, preview and test mail; their 400 messages appear in the „Nicht gespeichert:“ list as before.
-  The „PDF-Anhang“ section is hidden for every mail whose `maxAttachments` is 0 (member mails now too). Every
-  PNG/JPEG is drawn anew in the browser before the upload (same type, JPEG quality 0.8, still at most 1200 px
-  wide), so EXIF/GPS data no longer leaves the browser. The client copy of the HTML policy now keeps the last
+  The „PDF-Anhang“ section is hidden for every mail whose `maxAttachments` is 0 (member mails now too), and a PDF
+  stored before is no longer sent with the save (it would be refused). Every JPEG is drawn anew in the browser
+  before the upload (quality 0.8, at most 1200 px wide), so EXIF/GPS data of photos no longer leaves the browser;
+  a PNG is only redrawn when wider than 1200 px (an optimised logo would grow), the services re-encode every image.
+  An image the browser can not draw gets a clear message, and an image pasted while an upload or save still runs
+  gets „Bitte warten …“ instead of vanishing. The client copy of the HTML policy now keeps the last
   `font-size`/`text-align` declaration of a style, as the browser does. Needs eegfaktura-backend and
   eegfaktura-billing with the link rules for the numbers; without them nothing is shown.
 

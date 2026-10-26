@@ -310,6 +310,8 @@
     "test_sent": "Testmail gesendet an {{address}}",
     "images": "Bilder",
     "image_too_large": "Das Bild ist zu groß (höchstens {{max}}).",
+    "image_busy": "Bitte warten – es wird gerade noch etwas hochgeladen oder gespeichert.",
+    "image_unreadable": "Das Bild konnte nicht verarbeitet werden (zu groß oder beschädigt). Bitte ein kleineres PNG- oder JPEG-Bild verwenden.",
     "image_limit": "Höchstens {{max}} Bilder je Mail.",
     "attachment": "PDF-Anhang",
     "attachment_add": "PDF anhängen",

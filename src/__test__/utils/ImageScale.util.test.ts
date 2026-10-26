@@ -1,5 +1,5 @@
 import {afterEach, describe, expect, it, vi} from "vitest";
-import {downscaleImage, scaledSize} from "../../util/ImageScale.util";
+import {downscaleImage, ImageProcessError, scaledSize} from "../../util/ImageScale.util";
 
 describe("scaledSize", () => {
   it("keeps images up to 1200 px wide", () => {
@@ -26,7 +26,7 @@ describe("downscaleImage", () => {
     const encoded = new Blob(["re-encoded"], {type: "image/jpeg"})
     const canvas = {
       width: 0, height: 0, getContext: () => ({drawImage}),
-      toBlob: vi.fn((cb: (b: Blob) => void, _type: string, _quality?: number) => cb(encoded)),
+      toBlob: vi.fn((cb: (b: Blob | null) => void, _type: string, _quality?: number) => cb(encoded)),
     }
     const createElement = document.createElement.bind(document)
     vi.spyOn(document, "createElement").mockImplementation(((tag: string) =>
@@ -49,6 +49,19 @@ describe("downscaleImage", () => {
     expect(drawImage).toHaveBeenCalledWith(expect.anything(), 0, 0, 640, 480)
     expect(canvas.toBlob).toHaveBeenCalledWith(expect.any(Function), "image/jpeg", 0.8)
     expect(close).toHaveBeenCalled()
+  })
+
+  it("keeps a PNG up to 1200 px unchanged (an optimised palette PNG would grow; the service re-encodes)", async () => {
+    const {canvas} = fakeCanvas(800, 300)
+    const f = new File(["png"], "logo.png", {type: "image/png"})
+    expect(await downscaleImage(f)).toBe(f)
+    expect(canvas.toBlob).not.toHaveBeenCalled()
+  })
+
+  it("throws ImageProcessError when the browser can not encode the image", async () => {
+    const {canvas} = fakeCanvas(1200, 15000)
+    canvas.toBlob.mockImplementation((cb: (b: Blob | null) => void) => cb(null))
+    await expect(downscaleImage(new File(["j"], "long.jpg", {type: "image/jpeg"}))).rejects.toBeInstanceOf(ImageProcessError)
   })
 
   it("re-encodes a PNG as PNG and scales a wider one to 1200 px", async () => {

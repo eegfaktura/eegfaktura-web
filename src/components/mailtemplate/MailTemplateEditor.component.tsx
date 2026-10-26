@@ -30,7 +30,7 @@ import {
   setContentWithoutHistory,
   toMailHtml
 } from "./mailEditor.extensions";
-import {downscaleImage} from "../../util/ImageScale.util";
+import {downscaleImage, ImageProcessError} from "../../util/ImageScale.util";
 import {useLocale} from "../../store/hook/useLocale";
 import {
   createBlobUrlCache, errorMessage, formatBytes, insertAtCursor, linkLimitReached, MAX_SUBJECT_CHARS
@@ -315,14 +315,20 @@ const MailTemplateEditor: FC<MailTemplateEditorProps> = ({tenant, source, templa
 
   // toolbar „Bild einfügen“, paste and drop; pos undefined = at the cursor
   const uploadImage: InsertImage = (file, pos) => {
+    if (!limits) return
     // another upload, save, … still runs (e.g. a second paste right after the first)
-    if (!limits || busyNow.current) return
+    if (busyNow.current) {
+      toast(t("mailtemplates.image_busy"), "danger")
+      return
+    }
     const doc = editor?.state.doc
     run(async () => {
       if (imageCount.current >= limits.maxImages) {
         throw new Error(t("mailtemplates.image_limit", {max: limits.maxImages}))
       }
-      const scaled = await downscaleImage(file)
+      const scaled = await downscaleImage(file).catch(e => {
+        throw e instanceof ImageProcessError ? new Error(t("mailtemplates.image_unreadable")) : e
+      })
       if (scaled.size > limits.maxImageBytes) {
         throw new Error(t("mailtemplates.image_too_large", {max: formatBytes(limits.maxImageBytes)}))
       }
