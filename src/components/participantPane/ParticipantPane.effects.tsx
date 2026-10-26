@@ -1,20 +1,17 @@
 import {useMemo} from "react";
 import {EegParticipant} from "../../models/members.model";
 import {filterMeters} from "./ParticipantPane.functions";
-import {hasOpenProblem} from "../../util/FilterHelper.unit";
-import moment from "moment";
 import {MemberSort, sortMembers} from "./participantSort";
-import {memberActivity} from "../../util/MemberActivity.util";
+import {filterMembers, toMemberFilter} from "./memberFilter.functions";
 
 interface SortParticipantProps {
   participants: EegParticipant[],
-  hideProducers: boolean,
-  hideConsumers: boolean,
   memberSort: MemberSort,
+  actionFirst: boolean,
 }
 export const sortParticipants = (options: SortParticipantProps) => {
-  const {participants, hideConsumers, hideProducers, memberSort} = options
-  return useMemo(() => sortMembers(participants, memberSort), [participants, hideConsumers, hideProducers, memberSort])
+  const {participants, memberSort, actionFirst} = options
+  return useMemo(() => sortMembers(participants, memberSort, actionFirst), [participants, memberSort, actionFirst])
 }
 
 interface FilterParticipantProps {
@@ -25,41 +22,16 @@ interface FilterParticipantProps {
   hideConsumers: boolean,
   hideMeter: boolean,
   memberSort: MemberSort,
+  actionFirst: boolean,
 }
 export const filterParticipant = (options: FilterParticipantProps) => {
-  const {selectedFilter, sortedParticipants, participants, hideConsumers, hideProducers, hideMeter, memberSort} = options
+  const {selectedFilter, sortedParticipants, participants, hideConsumers, hideProducers, hideMeter, memberSort, actionFirst} = options
   return useMemo(() => {
-    // the filtered views keep their order with the standard sort
-    const sorted = (list: EegParticipant[]) => memberSort === 'standard' ? list : sortMembers(list, memberSort)
-    switch (selectedFilter) {
-      case 'active':
-        // the same rule as the "Aktive" count of the dashboard
-        const sorted0 = participants.filter(p => memberActivity(p) === 'ACTIVE')
-          .map(p => ({...p, meters: p.meters.filter(m => m.status === "ACTIVE")}))
-        return filterMeters(sorted(sorted0), hideProducers, hideConsumers, false)
-      case 'init':
-        const sorted1 = participants
-          .filter(p => p.meters.findIndex(meter => meter.status === 'INIT' || (meter.processState !== "ACTIVE" && meter.processState !== "INACTIVE")) >= 0)
-          .map(p => {
-            return {
-              ...p, meters: p.meters.filter(m =>
-                (m.processState === "NEW" || m.processState === "INIT" || m.processState === "APPROVED" || m.processState === "PENDING"))
-            }
-          })
-        return filterMeters(sorted(sorted1), hideProducers, hideConsumers, false)
-      case 'inactive':
-        const sorted2 = participants.filter(p => p.meters.findIndex(meter => meter.status === "INACTIVE") >= 0)
-          .map(p => {
-            return {...p, meters: p.meters.filter(m => m.status === "INACTIVE")}
-          })
-        return filterMeters(sorted(sorted2), hideProducers, hideConsumers, false)
-      case 'rejected':
-        // also meters that were inactive before (re-registration after leaving was rejected)
-        const sorted3 = participants.filter(p => p.meters.some(hasOpenProblem))
-          .map(p => ({...p, meters: p.meters.filter(hasOpenProblem)}))
-        return filterMeters(sorted(sorted3), hideProducers, hideConsumers, false)
-      default:
-        return filterMeters(sortedParticipants, hideProducers, hideConsumers, hideMeter /*!(hideProducers || hideConsumers)*/)
+    if (selectedFilter === 'period') {
+      return filterMeters(sortedParticipants, hideProducers, hideConsumers, hideMeter /*!(hideProducers || hideConsumers)*/)
     }
-  }, [selectedFilter, participants, sortedParticipants, hideConsumers, hideProducers, hideMeter, memberSort])
+    // sorted with all metering points of a member, then filtered: the order does not depend on the filter
+    return filterMembers(sortMembers(participants, memberSort, actionFirst), toMemberFilter(selectedFilter),
+      hideProducers, hideConsumers)
+  }, [selectedFilter, participants, sortedParticipants, hideConsumers, hideProducers, hideMeter, memberSort, actionFirst])
 }
