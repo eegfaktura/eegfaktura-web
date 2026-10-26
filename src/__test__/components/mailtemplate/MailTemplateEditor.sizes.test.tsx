@@ -142,6 +142,23 @@ describe("MailTemplateEditor paste and drop of images", () => {
     expect(await savedBody(saveTemplate)).toBe(`<p>Neu <img src="mailfile:${UPLOADED}" alt="bild.png">Hallo</p>`)
   })
 
+  it("does not take the focus back from the subject when a pasted image arrives", async () => {
+    const {uploadFile, saveTemplate, pm} = setup(template(true))
+    let finish: () => void = () => undefined
+    uploadFile.mockReturnValueOnce(new Promise(r => finish = () =>
+      r({id: UPLOADED, kind: "image", filename: "bild.png", mimeType: "image/png", size: 3, committed: false})))
+    await waitFor(() => expect(pm().getAttribute("contenteditable")).toBe("true"))
+    fireEvent.paste(pm(), {clipboardData: clipboard([png()])})
+    await waitFor(() => expect(uploadFile).toHaveBeenCalledTimes(1))
+    const other = document.body.appendChild(document.createElement("input"))
+    other.focus()
+    await act(async () => finish())
+    await waitFor(() => expect(screen.getByText(/bild\.png/)).toBeTruthy())
+    expect(document.activeElement).toBe(other)
+    expect(await savedBody(saveTemplate)).toContain(`<img src="mailfile:${UPLOADED}" alt="bild.png">`)
+    other.remove()
+  })
+
   it("pastes text as before, also when it comes with a picture of itself", async () => {
     const {uploadFile, saveTemplate, pm} = setup(template(true))
     await waitFor(() => expect(pm().getAttribute("contenteditable")).toBe("true"))
