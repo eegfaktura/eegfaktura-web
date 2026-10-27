@@ -172,6 +172,19 @@ export interface EegTariff {
   timeTariff2From?: string
   timeTariff2To?: string
   timeTariff2CentPerKWh?: number
+  // Joining fee (type EEG only, 0/false otherwise): net amount in €, charged once with the member's first energy
+  // billing, with its own VAT setting (platform#217)
+  joiningFee?: number
+  joiningFeeUseVat?: boolean
+  joiningFeeVatInPercent?: number
+}
+
+// billing GET /api/billingDocuments/tenant/{tenantId}/joiningFeeState: one entry per member with a final document
+// in the community (members without one are missing = not energy billed, no fee); passed on to the member export
+export interface JoiningFeeState {
+  participantId: string
+  energyBilled: boolean
+  joiningFee: { documentNumber: string, documentDate: string } | null
 }
 
 export enum MONTHNAME {

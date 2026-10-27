@@ -8,6 +8,21 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **Joining fee in the membership fee tariff (platform#217).** The tariff dialog of type „Mitgliedsbeitrag“ has a new
+  section „Einmalige Beitrittsgebühr“: the amount in € (net, with cents, e.g. 49,90) and its own VAT setting
+  (yes/no, rate), independent of the running membership fee; empty or 0 means no fee. The tariff card shows the fee
+  (and its VAT rate) when set. Saving a fee above 0 asks first when (a) the fee's VAT rate is above 0 % and no tariff
+  of the community uses it („Dieser USt-Satz kommt in der EEG sonst nicht vor. …“; checked in the browser against the
+  loaded tariffs) or (b) active members (an active metering point, the rule of the member list's „Aktive“) with this
+  tariff were never billed with energy in eegfaktura („N aktive Mitglieder mit diesem Tarif wurden in eegfaktura noch
+  nie mit Energie abgerechnet und bekommen die Beitrittsgebühr mit ihrer nächsten Abrechnung.“); if billing cannot
+  be reached, the question says the number could not be determined. Saving stays possible in every case.
+  **Contract:** sends and reads the new tariff JSON fields `joiningFee`, `joiningFeeUseVat`,
+  `joiningFeeVatInPercent` (eegfaktura-backend `POST/GET /eeg/tariff`) and calls the new billing endpoint
+  `GET /api/billingDocuments/tenant/{tenantId}/joiningFeeState` (header `tenant`). Needs eegfaktura-backend and
+  eegfaktura-billing with the joining fee first; deploy them before this version.
+
 ## [1.14.0] – 2026-10-27
 
 ### Changed

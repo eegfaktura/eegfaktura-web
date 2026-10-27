@@ -1,4 +1,4 @@
-import {BillingConfig, EdaHistories, Eeg, EegNotification, EegTariff} from "../models/eeg.model";
+import {BillingConfig, EdaHistories, Eeg, EegNotification, EegTariff, JoiningFeeState} from "../models/eeg.model";
 import {EegParticipant} from "../models/members.model";
 import {
   BillingDocumentAmounts,
@@ -239,6 +239,18 @@ export class EegService extends EegBaseService {
         ...this.getSecureHeaders(token, tenant),
         'Accept': 'application/json',
         "Content-Type": "application/json",
+      },
+    }).then(this.handleErrors).then(res => res.json())
+  }
+
+  // platform#217: per member with a final document, energy billed yes/no and the document with the joining fee
+  async fetchJoiningFeeState(tenant: string): Promise<JoiningFeeState[]> {
+    const token = await this.lookupToken()
+    return await fetch(`${BILLING_API_SERVER}/api/billingDocuments/tenant/${tenant.toUpperCase()}/joiningFeeState`, {
+      method: 'GET',
+      headers: {
+        ...this.getSecureHeaders(token, tenant),
+        'Accept': 'application/json',
       },
     }).then(this.handleErrors).then(res => res.json())
   }

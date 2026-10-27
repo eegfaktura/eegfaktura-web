@@ -58,6 +58,22 @@
     "warn_price_missing": "Preis ist erforderlich",
     "warn_no_active_window": "Bei einem zeitbasierten Tarif muss mindestens ein Zeitraum aktiv sein (Häkchen „Zeitraum aktiv“) und Von und Bis haben. Sonst kann der Tarif nicht gespeichert werden."
   },
+  "joiningFee": {
+    "header": "Einmalige Beitrittsgebühr",
+    "amount": "Beitrittsgebühr in € (einmalig, netto)",
+    "useVat": "Umsatzsteuer für die Beitrittsgebühr anführen",
+    "vatInPercent": "Umsatzsteuer der Beitrittsgebühr in %",
+    "card": "Beitrittsgebühr",
+    "vatInPercent_card": "Umsatzsteuer Beitrittsgebühr",
+    "warn_negative": "Die Beitrittsgebühr darf nicht negativ sein",
+    "warn_vat_range": "Der USt-Satz muss zwischen 0 und 100 % liegen",
+    "warn_vat_unusual": "Dieser USt-Satz kommt in der EEG sonst nicht vor. Eine Rechnung kann höchstens zwei verschiedene Sätze über 0 % enthalten; mit einem dritten bricht die Abrechnung ab.",
+    "warn_rollout_one": "{{count}} aktives Mitglied mit diesem Tarif wurde in eegfaktura noch nie mit Energie abgerechnet und bekommt die Beitrittsgebühr mit seiner nächsten Abrechnung.",
+    "warn_rollout_other": "{{count}} aktive Mitglieder mit diesem Tarif wurden in eegfaktura noch nie mit Energie abgerechnet und bekommen die Beitrittsgebühr mit ihrer nächsten Abrechnung.",
+    "warn_rollout_unknown": "Wie viele aktive Mitglieder mit diesem Tarif in eegfaktura noch nie mit Energie abgerechnet wurden, konnte nicht ermittelt werden (Abrechnung nicht erreichbar). Diese Mitglieder bekommen die Beitrittsgebühr mit ihrer nächsten Abrechnung.",
+    "save": "Speichern",
+    "cancel": "Abbrechen"
+  },
   "useMeteringPointFee": "Zählpunktgebühr einheben?",
   "meteringPointFee": "Zählpunktgebühr in €",
   "meteringPointVat": "USt. für Zählpunktgebühr in %",
