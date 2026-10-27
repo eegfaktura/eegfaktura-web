@@ -27,6 +27,11 @@ this changelog highlights the changes relevant for overview and operations.
   app imports `processDetails/ProcessHistory/ProcessHistory.component`).
 
 ### Fixed
+- **Emptied number fields keep the old value (261027-mm1).** Clearing a number field (e.g. a price or fee in the
+  tariff dialog) left the previous value in the form, so it was saved again. An emptied field now counts as 0, as
+  typing 0 does.
+- **Tariff dialog: VAT range messages were swapped (261027-mm2).** Above 100 % it said „0% nicht erlaubt!“, below 0
+  „Nur 100% erlaubt!“. Now „Höchstens 100 % erlaubt!“ and „Negative Werte sind nicht erlaubt!“.
 - **Member list sort popover: long texts are no longer cut off.** Options such as „Mitglieder mit nötiger Aktion
   oben“ or „Mitglied seit (neueste zuerst)“ ended in „…“ in the narrow popover; they now wrap onto a second line
   (also on mobile).
