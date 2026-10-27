@@ -14,12 +14,15 @@ import {FilterByMeterState, meteringDisplayName, selectedMeters} from "../../uti
 import {Api} from "../../service";
 import {useLocale} from "../../store/hook/useLocale";
 import {JoinStrings} from "../../util/Helper.util";
+import {TFunction} from "i18next";
 import {isInPartFactWindow, PARTFACT_WINDOW_TEXT} from "../../util/PartFactWindow.util";
 import {useProcessFeedback} from "./useProcessFeedback";
 
 // 0 would have been sent as 100 % (`|| 100`); the factor is 1–100 like in the meter form
 const PARTFACT_RANGE = {value: 1, message: "Der Teilnahmefaktor muss zwischen 1 und 100 % liegen."}
 const PARTFACT_RANGE_MAX = {value: 100, message: PARTFACT_RANGE.message}
+
+export const partFactMeterLabel = (m: Metering, t: TFunction) => meteringDisplayName(m, t) + ' - ' + m.partFact + '%'
 
 export const partFactChanges = (meters: Metering[], partFact: number) =>
   meters.map(m => ({meter: m.meteringPoint, direction: m.direction, gridOperatorId: m.gridOperatorId,
@@ -116,7 +119,7 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
                                   })} label={t("participant")}/>
             <BasicSelectComponent control={control} name={"meteringPoints"}
                                   options={useableMeters.map((p) => {
-                                    return {value: p.meteringPoint, label: meteringDisplayName(p) + ' - ' + p.partFact + '%'}
+                                    return {value: p.meteringPoint, label: partFactMeterLabel(p, t)}
                                   })} label={t("metering")} multiple={true} rules={{required: true}}/>
             <InputForm name="partFact" label={t("process.partFact.label")}
                        control={control} rules={{required: true, min: PARTFACT_RANGE, max: PARTFACT_RANGE_MAX}}

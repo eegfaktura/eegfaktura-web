@@ -16,6 +16,7 @@ import {useLocale} from "../../store/hook/useLocale";
 import {BasicSelectComponent, SelectOptions} from "../form/BasicSelect.component";
 import {JoinStrings} from "../../util/Helper.util";
 import {meteringDisplayName, selectedMeters} from "../../util/FilterHelper";
+import {TFunction} from "i18next";
 import {useProcessFeedback} from "./useProcessFeedback";
 import {useTenant} from "../../store/hook/Eeg.provider";
 import {SyncEnergyMeter, SyncEnergyResult} from "../../service/eeg.service";
@@ -45,6 +46,8 @@ interface ProcessRequestValuesComponentProps {
   participants: EegParticipant[]
   edaProcess: EdaProcess
 }
+
+export const requestValuesMeterLabel = (m: Metering, t: TFunction) => JoinStrings(" ", "", meteringDisplayName(m, t), m.processState)
 
 const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({eeg, meters, participants, edaProcess}) => {
   const processValues = {
@@ -174,13 +177,6 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
     );
   });
 
-  const meteringDisplayName = (m: Metering): string => {
-    if (m.equipmentName && m.equipmentName.length > 0) {
-      return `${m.equipmentName} - ${m.meteringPoint}`
-    }
-    return m.meteringPoint
-  }
-
   const selectAllMeteringPoints = (s: boolean) => {
     if (s) {
       setValue("meteringPoints", meters.map(m => {
@@ -210,7 +206,7 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
                                   })} label={t("participant")} disabled={selectEntire}/>
             <BasicSelectComponent control={control} name={"meteringPoints"}
                                   options={useableMeters.filter(p => p.processState === 'ACTIVE' || p.processState == 'INACTIVE').map((p) => {
-                                    return {value: p.meteringPoint, label: JoinStrings(" ", "", meteringDisplayName(p), p.processState)}
+                                    return {value: p.meteringPoint, label: requestValuesMeterLabel(p, t)}
                                   })} label={t("metering")} multiple={true} rules={{required: true}} disabled={selectEntire}/>
             <div className="form-element">
               <DatePicker

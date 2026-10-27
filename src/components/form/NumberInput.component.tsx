@@ -9,6 +9,10 @@ import "./form-element.css";
 function noop() {
 }
 
+// The number an input sends to the form: an emptied field is 0 (it used to keep the old value, 261027-mm1).
+export const numberInputValue = (value: string | number | null | undefined): number =>
+  value === null || value === undefined || value.toString().trim() === '' ? 0 : parseFloat(value.toString().replace(",", "."))
+
 type NumberInputFormProps<T extends FieldValues> = {
   control: Control<T>,
   clear?: UseFormClearErrors<any>
@@ -60,8 +64,6 @@ const NumberInput: FC<NumberInput> = ({
   //   if (input) input.getInputElement().then(e => e.setSelectionRange(cursor, cursor))
   // }, [inputRef, cursor]);
 
-
-  const format = (value: string): number => value === '' ? 0 : parseFloat(value.replace(",", "."))
 
   const formatValue = (value: string): string => {
     let numValue: number
@@ -116,9 +118,7 @@ const NumberInput: FC<NumberInput> = ({
   }
 
   const onChangeValue = (e: IonInputCustomEvent<InputChangeEventDetail>) => {
-    if (e.target.value) {
-      onChange(format(e.target.value.toString()))
-    }
+    onChange(numberInputValue(e.target.value))
   }
 
   const splitDecimal = (numStr: string, allowNegative: boolean = true) => {

@@ -12,6 +12,7 @@ import {Api} from "../../service";
 import {BasicSelectComponent} from "../form/BasicSelect.component";
 import {JoinStrings} from "../../util/Helper.util";
 import {meteringDisplayName} from "../../util/FilterHelper";
+import {TFunction} from "i18next";
 import {useLocale} from "../../store/hook/useLocale";
 import CheckboxComponent from "../form/Checkbox.component";
 import {useProcessFeedback} from "./useProcessFeedback";
@@ -30,6 +31,8 @@ interface ProcessRegisterMeterComponentProps {
   participants: EegParticipant[]
   edaProcess: EdaProcess
 }
+
+export const registerMeterLabel = (m: Metering, t: TFunction) => JoinStrings(" ", "", meteringDisplayName(m, t), m.processState)
 
 const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
                                                                                  eeg,
@@ -132,7 +135,7 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
                                   options={useableMeters.filter(p => p.processState !== 'ACTIVE' /*&& p.status !== 'APPROVED' && p.status !== 'PENDING'*/).map((p) => {
                                     return {
                                       value: p.meteringPoint,
-                                      label: JoinStrings(" ", "", meteringDisplayName(p), p.processState)
+                                      label: registerMeterLabel(p, t)
                                     }
                                   })} label={t("metering")} rules={{required: true}}/>
 

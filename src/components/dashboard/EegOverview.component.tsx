@@ -5,7 +5,7 @@ import {useAppSelector} from "../../store";
 import {allParticipantsSelector} from "../../store/participant";
 import {selectedPeriodSelector} from "../../store/energy";
 import {periodDisplayString} from "../../util/Helper.util";
-import {countMemberActivity} from "../../util/MemberActivity.util";
+import {countMemberActivity, countMemberFees} from "../../util/MemberActivity.util";
 import {countMeters} from "../../util/MeterCount.util";
 
 interface EegOverviewComponentProps {
@@ -26,6 +26,8 @@ const EegOverviewComponent: FC<EegOverviewComponentProps> = ({participants, rate
   const allParticipants = useAppSelector(allParticipantsSelector)
   const activePeriod = useAppSelector(selectedPeriodSelector)
   const members = useMemo(() => countMemberActivity(allParticipants), [allParticipants])
+  // platform#223: membership fees of the active members, same basis as the member count above
+  const memberFees = useMemo(() => countMemberFees(allParticipants), [allParticipants])
 
   // platform#211: each metering point once, with the tariff of its current participation
   const [consumerCount, producerCount, tariffUsage] = useMemo(() => {
@@ -88,6 +90,22 @@ const EegOverviewComponent: FC<EegOverviewComponentProps> = ({participants, rate
         })
 
         }
+        { Object.entries(memberFees.tariffs).map(([tariffId, count], i) => {
+          const tariff = rateMap[tariffId]
+          if (!tariff) return (<div key={`fee-${i}`}></div>)
+          return (
+            <div key={`fee-${i}`} style={{display: "flex", flexFlow: "row", flex: "1"}}>
+              <div style={{flexBasis: "50%"}}>{tariff.name}</div>
+              <div style={{flexBasis: "50%"}}>{count}</div>
+            </div>
+          )
+        })}
+        { memberFees.withoutFee > 0 && (
+          <div style={{display: "flex", flexFlow: "row", flex: "1"}}>
+            <div style={{flexBasis: "50%"}}>ohne Mitgliedsbeitrag</div>
+            <div style={{flexBasis: "50%"}}>{memberFees.withoutFee}</div>
+          </div>
+        )}
       </div>
     )
   }

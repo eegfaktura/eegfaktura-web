@@ -182,8 +182,8 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
               <>
                   <InputFormComponent label={t("vatInPercent")} control={control} name="vatInPercent"
                                       rules={{required: t("warnings.vat_missing"),
-                                        max: {value: 100, message: t("warnings.vat_zero")},
-                                        min: {value: 0, message: t("warnings.vat_to_big")}}}/>
+                                        max: {value: 100, message: t("warnings.vat_to_big")},
+                                        min: {value: 0, message: t("warnings.vat_zero")}}}/>
                   <InputFormComponent label={t("vatSupplementaryText")} control={control} name="vatSupplementaryText" rules={{required: false}}/>
               </>
           }

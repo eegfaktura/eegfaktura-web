@@ -8,6 +8,34 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **Process metering point selections show the direction.** „Teilnahmefaktor ändern“, „Zählpunkt anmelden“,
+  „Zählpunkt abmelden“ and „Zählpunktdaten nachfordern“ now label each metering point with „Verbraucher“ or
+  „Erzeuger“ (the terms of the meter form), then the equipment name when set, then the number. „Zählpunktdaten
+  nachfordern“ uses the shared label helper instead of its own copy (eegfaktura-platform#222).
+- **Dashboard „Tarife“ shows the membership fees.** Below the metering point tariffs (counted as before) each
+  membership-fee tariff is listed with the number of active members that have it (active as in the member count
+  above and the member list filter „Aktive“: at least one active metering point, all members as of today), plus a
+  line „ohne Mitgliedsbeitrag“ when active members have none (eegfaktura-platform#223).
+- **Process history: time for „Versenden von Energiedaten“, German date format.** „Abgewickelt am:“ of „Versenden von
+  Energiedaten“ now shows the time below the date like the other tables. All dates of the process history (incl. the date range in the header of „Prozess History“ and the process header, „Abgewickelt
+  am:“, „Energiedaten von/bis“, consent end, requested period) are shown as DD.MM.YYYY instead of e.g. „Tue Oct 27
+  2026“, times as HH:mm:ss instead of „09:15:00 GMT+0100 (…)“ (eegfaktura-platform#224).
+
+### Removed
+- Unused `src/components/processDetails/ProcessHistory.component.tsx` (an older copy of the process history; the
+  app imports `processDetails/ProcessHistory/ProcessHistory.component`).
+
+### Fixed
+- **Emptied number fields keep the old value (261027-mm1).** Clearing a number field (e.g. a price or fee in the
+  tariff dialog) left the previous value in the form, so it was saved again. An emptied field now counts as 0, as
+  typing 0 does.
+- **Tariff dialog: VAT range messages were swapped (261027-mm2).** Above 100 % it said „0% nicht erlaubt!“, below 0
+  „Nur 100% erlaubt!“. Now „Höchstens 100 % erlaubt!“ and „Negative Werte sind nicht erlaubt!“.
+- **Member list sort popover: long texts are no longer cut off.** Options such as „Mitglieder mit nötiger Aktion
+  oben“ or „Mitglied seit (neueste zuerst)“ ended in „…“ in the narrow popover; they now wrap onto a second line
+  (also on mobile).
+
 ## [1.13.0] – 2026-10-26
 
 ### Added

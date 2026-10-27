@@ -142,8 +142,8 @@
     "metering_missing_msg": "Zählpunktnummer fehlt!",
     "fee_missing": "Gebühr fehlt!",
     "vat_missing": "USt. fehlt!",
-    "vat_zero": "0% nicht erlaubt!",
-    "vat_to_big": "Nur 100% erlaubt!"
+    "vat_zero": "Negative Werte sind nicht erlaubt!",
+    "vat_to_big": "Höchstens 100 % erlaubt!"
   },
   "alerts": {
     "changeDirection_0": "Energierichtung zu einem $t(producer) ändern? Es gilt zu beachten, dass diese Änderung nicht mit dem Netzbetreiber kommuniziert wird. Die Änderung wird nur in EEGFaktura vollzogen und hat keine Auswirkung beim Netzbetreiber!",

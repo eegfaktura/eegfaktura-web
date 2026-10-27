@@ -3,6 +3,8 @@ import {IonButton, IonButtons, IonCheckbox, IonItem, IonList, IonListHeader, Ion
 import {useLocale} from "../../store/hook/useLocale";
 import {MEMBER_SORT_OPTIONS, MemberSort} from "./participantSort";
 
+import "./MemberSortPopover.component.scss"
+
 // The sort choice of the member list (platform#214). Not an alert: an Ionic alert cannot mix radio buttons with a
 // checkbox. The choice is applied with "Übernehmen" only.
 interface MemberSortPopoverProps {
@@ -18,7 +20,7 @@ const MemberSortPopover: FC<MemberSortPopoverProps> = ({memberSort, actionFirst,
   const [first, setFirst] = useState<boolean>(actionFirst)
 
   return (
-    <IonList lines="none">
+    <IonList lines="none" className="member-sort-popover">
       <IonListHeader>{t('meterlist.sort_header')}</IonListHeader>
       <IonRadioGroup value={sort} onIonChange={e => setSort(e.detail.value)}>
         {MEMBER_SORT_OPTIONS.map(o => (

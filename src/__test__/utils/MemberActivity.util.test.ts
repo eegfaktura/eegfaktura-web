@@ -1,5 +1,5 @@
 import {describe, expect, it} from "vitest";
-import {countMemberActivity, memberActivity} from "../../util/MemberActivity.util";
+import {countMemberActivity, countMemberFees, memberActivity} from "../../util/MemberActivity.util";
 import {EegParticipant} from "../../models/members.model";
 
 const member = (...meters: [string, string][]) =>
@@ -35,5 +35,28 @@ describe("memberActivity without metering points (platform#165)", () => {
 
   it("stays inactive while a metering point that left shows a registration state, until it is active again", () => {
     expect(memberActivity(member(["INACTIVE", "PENDING"]))).toBe('INACTIVE')
+  })
+})
+
+describe("countMemberFees (platform#223)", () => {
+  const withFee = (tariffId: string | undefined, ...meters: [string, string][]) =>
+    ({...member(...meters), tariffId}) as EegParticipant
+
+  it("counts the active members per membership-fee tariff and the ones without a fee", () => {
+    expect(countMemberFees([
+      withFee("fee1", ["ACTIVE", "ACTIVE"]),
+      withFee("fee1", ["INACTIVE", "INACTIVE"], ["ACTIVE", "ACTIVE"]),
+      withFee("fee2", ["ACTIVE", "REVOKED"]),
+      withFee(undefined, ["ACTIVE", "ACTIVE"]),
+      withFee("", ["ACTIVE", "ACTIVE"]),
+    ])).toEqual({tariffs: {fee1: 2, fee2: 1}, withoutFee: 2})
+  })
+
+  it("leaves out members that are not active (filter „Aktive“)", () => {
+    expect(countMemberFees([
+      withFee("fee1", ["INACTIVE", "INACTIVE"]),
+      withFee(undefined, ["INIT", "PENDING"]),
+      withFee(undefined),
+    ])).toEqual({tariffs: {}, withoutFee: 0})
   })
 })
