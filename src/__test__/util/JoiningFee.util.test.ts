@@ -1,6 +1,7 @@
 import {describe, expect, it} from "vitest";
 import {
-  hasJoiningFee, joiningFeeStateOf, joiningFeeVatUnusual, membersNotYetEnergyBilled, showJoiningFeeHint
+  hasJoiningFee, joiningFeeActions, joiningFeeStateOf, joiningFeeStatus, joiningFeeStatusText, joiningFeeVatUnusual,
+  membersNotYetEnergyBilled, showJoiningFeeHint
 } from "../../util/JoiningFee.util";
 import {EegTariff, JoiningFeeState} from "../../models/eeg.model";
 import {EegParticipant} from "../../models/members.model";
@@ -66,6 +67,10 @@ describe("membersNotYetEnergyBilled", () => {
   it("is 0 without members of the tariff", () => {
     expect(membersNotYetEnergyBilled([], "t1", [])).toBe(0)
   })
+  it("does not count a member whose fee was paid outside eegfaktura (extension 27.10.)", () => {
+    const paid: JoiningFeeState[] = [{participantId: "a", energyBilled: false, joiningFee: null, paidExternally: {paidOn: "2026-03-01", note: null}}]
+    expect(membersNotYetEnergyBilled([member("a", "t1", "ACTIVE"), member("f", "t1", "ACTIVE")], "t1", paid)).toBe(1)
+  })
 })
 
 describe("showJoiningFeeHint (grill 27.10. no. 3, AK 11)", () => {
@@ -89,5 +94,63 @@ describe("showJoiningFeeHint (grill 27.10. no. 3, AK 11)", () => {
   it("finds the member's entry without case", () => {
     expect(joiningFeeStateOf([{...billed, participantId: "ABC"}], "abc")?.energyBilled).toBe(true)
     expect(joiningFeeStateOf([billed], "other")).toBeUndefined()
+  })
+  it("does not show when the fee is requested or was paid outside (extension 27.10.)", () => {
+    expect(showJoiningFeeHint({...billed, requested: true}, fee)).toBe(false)
+    expect(showJoiningFeeHint({...billed, paidExternally: {paidOn: "2026-03-01", note: null}}, fee)).toBe(false)
+  })
+})
+
+describe("joiningFeeStatus / joiningFeeStatusText (extension 27.10., six states)", () => {
+  const fee = eeg({joiningFee: 50})
+  const s = (extra: Partial<JoiningFeeState> = {}): JoiningFeeState =>
+    ({participantId: "p", energyBilled: false, joiningFee: null, requested: false, paidExternally: null, ...extra})
+  const text = (state: JoiningFeeState | undefined, tariff?: EegTariff) => joiningFeeStatusText(joiningFeeStatus(state, tariff))
+  const doc = {documentNumber: "RG202600012", documentDate: "2026-01-15"}
+  const paid = {paidOn: "2026-03-01", note: "bar beim Beitritt"}
+
+  it("has the concept's texts", () => {
+    expect(text(s({joiningFee: doc, energyBilled: true}), fee)).toBe("verrechnet mit RG202600012 vom 15.01.2026")
+    expect(text(s({paidExternally: paid}), fee)).toBe("außerhalb bezahlt am 01.03.2026 (bar beim Beitritt)")
+    expect(text(s({paidExternally: {...paid, note: null}}), fee)).toBe("außerhalb bezahlt am 01.03.2026")
+    expect(text(s({requested: true, energyBilled: true}), fee)).toBe("zur Verrechnung im nächsten Abrechnungslauf vorgemerkt")
+    expect(text(undefined, fee)).toBe("offen – wird mit der ersten Energieabrechnung verrechnet")
+    expect(text(s({energyBilled: true}), fee)).toBe("nicht verrechnet – Mitglied wurde schon abgerechnet")
+    expect(text(s({energyBilled: true}), eeg({joiningFee: 0}))).toBe("kein Tarif mit Beitrittsgebühr")
+  })
+  it("a document wins over a record, a record over the tariff; a request without a fee tariff is no fee", () => {
+    expect(joiningFeeStatus(s({joiningFee: doc, requested: true}), eeg()).kind).toBe("BILLED")
+    expect(joiningFeeStatus(s({paidExternally: paid}), eeg()).kind).toBe("PAID_EXTERNALLY")
+    expect(joiningFeeStatus(s({requested: true}), eeg()).kind).toBe("NO_FEE")
+  })
+  it("an older billing without the new fields reads as no record", () => {
+    expect(joiningFeeStatus({participantId: "p", energyBilled: true, joiningFee: null}, fee).kind).toBe("NOT_BILLED")
+  })
+})
+
+describe("joiningFeeActions (extension 27.10.)", () => {
+  const fee = eeg({joiningFee: 50})
+  const s = (extra: Partial<JoiningFeeState> = {}): JoiningFeeState =>
+    ({participantId: "p", energyBilled: true, joiningFee: null, requested: false, paidExternally: null, ...extra})
+  const paid = {paidOn: "2026-03-01", note: null}
+
+  it("open fee: request or record a payment", () => {
+    expect(joiningFeeActions(s(), fee)).toEqual({request: true, withdraw: false, recordPaid: true, changePaid: false})
+    expect(joiningFeeActions(undefined, fee)).toEqual({request: true, withdraw: false, recordPaid: true, changePaid: false})
+  })
+  it("no request without a fee in the member's tariff; a payment can still be recorded", () => {
+    expect(joiningFeeActions(s(), eeg({joiningFee: 0}))).toEqual({request: false, withdraw: false, recordPaid: true, changePaid: false})
+  })
+  it("requested: only withdraw (request and payment exclude each other)", () => {
+    expect(joiningFeeActions(s({requested: true}), fee)).toEqual({request: false, withdraw: true, recordPaid: false, changePaid: false})
+  })
+  it("paid outside: only correct or remove", () => {
+    expect(joiningFeeActions(s({paidExternally: paid}), fee)).toEqual({request: false, withdraw: false, recordPaid: false, changePaid: true})
+  })
+  it("charged: nothing, also with a leftover record", () => {
+    const doc = {documentNumber: "RG1", documentDate: "2026-01-15"}
+    const none = {request: false, withdraw: false, recordPaid: false, changePaid: false}
+    expect(joiningFeeActions(s({joiningFee: doc}), fee)).toEqual(none)
+    expect(joiningFeeActions(s({joiningFee: doc, requested: true}), fee)).toEqual(none)
   })
 })

@@ -1,4 +1,6 @@
-import {BillingConfig, EdaHistories, Eeg, EegNotification, EegTariff, JoiningFeeState} from "../models/eeg.model";
+import {
+  BillingConfig, EdaHistories, Eeg, EegNotification, EegTariff, JoiningFeeRecord, JoiningFeeState
+} from "../models/eeg.model";
 import {EegParticipant} from "../models/members.model";
 import {
   BillingDocumentAmounts,
@@ -42,6 +44,13 @@ export const parseSyncEnergyResult = async (res: Response): Promise<SyncEnergyRe
   if (!text) return {skipped: []}
   const body = JSON.parse(text)
   return {requested: body.requested, skipped: body.skipped ?? []}
+}
+
+// billing answers 409 when the member's joining fee was charged in a final run meanwhile
+export class JoiningFeeAlreadyBilledError extends Error {
+  constructor() {
+    super("Die Beitrittsgebühr wurde inzwischen verrechnet – die Änderung ist nicht mehr möglich.")
+  }
 }
 
 export class EegService extends EegBaseService {
@@ -253,6 +262,30 @@ export class EegService extends EegBaseService {
         'Accept': 'application/json',
       },
     }).then(this.handleErrors).then(res => res.json())
+  }
+
+  // extension 2026-10-27: request the fee for the next final run or record a payment made outside eegfaktura (PUT),
+  // or take the record back (DELETE); 409 once the fee is charged
+  async saveJoiningFeeRecord(tenant: string, participantId: string, record: JoiningFeeRecord): Promise<void> {
+    return this.joiningFeeRecordCall(tenant, participantId, 'PUT', record)
+  }
+
+  async deleteJoiningFeeRecord(tenant: string, participantId: string): Promise<void> {
+    return this.joiningFeeRecordCall(tenant, participantId, 'DELETE')
+  }
+
+  private async joiningFeeRecordCall(tenant: string, participantId: string, method: 'PUT' | 'DELETE', record?: JoiningFeeRecord) {
+    const token = await this.lookupToken()
+    const response = await fetch(`${BILLING_API_SERVER}/api/billingDocuments/tenant/${tenant.toUpperCase()}/participants/${encodeURIComponent(participantId)}/joiningFee`, {
+      method,
+      headers: {
+        ...this.getSecureHeaders(token, tenant),
+        'Content-Type': 'application/json',
+      },
+      body: record ? JSON.stringify(record) : undefined,
+    })
+    if (response.status === 409) throw new JoiningFeeAlreadyBilledError()
+    await this.handleErrors(response)
   }
 
   async fetchBillingDocumentFiles(tenant: string): Promise<InvoiceDocumentResponse[]> {

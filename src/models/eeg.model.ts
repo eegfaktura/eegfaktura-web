@@ -185,7 +185,16 @@ export interface JoiningFeeState {
   participantId: string
   energyBilled: boolean
   joiningFee: { documentNumber: string, documentDate: string } | null
+  // extension 2026-10-27, missing from an older billing: the fee is requested for the next final run / was paid
+  // outside eegfaktura (members with only such a record are listed too)
+  requested?: boolean
+  paidExternally?: { paidOn: string, note: string | null } | null
 }
+
+// billing PUT .../participants/{participantId}/joiningFee
+export type JoiningFeeRecord =
+  | { kind: "CHARGE_REQUESTED" }
+  | { kind: "PAID_EXTERNALLY", paidOn: string, note: string | null }
 
 export enum MONTHNAME {
   Januar = 1,

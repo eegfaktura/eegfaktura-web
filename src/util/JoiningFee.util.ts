@@ -35,10 +35,11 @@ export const joiningFeeVatUnusual = (tariff: EegTariff, tariffs: EegTariff[]): b
 /**
  * The active members (an active metering point, the member list's "Aktive" rule) with this membership fee tariff that
  * have no final document with energy in eegfaktura yet: they get the joining fee with their next final billing.
+ * Members whose fee was recorded as paid outside eegfaktura get none and do not count.
  */
 export const membersNotYetEnergyBilled = (participants: EegParticipant[], tariffId: string,
                                           state: JoiningFeeState[]): number => {
-  const billed = new Set(state.filter(s => s.energyBilled).map(s => s.participantId.toLowerCase()))
+  const billed = new Set(state.filter(s => s.energyBilled || s.paidExternally).map(s => s.participantId.toLowerCase()))
   return participants.filter(p => p.tariffId === tariffId
     && (p.meters ?? []).some(isActiveMeter)
     && !billed.has(p.id.toLowerCase())).length
@@ -50,13 +51,81 @@ export const joiningFeeStateOf = (state: JoiningFeeState[], participantId: strin
 
 /**
  * Hint at the member's tariff (decision 2026-10-27): the member was billed with energy already, was never charged a
- * joining fee, and the chosen tariff has one — billing will not charge it any more. Assigning stays possible.
+ * joining fee, and the chosen tariff has one — billing will not charge it automatically any more (it can be requested,
+ * see joiningFeeActions). Not when the fee is requested already or was paid outside eegfaktura. Assigning stays possible.
  */
 export const showJoiningFeeHint = (state: JoiningFeeState | undefined, tariff?: EegTariff): boolean =>
-  hasJoiningFee(tariff) && !!state?.energyBilled && !state.joiningFee
+  hasJoiningFee(tariff) && !!state?.energyBilled && !state.joiningFee && !state.requested && !state.paidExternally
+
+// Status of a member's joining fee (extension 2026-10-27), in this order: a final document with the fee wins, then a
+// payment recorded as made outside eegfaktura, then the tariff (no fee: nothing will be charged, also not a request),
+// then a request for the next final run, then whether the member was billed with energy already.
+export type JoiningFeeStatus =
+  | { kind: "BILLED", documentNumber: string, documentDate: string }
+  | { kind: "PAID_EXTERNALLY", paidOn: string, note: string | null }
+  | { kind: "NO_FEE" }
+  | { kind: "REQUESTED" }
+  | { kind: "NOT_BILLED" }
+  | { kind: "OPEN" }
+
+export const joiningFeeStatus = (state: JoiningFeeState | undefined, tariff?: EegTariff): JoiningFeeStatus => {
+  if (state?.joiningFee) return {kind: "BILLED", ...state.joiningFee}
+  if (state?.paidExternally) return {kind: "PAID_EXTERNALLY", paidOn: state.paidExternally.paidOn, note: state.paidExternally.note}
+  if (!hasJoiningFee(tariff)) return {kind: "NO_FEE"}
+  if (state?.requested) return {kind: "REQUESTED"}
+  return state?.energyBilled ? {kind: "NOT_BILLED"} : {kind: "OPEN"}
+}
+
+/** "2026-01-15" -> "15.01.2026" */
+export const formatIsoDate = (iso: string): string => {
+  const [y, m, d] = iso.substring(0, 10).split("-")
+  return d && m && y ? `${d}.${m}.${y}` : iso
+}
+
+/** The status texts of the concept (member details; the backend writes the same into the export). */
+export const joiningFeeStatusText = (status: JoiningFeeStatus): string => {
+  switch (status.kind) {
+    case "BILLED":
+      return `verrechnet mit ${status.documentNumber} vom ${formatIsoDate(status.documentDate)}`
+    case "PAID_EXTERNALLY":
+      return `außerhalb bezahlt am ${formatIsoDate(status.paidOn)}` + (status.note ? ` (${status.note})` : "")
+    case "REQUESTED":
+      return "zur Verrechnung im nächsten Abrechnungslauf vorgemerkt"
+    case "OPEN":
+      return "offen – wird mit der ersten Energieabrechnung verrechnet"
+    case "NOT_BILLED":
+      return "nicht verrechnet – Mitglied wurde schon abgerechnet"
+    case "NO_FEE":
+      return "kein Tarif mit Beitrittsgebühr"
+  }
+}
+
+export interface JoiningFeeActions {
+  // „Beitrittsgebühr nachverrechnen“: never charged, not paid outside, not requested yet, the member's tariff has a fee
+  request: boolean
+  // „Vormerkung zurücknehmen“: requested and not charged yet
+  withdraw: boolean
+  // „Außerhalb bezahlt erfassen“: never charged and not requested (both exclude each other)
+  recordPaid: boolean
+  // correct or remove the recorded payment: recorded and not charged yet
+  changePaid: boolean
+}
+
+/** What an EEG admin may do with the member's joining fee; billing checks the same and answers 409 after charging. */
+export const joiningFeeActions = (state: JoiningFeeState | undefined, tariff?: EegTariff): JoiningFeeActions => {
+  const billed = !!state?.joiningFee
+  const requested = !!state?.requested
+  const paid = !!state?.paidExternally
+  return {
+    request: !billed && !paid && !requested && hasJoiningFee(tariff),
+    withdraw: !billed && requested,
+    recordPaid: !billed && !requested && !paid,
+    changePaid: !billed && paid,
+  }
+}
 
 export const JOINING_FEE_EXPORT_WITHOUT_BILLING =
-  "Die Abrechnung ist nicht erreichbar: Der Export enthält alle Mitglieder, die Spalte „Beitrittsgebühr verrechnet“ bleibt aber leer."
+  "Die Abrechnung ist nicht erreichbar: Der Export enthält alle Mitglieder, die Spalte „Beitrittsgebühr Status“ bleibt aber leer."
 
 /**
  * Member export (decision 2026-10-27, web orchestrates): billing's joiningFeeState goes to the backend with the export

@@ -22,11 +22,28 @@ this changelog highlights the changes relevant for overview and operations.
   `joiningFeeVatInPercent` (eegfaktura-backend `POST/GET /eeg/tariff`) and calls the new billing endpoint
   `GET /api/billingDocuments/tenant/{tenantId}/joiningFeeState` (header `tenant`). Needs eegfaktura-backend and
   eegfaktura-billing with the joining fee first; deploy them before this version.
-- **Hint at the member's tariff (platform#217).** In the member details, choosing a membership fee tariff with a
-  joining fee for a member that was billed with energy already and never charged a joining fee shows „Dieses Mitglied
-  wurde schon abgerechnet – die Beitrittsgebühr wird ihm nicht mehr verrechnet.“ Assigning stays possible. The data
-  comes from billing's `joiningFeeState`, loaded once per member and only when a tariff with a fee is chosen; without
-  an answer from billing no hint is shown.
+- **Joining fee in the member details (platform#217, extension of 2026-10-27).** For EEG admins, below the member's
+  tariff, when some tariff of the community has a joining fee:
+  - a status line „Beitrittsgebühr: …“ with one of „verrechnet mit RG… vom TT.MM.JJJJ“, „außerhalb bezahlt am
+    TT.MM.JJJJ“ (+ note), „zur Verrechnung im nächsten Abrechnungslauf vorgemerkt“, „offen – wird mit der ersten
+    Energieabrechnung verrechnet“, „nicht verrechnet – Mitglied wurde schon abgerechnet“, „kein Tarif mit
+    Beitrittsgebühr“;
+  - „Beitrittsgebühr nachverrechnen“ (confirm dialog with amount and VAT from the tariff; only when no fee was charged,
+    no payment is recorded and the member's tariff has a fee) and „Vormerkung zurücknehmen“;
+  - „Außerhalb bezahlt erfassen“ (date required, note optional, no amount), „Zahlung korrigieren“, „Zahlung entfernen“;
+    request and payment exclude each other, nothing can be changed once the fee is charged (billing's 409 shows „Die
+    Beitrittsgebühr wurde inzwischen verrechnet – die Änderung ist nicht mehr möglich.“ and reloads the state);
+  - the hint at the tariff assignment for a member billed with energy already and never charged a fee: „Dieses
+    Mitglied wurde schon abgerechnet – die Beitrittsgebühr wird ihm nicht mehr automatisch verrechnet. Mit
+    „Beitrittsgebühr nachverrechnen“ lässt sie sich im nächsten Abrechnungslauf verrechnen.“ (not when requested or
+    paid outside). Assigning stays possible.
+
+  The tariff dialog's count of members that get the fee with their next billing leaves out members with a recorded
+  payment. Without an answer from billing nothing is shown. **Contract:** reads the new `joiningFeeState` fields
+  `requested` and `paidExternally` (missing = none, older billing) and calls the new billing endpoints
+  `PUT` / `DELETE /api/billingDocuments/tenant/{tenantId}/participants/{participantId}/joiningFee` (body
+  `{"kind":"CHARGE_REQUESTED"}` or `{"kind":"PAID_EXTERNALLY","paidOn":"YYYY-MM-DD","note":…}`). Needs
+  eegfaktura-billing with these endpoints first.
 - **Joining fee in the billing amounts (platform#217).** The member's billing details (preview and final runs) show
   an own line „Beitrittsgebühr:“ from the new field `ParticipantAmount.joiningFee` (gross) of billing's
   `POST /api/billing` / `GET /api/billingRuns/{id}/participantAmounts`, and the member's sum, the member list amount
@@ -50,9 +67,10 @@ this changelog highlights the changes relevant for overview and operations.
   2026“, times as HH:mm:ss instead of „09:15:00 GMT+0100 (…)“ (eegfaktura-platform#224).
 - **Member export with the joining fee (platform#217).** „Stammdaten exportieren“ first reads billing's
   `joiningFeeState` and sends it as JSON body of **`POST /eeg/export/masterdata`** (before `GET` without body); the
-  backend fills the new columns „Beitrittsgebühr (€)“ and „Beitrittsgebühr verrechnet“ of sheet „Mitglieder“ from it.
-  If billing cannot be reached, the export runs without body and a toast says „Die Abrechnung ist nicht erreichbar:
-  Der Export enthält alle Mitglieder, die Spalte „Beitrittsgebühr verrechnet“ bleibt aber leer.“ **Contract:** needs
+  backend fills the new columns „Beitrittsgebühr (€)“ and „Beitrittsgebühr Status“ of sheet „Mitglieder“ from it
+  (the list is passed on unchanged, incl. `requested` and `paidExternally`). If billing cannot be reached, the export
+  runs without body and a toast says „Die Abrechnung ist nicht erreichbar: Der Export enthält alle Mitglieder, die
+  Spalte „Beitrittsgebühr Status“ bleibt aber leer.“ **Contract:** needs
   eegfaktura-backend with `POST /eeg/export/masterdata` (an older backend answers the POST with an error, the export
   then fails) — deploy the backend first.
 

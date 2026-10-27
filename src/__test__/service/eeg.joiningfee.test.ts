@@ -1,5 +1,5 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
-import {EegService} from "../../service/eeg.service";
+import {EegService, JoiningFeeAlreadyBilledError} from "../../service/eeg.service";
 import {AuthService} from "../../service/auth.service";
 import {exportMasterdataWithJoiningFees} from "../../util/JoiningFee.util";
 import {JoiningFeeState} from "../../models/eeg.model";
@@ -46,6 +46,35 @@ describe("EegService: joining fee calls", () => {
     await service.exportMasterdata("TE100200")
     expect(fetchMock.mock.calls[0][1].method).toBe("POST")
     expect(fetchMock.mock.calls[0][1].body).toBeUndefined()
+  })
+
+  it("requests the fee / records a payment with PUT on the member's joiningFee resource", async () => {
+    fetchMock.mockResolvedValue(new Response(null, {status: 204}))
+    await service.saveJoiningFeeRecord("te100200", "p-1", {kind: "PAID_EXTERNALLY", paidOn: "2026-03-01", note: null})
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toMatch(/\/api\/billingDocuments\/tenant\/TE100200\/participants\/p-1\/joiningFee$/)
+    expect(init.method).toBe("PUT")
+    expect(init.headers.tenant).toBe("te100200")
+    expect(JSON.parse(init.body)).toEqual({kind: "PAID_EXTERNALLY", paidOn: "2026-03-01", note: null})
+  })
+
+  it("takes the record back with DELETE", async () => {
+    fetchMock.mockResolvedValue(new Response(null, {status: 204}))
+    await service.deleteJoiningFeeRecord("TE100200", "p-1")
+    expect(fetchMock.mock.calls[0][1].method).toBe("DELETE")
+    expect(fetchMock.mock.calls[0][1].body).toBeUndefined()
+  })
+
+  it("turns 409 (fee charged meanwhile) into JoiningFeeAlreadyBilledError, other errors stay errors", async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({error: "Conflict"}), {status: 409}))
+    await expect(service.saveJoiningFeeRecord("TE100200", "p-1", {kind: "CHARGE_REQUESTED"}))
+      .rejects.toBeInstanceOf(JoiningFeeAlreadyBilledError)
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({error: "Conflict"}), {status: 409}))
+    await expect(service.deleteJoiningFeeRecord("TE100200", "p-1")).rejects.toBeInstanceOf(JoiningFeeAlreadyBilledError)
+    fetchMock.mockResolvedValue(new Response("boom", {status: 500, statusText: "Internal Server Error"}))
+    const e = await service.deleteJoiningFeeRecord("TE100200", "p-1").catch(x => x)
+    expect(e).toBeInstanceOf(Error)
+    expect(e).not.toBeInstanceOf(JoiningFeeAlreadyBilledError)
   })
 })
 

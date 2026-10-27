@@ -1,0 +1,134 @@
+import React, {FC, useEffect, useState} from "react";
+import {IonButton, useIonAlert, useIonToast} from "@ionic/react";
+import {EegTariff, JoiningFeeRecord, JoiningFeeState} from "../../models/eeg.model";
+import {Api} from "../../service";
+import {JoiningFeeAlreadyBilledError} from "../../service/eeg.service";
+import {useLocale} from "../../store/hook/useLocale";
+import {
+  joiningFeeActions,
+  joiningFeeStateOf,
+  joiningFeeStatus,
+  joiningFeeStatusText,
+  showJoiningFeeHint
+} from "../../util/JoiningFee.util";
+import {formatDecimal2} from "../../util/Number.util";
+
+interface JoiningFeeMemberProps {
+  tenant: string
+  participantId: string
+  // the tariff chosen in the member form (saved on change)
+  tariff?: EegTariff
+  // some tariff of the community has a joining fee; otherwise nothing is shown and billing is not asked
+  feeInUse: boolean
+}
+
+const today = () => new Date().toISOString().substring(0, 10)
+
+/**
+ * platform#217 with the extension of 2026-10-27, member details, EEG admins only (billing allows the calls only to
+ * them): the hint at the tariff, the status line „Beitrittsgebühr“ and the actions request / withdraw, record / correct
+ * / remove a payment made outside eegfaktura. billing's joiningFeeState is loaded once per member and again after an
+ * action; without an answer from billing nothing is shown.
+ */
+const JoiningFeeMember: FC<JoiningFeeMemberProps> = ({tenant, participantId, tariff, feeInUse}) => {
+  const {t} = useLocale("common")
+  const [alert] = useIonAlert()
+  const [toast] = useIonToast()
+  const [version, setVersion] = useState(0)
+  const key = `${tenant}/${participantId}/${version}`
+  const [loaded, setLoaded] = useState<{ key: string, ok: boolean, state?: JoiningFeeState }>()
+
+  useEffect(() => {
+    if (!feeInUse || loaded?.key === key) return
+    let current = true
+    Api.eegService.fetchJoiningFeeState(tenant)
+      .then(all => ({ok: true, state: joiningFeeStateOf(all, participantId)}), () => ({ok: false}))
+      .then(result => {
+        if (current) setLoaded({key, ...result})
+      })
+    return () => { current = false }
+  }, [key, feeInUse])
+
+  // while reloading after an action the last state of the same member stays visible
+  if (!feeInUse || !loaded?.ok || !loaded.key.startsWith(`${tenant}/${participantId}/`)) return null
+  const state = loaded.state
+  const actions = joiningFeeActions(state, tariff)
+
+  const run = (call: () => Promise<void>) =>
+    call()
+      .catch(e => {
+        const billed = e instanceof JoiningFeeAlreadyBilledError
+        toast({
+          message: billed ? e.message : t("joiningFee.change_failed", {reason: e instanceof Error ? e.message : String(e)}),
+          duration: 4500, position: "bottom", color: billed ? "warning" : "danger",
+        })
+      })
+      .finally(() => setVersion(v => v + 1))
+
+  const save = (record: JoiningFeeRecord) => run(() => Api.eegService.saveJoiningFeeRecord(tenant, participantId, record))
+  const remove = () => run(() => Api.eegService.deleteJoiningFeeRecord(tenant, participantId))
+
+  const confirm = (header: string, message: string, confirmText: string, action: () => void) =>
+    alert({
+      header, message,
+      buttons: [{text: t("joiningFee.cancel"), role: "cancel"}, {text: confirmText, role: "confirm", handler: action}],
+    })
+
+  const onRequest = () => {
+    if (!tariff) return
+    const vat = tariff.joiningFeeUseVat ? t("joiningFee.request_vat", {rate: Number(tariff.joiningFeeVatInPercent ?? 0)}) : ""
+    confirm(t("joiningFee.request"),
+      t("joiningFee.request_message", {tariff: tariff.name, amount: formatDecimal2(Number(tariff.joiningFee)), vat}),
+      t("joiningFee.request_confirm"), () => save({kind: "CHARGE_REQUESTED"}))
+  }
+
+  const onPaid = () => {
+    const paid = state?.paidExternally
+    alert({
+      header: t(paid ? "joiningFee.correct_paid" : "joiningFee.record_paid"),
+      message: t("joiningFee.paid_message"),
+      inputs: [
+        {name: "paidOn", type: "date", value: paid?.paidOn ?? "", max: today()},
+        {name: "note", type: "text", value: paid?.note ?? "", placeholder: t("joiningFee.paid_note"), attributes: {maxlength: 200}},
+      ],
+      buttons: [
+        {text: t("joiningFee.cancel"), role: "cancel"},
+        {
+          text: t("joiningFee.save"), role: "confirm",
+          handler: (v: { paidOn?: string, note?: string }) => {
+            if (!v.paidOn) {
+              toast({message: t("joiningFee.paid_date_missing"), duration: 3500, position: "bottom", color: "warning"})
+              return false
+            }
+            const note = v.note?.trim()
+            save({kind: "PAID_EXTERNALLY", paidOn: v.paidOn, note: note ? note : null})
+          },
+        },
+      ],
+    })
+  }
+
+  const button = (label: string, onClick: () => void) =>
+    <IonButton size="small" fill="outline" onClick={onClick}>{label}</IonButton>
+
+  return (
+    <div style={{margin: "4px 16px 8px", fontSize: "0.9em"}}>
+      {showJoiningFeeHint(state, tariff) &&
+          <p style={{color: "var(--ion-color-warning-shade)", fontSize: "0.95em", margin: "0 0 4px"}}>
+            {t("joiningFee.hint_billed")}
+          </p>}
+      <div>{t("joiningFee.status_label")}: {joiningFeeStatusText(joiningFeeStatus(state, tariff))}</div>
+      <div style={{display: "flex", flexWrap: "wrap", gap: "4px", marginTop: "4px"}}>
+        {actions.request && button(t("joiningFee.request"), onRequest)}
+        {actions.withdraw && button(t("joiningFee.withdraw"), () =>
+          confirm(t("joiningFee.withdraw"), t("joiningFee.withdraw_message"), t("joiningFee.withdraw"), remove))}
+        {actions.recordPaid && button(t("joiningFee.record_paid"), onPaid)}
+        {actions.changePaid && button(t("joiningFee.correct_paid"), onPaid)}
+        {actions.changePaid && button(t("joiningFee.remove_paid"), () =>
+          confirm(t("joiningFee.remove_paid"), t("joiningFee.remove_paid_message"), t("joiningFee.remove"), remove))}
+      </div>
+    </div>
+  )
+}
+
+export default JoiningFeeMember
