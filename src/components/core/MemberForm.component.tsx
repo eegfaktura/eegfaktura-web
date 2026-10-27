@@ -21,6 +21,7 @@ import {Moment} from "moment";
 import {LocalDate} from "local-date";
 import {isValidEmailList} from "../../util/EmailAddress.util";
 import {isDirectDebit} from "../../util/MandateReference.util";
+import JoiningFeeHint from "./JoiningFeeHint.component";
 
 interface MemberFormComponentProps {
   participant: EegParticipant
@@ -78,6 +79,7 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
   }
 
   const sepaMode = watch ? watch("accountInfo.sepaDirectDebit") : "NONE"
+  const tariffId = watch("tariffId")
 
   const onUpdateBaseData = (name: string, value: any) => {
     return onSubmitPartial(participant.id, {[name]: value})
@@ -142,6 +144,7 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
             )
           }
           <SelectForm name={"tariffId"} label={t("participant_tariff")} control={control} options={getRatesOption()} onChangePartial={onUpdateBaseData}/>
+          {tenant && <JoiningFeeHint tenant={tenant} participantId={participant.id} tariff={rates.find(r => r.id === tariffId)}/>}
           <InputForm name={"billingAddress.street"} label={t("street")} control={control} rules={{required: "Straße fehlt"}} type="text" error={errors.residentAddress?.street} onChangePartial={onUpdateBaseData}/>
           <InputForm name={"billingAddress.streetNumber"} label="Hausnummer" control={control} type="text" onChangePartial={onUpdateBaseData}/>
           <InputForm name={"billingAddress.zip"} label={t("zip")} control={control} type="text" onChangePartial={onUpdateBaseData}/>

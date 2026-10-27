@@ -22,6 +22,11 @@ this changelog highlights the changes relevant for overview and operations.
   `joiningFeeVatInPercent` (eegfaktura-backend `POST/GET /eeg/tariff`) and calls the new billing endpoint
   `GET /api/billingDocuments/tenant/{tenantId}/joiningFeeState` (header `tenant`). Needs eegfaktura-backend and
   eegfaktura-billing with the joining fee first; deploy them before this version.
+- **Hint at the member's tariff (platform#217).** In the member details, choosing a membership fee tariff with a
+  joining fee for a member that was billed with energy already and never charged a joining fee shows „Dieses Mitglied
+  wurde schon abgerechnet – die Beitrittsgebühr wird ihm nicht mehr verrechnet.“ Assigning stays possible. The data
+  comes from billing's `joiningFeeState`, loaded once per member and only when a tariff with a fee is chosen; without
+  an answer from billing no hint is shown.
 
 ## [1.14.0] – 2026-10-27
 

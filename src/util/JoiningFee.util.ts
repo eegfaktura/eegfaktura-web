@@ -43,3 +43,14 @@ export const membersNotYetEnergyBilled = (participants: EegParticipant[], tariff
     && (p.meters ?? []).some(isActiveMeter)
     && !billed.has(p.id.toLowerCase())).length
 }
+
+/** The member's entry in billing's joiningFeeState; a member without a final document has none. */
+export const joiningFeeStateOf = (state: JoiningFeeState[], participantId: string): JoiningFeeState | undefined =>
+  state.find(s => s.participantId.toLowerCase() === participantId.toLowerCase())
+
+/**
+ * Hint at the member's tariff (decision 2026-10-27): the member was billed with energy already, was never charged a
+ * joining fee, and the chosen tariff has one — billing will not charge it any more. Assigning stays possible.
+ */
+export const showJoiningFeeHint = (state: JoiningFeeState | undefined, tariff?: EegTariff): boolean =>
+  hasJoiningFee(tariff) && !!state?.energyBilled && !state.joiningFee

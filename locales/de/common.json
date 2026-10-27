@@ -72,7 +72,8 @@
     "warn_rollout_other": "{{count}} aktive Mitglieder mit diesem Tarif wurden in eegfaktura noch nie mit Energie abgerechnet und bekommen die Beitrittsgebühr mit ihrer nächsten Abrechnung.",
     "warn_rollout_unknown": "Wie viele aktive Mitglieder mit diesem Tarif in eegfaktura noch nie mit Energie abgerechnet wurden, konnte nicht ermittelt werden (Abrechnung nicht erreichbar). Diese Mitglieder bekommen die Beitrittsgebühr mit ihrer nächsten Abrechnung.",
     "save": "Speichern",
-    "cancel": "Abbrechen"
+    "cancel": "Abbrechen",
+    "hint_billed": "Dieses Mitglied wurde schon abgerechnet – die Beitrittsgebühr wird ihm nicht mehr verrechnet."
   },
   "useMeteringPointFee": "Zählpunktgebühr einheben?",
   "meteringPointFee": "Zählpunktgebühr in €",

@@ -1,5 +1,7 @@
 import {describe, expect, it} from "vitest";
-import {hasJoiningFee, joiningFeeVatUnusual, membersNotYetEnergyBilled} from "../../util/JoiningFee.util";
+import {
+  hasJoiningFee, joiningFeeStateOf, joiningFeeVatUnusual, membersNotYetEnergyBilled, showJoiningFeeHint
+} from "../../util/JoiningFee.util";
 import {EegTariff, JoiningFeeState} from "../../models/eeg.model";
 import {EegParticipant} from "../../models/members.model";
 
@@ -63,5 +65,29 @@ describe("membersNotYetEnergyBilled", () => {
   })
   it("is 0 without members of the tariff", () => {
     expect(membersNotYetEnergyBilled([], "t1", [])).toBe(0)
+  })
+})
+
+describe("showJoiningFeeHint (grill 27.10. no. 3, AK 11)", () => {
+  const fee = eeg({joiningFee: 50})
+  const billed: JoiningFeeState = {participantId: "p", energyBilled: true, joiningFee: null}
+
+  it("shows for a member billed with energy, never charged a fee, and a tariff with a fee", () => {
+    expect(showJoiningFeeHint(billed, fee)).toBe(true)
+  })
+  it("does not show when the fee was charged already", () => {
+    expect(showJoiningFeeHint({...billed, joiningFee: {documentNumber: "RG202600012", documentDate: "2026-01-15"}}, fee)).toBe(false)
+  })
+  it("does not show for a member not billed with energy or without a final document", () => {
+    expect(showJoiningFeeHint({...billed, energyBilled: false}, fee)).toBe(false)
+    expect(showJoiningFeeHint(undefined, fee)).toBe(false)
+  })
+  it("does not show for a tariff without a fee or no tariff", () => {
+    expect(showJoiningFeeHint(billed, eeg({joiningFee: 0}))).toBe(false)
+    expect(showJoiningFeeHint(billed, undefined)).toBe(false)
+  })
+  it("finds the member's entry without case", () => {
+    expect(joiningFeeStateOf([{...billed, participantId: "ABC"}], "abc")?.energyBilled).toBe(true)
+    expect(joiningFeeStateOf([billed], "other")).toBeUndefined()
   })
 })
