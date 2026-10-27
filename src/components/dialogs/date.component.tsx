@@ -5,6 +5,7 @@ import {IonButton, IonIcon, IonInput, IonLabel, IonRow} from "@ionic/react";
 import "react-datepicker/dist/react-datepicker.css";
 import "./data.component.scss"
 import {calendar} from "ionicons/icons";
+import moment from "moment";
 
 interface DateComponentProps {
   initialDate: [Date|null, Date|null]
@@ -23,7 +24,7 @@ const DateComponent: FC<DateComponentProps> = ({range, initialDate}) => {
   const DateInputComponent = forwardRef<HTMLIonButtonElement, any>(function CustomInput(p, ref) {
     return (
       <IonRow ref={ref} {...p} style={{alignItems:"center"}}>
-        <div><span>{startDate?.toDateString()}</span> - <span>{endDate?.toDateString()}</span></div>
+        <div><span>{startDate && moment(startDate).format("DD.MM.YYYY")}</span> - <span>{endDate && moment(endDate).format("DD.MM.YYYY")}</span></div>
         <IonButton fill="clear" size="small">
           <IonIcon slot="icon-only" icon={calendar}/>
         </IonButton>
