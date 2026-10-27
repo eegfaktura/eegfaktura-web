@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.14.0] – 2026-10-27
+
 ### Changed
 - **Process metering point selections show the direction.** „Teilnahmefaktor ändern“, „Zählpunkt anmelden“,
   „Zählpunkt abmelden“ and „Zählpunktdaten nachfordern“ now label each metering point with „Verbraucher“ or
