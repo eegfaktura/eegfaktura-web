@@ -109,6 +109,18 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
     return (<></>)
   }
 
+  const getJoiningFeeLine = (fee: number) => {
+    if (fee !== 0) {
+      return (
+        <div style={{display: "flex", justifyContent: "space-between", width: "100%"}}>
+          <div style={{padding: "5px"}}>Beitrittsgebühr:</div>
+          <div style={{padding: "5px"}}>{formatDecimal2(fee)} €</div>
+        </div>
+      )
+    }
+    return (<></>)
+  }
+
   const getMeteringPointFeeLine = (fee: number) => {
     if (fee !== 0) {
       return (
@@ -152,6 +164,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
       return (
         <div style={{width: "100%"}}>
           {getParticipantLine(memberBill.participantFee)}
+          {getJoiningFeeLine(memberBill.joiningFee ?? 0)}
           {getMeteringPointFeeLine(memberBill.meteringPointFeeSum ?? 0)}
           {getCreditLine(credit)}
           {getDebitLine(debit)}
@@ -161,7 +174,7 @@ const ParticipantInvoiceDetailsComponent: FC = () => {
   }
 
   // A member with fees but without energy amounts (no kWh in the period) still gets the details.
-  if (!memberBill || (Object.keys(rateGroups).length === 0 && !memberBill.participantFee && !memberBill.meteringPointFeeSum)) {
+  if (!memberBill || (Object.keys(rateGroups).length === 0 && !memberBill.participantFee && !memberBill.meteringPointFeeSum && !memberBill.joiningFee)) {
     return (
       <></>
     )

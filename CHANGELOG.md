@@ -27,6 +27,11 @@ this changelog highlights the changes relevant for overview and operations.
   wurde schon abgerechnet – die Beitrittsgebühr wird ihm nicht mehr verrechnet.“ Assigning stays possible. The data
   comes from billing's `joiningFeeState`, loaded once per member and only when a tariff with a fee is chosen; without
   an answer from billing no hint is shown.
+- **Joining fee in the billing amounts (platform#217).** The member's billing details (preview and final runs) show
+  an own line „Beitrittsgebühr:“ from the new field `ParticipantAmount.joiningFee` (gross) of billing's
+  `POST /api/billing` / `GET /api/billingRuns/{id}/participantAmounts`, and the member's sum, the member list amount
+  and the run's sum include it. Without the fee the amounts are unchanged; an older billing without the field counts
+  as 0 (before, such a billing would show a joining fee as „Mitgliedsbeitrag“).
 
 ## [1.14.0] – 2026-10-27
 

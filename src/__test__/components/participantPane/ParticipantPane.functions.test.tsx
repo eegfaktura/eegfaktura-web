@@ -165,4 +165,11 @@ describe("billTotal", () => {
   it("is the fees alone without metering point amounts", () => {
     expect(billTotal({id: "1", amount: 0, participantFee: 0, meteringPointFeeSum: 1.2, meteringPoints: []})).toBe(1.2)
   })
+
+  it("adds the joining fee (platform#217), also without a membership fee; missing from older billing", () => {
+    const bill = {id: "1", amount: 0, participantFee: 2, joiningFee: 60, meteringPoints: [{id: "AT1", amount: -8.25}]} as ParticipantBillType
+    expect(billTotal(bill)).toBeCloseTo(53.75, 10)
+    expect(billTotal({id: "1", amount: 0, participantFee: 0, joiningFee: 49.9, meteringPoints: []})).toBe(49.9)
+    expect(billTotal({id: "1", amount: 0, participantFee: 2, meteringPoints: []})).toBe(2)
+  })
 })
