@@ -54,3 +54,24 @@ export const joiningFeeStateOf = (state: JoiningFeeState[], participantId: strin
  */
 export const showJoiningFeeHint = (state: JoiningFeeState | undefined, tariff?: EegTariff): boolean =>
   hasJoiningFee(tariff) && !!state?.energyBilled && !state.joiningFee
+
+export const JOINING_FEE_EXPORT_WITHOUT_BILLING =
+  "Die Abrechnung ist nicht erreichbar: Der Export enthält alle Mitglieder, die Spalte „Beitrittsgebühr verrechnet“ bleibt aber leer."
+
+/**
+ * Member export (decision 2026-10-27, web orchestrates): billing's joiningFeeState goes to the backend with the export
+ * call. When billing fails, the export still runs without it and the user is told the column stays empty.
+ */
+export const exportMasterdataWithJoiningFees = async <T>(
+  fetchState: () => Promise<JoiningFeeState[]>,
+  exportMasterdata: (state?: JoiningFeeState[]) => Promise<T>,
+  billingUnavailable: () => void,
+): Promise<T> => {
+  let state: JoiningFeeState[] | undefined
+  try {
+    state = await fetchState()
+  } catch {
+    billingUnavailable()
+  }
+  return exportMasterdata(state)
+}

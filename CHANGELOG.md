@@ -48,6 +48,13 @@ this changelog highlights the changes relevant for overview and operations.
   Energiedaten“ now shows the time below the date like the other tables. All dates of the process history (incl. the date range in the header of „Prozess History“ and the process header, „Abgewickelt
   am:“, „Energiedaten von/bis“, consent end, requested period) are shown as DD.MM.YYYY instead of e.g. „Tue Oct 27
   2026“, times as HH:mm:ss instead of „09:15:00 GMT+0100 (…)“ (eegfaktura-platform#224).
+- **Member export with the joining fee (platform#217).** „Stammdaten exportieren“ first reads billing's
+  `joiningFeeState` and sends it as JSON body of **`POST /eeg/export/masterdata`** (before `GET` without body); the
+  backend fills the new columns „Beitrittsgebühr (€)“ and „Beitrittsgebühr verrechnet“ of sheet „Mitglieder“ from it.
+  If billing cannot be reached, the export runs without body and a toast says „Die Abrechnung ist nicht erreichbar:
+  Der Export enthält alle Mitglieder, die Spalte „Beitrittsgebühr verrechnet“ bleibt aber leer.“ **Contract:** needs
+  eegfaktura-backend with `POST /eeg/export/masterdata` (an older backend answers the POST with an error, the export
+  then fails) — deploy the backend first.
 
 ### Removed
 - Unused `src/components/processDetails/ProcessHistory.component.tsx` (an older copy of the process history; the

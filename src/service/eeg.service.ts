@@ -509,14 +509,17 @@ export class EegService extends EegBaseService {
     }).then(this.handleErrors).then(res => res.json());
   }
 
-  async exportMasterdata(tenant: string) {
+  // platform#217: POST with billing's joiningFeeState as body for the column „Beitrittsgebühr verrechnet“; without
+  // a body (billing not reachable) the backend leaves the column empty
+  async exportMasterdata(tenant: string, joiningFeeState?: JoiningFeeState[]) {
     const token = await this.lookupToken()
     return fetch(`${API_API_SERVER}/eeg/export/masterdata`, {
-      method: 'GET',
+      method: 'POST',
       headers: {
         ...this.getSecureHeaders(token, tenant),
         'Content-Type': 'application/json'
       },
+      body: joiningFeeState ? JSON.stringify(joiningFeeState) : undefined,
     })
       .then(this.handleErrors)
       .then( response => this.handleDownload(response, "energy-export"));
