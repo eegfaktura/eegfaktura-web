@@ -13,14 +13,15 @@ this changelog highlights the changes relevant for overview and operations.
   the Dynatrace JavaScript tag, Caddy renders the tag into `index.html` at request time, loaded `async` so it never
   blocks the page. Without the variable no tag is emitted: self-hosted installations send no session data. **Operations:**
   set `DYNATRACE_RUM_URL` in the deployments that should report (README, Configuration).
-- **Upload by drag & drop** (pilot group). In the upload dialog of the member list (cloud icon) a file can be dropped
-  on the dialog instead of choosing it with the star; the dialog shows where to drop it. One file per import, as before:
-  several dropped files are refused with a hint.
+- **Upload by drag & drop** (pilot group). While the upload dialog of the member list (cloud icon) is open, a dropped
+  file is taken like one chosen with the star, also when it lands beside the dialog (the browser no longer opens it).
+  One file per import, as before: several dropped files are refused with a hint and clear an earlier choice.
 
 ### Fixed
 - **Upload: the sheet name typed in the upload dialog is used** (eegfaktura-dev tracking 261028-mm2). The field never passed
   its value on, so every import read the default sheet („EEG Stammdaten“ / „Energiedaten“); a workbook with another
-  sheet name had to be renamed in Excel first. The name now goes to the selected import type.
+  sheet name had to be renamed in Excel first. The name now goes to the selected import type; an emptied field falls
+  back to the default, surrounding spaces are removed.
 
 ## [1.16.0] – 2026-10-28
 
