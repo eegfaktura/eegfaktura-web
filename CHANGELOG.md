@@ -14,6 +14,11 @@ this changelog highlights the changes relevant for overview and operations.
   blocks the page. Without the variable no tag is emitted: self-hosted installations send no session data. **Operations:**
   set `DYNATRACE_RUM_URL` in the deployments that should report (README, Configuration).
 
+### Fixed
+- **Upload: the sheet name typed in the upload dialog is used** (eegfaktura-dev tracking 261028-mm2). The field never passed
+  its value on, so every import read the default sheet („EEG Stammdaten“ / „Energiedaten“); a workbook with another
+  sheet name had to be renamed in Excel first. The name now goes to the selected import type.
+
 ## [1.16.0] – 2026-10-28
 
 ### Changed

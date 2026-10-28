@@ -21,17 +21,9 @@ const UploadPopup: FC<{
     // onUpdate(evt.target.files)
   }
 
-  const onChangeSheetname = (e: CustomEvent) => {
-    const [sSheet, eSheet] = sheetName
-    switch (selectedImportType) {
-      case 1:
-        setSheetName([e.detail.value, sSheet])
-        break;
-      case 0:
-        setSheetName([eSheet, e.detail.value])
-        break;
-    }
-  }
+  // the sheet name of the selected import type: slot 0 master data, slot 1 energy data (261028-mm2)
+  const onChangeSheetname = (value: string) =>
+    setSheetName(prev => selectedImportType === 1 ? [prev[0], value] : [value, prev[1]])
 
   return (
     <IonContent className="ion-padding" color="eeglight">
@@ -55,7 +47,7 @@ const UploadPopup: FC<{
 
         <IonItem color="eeglight" lines="full">
           <IonInput label="Sheet-Name" labelPlacement="floating" name="sheetName" value={sheetName[selectedImportType]}
-                    onIonChange={(e) => typeof e.detail.value === 'string' ? onChangeSheetname : ""}></IonInput>
+                    onIonChange={(e) => { if (typeof e.detail.value === 'string') onChangeSheetname(e.detail.value) }}></IonInput>
         </IonItem>
       <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center"}}>
         <IonItem color="eeglight" lines="full">
