@@ -8,10 +8,76 @@
   box-shadow: 0px 4px 5px rgba(0, 0, 0, 0.14), 0px 1px 10px rgba(0, 0, 0, 0.12), 0px 2px 4px rgba(0, 0, 0, 0.2);
 
   & .content {
-    padding-top: 16px;
+    // the first group heading brings its own top margin
+    padding-top: 4px;
   }
 }
 
 .rates {
   @include eeg-cards;
+  // compact (pilot group 2026-10-28): less vertical padding than the shared card mixin
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+// compact cards on the tariff page (pilot group 2026-10-28), in the size of the member list; the same card in the
+// invoice details of a member keeps its layout
+.rates {
+  ion-card {
+    margin: 0;
+  }
+  ion-card-content {
+    padding: 6px 12px;
+  }
+  ion-grid, ion-col {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  ion-label h2 {
+    font-size: 15px;
+    margin: 0 0 2px;
+  }
+  ion-label p {
+    font-size: 13px;
+    margin: 0;
+    line-height: 1.35;
+  }
+}
+
+.rate-group-title {
+  margin: 12px 15px 4px 10px;
+
+  // the heading is a button: click (or Enter/Space) collapses or expands the group
+  button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 4px 5px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: default;
+    }
+    font: inherit;
+    font-size: 13px;
+    font-weight: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ion-color-medium-shade);
+    text-align: left;
+
+    &:hover:not(:disabled) {
+      background: rgba(0, 0, 0, 0.04);
+    }
+  }
+}
+
+.rate-search-empty {
+  margin: 12px 15px;
+  font-size: 13px;
+  color: var(--ion-color-medium-shade);
 }

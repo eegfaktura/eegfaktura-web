@@ -9,6 +9,14 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Added
+- **Tariff list grouped, collapsible, sorted and searchable, with compact cards** (pilot group). The tariffs page groups the tariffs under
+  „Mitgliedstarife“, „Erzeugertarife“ and „Verbrauchertarife“ (the kinds of the tariff form) and sorts them by name,
+  numbers in natural order („Beitritt 2 ZP“ before „Beitritt 10 ZP“); before, they came in the backend's order. A tariff
+  of another kind shows under „Sonstige Tarife“. Every tariff selection (metering point, member) uses the same order.
+  A click on a heading collapses or expands its group (all open when the page opens; the heading shows the number of
+  tariffs). Search as in the member list: the magnifier next to the plus button opens a search bar that filters by
+  tariff name (ignoring case and accents) and opens the groups with hits; the selected tariff always stays visible. The cards
+  on the tariffs page are smaller, in the size of the member list.
 - **Optional Dynatrace Real User Monitoring (`DYNATRACE_RUM_URL`).** When the container sets the variable to the URL of
   the Dynatrace JavaScript tag, Caddy renders the tag into `index.html` at request time, loaded `async` so it never
   blocks the page. Without the variable no tag is emitted: self-hosted installations send no session data. **Operations:**

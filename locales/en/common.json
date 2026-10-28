@@ -1,3 +1,9 @@
 {
+  "rateGroupMember": "Member tariffs",
+  "rateGroupProducer": "Producer tariffs",
+  "rateGroupConsumer": "Consumer tariffs",
+  "rateGroupOther": "Other tariffs",
+  "rateSearchPlaceholder": "Search tariff",
+  "rateSearchEmpty": "No tariff found.",
   "top": "sepp1"
 }
