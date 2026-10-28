@@ -1,6 +1,7 @@
 import React, {FC} from "react";
 import {useAppDispatch, useAppSelector} from "../store";
 import {ratesSelector, saveNewRate, selectedRateSelector, selectRate, updateRate} from "../store/rate";
+import {TARIFF_TYPE_ORDER} from "../store/rate/selectors/rate.selector";
 import RateCardComponent from "../components/RateCard.component";
 import {
   IonButton, IonButtons,
@@ -20,6 +21,8 @@ import {selectedTenant} from "../store/eeg";
 import {useRateType} from "../store/hook/Rate.provider";
 import { get } from "react-hook-form";
 import {useTenant} from "../store/hook/Eeg.provider";
+
+const RATE_GROUP_TITLE: Record<string, string> = {EEG: "Mitglied", EZP: "Erzeuger", VZP: "Verbraucher", OTHER: "Sonstige"}
 
 const RatesPage: FC = () => {
 
@@ -123,11 +126,22 @@ const RatesPage: FC = () => {
               </IonButtons>
             </IonToolbar>
             <div className={"content"}>
-            {rates.map((r, idx) => (
-              <div key={idx} className={cn("rates", {"selected": r.id === selectedTariff?.id})}>
-                <RateCardComponent rate={r} editable={true} onSelect={onSelect}/>
-              </div>
-            ))}
+            {/* grouped by kind, headings as in the tariff form; rates come sorted from ratesSelector */}
+            {[...TARIFF_TYPE_ORDER, "OTHER"].map(type => {
+              // a kind outside the three (none known today) still shows, at the end
+              const group = rates.filter(r => type === "OTHER" ? !TARIFF_TYPE_ORDER.includes(r.type) : r.type === type)
+              if (group.length === 0) return null
+              return (
+                <section key={type} className="rate-group">
+                  <h3 className="rate-group-title">{RATE_GROUP_TITLE[type]}</h3>
+                  {group.map((r) => (
+                    <div key={r.id} className={cn("rates", {"selected": r.id === selectedTariff?.id})}>
+                      <RateCardComponent rate={r} editable={true} onSelect={onSelect}/>
+                    </div>
+                  ))}
+                </section>
+              )
+            })}
             </div>
           </div>
           <div style={{flexGrow:"1", background: "#EAE7D9"}}>
