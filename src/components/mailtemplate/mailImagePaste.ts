@@ -1,6 +1,7 @@
 import {Editor} from "@tiptap/react";
 import {Node} from "@tiptap/pm/model";
 import {EditorView} from "@tiptap/pm/view";
+import {IMAGE_WIDTHS} from "./mailEditor.sizes";
 
 // Pasting or dropping an image file goes through the same upload as „Bild einfügen“
 // (insertImage); everything else is left to the editor as before.
@@ -37,9 +38,10 @@ export const mailImageEditorProps = (insertImage: () => InsertImage) => ({
 // Inserts the uploaded image. The drop position only holds while the text is unchanged (doc = the text at
 // the drop); otherwise, and for paste or „Bild einfügen“, the image goes to the cursor. The editor is only
 // focused when it still has the focus, so the upload does not pull the cursor out of e.g. the subject.
+// A new image starts in the small size (users' request, 2026-10-28); the size control changes it.
 export const insertUploadedImage = (editor: Editor, image: { src: string, alt: string }, pos?: number, doc?: Node) => {
   const at = pos !== undefined && editor.state.doc === doc ? pos : undefined
   const chain = editor.chain()
   const placed = editor.isFocused ? chain.focus(at) : at !== undefined ? chain.setTextSelection(at) : chain
-  return placed.setImage(image).run()
+  return placed.setImage({...image, width: IMAGE_WIDTHS.small}).run()
 }
