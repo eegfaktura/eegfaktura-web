@@ -16,7 +16,8 @@ this changelog highlights the changes relevant for overview and operations.
   A click on a heading collapses or expands its group (all open when the page opens; the heading shows the number of
   tariffs). A search field, as in the member list, filters by tariff name (ignoring case
   and accents) and opens the groups with hits; the selected tariff always stays visible. The cards
-  on the tariffs page are smaller, in the size of the member list.
+  on the tariffs page are smaller, in the size of the member list. A new tariff is started with a floating button at
+  the bottom right of the tariff column (before: the plus button above the list).
 - **Optional Dynatrace Real User Monitoring (`DYNATRACE_RUM_URL`).** When the container sets the variable to the URL of
   the Dynatrace JavaScript tag, Caddy renders the tag into `index.html` at request time, loaded `async` so it never
   blocks the page. Without the variable no tag is emitted: self-hosted installations send no session data. **Operations:**

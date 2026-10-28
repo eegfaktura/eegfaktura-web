@@ -2,7 +2,7 @@ import {describe, expect, it, vi} from "vitest";
 import {act, fireEvent, screen} from "@testing-library/react";
 import {renderWithProviders} from "../test-utils";
 import {EegTariff} from "../../models/eeg.model";
-import {compareTariffs, ratesSelector} from "../../store/rate";
+import {compareTariffs, ratesSelector, selectedRateSelector} from "../../store/rate";
 import {fetchRatesModel, selectRate} from "../../store/rate";
 import "../../util/I18n";
 
@@ -121,5 +121,12 @@ describe("tariff order (pilot group 2026-10-28)", () => {
     act(() => { store.dispatch(fetchRatesModel.fulfilled({rates: [...rates, tariff("8", "EZP", "Überschuss")]}, "req", {tenant: "RC100100"} as any)) })
     searchFor(container, "uberschuss")
     expect(screen.getByText("Überschuss")).toBeTruthy()
+  })
+
+  it("starts a new tariff from the floating button of the tariff column", () => {
+    const {store} = renderWithProviders(<RatesPage/>)
+    act(() => { store.dispatch(fetchRatesModel.fulfilled({rates}, "req", {tenant: "RC100100"} as any)) })
+    fireEvent.click(screen.getByLabelText("Neuer Tarif"))
+    expect(selectedRateSelector(store.getState())).toMatchObject({id: "", name: "", type: "EEG"})
   })
 })

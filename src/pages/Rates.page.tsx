@@ -4,8 +4,9 @@ import {ratesSelector, saveNewRate, selectedRateSelector, selectRate, TARIFF_TYP
 import {useLocale} from "../store/hook/useLocale";
 import RateCardComponent from "../components/RateCard.component";
 import {
-  IonButton, IonButtons,
   IonContent,
+  IonFab,
+  IonFabButton,
   IonIcon,
   IonPage,
   IonSearchbar,
@@ -133,25 +134,16 @@ const RatesPage: FC = () => {
     <IonPage>
       <IonContent fullscreen color="eeg">
         <div style={{display: "flex", flexDirection: "row", height: "100vh"}}>
-          <div className={"ratePane"} style={{overflowY: "auto"}}>
+          <div className={"ratePane"}>
+          <div className={"ratePane-scroll"}>
             <IonToolbar color="eeg">
               <IonSearchbar
                 placeholder={t("rateSearchPlaceholder")}
                 // gaps left and top, so the field does not stick to the edges (left like the plus button on the right)
-                style={{"--box-shadow": "none", paddingInlineStart: "20px", paddingTop: "16px"}}
+                style={{"--box-shadow": "none", paddingInlineStart: "20px", paddingInlineEnd: "20px", paddingTop: "16px"}}
                 debounce={500}
                 onIonInput={(e) => setQuery(e.detail.value ?? "")}
               ></IonSearchbar>
-              <IonButtons slot="end">
-                <IonButton
-                  color="primary"
-                  shape="round"
-                  fill={"solid"}
-                  style={{"--border-radius": "50%", width:"36px", height: "36px", marginRight: "16px"}}
-                onClick={() => onNew()}>
-                  <IonIcon slot="icon-only" icon={add}></IonIcon>
-                </IonButton>
-              </IonButtons>
             </IonToolbar>
             <div className={"content"}>
             {searching && !rates.some(matches) && <p className="rate-search-empty">{t("rateSearchEmpty")}</p>}
@@ -180,6 +172,13 @@ const RatesPage: FC = () => {
               )
             })}
             </div>
+          </div>
+          {/* new tariff: floating button at the bottom right of the tariff column, stays put while the list scrolls */}
+          <IonFab vertical="bottom" horizontal="end" className="rate-fab">
+            <IonFabButton size="small" title={t("rateNew")} aria-label={t("rateNew")} onClick={() => onNew()}>
+              <IonIcon icon={add}/>
+            </IonFabButton>
+          </IonFab>
           </div>
           <div style={{flexGrow:"1", background: "#EAE7D9"}}>
             {selectedTariff && <RateDetailPaneComponent submitId="change-rate-submit-id" onSubmit={onSubmitRateChange} />}
