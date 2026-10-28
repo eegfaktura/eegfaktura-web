@@ -88,7 +88,7 @@ import DatePickerCoreElement from "../core/elements/DatePickerCore.element";
 import {filterActiveMeter, filterActiveParticipantAndMeter,} from "../../util/FilterHelper.unit";
 import moment from "moment";
 import {Api} from "../../service";
-import {billingRunBlocker, billTotal, buildAllocationMap, downloadWithFeedback, filterSearchQuery} from "./ParticipantPane.functions";
+import {billingRunBlocker, billingSwitchTooltip, billTotal, buildAllocationMap, downloadWithFeedback, filterSearchQuery} from "./ParticipantPane.functions";
 import {exportMasterdataWithJoiningFees, hasJoiningFee, JOINING_FEE_EXPORT_WITHOUT_BILLING} from "../../util/JoiningFee.util";
 import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
 import {withOpenProblems} from "./ParticipantPane.functions";
@@ -259,9 +259,12 @@ const ParticipantPaneComponent: FC = () => {
   const energyReport = useAppSelector(meteringEnergyGroup1);
   const reportLoading = useAppSelector(energyReportLoadingSelector);
   const reportError = useAppSelector(energyReportErrorSelector);
+  const [billingBlockReason, setBillingBlockReason] = useState<string | undefined>();
   useEffect(() => {
     if (reportLoading) return;
-    const nextBillingEnabled = !!activePeriod && !billingRunBlocker(false, reportError, buildAllocationMap(participants).length);
+    const blocker = activePeriod ? billingRunBlocker(false, reportError, buildAllocationMap(participants).length) : undefined;
+    const nextBillingEnabled = !!activePeriod && !blocker;
+    setBillingBlockReason(blocker);
     setBillingEnabled(nextBillingEnabled);
     if (!nextBillingEnabled) toggleShowAmount(false);
   }, [activePeriod, participants, energyReport, reportLoading, reportError]);
@@ -1111,6 +1114,7 @@ const ParticipantPaneComponent: FC = () => {
               <SlideButtonComponent
                 checked={showAmount}
                 disabled={!billingEnabled}
+                title={billingSwitchTooltip(billingEnabled, showAmount, billingBlockReason)}
                 setChecked={(c) => activateBilling(c)}
               ></SlideButtonComponent>
             </div>

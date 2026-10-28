@@ -33,7 +33,7 @@ vi.mock("../../../store/rate", () => ({
   }),
 }));
 
-import {billingRunBlocker, billTotal, buildAllocationMap, isBillableParticipant, uploadActivationDocuments, withOpenProblems} from "../../../components/participantPane/ParticipantPane.functions";
+import {billingRunBlocker, billingSwitchTooltip, billTotal, buildAllocationMap, isBillableParticipant, uploadActivationDocuments, withOpenProblems} from "../../../components/participantPane/ParticipantPane.functions";
 
 describe("<ParticipantPane/> Functions", () => {
   it("allocate invoice member and metering points", async () => {
@@ -207,5 +207,17 @@ describe("no billing run without energy (platform#189)", () => {
 
   it("lets the run start with a loaded report holding entries", () => {
     expect(billingRunBlocker(false, undefined, 1)).toBeUndefined()
+  })
+})
+
+describe("tooltip of the € switch (pilot group 2026-10-28)", () => {
+  it("names what a click does: open or close the billing view", () => {
+    expect(billingSwitchTooltip(true, false, undefined)).toBe("Abrechnung vorbereiten")
+    expect(billingSwitchTooltip(true, true, undefined)).toBe("Abrechnung schließen")
+  })
+
+  it("gives the reason while it cannot be switched on", () => {
+    expect(billingSwitchTooltip(false, false, "Die Energiedaten des Zeitraums werden noch geladen.")).toMatch(/noch geladen/)
+    expect(billingSwitchTooltip(false, false, undefined)).toBe("Bitte zuerst einen Zeitraum wählen.")
   })
 })

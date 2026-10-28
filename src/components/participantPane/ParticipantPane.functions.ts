@@ -24,6 +24,13 @@ export const billingRunBlocker = (reportLoading: boolean, reportError: string | 
   return undefined
 }
 
+/** Tooltip of the € switch: it only opens or closes the billing view, the run itself is started there. */
+export const billingSwitchTooltip = (canSwitchOn: boolean, on: boolean, blocker: string | undefined): string => {
+  if (on) return "Abrechnung schließen"
+  if (canSwitchOn) return "Abrechnung vorbereiten"
+  return blocker ?? "Bitte zuerst einen Zeitraum wählen."
+}
+
 /** The energy of every billable member of the period, from the loaded energy report; built when the run starts. */
 export const buildAllocationMap = (participants: EegParticipant[]): MeteringEnergyGroupType[] => {
   const participantReport = meteringEnergyGroup1(store.getState())
