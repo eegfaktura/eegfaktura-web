@@ -4,9 +4,8 @@ import {ratesSelector, saveNewRate, selectedRateSelector, selectRate, TARIFF_TYP
 import {useLocale} from "../store/hook/useLocale";
 import RateCardComponent from "../components/RateCard.component";
 import {
+  IonButtons,
   IonContent,
-  IonFab,
-  IonFabButton,
   IonIcon,
   IonPage,
   IonSearchbar,
@@ -17,7 +16,8 @@ import {EegTariff} from "../models/eeg.model";
 import cn from "classnames";
 
 import "./Rates.scss"
-import {add, chevronDown, chevronForward} from "ionicons/icons";
+import {add, chevronDown, chevronForward, search} from "ionicons/icons";
+import HeaderFavButtonComponent from "../components/core/HeaderFavButton.component";
 import RateDetailPaneComponent from "../components/RateDetailPane.component";
 import {selectedTenant} from "../store/eeg";
 import {useRateType} from "../store/hook/Rate.provider";
@@ -40,6 +40,12 @@ const RatesPage: FC = () => {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   // search in the tariff names, as in the member list; while searching, groups with hits are open
   const [query, setQuery] = useState("")
+  // the search bar opens below the toolbar with the magnifier, as in the member list; closing it clears the search
+  const [searchActive, setSearchActive] = useState(false)
+  const toggleSearch = () => {
+    if (searchActive) setQuery("")
+    setSearchActive(!searchActive)
+  }
   const needle = fold(query.trim())
   const searching = needle.length > 0
   const matches = (r: EegTariff) => !searching || fold(r.name ?? "").includes(needle)
@@ -134,17 +140,24 @@ const RatesPage: FC = () => {
     <IonPage>
       <IonContent fullscreen color="eeg">
         <div style={{display: "flex", flexDirection: "row", height: "100vh"}}>
-          <div className={"ratePane"}>
-          <div className={"ratePane-scroll"}>
+          <div className={"ratePane"} style={{overflowY: "auto"}}>
             <IonToolbar color="eeg">
-              <IonSearchbar
-                placeholder={t("rateSearchPlaceholder")}
-                // gaps left and top, so the field does not stick to the edges (left like the plus button on the right)
-                style={{"--box-shadow": "none", paddingInlineStart: "20px", paddingInlineEnd: "20px", paddingTop: "16px"}}
-                debounce={500}
-                onIonInput={(e) => setQuery(e.detail.value ?? "")}
-              ></IonSearchbar>
+              <IonButtons slot="end">
+                <HeaderFavButtonComponent icon={search} onClick={toggleSearch}/>
+                <HeaderFavButtonComponent icon={add} onClick={() => onNew()}/>
+              </IonButtons>
             </IonToolbar>
+            {searchActive && (
+              <IonToolbar color="eeg">
+                <IonSearchbar
+                  placeholder={t("rateSearchPlaceholder")}
+                  // gaps left and right, so the field does not stick to the edges
+                  style={{"--box-shadow": "none", paddingInlineStart: "16px", paddingInlineEnd: "16px"}}
+                  debounce={500}
+                  onIonInput={(e) => setQuery(e.detail.value ?? "")}
+                ></IonSearchbar>
+              </IonToolbar>
+            )}
             <div className={"content"}>
             {searching && !rates.some(matches) && <p className="rate-search-empty">{t("rateSearchEmpty")}</p>}
             {/* grouped by kind, headings as in the tariff form; rates come sorted from ratesSelector */}
@@ -172,13 +185,6 @@ const RatesPage: FC = () => {
               )
             })}
             </div>
-          </div>
-          {/* new tariff: floating button at the bottom right of the tariff column, stays put while the list scrolls */}
-          <IonFab vertical="bottom" horizontal="end" className="rate-fab">
-            <IonFabButton size="small" title={t("rateNew")} aria-label={t("rateNew")} onClick={() => onNew()}>
-              <IonIcon icon={add}/>
-            </IonFabButton>
-          </IonFab>
           </div>
           <div style={{flexGrow:"1", background: "#EAE7D9"}}>
             {selectedTariff && <RateDetailPaneComponent submitId="change-rate-submit-id" onSubmit={onSubmitRateChange} />}

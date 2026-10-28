@@ -18,6 +18,13 @@ const rates = [
   tariff("4", "EZP", "Einkauf"), tariff("5", "EEG", "Beitritt 10 ZP"), tariff("6", "EEG", "beitritt 1 ZP"),
 ]
 
+const headerButtons = (container: HTMLElement) => container.querySelectorAll(".header-fav-button")
+// the search bar opens with the magnifier, as in the member list
+const openSearch = (container: HTMLElement) => {
+  if (!container.querySelector("ion-searchbar")) fireEvent.click(headerButtons(container)[0])
+  return container.querySelector("ion-searchbar") as HTMLElement
+}
+
 describe("tariff order (pilot group 2026-10-28)", () => {
   it("sorts by kind as in the tariff form, then by name with numbers in natural order", () => {
     expect([...rates].sort(compareTariffs).map(r => r.name)).toEqual([
@@ -77,7 +84,8 @@ describe("tariff order (pilot group 2026-10-28)", () => {
     act(() => { store.dispatch(fetchRatesModel.fulfilled({rates}, "req", {tenant: "RC100100"} as any)) })
     fireEvent.click(screen.getByRole("button", {name: /Verbrauchertarife/}))
     expect(screen.queryByText("Sonnenstrom-Verkauf")).toBeNull()
-    const search = container.querySelector("ion-searchbar") as HTMLElement
+    expect(container.querySelector("ion-searchbar")).toBeNull()
+    const search = openSearch(container)
     act(() => { search.dispatchEvent(new CustomEvent("ionInput", {detail: {value: "VERKAUF"}})) })
     expect(screen.getByText("Sonnenstrom-Verkauf")).toBeTruthy()
     expect(screen.getByText("Verkauf")).toBeTruthy()
@@ -93,7 +101,7 @@ describe("tariff order (pilot group 2026-10-28)", () => {
   })
 
   const searchFor = (container: HTMLElement, value: string) =>
-    act(() => { (container.querySelector("ion-searchbar") as HTMLElement).dispatchEvent(new CustomEvent("ionInput", {detail: {value}})) })
+    { const bar = openSearch(container); act(() => { bar.dispatchEvent(new CustomEvent("ionInput", {detail: {value}})) }) }
 
   it("ignores a click on a heading while searching, so clearing the search restores the state before", () => {
     const {store, container} = renderWithProviders(<RatesPage/>)
@@ -123,10 +131,21 @@ describe("tariff order (pilot group 2026-10-28)", () => {
     expect(screen.getByText("Überschuss")).toBeTruthy()
   })
 
-  it("starts a new tariff from the floating button of the tariff column", () => {
-    const {store} = renderWithProviders(<RatesPage/>)
+  it("starts a new tariff with the plus button next to the magnifier", () => {
+    const {store, container} = renderWithProviders(<RatesPage/>)
     act(() => { store.dispatch(fetchRatesModel.fulfilled({rates}, "req", {tenant: "RC100100"} as any)) })
-    fireEvent.click(screen.getByLabelText("Neuer Tarif"))
+    fireEvent.click(headerButtons(container)[1])
     expect(selectedRateSelector(store.getState())).toMatchObject({id: "", name: "", type: "EEG"})
+  })
+
+  it("clears the search when the magnifier closes the search bar", () => {
+    const {store, container} = renderWithProviders(<RatesPage/>)
+    act(() => { store.dispatch(fetchRatesModel.fulfilled({rates}, "req", {tenant: "RC100100"} as any)) })
+    const bar = openSearch(container)
+    act(() => { bar.dispatchEvent(new CustomEvent("ionInput", {detail: {value: "Einkauf"}})) })
+    expect(screen.queryByText("Beitritt 2 ZP")).toBeNull()
+    fireEvent.click(headerButtons(container)[0])
+    expect(container.querySelector("ion-searchbar")).toBeNull()
+    expect(screen.getByText("Beitritt 2 ZP")).toBeTruthy()
   })
 })
