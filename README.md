@@ -58,7 +58,15 @@ Dev environment variables (Vite):
 - `VITE_FILESTORE_SERVER_URL` (default `/filestore`) — filestore
 
 Runtime Keycloak config: `/config/keycloak-config.json` (`auth-server-url`, `realm`,
-`resource`). Ports: container **8080**; dev server **5173**.
+`resource`).
+
+Optional Dynatrace Real User Monitoring: set `DYNATRACE_RUM_URL` on the container to the URL of the
+Dynatrace JavaScript tag (`https://…/…_complete.js`). Caddy then renders
+`<script src="…" crossorigin="anonymous" async>` into `index.html`; without the variable, or with a
+value that is not such an https `.js` URL, no tag is emitted and no session data leaves the browser.
+The tag loads `async`, so a slow or blocked CDN does not delay the page; actions before the agent has
+loaded are not captured. Set the script execution attribute of the Dynatrace application
+(settings → injection → snippet format) to `async` as well. Ports: container **8080**; dev server **5173**.
 
 ## Dependencies
 
