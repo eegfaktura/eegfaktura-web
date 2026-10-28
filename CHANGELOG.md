@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.16.0] – 2026-10-28
+
 ### Changed
 - **Billing always covers the whole community, without a selection (platform#194).** The check boxes in the member
   list („alle auswählen“ in the period header, one per member) are gone. The billing mode can be switched on as soon
