@@ -8,6 +8,13 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Security
+- Runtime image `caddy:2.8.4` → `caddy:2.11.7` (release 2026-10-03, Docker image tag 2026-10-05). 2.8.4 sat on
+  Alpine 3.20 (end of support) and Go 1.22; the prod image scan of 2026-10-28 counted 7 CRITICAL / 89 HIGH,
+  the new image 0 CRITICAL / 10 HIGH (Trivy 0.75.0). Caddyfile unchanged; responses (`/`, SPA routes, assets,
+  `/config/keycloak-config.json`) are identical apart from the ETag format. New in Caddy 2.11.6: request headers
+  are limited to 16 KiB (larger → `431`).
+
 ## [1.15.0] – 2026-10-28
 
 ### Added
