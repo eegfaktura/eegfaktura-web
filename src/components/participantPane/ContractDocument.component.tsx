@@ -82,14 +82,28 @@ const ContractDocumentComponent: FC<ContractDocumentComponentProps> = ({tenant, 
     droppedFiles.current = files
     openModal()
   }
+  // opening with the button starts without dropped files
+  const openFromButton = () => {
+    droppedFiles.current = []
+    openModal()
+  }
+  // while the member page shows the contracts, a file dropped beside the area must not make the browser open it
+  // (and leave the app); the area and an open upload dialog handle their own drops
+  useEffect(() => {
+    const isFiles = (e: globalThis.DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes("Files")
+    const guard = (e: globalThis.DragEvent) => { if (isFiles(e)) e.preventDefault() }
+    window.addEventListener("dragover", guard)
+    window.addEventListener("drop", guard)
+    return () => {
+      window.removeEventListener("dragover", guard)
+      window.removeEventListener("drop", guard)
+    }
+  }, [])
 
   const [present, dismiss] = useIonModal(UploadContractFilesDialog, {
     participant,
-    initialFiles: () => {
-      const files = droppedFiles.current
-      droppedFiles.current = []
-      return files
-    },
+    // read when the dialog mounts; side-effect free, as StrictMode calls a state initializer twice
+    initialFiles: () => droppedFiles.current,
     onDismiss: (data: FormData, role: string) => dismiss(data, role),
     uploadButtonText: "Hochladen",
     children: (
@@ -181,7 +195,7 @@ const ContractDocumentComponent: FC<ContractDocumentComponentProps> = ({tenant, 
              <IonLabel>Noch keine Verträge für das Mitglied {participant.lastname} hochgeladen.</IonLabel>
            </IonItem>
            <IonItem lines="none" color="warning-light">
-             <IonButton slot="end" color="warning" size="default" onClick={openModal}>Hochladen</IonButton>
+             <IonButton slot="end" color="warning" size="default" onClick={openFromButton}>Hochladen</IonButton>
            </IonItem>
          </IonCard>
        </div>
@@ -192,7 +206,7 @@ const ContractDocumentComponent: FC<ContractDocumentComponentProps> = ({tenant, 
       <div className="ion-padding">
         <IonToolbar>
           <IonLabel><h1>Verträge</h1></IonLabel>
-          <IonButton slot="end" onClick={openModal}>Hinzufügen</IonButton>
+          <IonButton slot="end" onClick={openFromButton}>Hinzufügen</IonButton>
         </IonToolbar>
         <IonList>
         {

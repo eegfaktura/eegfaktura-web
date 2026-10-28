@@ -1,4 +1,5 @@
 import {describe, expect, it, vi} from "vitest";
+import React from "react";
 import {createEvent, fireEvent, render, screen} from "@testing-library/react";
 import UploadContractFilesDialog, {isContractFile} from "../../../components/dialogs/UploadContractFiles.dialog";
 import {EegParticipant} from "../../../models/members.model";
@@ -76,5 +77,11 @@ describe("contract upload: drag & drop (2026-10-28)", () => {
       initialFiles={() => [file("vertrag.pdf", "application/pdf"), file("brief.txt", "text/plain")]}/>)
     expect(screen.getByText("vertrag.pdf")).toBeTruthy()
     expect(screen.getByText(/brief\.txt nicht übernommen/)).toBeTruthy()
+  })
+
+  it("keeps the initial files under StrictMode, which calls the state initializer twice", () => {
+    const pdf = file("vertrag.pdf", "application/pdf")
+    render(<React.StrictMode><UploadContractFilesDialog participant={participant} onDismiss={vi.fn()} initialFiles={() => [pdf]}/></React.StrictMode>)
+    expect(screen.getByText("vertrag.pdf")).toBeTruthy()
   })
 })
