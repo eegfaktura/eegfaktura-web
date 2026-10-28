@@ -70,4 +70,11 @@ describe("contract upload: drag & drop (2026-10-28)", () => {
     fireEvent.change(container.querySelector("input[type=file]") as HTMLInputElement, {target: {files: [file("vertrag.pdf", "application/pdf")]}})
     expect(screen.queryByText(/nicht übernommen/)).toBeNull()
   })
+
+  it("opens with files dropped on the contract area, refusing the wrong types", () => {
+    render(<UploadContractFilesDialog participant={participant} onDismiss={vi.fn()}
+      initialFiles={() => [file("vertrag.pdf", "application/pdf"), file("brief.txt", "text/plain")]}/>)
+    expect(screen.getByText("vertrag.pdf")).toBeTruthy()
+    expect(screen.getByText(/brief\.txt nicht übernommen/)).toBeTruthy()
+  })
 })

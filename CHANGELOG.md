@@ -13,6 +13,8 @@ this changelog highlights the changes relevant for overview and operations.
   list as if chosen one by one, several at once, also when they land beside the dialog (the browser no longer opens
   them). Only PDF, JPEG and PNG are taken, the types the filestore accepts; other files are named in a hint. A file
   dropped twice is listed once.
+  Files can also be dropped right on the „Verträge“ area of a member: the upload dialog opens with them in its list,
+  to be confirmed with „Hochladen“.
 
 ## [1.17.0] – 2026-10-28
 

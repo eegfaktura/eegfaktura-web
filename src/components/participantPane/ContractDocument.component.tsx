@@ -1,4 +1,4 @@
-import React, {FC, MouseEventHandler, useEffect, useState} from "react";
+import React, {DragEvent, FC, MouseEventHandler, useEffect, useRef, useState} from "react";
 import {
   IonButton, IonButtons,
   IonCard, IonCol, IonGrid,
@@ -60,8 +60,36 @@ const ContractDocumentComponent: FC<ContractDocumentComponentProps> = ({tenant, 
   //   }
   // }
 
+  // files dropped on the contract area: the upload dialog opens with them in its list (they are confirmed there)
+  const droppedFiles = useRef<File[]>([])
+  const [dragOver, setDragOver] = useState(false)
+  const isFileDrag = (e: DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes("Files")
+  const onAreaDragOver = (e: DragEvent<HTMLDivElement>) => {
+    if (!isFileDrag(e)) return
+    e.preventDefault()
+    setDragOver(true)
+  }
+  const onAreaDragLeave = (e: DragEvent<HTMLDivElement>) => {
+    // only when leaving the area, not when moving onto one of its elements
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragOver(false)
+  }
+  const onAreaDrop = (e: DragEvent<HTMLDivElement>) => {
+    if (!isFileDrag(e)) return
+    e.preventDefault()
+    setDragOver(false)
+    const files = Array.from(e.dataTransfer?.files ?? [])
+    if (files.length === 0) return
+    droppedFiles.current = files
+    openModal()
+  }
+
   const [present, dismiss] = useIonModal(UploadContractFilesDialog, {
     participant,
+    initialFiles: () => {
+      const files = droppedFiles.current
+      droppedFiles.current = []
+      return files
+    },
     onDismiss: (data: FormData, role: string) => dismiss(data, role),
     uploadButtonText: "Hochladen",
     children: (
@@ -186,7 +214,8 @@ const ContractDocumentComponent: FC<ContractDocumentComponentProps> = ({tenant, 
   }
 
   return (
-    <div>
+    <div className={dragOver ? "contract-drop-area drag-over" : "contract-drop-area"} data-testid="contract-area"
+         onDragOver={onAreaDragOver} onDragLeave={onAreaDragLeave} onDrop={onAreaDrop}>
       {renderContent()}
     </div>  )
 }
