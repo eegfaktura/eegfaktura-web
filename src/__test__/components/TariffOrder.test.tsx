@@ -148,4 +148,14 @@ describe("tariff order (pilot group 2026-10-28)", () => {
     expect(container.querySelector("ion-searchbar")).toBeNull()
     expect(screen.getByText("Beitritt 2 ZP")).toBeTruthy()
   })
+
+  it("ignores a late debounced input after the search bar was closed", () => {
+    const {store, container} = renderWithProviders(<RatesPage/>)
+    act(() => { store.dispatch(fetchRatesModel.fulfilled({rates}, "req", {tenant: "RC100100"} as any)) })
+    const bar = openSearch(container)
+    fireEvent.click(headerButtons(container)[0])
+    // the debounce timer of the closed bar fires its ionInput only now
+    act(() => { bar.dispatchEvent(new CustomEvent("ionInput", {detail: {value: "Einkauf"}})) })
+    expect(screen.getByText("Beitritt 2 ZP")).toBeTruthy()
+  })
 })

@@ -1,4 +1,4 @@
-import React, {FC, useState} from "react";
+import React, {FC, useRef, useState} from "react";
 import {useAppDispatch, useAppSelector} from "../store";
 import {ratesSelector, saveNewRate, selectedRateSelector, selectRate, TARIFF_TYPE_ORDER, updateRate} from "../store/rate";
 import {useLocale} from "../store/hook/useLocale";
@@ -42,8 +42,11 @@ const RatesPage: FC = () => {
   const [query, setQuery] = useState("")
   // the search bar opens below the toolbar with the magnifier, as in the member list; closing it clears the search
   const [searchActive, setSearchActive] = useState(false)
+  // the search bar's debounced ionInput can still fire after the bar is gone: only an open bar sets the query
+  const searchOpen = useRef(false)
   const toggleSearch = () => {
     if (searchActive) setQuery("")
+    searchOpen.current = !searchActive
     setSearchActive(!searchActive)
   }
   const needle = fold(query.trim())
@@ -154,7 +157,7 @@ const RatesPage: FC = () => {
                   // gaps left and right, so the field does not stick to the edges
                   style={{"--box-shadow": "none", paddingInlineStart: "16px", paddingInlineEnd: "16px"}}
                   debounce={500}
-                  onIonInput={(e) => setQuery(e.detail.value ?? "")}
+                  onIonInput={(e) => { if (searchOpen.current) setQuery(e.detail.value ?? "") }}
                 ></IonSearchbar>
               </IonToolbar>
             )}
