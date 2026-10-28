@@ -59,7 +59,7 @@
     cursor: pointer;
     font: inherit;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: normal;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: var(--ion-color-medium-shade);
@@ -68,9 +68,5 @@
     &:hover {
       background: rgba(0, 0, 0, 0.04);
     }
-  }
-
-  .rate-group-count {
-    font-weight: 400;
   }
 }
