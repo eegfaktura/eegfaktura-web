@@ -3,7 +3,7 @@ import {IonButton, IonButtons} from "@ionic/react";
 
 import "./ButtonGroup.component.css";
 
-const ButtonGroup: FC<{buttons: {icon: JSX.Element}[], onChange: (idx: number) => void}> = ({buttons, onChange}) => {
+const ButtonGroup: FC<{buttons: {icon: JSX.Element, title?: string}[], onChange: (idx: number) => void}> = ({buttons, onChange}) => {
 
   const [buttonState, setButtonState] = useState(0)
 
@@ -24,6 +24,8 @@ const ButtonGroup: FC<{buttons: {icon: JSX.Element}[], onChange: (idx: number) =
       <IonButton
         key={idx}
         className={"button-group-item" + (buttonState === idx + 1 ? " isActive" : "")}
+        title={b.title}
+        aria-label={b.title}
         onClick={(() => onChangeButton(idx+1))}>
         {b.icon}
       </IonButton>

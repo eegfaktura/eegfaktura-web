@@ -39,10 +39,6 @@ ion-segment-button.ios::part(indicator-background) {
     //padding: 6px;
     font-size: 0.9em;
     cursor: pointer;
-    &.selected {
-      border-bottom: 3px solid var(--ion-color-primary);
-      font-size: 1em;
-    }
   }
 
   & .sort {

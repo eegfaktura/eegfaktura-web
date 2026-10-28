@@ -1149,8 +1149,9 @@ const ParticipantPaneComponent: FC = () => {
                   buttons={[
                     {
                       icon: <IonIcon slot="icon-only" icon={person}></IonIcon>,
+                      title: "Nur Mitglieder (Zählpunkte einklappen)",
                     },
-                    {icon: <IonIcon slot="icon-only" icon={flash}></IonIcon>},
+                    {icon: <IonIcon slot="icon-only" icon={flash}></IonIcon>, title: "Nur Zählpunkte"},
                   ]}
                   onChange={toggleMembersMeter}
                 />
@@ -1162,9 +1163,11 @@ const ParticipantPaneComponent: FC = () => {
                       icon: (
                         <IonIcon slot="icon-only" icon={eegSolar}></IonIcon>
                       ),
+                      title: "Nur Erzeuger",
                     },
                     {
                       icon: <IonIcon slot="icon-only" icon={eegPlug}></IonIcon>,
+                      title: "Nur Verbraucher",
                     },
                   ]}
                   onChange={toggleMetering}
