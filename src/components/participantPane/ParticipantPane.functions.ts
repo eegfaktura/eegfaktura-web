@@ -24,11 +24,20 @@ export const billingRunBlocker = (reportLoading: boolean, reportError: string | 
   return undefined
 }
 
-/** Tooltip of the € switch: it only opens or closes the billing view, the run itself is started there. */
-export const billingSwitchTooltip = (canSwitchOn: boolean, on: boolean, blocker: string | undefined): string => {
-  if (on) return "Abrechnung schließen"
-  if (canSwitchOn) return "Abrechnung vorbereiten"
-  return blocker ?? "Bitte zuerst einen Zeitraum wählen."
+/**
+ * Tooltip of the € switch. The switch only opens or closes the billing view (the run is started there), so the text
+ * names that; while it cannot be switched on, the reason. `canSwitchOn` is the switch's own state: while a report loads
+ * the switch keeps its previous state, so the loading text only shows when it is off-limits.
+ */
+export const billingSwitchTooltip = (s: {canSwitchOn: boolean, on: boolean, hasPeriod: boolean, reportLoading: boolean,
+                                          reportError: string | undefined, billableCount: number}): string => {
+  if (!s.canSwitchOn) {
+    if (!s.hasPeriod) return "Bitte zuerst einen Zeitraum wählen."
+    if (s.reportLoading) return "Die Energiedaten des Zeitraums werden geladen."
+    if (s.reportError) return "Die Energiedaten des Zeitraums konnten nicht geladen werden."
+    if (s.billableCount === 0) return "Im Zeitraum gibt es keine abrechenbaren Mitglieder (aktiv, mit Tarif)."
+  }
+  return s.on ? "Abrechnung schließen" : "Abrechnung vorbereiten"
 }
 
 /** The energy of every billable member of the period, from the loaded energy report; built when the run starts. */

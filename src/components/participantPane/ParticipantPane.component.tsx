@@ -259,15 +259,18 @@ const ParticipantPaneComponent: FC = () => {
   const energyReport = useAppSelector(meteringEnergyGroup1);
   const reportLoading = useAppSelector(energyReportLoadingSelector);
   const reportError = useAppSelector(energyReportErrorSelector);
-  const [billingBlockReason, setBillingBlockReason] = useState<string | undefined>();
   useEffect(() => {
     if (reportLoading) return;
-    const blocker = activePeriod ? billingRunBlocker(false, reportError, buildAllocationMap(participants).length) : undefined;
-    const nextBillingEnabled = !!activePeriod && !blocker;
-    setBillingBlockReason(blocker);
+    const nextBillingEnabled = !!activePeriod && !billingRunBlocker(false, reportError, buildAllocationMap(participants).length);
     setBillingEnabled(nextBillingEnabled);
     if (!nextBillingEnabled) toggleShowAmount(false);
   }, [activePeriod, participants, energyReport, reportLoading, reportError]);
+
+  // the tooltip is derived on render, so it follows a loading report and a period change at once
+  const billingSwitchTitle = useMemo(() => billingSwitchTooltip({
+    canSwitchOn: billingEnabled, on: showAmount, hasPeriod: !!activePeriod, reportLoading, reportError,
+    billableCount: billingEnabled || reportLoading || reportError || !activePeriod ? 1 : buildAllocationMap(participants).length,
+  }), [billingEnabled, showAmount, activePeriod, reportLoading, reportError, participants, energyReport]);
 
   useEffect(() => {
     if (billingRunErrorMessage) {
@@ -1114,7 +1117,7 @@ const ParticipantPaneComponent: FC = () => {
               <SlideButtonComponent
                 checked={showAmount}
                 disabled={!billingEnabled}
-                title={billingSwitchTooltip(billingEnabled, showAmount, billingBlockReason)}
+                title={billingSwitchTitle}
                 setChecked={(c) => activateBilling(c)}
               ></SlideButtonComponent>
             </div>

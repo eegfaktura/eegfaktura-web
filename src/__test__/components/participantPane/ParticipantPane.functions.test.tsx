@@ -211,13 +211,24 @@ describe("no billing run without energy (platform#189)", () => {
 })
 
 describe("tooltip of the € switch (pilot group 2026-10-28)", () => {
+  const state = {canSwitchOn: true, on: false, hasPeriod: true, reportLoading: false, reportError: undefined, billableCount: 3}
+
   it("names what a click does: open or close the billing view", () => {
-    expect(billingSwitchTooltip(true, false, undefined)).toBe("Abrechnung vorbereiten")
-    expect(billingSwitchTooltip(true, true, undefined)).toBe("Abrechnung schließen")
+    expect(billingSwitchTooltip(state)).toBe("Abrechnung vorbereiten")
+    expect(billingSwitchTooltip({...state, on: true})).toBe("Abrechnung schließen")
+    // while a report loads the switch keeps its state, and a click still does what the text says
+    expect(billingSwitchTooltip({...state, reportLoading: true})).toBe("Abrechnung vorbereiten")
   })
 
-  it("gives the reason while it cannot be switched on", () => {
-    expect(billingSwitchTooltip(false, false, "Die Energiedaten des Zeitraums werden noch geladen.")).toMatch(/noch geladen/)
-    expect(billingSwitchTooltip(false, false, undefined)).toBe("Bitte zuerst einen Zeitraum wählen.")
+  it("gives the reason while the switch is off-limits", () => {
+    const off = {...state, canSwitchOn: false}
+    expect(billingSwitchTooltip({...off, hasPeriod: false})).toBe("Bitte zuerst einen Zeitraum wählen.")
+    expect(billingSwitchTooltip({...off, reportLoading: true})).toMatch(/werden geladen/)
+    expect(billingSwitchTooltip({...off, reportError: "Bad Gateway"})).toMatch(/nicht geladen werden/)
+    expect(billingSwitchTooltip({...off, billableCount: 0})).toMatch(/keine abrechenbaren Mitglieder/)
+  })
+
+  it("never says „schließen“ on a switch that is shown off and disabled", () => {
+    expect(billingSwitchTooltip({...state, canSwitchOn: false, on: true, billableCount: 0})).toMatch(/keine abrechenbaren/)
   })
 })
