@@ -11,20 +11,25 @@ interface UploadContractFilesDialogProps {
   onDismiss: (data?: FormData, role?: string) => void;
   children?: ReactNode;
   uploadButtonText?: string;
+  // files dropped on the contract area before the dialog opened; read once when it opens
+  initialFiles?: () => File[];
 }
 
 // the types the filestore accepts (allowed_media_types); a dropped file skips the picker's accept filter. The type is
 // what the upload sends, so a file without one (unknown to the browser) would be refused by the filestore: refuse it here.
 const CONTRACT_TYPES = ["application/pdf", "image/jpeg", "image/png"]
 export const isContractFile = (f: File) => CONTRACT_TYPES.includes(f.type)
+const refusedHint = (refused: File[]) => refused.length > 0
+  ? `Nur PDF, JPEG oder PNG: ${refused.map(f => f.name).join(", ")} nicht übernommen.` : undefined
 // the same file dropped again (name, size, last change) is not listed twice, so it is not uploaded twice
 const sameFile = (a: File, b: File) => a.name === b.name && a.size === b.size && a.lastModified === b.lastModified
 
-const UploadContractFilesDialog: FC<UploadContractFilesDialogProps> = ({participant, onDismiss, children, uploadButtonText}) => {
+const UploadContractFilesDialog: FC<UploadContractFilesDialogProps> = ({participant, onDismiss, children, uploadButtonText, initialFiles}) => {
   const inputFile = useRef<HTMLInputElement | null>(null)
-  const [files, setFiles] = useState<File[]>([])
+  const [initial] = useState(() => initialFiles?.() ?? [])
+  const [files, setFiles] = useState<File[]>(() => initial.filter(isContractFile))
   const [dragOver, setDragOver] = useState(false)
-  const [dropHint, setDropHint] = useState<string>()
+  const [dropHint, setDropHint] = useState<string | undefined>(() => refusedHint(initial.filter(f => !isContractFile(f))))
 
   // drag & drop: files dropped while the dialog is open join the list, as if chosen one by one. Handled on the window,
   // so a drop beside the dialog never makes the browser open the file; only file drags are taken (text still drags).
@@ -45,9 +50,7 @@ const UploadContractFilesDialog: FC<UploadContractFilesDialogProps> = ({particip
       setDragOver(false)
       const dropped = Array.from(e.dataTransfer?.files ?? [])
       const accepted = dropped.filter(isContractFile)
-      const refused = dropped.filter(f => !isContractFile(f))
-      setDropHint(refused.length > 0
-        ? `Nur PDF, JPEG oder PNG: ${refused.map(f => f.name).join(", ")} nicht übernommen.` : undefined)
+      setDropHint(refusedHint(dropped.filter(f => !isContractFile(f))))
       if (accepted.length > 0) setFiles(prev => [...prev, ...accepted.filter(f => !prev.some(p => sameFile(p, f)))])
     }
     window.addEventListener("dragover", onDragOver)

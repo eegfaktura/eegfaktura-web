@@ -1,4 +1,5 @@
 import {describe, expect, it, vi} from "vitest";
+import React from "react";
 import {createEvent, fireEvent, render, screen} from "@testing-library/react";
 import UploadContractFilesDialog, {isContractFile} from "../../../components/dialogs/UploadContractFiles.dialog";
 import {EegParticipant} from "../../../models/members.model";
@@ -69,5 +70,18 @@ describe("contract upload: drag & drop (2026-10-28)", () => {
     expect(screen.getByText(/brief\.txt nicht übernommen/)).toBeTruthy()
     fireEvent.change(container.querySelector("input[type=file]") as HTMLInputElement, {target: {files: [file("vertrag.pdf", "application/pdf")]}})
     expect(screen.queryByText(/nicht übernommen/)).toBeNull()
+  })
+
+  it("opens with files dropped on the contract area, refusing the wrong types", () => {
+    render(<UploadContractFilesDialog participant={participant} onDismiss={vi.fn()}
+      initialFiles={() => [file("vertrag.pdf", "application/pdf"), file("brief.txt", "text/plain")]}/>)
+    expect(screen.getByText("vertrag.pdf")).toBeTruthy()
+    expect(screen.getByText(/brief\.txt nicht übernommen/)).toBeTruthy()
+  })
+
+  it("shows the initial files under StrictMode (the getter purity itself is tested in ContractDocument.drop)", () => {
+    const pdf = file("vertrag.pdf", "application/pdf")
+    render(<React.StrictMode><UploadContractFilesDialog participant={participant} onDismiss={vi.fn()} initialFiles={() => [pdf]}/></React.StrictMode>)
+    expect(screen.getByText("vertrag.pdf")).toBeTruthy()
   })
 })
