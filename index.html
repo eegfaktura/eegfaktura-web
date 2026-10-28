@@ -2,6 +2,8 @@
 <html lang="de">
   <head>
     <meta charset="utf-8" />
+    <!-- Dynatrace RUM tag, rendered by Caddy only when DYNATRACE_RUM_URL is set (README, Configuration) -->
+    <!--dt: with env "DYNATRACE_RUM_URL" :dt--><!--dt: if regexMatch "^https://[A-Za-z0-9._~/-]+\\.js$" . :dt--><!--dt: printf "<script type=\"text/javascript\" src=%q crossorigin=\"anonymous\" async></script>" . :dt--><!--dt: end :dt--><!--dt: end :dt-->
     <title>eegFaktura App</title>
     
     <base href="/" />

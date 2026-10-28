@@ -8,6 +8,12 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **Optional Dynatrace Real User Monitoring (`DYNATRACE_RUM_URL`).** When the container sets the variable to the URL of
+  the Dynatrace JavaScript tag, Caddy renders the tag into `index.html` at request time, loaded `async` so it never
+  blocks the page. Without the variable no tag is emitted: self-hosted installations send no session data. **Operations:**
+  set `DYNATRACE_RUM_URL` in the deployments that should report (README, Configuration).
+
 ## [1.16.0] – 2026-10-28
 
 ### Changed
