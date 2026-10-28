@@ -13,6 +13,17 @@ export const isBillableParticipant = (p: EegParticipant): boolean =>
   p.status === "ACTIVE" && p.meters.reduce((c, e) => c || (e.tariff_id !== undefined && e.tariff_id !== null && e.status !== 'INIT'),
     p.tariffId !== undefined && p.tariffId != null)
 
+/**
+ * Why a billing run cannot start now (platform#189), or undefined when it can: the report of the period is still
+ * loading, its load failed, or it holds no entry of a billable member. A run is never started with an empty list.
+ */
+export const billingRunBlocker = (reportLoading: boolean, reportError: string | undefined, allocationCount: number): string | undefined => {
+  if (reportLoading) return "Die Energiedaten des Zeitraums werden noch geladen. Bitte kurz warten und erneut starten."
+  if (reportError) return "Die Energiedaten des Zeitraums konnten nicht geladen werden. Bitte die Seite neu laden und erneut starten."
+  if (allocationCount === 0) return "Im gewählten Zeitraum gibt es keine abrechenbaren Mitglieder (aktiv, mit Tarif) in den geladenen Energiedaten. „Daten prüfen“ zeigt Zählpunkte ohne Tarif."
+  return undefined
+}
+
 /** The energy of every billable member of the period, from the loaded energy report; built when the run starts. */
 export const buildAllocationMap = (participants: EegParticipant[]): MeteringEnergyGroupType[] => {
   const participantReport = meteringEnergyGroup1(store.getState())

@@ -88,7 +88,7 @@ import DatePickerCoreElement from "../core/elements/DatePickerCore.element";
 import {filterActiveMeter, filterActiveParticipantAndMeter,} from "../../util/FilterHelper.unit";
 import moment from "moment";
 import {Api} from "../../service";
-import {billTotal, buildAllocationMap, downloadWithFeedback, filterSearchQuery} from "./ParticipantPane.functions";
+import {billingRunBlocker, billTotal, buildAllocationMap, downloadWithFeedback, filterSearchQuery} from "./ParticipantPane.functions";
 import {exportMasterdataWithJoiningFees, hasJoiningFee, JOINING_FEE_EXPORT_WITHOUT_BILLING} from "../../util/JoiningFee.util";
 import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
 import {withOpenProblems} from "./ParticipantPane.functions";
@@ -253,14 +253,15 @@ const ParticipantPaneComponent: FC = () => {
     return () => { current = false };
   }, [tenant, billingRun?.id, billingInfo, showAmount]);
 
-  // platform#194/#189: the whole community is billed, no selection. The billing mode needs the loaded energy report
-  // of the shown period with energy of at least one billable member; while a report loads the mode stays as it is.
+  // platform#194/#189: the whole community is billed, no selection. The billing mode can be switched on with the loaded
+  // energy report of the shown period holding an entry of at least one billable member; while a report loads the mode
+  // stays as it is. billingEnabled means "can be switched on" and is set only here.
   const energyReport = useAppSelector(meteringEnergyGroup1);
   const reportLoading = useAppSelector(energyReportLoadingSelector);
   const reportError = useAppSelector(energyReportErrorSelector);
   useEffect(() => {
     if (reportLoading) return;
-    const nextBillingEnabled = !!activePeriod && !reportError && buildAllocationMap(participants).length > 0;
+    const nextBillingEnabled = !!activePeriod && !billingRunBlocker(false, reportError, buildAllocationMap(participants).length);
     setBillingEnabled(nextBillingEnabled);
     if (!nextBillingEnabled) toggleShowAmount(false);
   }, [activePeriod, participants, energyReport, reportLoading, reportError]);
@@ -380,7 +381,6 @@ const ParticipantPaneComponent: FC = () => {
       });
     } else {
       toggleShowAmount(false);
-      setBillingEnabled(false);
     }
   };
 
@@ -556,16 +556,15 @@ const ParticipantPaneComponent: FC = () => {
     && billingRun.runStatus !== "RUNNING" && billingRun.runStatus !== "FAILED" ? runTotals.totals : undefined;
   const onDoBilling =(preview: boolean, documentDate: Date) => {
     if (activePeriod) {
-      // platform#189: never start a run without energy (an empty list gave a finished run without documents)
-      const allocations = reportLoading || reportError ? [] : buildAllocationMap(participants);
-      if (allocations.length === 0) {
-        presentAlert({
-          subHeader: "Keine Energiedaten für die Abrechnung",
-          message: reportLoading
-            ? "Die Energiedaten des Zeitraums werden noch geladen. Bitte kurz warten und erneut starten."
-            : "Für den gewählten Zeitraum sind keine Energiedaten der Mitglieder geladen. Bitte die Seite neu laden und erneut starten.",
-          buttons: ["OK"],
-        });
+      // platform#189: never start a run without energy (an empty list gave a finished run without documents). Read
+      // from the store now: this runs from the dialog's closure, the rendered values can be older than the report.
+      const state = store.getState();
+      const loading = energyReportLoadingSelector(state);
+      const error = energyReportErrorSelector(state);
+      const allocations = loading || error ? [] : buildAllocationMap(participants);
+      const blocker = billingRunBlocker(loading, error, allocations.length);
+      if (blocker) {
+        presentAlert({subHeader: "Abrechnung nicht möglich", message: blocker, buttons: ["OK"]});
         return;
       }
       documentDate?.setHours(12);

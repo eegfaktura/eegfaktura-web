@@ -11,17 +11,19 @@ this changelog highlights the changes relevant for overview and operations.
 ### Changed
 - **Billing always covers the whole community, without a selection (platform#194).** The check boxes in the member
   list („alle auswählen“ in the period header, one per member) are gone. The billing mode can be switched on as soon
-  as the energy report of the selected period is loaded and has energy of at least one billable member; „Vorschau“
+  as the energy report of the selected period is loaded and holds an entry of at least one billable member (also
+  with 0 kWh); „Vorschau“
   and „Abrechnung durchführen“ send all active members with a tariff (on the member or on a registered metering
   point, the rule of the former „alle auswählen“), built when the run starts. Before, the selection stayed when the
   period changed, so members new in that period were left out without a note. Members without a tariff are named by
   „Daten prüfen“ (unchanged). **Visible change** for the EEG admins (release note).
 
 ### Fixed
-- **No billing run without energy (platform#189, web part).** A run is only started with energy of at least one
-  member from the loaded report of the selected period; while the report loads or after it failed, „Vorschau“ /
-  „Abrechnung durchführen“ say so („Keine Energiedaten für die Abrechnung“) instead of sending an empty list (which
-  billing finished as a run without documents).
+- **No billing run without energy (platform#189, web part).** A run is only started with entries of at least one
+  billable member from the loaded report of the selected period; while the report loads, after it failed or without
+  any such entry, „Vorschau“ / „Abrechnung durchführen“ say why („Abrechnung nicht möglich“) instead of sending an
+  empty list (which billing finished as a run without documents). Switching the billing mode off no longer greys
+  out the switch.
 
 ### Security
 - Runtime image `caddy:2.8.4` → `caddy:2.11.7` (release 2026-10-03, Docker image tag 2026-10-05). 2.8.4 sat on

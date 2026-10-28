@@ -33,7 +33,7 @@ vi.mock("../../../store/rate", () => ({
   }),
 }));
 
-import {billTotal, buildAllocationMap, isBillableParticipant, uploadActivationDocuments, withOpenProblems} from "../../../components/participantPane/ParticipantPane.functions";
+import {billingRunBlocker, billTotal, buildAllocationMap, isBillableParticipant, uploadActivationDocuments, withOpenProblems} from "../../../components/participantPane/ParticipantPane.functions";
 
 describe("<ParticipantPane/> Functions", () => {
   it("allocate invoice member and metering points", async () => {
@@ -198,3 +198,14 @@ describe("billing always the whole community (platform#194)", () => {
   })
 })
 
+describe("no billing run without energy (platform#189)", () => {
+  it("blocks while the report loads, after it failed and without any billable entry", () => {
+    expect(billingRunBlocker(true, undefined, 5)).toMatch(/noch geladen/)
+    expect(billingRunBlocker(false, "Bad Gateway", 5)).toMatch(/nicht geladen werden/)
+    expect(billingRunBlocker(false, undefined, 0)).toMatch(/keine abrechenbaren Mitglieder/)
+  })
+
+  it("lets the run start with a loaded report holding entries", () => {
+    expect(billingRunBlocker(false, undefined, 1)).toBeUndefined()
+  })
+})
