@@ -15,7 +15,7 @@ this changelog highlights the changes relevant for overview and operations.
   set `DYNATRACE_RUM_URL` in the deployments that should report (README, Configuration).
 - **Tooltip on the € switch in the member list** (pilot group). It names what a click does: „Abrechnung vorbereiten“
   opens the billing view, „Abrechnung schließen“ closes it. While the switch is off-limits it shows the reason (no period
-  chosen, energy data loading or not loadable, no billable member in the period); screen readers get the same text.
+  chosen, energy data loading or not loadable, no billable member in the period).
 
 ## [1.16.0] – 2026-10-28
 

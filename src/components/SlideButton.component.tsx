@@ -23,7 +23,7 @@ const SlideButtonComponent: FC<SlideButtonComponentProps> = ({checked,disabled, 
 
   return (
     <label className={disabled ? "eeg-sliding-box disabled" : "eeg-sliding-box"} aria-disabled={disabled} title={title}>
-      <input type="checkbox" checked={checked && !disabled} onChange={(e) => changeCheckbox(e)} disabled={disabled} aria-label={title}/>
+      <input type="checkbox" checked={checked && !disabled} onChange={(e) => changeCheckbox(e)} disabled={disabled}/>
       <div className="eeg-sliding-box-inner">
         <div>
           <span className="eeg-on">
