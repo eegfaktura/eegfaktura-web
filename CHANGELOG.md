@@ -11,9 +11,8 @@ this changelog highlights the changes relevant for overview and operations.
 ### Changed
 - **Billing always covers the whole community, without a selection (platform#194).** The check boxes in the member
   list („alle auswählen“ in the period header, one per member) are gone. The billing mode can be switched on as soon
-  as the energy report of the selected period is loaded and holds an entry of at least one billable member (also
-  with 0 kWh); „Vorschau“
-  and „Abrechnung durchführen“ send all active members with a tariff (on the member or on a registered metering
+  as the energy report of the selected period is loaded and holds an entry of at least one billable member (also with 0 kWh);
+  „Vorschau“ and „Abrechnung durchführen“ send all active members with a tariff (on the member or on a registered metering
   point, the rule of the former „alle auswählen“), built when the run starts. Before, the selection stayed when the
   period changed, so members new in that period were left out without a note. Members without a tariff are named by
   „Daten prüfen“ (unchanged). **Visible change** for the EEG admins (release note).
@@ -32,7 +31,6 @@ this changelog highlights the changes relevant for overview and operations.
   the new image 0 CRITICAL / 10 HIGH (Trivy 0.75.0). Caddyfile unchanged; responses (`/`, SPA routes, assets,
   `/config/keycloak-config.json`) are identical apart from the ETag format. New in Caddy 2.11.6: request headers
   are limited to 16 KiB (larger → `431`).
-
 
 ## [1.15.0] – 2026-10-28
 
