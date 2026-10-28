@@ -12,12 +12,13 @@ import {eegFilterList} from "../../eegIcons";
 import {useLocale} from "../../store/hook/useLocale";
 import {swapVertical} from "ionicons/icons";
 import {MemberSort} from "./participantSort";
-import {MEMBER_FILTER_OPTIONS} from "./memberFilter.functions";
+import {MEMBER_FILTER_OPTIONS, MemberFilter} from "./memberFilter.functions";
 import MemberSortPopover from "./MemberSortPopover.component";
 
 // One choice for the list (decided 28.10.2026, replaces the tabs „Periode“ and the filter): „Standard“ is the former
 // „Periode“ (members active in the selected period, the view for billing), then the filters of platform#214.
-export const MEMBER_VIEW_OPTIONS = ['period', ...MEMBER_FILTER_OPTIONS]
+export type MemberView = 'period' | MemberFilter
+export const MEMBER_VIEW_OPTIONS: MemberView[] = ['period', ...MEMBER_FILTER_OPTIONS]
 
 interface FilterSegmentProps {
   selectedOption: string;
@@ -70,7 +71,9 @@ const FilterSegmentComponent: FC<FilterSegmentProps> = ({selectedOption, setSele
 
   return (
     <div className="period-filter-menu">
-      <div className="item" onClick={onClickView} title={t('meterlist.view_tooltip_' + selectedOption)}>
+      <div className="item" role="button" tabIndex={0} onClick={onClickView}
+           onKeyDown={e => (e.key === "Enter" || e.key === " ") && onClickView()}
+           title={t('meterlist.view_tooltip_' + selectedOption)}>
         <IonItem lines="none">
           <IonIcon aria-hidden="true" icon={eegFilterList} slot="end"></IonIcon>
           <IonLabel>{t('meterlist.view_header')} {viewLabel}</IonLabel>

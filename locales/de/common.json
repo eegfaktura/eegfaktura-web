@@ -285,7 +285,7 @@
     "filter_text_active": "Aktive",
     "filter_text_inactive": "Inaktive",
     "view_tooltip_period": "Mitglieder mit Zählpunkten, die im gewählten Zeitraum aktiv sind, dazu Zählpunkte mit offenem Problem – die Ansicht für die Abrechnung",
-    "view_tooltip_all": "Alle Mitglieder mit allen Zählpunkten, unabhängig vom Zeitraum",
+    "view_tooltip_all": "Alle Zählpunkte aller Mitglieder (Stand heute), unabhängig vom Zeitraum",
     "view_tooltip_active": "Mitglieder mit aktiven Zählpunkten (Stand heute), unabhängig vom Zeitraum",
     "view_tooltip_inactive": "Zählpunkte, die nicht aktiv sind oder eine Aktion brauchen (Stand heute), unabhängig vom Zeitraum",
     "sort_header": "Sortierung:",

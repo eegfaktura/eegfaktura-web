@@ -63,15 +63,15 @@ this changelog highlights the changes relevant for overview and operations.
   Inaktive behind the filter icon) are one entry „Anzeige: …“; a click opens the choice Standard, Alle, Aktive,
   Inaktive. „Standard“ is the former „Periode“ (members with metering points active in the selected period plus
   metering points with an open problem, the view for billing) and stays the default; the others are unchanged
-  (status as of today, independent of the period). A tooltip explains the chosen view. The four buttons below the
-  list (members only, metering points only, hide producers, hide consumers) got tooltips.
+  (status as of today, independent of the period). A tooltip (desktop) explains the chosen view; the entry can be opened with the keyboard. Switching
+  back to „Standard“ now takes the choice (open, pick, Übernehmen) instead of one tab click. The four buttons below
+  the list got tooltips: „Nur Mitglieder (Zählpunkte einklappen)“, „Nur Zählpunkte“, „Nur Erzeuger“, „Nur Verbraucher“.
 
 ### Fixed
 - **CI: the Snyk Code scan fails visibly when it cannot run.** An invalid `SNYK_TOKEN` ended the weekly and
   push scan green without any result (`continue-on-error`); now only „issues found“ keeps the run green (the
   issues go to Code Scanning), an authentication or tool error fails it. The Snyk CLI is pinned to 1.1308.1
   instead of the latest version.
-
 
 ## [1.14.0] – 2026-10-27
 

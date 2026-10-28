@@ -1163,11 +1163,11 @@ const ParticipantPaneComponent: FC = () => {
                       icon: (
                         <IonIcon slot="icon-only" icon={eegSolar}></IonIcon>
                       ),
-                      title: "Erzeuger ausblenden",
+                      title: "Nur Erzeuger",
                     },
                     {
                       icon: <IonIcon slot="icon-only" icon={eegPlug}></IonIcon>,
-                      title: "Verbraucher ausblenden",
+                      title: "Nur Verbraucher",
                     },
                   ]}
                   onChange={toggleMetering}

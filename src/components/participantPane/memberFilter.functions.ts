@@ -1,13 +1,13 @@
 import {EegParticipant} from "../../models/members.model";
 import {Metering} from "../../models/meteringpoint.model";
 
-// Filters of the member list's second tab (platform#214). The view shows all members of the community, independent of
+// Filters of the member list's choice „Anzeige“ besides „Standard“ (platform#214). The view shows all members of the community, independent of
 // the period, each with exactly the metering points that match; a member with none is not listed.
 export type MemberFilter = 'all' | 'active' | 'inactive'
 
 export const MEMBER_FILTER_OPTIONS: MemberFilter[] = ['all', 'active', 'inactive']
 
-// The attention view, it replaces the former "Ausstehende".
+// Fallback of toMemberFilter for an unknown value (the list itself starts with „Standard“, see FilterSegment).
 export const DEFAULT_MEMBER_FILTER: MemberFilter = 'inactive'
 
 // Active by its status, the rule of the dashboard's "Aktive" count (memberActivity). Anything else (registration in
@@ -44,6 +44,6 @@ export const filterMembers = (participants: EegParticipant[], filter: MemberFilt
     }))
     .filter(p => p.meters.length > 0 || (filter !== 'active' && waitsForAdmission(p)))
 
-/** The filter of a tab value; anything unknown is the default. */
+/** The filter of a view value; anything unknown is the fallback. */
 export const toMemberFilter = (value: string): MemberFilter =>
   MEMBER_FILTER_OPTIONS.find(o => o === value) ?? DEFAULT_MEMBER_FILTER
