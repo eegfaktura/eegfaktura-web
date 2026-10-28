@@ -137,8 +137,8 @@ const RatesPage: FC = () => {
             <IonToolbar color="eeg">
               <IonSearchbar
                 placeholder={t("rateSearchPlaceholder")}
-                // a left gap like the plus button's on the right, so the field does not stick to the edge
-                style={{"--box-shadow": "none", paddingInlineStart: "20px"}}
+                // gaps left and top, so the field does not stick to the edges (left like the plus button on the right)
+                style={{"--box-shadow": "none", paddingInlineStart: "20px", paddingTop: "16px"}}
                 debounce={500}
                 onIonInput={(e) => setQuery(e.detail.value ?? "")}
               ></IonSearchbar>
