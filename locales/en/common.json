@@ -1,4 +1,7 @@
 {
-  "rateGroupOther": "Other",
+  "rateGroupMember": "Member tariffs",
+  "rateGroupProducer": "Producer tariffs",
+  "rateGroupConsumer": "Consumer tariffs",
+  "rateGroupOther": "Other tariffs",
   "top": "sepp1"
 }

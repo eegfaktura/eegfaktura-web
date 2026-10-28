@@ -36,20 +36,20 @@ describe("tariff order (pilot group 2026-10-28)", () => {
     act(() => { store.dispatch(fetchRatesModel.fulfilled({rates}, "req", {tenant: "RC100100"} as any)) })
     const text = document.body.textContent ?? ""
     const at = (s: string) => text.indexOf(s)
-    expect(screen.getByText("Mitglied")).toBeTruthy()
-    expect(at("Mitglied")).toBeLessThan(at("beitritt 1 ZP"))
-    expect(at("Beitritt 10 ZP")).toBeLessThan(at("Erzeuger"))
-    expect(at("Erzeuger")).toBeLessThan(at("Einkauf"))
-    expect(at("Einkauf")).toBeLessThan(at("Verbraucher"))
-    expect(at("Verbraucher")).toBeLessThan(at("Sonnenstrom-Verkauf"))
+    expect(screen.getByText("Mitgliedstarife")).toBeTruthy()
+    expect(at("Mitgliedstarife")).toBeLessThan(at("beitritt 1 ZP"))
+    expect(at("Beitritt 10 ZP")).toBeLessThan(at("Erzeugertarife"))
+    expect(at("Erzeugertarife")).toBeLessThan(at("Einkauf"))
+    expect(at("Einkauf")).toBeLessThan(at("Verbrauchertarife"))
+    expect(at("Verbrauchertarife")).toBeLessThan(at("Sonnenstrom-Verkauf"))
   })
 
-  it("shows a tariff of an unknown kind at the end under „Sonstige“ instead of hiding it", () => {
+  it("shows a tariff of an unknown kind at the end under „Sonstige Tarife“ instead of hiding it", () => {
     const {store} = renderWithProviders(<RatesPage/>)
     act(() => { store.dispatch(fetchRatesModel.fulfilled({rates: [...rates, tariff("7", "AKONTO", "Alt")]}, "req", {tenant: "RC100100"} as any)) })
     const text = document.body.textContent ?? ""
-    expect(text.indexOf("Sonstige")).toBeGreaterThan(text.indexOf("Verkauf"))
-    expect(text.indexOf("Alt")).toBeGreaterThan(text.indexOf("Sonstige"))
+    expect(text.indexOf("Sonstige Tarife")).toBeGreaterThan(text.indexOf("Verkauf"))
+    expect(text.indexOf("Alt")).toBeGreaterThan(text.indexOf("Sonstige Tarife"))
   })
 
   it("keeps a fixed order for equal names", () => {

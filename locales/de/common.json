@@ -1,5 +1,8 @@
 {
-  "rateGroupOther": "Sonstige",
+  "rateGroupMember": "Mitgliedstarife",
+  "rateGroupProducer": "Erzeugertarife",
+  "rateGroupConsumer": "Verbrauchertarife",
+  "rateGroupOther": "Sonstige Tarife",
   "firstname": "Vorname",
   "lastname": "Nachname",
   "company-name": "Firmenname",

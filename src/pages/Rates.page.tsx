@@ -23,7 +23,7 @@ import { get } from "react-hook-form";
 import {useTenant} from "../store/hook/Eeg.provider";
 
 // group headings: the kinds of the tariff form
-const RATE_GROUP_TITLE_KEY: Record<string, string> = {EEG: "participant", EZP: "producer", VZP: "consumer", OTHER: "rateGroupOther"}
+const RATE_GROUP_TITLE_KEY: Record<string, string> = {EEG: "rateGroupMember", EZP: "rateGroupProducer", VZP: "rateGroupConsumer", OTHER: "rateGroupOther"}
 
 const RatesPage: FC = () => {
 
