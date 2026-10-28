@@ -89,7 +89,8 @@
     "remove_paid": "Zahlung entfernen",
     "remove_paid_message": "Die erfasste Zahlung entfernen? Die Beitrittsgebühr gilt dann wieder als offen.",
     "remove": "Entfernen",
-    "change_failed": "Die Beitrittsgebühr konnte nicht geändert werden: {{reason}}"
+    "change_failed": "Die Beitrittsgebühr konnte nicht geändert werden. Bitte die Eingabe prüfen oder später erneut versuchen.",
+    "warn_vat_whole": "Bitte einen ganzzahligen USt-Satz über 0 % eingeben."
   },
   "useMeteringPointFee": "Zählpunktgebühr einheben?",
   "meteringPointFee": "Zählpunktgebühr in €",

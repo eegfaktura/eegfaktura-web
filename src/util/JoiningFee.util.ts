@@ -39,7 +39,9 @@ export const joiningFeeVatUnusual = (tariff: EegTariff, tariffs: EegTariff[]): b
  */
 export const membersNotYetEnergyBilled = (participants: EegParticipant[], tariffId: string,
                                           state: JoiningFeeState[]): number => {
-  const billed = new Set(state.filter(s => s.energyBilled || s.paidExternally).map(s => s.participantId.toLowerCase()))
+  // billed with energy, paid outside or already charged the fee (e.g. by request): none of them gets it again
+  const billed = new Set(state.filter(s => s.energyBilled || s.paidExternally || s.joiningFee)
+    .map(s => s.participantId.toLowerCase()))
   return participants.filter(p => p.tariffId === tariffId
     && (p.meters ?? []).some(isActiveMeter)
     && !billed.has(p.id.toLowerCase())).length

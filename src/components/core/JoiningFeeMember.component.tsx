@@ -22,7 +22,11 @@ interface JoiningFeeMemberProps {
   feeInUse: boolean
 }
 
-const today = () => new Date().toISOString().substring(0, 10)
+// today in local time: billing checks the payment date against Europe/Vienna, toISOString() would give the UTC date
+const today = () => {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+}
 
 /**
  * platform#217 with the extension of 2026-10-27, member details, EEG admins only (billing allows the calls only to
@@ -37,6 +41,8 @@ const JoiningFeeMember: FC<JoiningFeeMemberProps> = ({tenant, participantId, tar
   const [version, setVersion] = useState(0)
   const key = `${tenant}/${participantId}/${version}`
   const [loaded, setLoaded] = useState<{ key: string, ok: boolean, state?: JoiningFeeState }>()
+  // one change at a time: a double click would send the record twice
+  const [busy, setBusy] = useState(false)
 
   useEffect(() => {
     if (!feeInUse || loaded?.key === key) return
@@ -54,16 +60,23 @@ const JoiningFeeMember: FC<JoiningFeeMemberProps> = ({tenant, participantId, tar
   const state = loaded.state
   const actions = joiningFeeActions(state, tariff)
 
-  const run = (call: () => Promise<void>) =>
+  // billing's reason is not in its error body (Spring sends only the status phrase), so a German text per case
+  const run = (call: () => Promise<void>) => {
+    if (busy) return
+    setBusy(true)
     call()
       .catch(e => {
-        const billed = e instanceof JoiningFeeAlreadyBilledError
+        const conflict = e instanceof JoiningFeeAlreadyBilledError
         toast({
-          message: billed ? e.message : t("joiningFee.change_failed", {reason: e instanceof Error ? e.message : String(e)}),
-          duration: 4500, position: "bottom", color: billed ? "warning" : "danger",
+          message: conflict ? e.message : t("joiningFee.change_failed"),
+          duration: 5000, position: "bottom", color: conflict ? "warning" : "danger",
         })
       })
-      .finally(() => setVersion(v => v + 1))
+      .finally(() => {
+        setBusy(false)
+        setVersion(v => v + 1)
+      })
+  }
 
   const save = (record: JoiningFeeRecord) => run(() => Api.eegService.saveJoiningFeeRecord(tenant, participantId, record))
   const remove = () => run(() => Api.eegService.deleteJoiningFeeRecord(tenant, participantId))
@@ -109,7 +122,7 @@ const JoiningFeeMember: FC<JoiningFeeMemberProps> = ({tenant, participantId, tar
   }
 
   const button = (label: string, onClick: () => void) =>
-    <IonButton size="small" fill="outline" onClick={onClick}>{label}</IonButton>
+    <IonButton size="small" fill="outline" disabled={busy} onClick={onClick}>{label}</IonButton>
 
   return (
     <div style={{margin: "4px 16px 8px", fontSize: "0.9em"}}>

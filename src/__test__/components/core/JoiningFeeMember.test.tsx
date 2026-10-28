@@ -128,7 +128,7 @@ describe("JoiningFeeMember", () => {
     fireEvent.click(button("Beitrittsgebühr nachverrechnen")!)
     await confirmAlert()
     expect(toast.mock.lastCall![0]).toEqual(expect.objectContaining({
-      message: "Die Beitrittsgebühr wurde inzwischen verrechnet – die Änderung ist nicht mehr möglich.", color: "warning"}))
+      message: expect.stringContaining("Die Beitrittsgebühr kann gerade nicht geändert werden"), color: "warning"}))
     expect(Api.eegService.fetchJoiningFeeState).toHaveBeenCalledTimes(2)
   })
 

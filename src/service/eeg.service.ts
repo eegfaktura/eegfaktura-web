@@ -49,7 +49,8 @@ export const parseSyncEnergyResult = async (res: Response): Promise<SyncEnergyRe
 // billing answers 409 when the member's joining fee was charged in a final run meanwhile
 export class JoiningFeeAlreadyBilledError extends Error {
   constructor() {
-    super("Die Beitrittsgebühr wurde inzwischen verrechnet – die Änderung ist nicht mehr möglich.")
+    super("Die Beitrittsgebühr kann gerade nicht geändert werden: Sie wurde inzwischen verrechnet, ein endgültiger "
+      + "Abrechnungslauf läuft oder jemand hat sie gleichzeitig geändert. Der aktuelle Stand wird angezeigt.")
   }
 }
 

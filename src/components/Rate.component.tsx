@@ -268,7 +268,10 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
         {joiningFeeUseVat &&
             <NumberInputForm label={t("joiningFee.vatInPercent")} control={control} name={"joiningFeeVatInPercent"}
                              rules={{max: {value: 100, message: t("joiningFee.warn_vat_range")},
-                               min: {value: 0, message: t("joiningFee.warn_vat_range")}}}/>}
+                               min: {value: 0, message: t("joiningFee.warn_vat_range")},
+                               // the backend stores a whole number; „USt anführen“ with 0 % would print 0 %
+                               validate: (v: unknown) => (v !== "" && v !== null && v !== undefined
+                                 && Number.isInteger(Number(v)) && Number(v) > 0) || t("joiningFee.warn_vat_whole")}}/>}
       </>
     )
 

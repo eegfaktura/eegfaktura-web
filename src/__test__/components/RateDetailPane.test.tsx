@@ -84,16 +84,25 @@ describe("RateDetailPane: saving a joining fee warns first (platform#217)", () =
     Api.eegService = {fetchJoiningFeeState: vi.fn().mockResolvedValue([])} as unknown as typeof Api.eegService
   })
 
-  const save = async (data: EegTariff, participants: any[] = []) => {
+  // before: the tariff as stored when the dialog opened (default: no joining fee yet)
+  const save = async (data: EegTariff, participants: any[] = [], before: EegTariff = {...data, joiningFee: 0}) => {
     const r = renderWithProviders(<RateDetailPaneComponent onSubmit={onSubmit} submitId="s"/>)
     act(() => {
       r.store.dispatch(fetchParticipantModel.fulfilled({participants}, "req", {tenant: "TE100200"}))
-      r.store.dispatch(fetchRatesModel.fulfilled({rates: [vzp20, data]}, "req", {tenant: "TE100200"}))
-      r.store.dispatch(selectRate(data))
+      r.store.dispatch(fetchRatesModel.fulfilled({rates: [vzp20, before]}, "req", {tenant: "TE100200"}))
+      r.store.dispatch(selectRate(before))
     })
     await act(async () => rateForm.props.onSubmit(data))
   }
   const confirmSave = () => alert.mock.lastCall![0].buttons.find((b: any) => b.role === "confirm").handler()
+
+  it("saves a tariff whose joining fee did not change directly (review 28.10.2026: renaming does not ask again)", async () => {
+    const withFee = {...tariff, joiningFee: 50}
+    await save({...withFee, name: "Neu"}, [active("p1")], withFee)
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+    expect(alert).not.toHaveBeenCalled()
+    expect(Api.eegService.fetchJoiningFeeState).not.toHaveBeenCalled()
+  })
 
   it("saves a tariff without a joining fee directly, without asking billing", async () => {
     await save({...tariff, joiningFee: 0})

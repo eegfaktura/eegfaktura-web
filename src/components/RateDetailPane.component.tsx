@@ -96,7 +96,12 @@ const RateDetailPaneComponent: FC<RateDetailPaneComponentProps> = ({onSubmit, su
   // the fee with their next billing (billing's joiningFeeState; unknown when billing cannot be reached). Saving stays
   // possible in every case.
   const onSave = async (data: EegTariff) => {
-    if (!hasJoiningFee(data)) {
+    // only when the fee is new or changed: renaming a tariff with a fee does not ask again
+    const before = selectedTariff
+    const feeChanged = !before || !before.id || Number(before.joiningFee ?? 0) !== Number(data.joiningFee ?? 0)
+      || !!before.joiningFeeUseVat !== !!data.joiningFeeUseVat
+      || Number(before.joiningFeeVatInPercent ?? 0) !== Number(data.joiningFeeVatInPercent ?? 0)
+    if (!hasJoiningFee(data) || !feeChanged) {
       onSubmit(data)
       return
     }
