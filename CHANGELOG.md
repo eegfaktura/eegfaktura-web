@@ -13,8 +13,8 @@ this changelog highlights the changes relevant for overview and operations.
   the Dynatrace JavaScript tag, Caddy renders the tag into `index.html` at request time, loaded `async` so it never
   blocks the page. Without the variable no tag is emitted: self-hosted installations send no session data. **Operations:**
   set `DYNATRACE_RUM_URL` in the deployments that should report (README, Configuration).
-- **Tooltip on the € switch in the member list** (pilot group). It names what a click does: „Abrechnung vorbereiten“
-  opens the billing view, „Abrechnung schließen“ closes it. While the switch is off-limits it shows the reason (no period
+- **Tooltip on the € switch in the member list** (pilot group). It names what a click does: „Abrechnungsmodus
+  aktivieren“ switches to the billing view, „Abrechnungsmodus beenden“ leaves it. While the switch is off-limits it shows the reason (no period
   chosen, energy data loading or not loadable, no billable member in the period).
 
 ### Security
