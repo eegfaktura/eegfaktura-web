@@ -1,4 +1,4 @@
-import React, {ChangeEvent, FC, forwardRef, useState} from "react";
+import React, {ChangeEvent, DragEvent, FC, forwardRef, useState} from "react";
 import {IonButton, IonCol, IonContent, IonGrid, IonIcon, IonInput, IonItem, IonLabel, IonRow} from "@ionic/react";
 import {people, star} from "ionicons/icons";
 import ToggleButtonComponent from "../ToggleButton.component";
@@ -15,8 +15,29 @@ const UploadPopup: FC<{
   const [sheetName, setSheetName] = useState<[string, string]>(["EEG Stammdaten", "Energiedaten"])
   const [file, setFile] = useState<FileList | null>();
   const [selectedImportType, setSelectedImportType] = useState<number>(online ? 0 : 1)
+  const [dragOver, setDragOver] = useState(false)
+  const [dropHint, setDropHint] = useState<string>()
+
+  // drag & drop (pilot group): a file dropped on the dialog is taken like one chosen with the star; one file per import
+  const onDragOver = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragOver(true);
+  }
+  const onDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragOver(false);
+    const dropped = e.dataTransfer?.files;
+    if (!dropped || dropped.length === 0) return;
+    if (dropped.length > 1) {
+      setDropHint("Bitte nur eine Datei pro Import ablegen.");
+      return;
+    }
+    setDropHint(undefined);
+    setFile(dropped);
+  }
 
   const onChange = (evt: ChangeEvent<HTMLInputElement>) => {
+    setDropHint(undefined);
     setFile(evt.target.files);
     // onUpdate(evt.target.files)
   }
@@ -27,6 +48,8 @@ const UploadPopup: FC<{
 
   return (
     <IonContent className="ion-padding" color="eeglight">
+      <div className={dragOver ? "upload-drop-zone drag-over" : "upload-drop-zone"} data-testid="upload-drop-zone"
+           onDragOver={onDragOver} onDragLeave={() => setDragOver(false)} onDrop={onDrop}>
       <IonGrid>
         <IonRow>
           <IonCol size="auto">
@@ -54,9 +77,10 @@ const UploadPopup: FC<{
           <IonLabel position={"stacked"}>Filename</IonLabel>
           <div style={{fontSize: "12px"}}>
             {
-              (file && file.length > 0) ? file[0].name : null
+              (file && file.length > 0) ? file[0].name : "Datei hierher ziehen oder mit dem Stern auswählen"
             }
           </div>
+          {dropHint && <div className="upload-drop-hint">{dropHint}</div>}
         </IonItem>
         <label htmlFor="btn-upload">
           <input
@@ -71,6 +95,7 @@ const UploadPopup: FC<{
         </label>
       </div>
       <IonButton expand="block" onClick={() => onDismiss([file, sheetName[selectedImportType], selectedImportType], "confirm")}>Import</IonButton>
+      </div>
 
     </IonContent>
   )
