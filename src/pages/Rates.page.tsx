@@ -24,7 +24,10 @@ import { get } from "react-hook-form";
 import {useTenant} from "../store/hook/Eeg.provider";
 
 // group headings: the kinds of the tariff form
-const RATE_GROUP_TITLE_KEY: Record<string, string> = {EEG: "rateGroupMember", EZP: "rateGroupProducer", VZP: "rateGroupConsumer", OTHER: "rateGroupOther"}
+const RATE_GROUP_TITLE_KEY: Record<EegTariff["type"] | "OTHER", string> = {
+  EEG: "rateGroupMember", EZP: "rateGroupProducer", VZP: "rateGroupConsumer", AKONTO: "rateGroupOther", OTHER: "rateGroupOther"}
+// search ignores case and accents, as the sort does („über“ finds „Uberschuss“)
+const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
 
 const RatesPage: FC = () => {
 
@@ -36,9 +39,13 @@ const RatesPage: FC = () => {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   // search in the tariff names, as in the member list; while searching, groups with hits are open
   const [query, setQuery] = useState("")
-  const searching = query.trim().length > 0
-  const matches = (r: EegTariff) => !searching || (r.name ?? "").toLowerCase().includes(query.trim().toLowerCase())
-  const toggleGroup = (type: string) => setCollapsed(prev => {
+  const needle = fold(query.trim())
+  const searching = needle.length > 0
+  const matches = (r: EegTariff) => !searching || fold(r.name ?? "").includes(needle)
+  // the selected tariff always stays visible, also in a collapsed group or outside the hits (e.g. right after saving)
+  const isSelected = (r: EegTariff) => r.id === selectedTariff?.id
+  // while searching the groups with hits are open; a click then would change the state restored after the search
+  const toggleGroup = (type: string) => !searching && setCollapsed(prev => {
     const next = new Set(prev)
     next.has(type) ? next.delete(type) : next.add(type)
     return next
@@ -129,9 +136,9 @@ const RatesPage: FC = () => {
           <div className={"ratePane"} style={{overflowY: "auto"}}>
             <IonToolbar color="eeg">
               <IonSearchbar
-                placeholder="Tarif suchen"
-                // left gap as the plus button's 16px on the right
-                style={{"--box-shadow": "undefined", paddingInlineStart: "16px"}}
+                placeholder={t("rateSearchPlaceholder")}
+                // a left gap like the plus button's on the right, so the field does not stick to the edge
+                style={{"--box-shadow": "none", paddingInlineStart: "20px"}}
                 debounce={500}
                 onIonInput={(e) => setQuery(e.detail.value ?? "")}
               ></IonSearchbar>
@@ -147,23 +154,24 @@ const RatesPage: FC = () => {
               </IonButtons>
             </IonToolbar>
             <div className={"content"}>
-            {searching && !rates.some(matches) && <p className="rate-search-empty">Kein Tarif gefunden.</p>}
+            {searching && !rates.some(matches) && <p className="rate-search-empty">{t("rateSearchEmpty")}</p>}
             {/* grouped by kind, headings as in the tariff form; rates come sorted from ratesSelector */}
             {[...TARIFF_TYPE_ORDER, "OTHER"].map(type => {
               // a kind outside the three (none known today) still shows, at the end
               const group = rates.filter(r => type === "OTHER" ? !TARIFF_TYPE_ORDER.includes(r.type) : r.type === type)
-                .filter(matches)
+                .filter(r => matches(r) || isSelected(r))
               if (group.length === 0) return null
               return (
                 <section key={type} className="rate-group">
                   <h3 className="rate-group-title">
-                    <button type="button" aria-expanded={searching || !collapsed.has(type)} onClick={() => toggleGroup(type)}>
+                    <button type="button" aria-expanded={searching || !collapsed.has(type)} disabled={searching}
+                            onClick={() => toggleGroup(type)}>
                       <IonIcon icon={!searching && collapsed.has(type) ? chevronForward : chevronDown} aria-hidden="true"/>
-                      <span>{t(RATE_GROUP_TITLE_KEY[type])}</span>
+                      <span>{t(RATE_GROUP_TITLE_KEY[type as EegTariff["type"] | "OTHER"])}</span>
                       <span className="rate-group-count">({group.length})</span>
                     </button>
                   </h3>
-                  {(searching || !collapsed.has(type)) && group.map((r) => (
+                  {group.filter(r => searching || !collapsed.has(type) || isSelected(r)).map((r) => (
                     <div key={r.id} className={cn("rates", {"selected": r.id === selectedTariff?.id})}>
                       <RateCardComponent rate={r} editable={true} onSelect={onSelect}/>
                     </div>

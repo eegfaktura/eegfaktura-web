@@ -3,7 +3,7 @@ import {act, fireEvent, screen} from "@testing-library/react";
 import {renderWithProviders} from "../test-utils";
 import {EegTariff} from "../../models/eeg.model";
 import {compareTariffs, ratesSelector} from "../../store/rate";
-import {fetchRatesModel} from "../../store/rate";
+import {fetchRatesModel, selectRate} from "../../store/rate";
 import "../../util/I18n";
 
 vi.mock("../../store/hook/Eeg.provider", () => ({useTenant: () => ({tenant: "RC100100"})}))
@@ -90,5 +90,36 @@ describe("tariff order (pilot group 2026-10-28)", () => {
     // back to the state before the search: the consumer group is still collapsed
     expect(screen.queryByText("Sonnenstrom-Verkauf")).toBeNull()
     expect(screen.getByText("Beitritt 2 ZP")).toBeTruthy()
+  })
+
+  const searchFor = (container: HTMLElement, value: string) =>
+    act(() => { (container.querySelector("ion-searchbar") as HTMLElement).dispatchEvent(new CustomEvent("ionInput", {detail: {value}})) })
+
+  it("ignores a click on a heading while searching, so clearing the search restores the state before", () => {
+    const {store, container} = renderWithProviders(<RatesPage/>)
+    act(() => { store.dispatch(fetchRatesModel.fulfilled({rates}, "req", {tenant: "RC100100"} as any)) })
+    searchFor(container, "Beitritt")
+    fireEvent.click(screen.getByRole("button", {name: /Mitgliedstarife/}))
+    searchFor(container, "")
+    expect(screen.getByText("Beitritt 2 ZP")).toBeTruthy()
+  })
+
+  it("keeps the selected tariff visible in a collapsed group and outside the hits", () => {
+    const {store, container} = renderWithProviders(<RatesPage/>)
+    act(() => { store.dispatch(fetchRatesModel.fulfilled({rates}, "req", {tenant: "RC100100"} as any)) })
+    fireEvent.click(screen.getByRole("button", {name: /Mitgliedstarife/}))
+    act(() => { store.dispatch(selectRate(rates[0])) })
+    expect(screen.getByText("Beitritt 2 ZP")).toBeTruthy()
+    expect(screen.queryByText("Beitritt 10 ZP")).toBeNull()
+    searchFor(container, "Einkauf")
+    expect(screen.getByText("Beitritt 2 ZP")).toBeTruthy()
+    expect(screen.getByText("Einkauf")).toBeTruthy()
+  })
+
+  it("searches without regard to accents", () => {
+    const {store, container} = renderWithProviders(<RatesPage/>)
+    act(() => { store.dispatch(fetchRatesModel.fulfilled({rates: [...rates, tariff("8", "EZP", "Überschuss")]}, "req", {tenant: "RC100100"} as any)) })
+    searchFor(container, "uberschuss")
+    expect(screen.getByText("Überschuss")).toBeTruthy()
   })
 })

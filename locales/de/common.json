@@ -3,6 +3,8 @@
   "rateGroupProducer": "Erzeugertarife",
   "rateGroupConsumer": "Verbrauchertarife",
   "rateGroupOther": "Sonstige Tarife",
+  "rateSearchPlaceholder": "Tarif suchen",
+  "rateSearchEmpty": "Kein Tarif gefunden.",
   "firstname": "Vorname",
   "lastname": "Nachname",
   "company-name": "Firmenname",
