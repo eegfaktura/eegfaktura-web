@@ -144,5 +144,7 @@ export interface ParticipantBillType {
   participantFee: number;
   // Missing from older billing versions.
   meteringPointFeeSum?: number;
+  // platform#217, gross; missing from older billing versions.
+  joiningFee?: number;
   meteringPoints: MeteringBillType[]
 }

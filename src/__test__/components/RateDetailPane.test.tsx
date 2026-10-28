@@ -9,13 +9,16 @@ vi.mock("@ionic/react", async (importOriginal) => ({
   useIonAlert: () => [alert],
   useIonToast: () => [toaster],
 }))
-// the tariff form is not part of this test
-vi.mock("../../components/Rate.component", () => ({default: () => <div/>}))
+// the tariff form is not part of this test; its props give the save handler
+const rateForm = vi.hoisted(() => ({props: undefined as any}))
+vi.mock("../../components/Rate.component", () => ({default: (props: any) => { rateForm.props = props; return <div/> }}))
 
 import RateDetailPaneComponent from "../../components/RateDetailPane.component";
 import {Api} from "../../service";
 import {selectRate} from "../../store/rate";
 import {fetchParticipantModel} from "../../store/participant";
+import {fetchRatesModel} from "../../store/rate";
+import "../../util/I18n";
 import {EegTariff} from "../../models/eeg.model";
 import {TariffService} from "../../service/tariff.service";
 import {AuthService} from "../../service/auth.service";
@@ -67,5 +70,78 @@ describe("RateDetailPane: archive a tariff (261024-ca16)", () => {
     expect(toaster.mock.lastCall![0].message)
       .toBe("Der Tarif wird noch von Mitgliedern oder Zählpunkten verwendet und kann nicht gelöscht werden.")
     vi.unstubAllGlobals()
+  })
+})
+
+describe("RateDetailPane: saving a joining fee warns first (platform#217)", () => {
+  const vzp20 = {id: "v1", name: "Bezug", type: "VZP", useVat: true, vatInPercent: "20"} as EegTariff
+  const active = (id: string) => ({id, firstname: id, lastname: "M", tariffId: "t1", meters: [{meteringPoint: "AT" + id, status: "ACTIVE"}]})
+  const onSubmit = vi.fn()
+
+  beforeEach(() => {
+    alert.mockReset()
+    onSubmit.mockReset()
+    Api.eegService = {fetchJoiningFeeState: vi.fn().mockResolvedValue([])} as unknown as typeof Api.eegService
+  })
+
+  // before: the tariff as stored when the dialog opened (default: no joining fee yet)
+  const save = async (data: EegTariff, participants: any[] = [], before: EegTariff = {...data, joiningFee: 0}) => {
+    const r = renderWithProviders(<RateDetailPaneComponent onSubmit={onSubmit} submitId="s"/>)
+    act(() => {
+      r.store.dispatch(fetchParticipantModel.fulfilled({participants}, "req", {tenant: "TE100200"}))
+      r.store.dispatch(fetchRatesModel.fulfilled({rates: [vzp20, before]}, "req", {tenant: "TE100200"}))
+      r.store.dispatch(selectRate(before))
+    })
+    await act(async () => rateForm.props.onSubmit(data))
+  }
+  const confirmSave = () => alert.mock.lastCall![0].buttons.find((b: any) => b.role === "confirm").handler()
+
+  it("saves a tariff whose joining fee did not change directly (review 28.10.2026: renaming does not ask again)", async () => {
+    const withFee = {...tariff, joiningFee: 50}
+    await save({...withFee, name: "Neu"}, [active("p1")], withFee)
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+    expect(alert).not.toHaveBeenCalled()
+    expect(Api.eegService.fetchJoiningFeeState).not.toHaveBeenCalled()
+  })
+
+  it("saves a tariff without a joining fee directly, without asking billing", async () => {
+    await save({...tariff, joiningFee: 0})
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+    expect(alert).not.toHaveBeenCalled()
+    expect(Api.eegService.fetchJoiningFeeState).not.toHaveBeenCalled()
+  })
+
+  it("names the active members never billed with energy and saves only on confirm", async () => {
+    vi.mocked(Api.eegService.fetchJoiningFeeState).mockResolvedValue([{participantId: "p3", energyBilled: true, joiningFee: null}])
+    await save({...tariff, joiningFee: 50}, [active("p1"), active("p2"), active("p3")])
+    expect(alert.mock.lastCall![0].message).toBe("2 aktive Mitglieder mit diesem Tarif wurden in eegfaktura noch nie mit " +
+      "Energie abgerechnet und bekommen die Beitrittsgebühr mit ihrer nächsten Abrechnung.")
+    expect(onSubmit).not.toHaveBeenCalled()
+    confirmSave()
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({joiningFee: 50}))
+  })
+
+  it("saves directly when every member was billed already and the rate is in use", async () => {
+    vi.mocked(Api.eegService.fetchJoiningFeeState).mockResolvedValue([{participantId: "p1", energyBilled: true, joiningFee: null}])
+    await save({...tariff, joiningFee: 50, joiningFeeUseVat: true, joiningFeeVatInPercent: 20}, [active("p1")])
+    expect(alert).not.toHaveBeenCalled()
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+  })
+
+  it("says the count is unknown when billing cannot be reached, saving stays possible", async () => {
+    vi.mocked(Api.eegService.fetchJoiningFeeState).mockRejectedValue(new Error("503"))
+    await save({...tariff, joiningFee: 50}, [active("p1")])
+    expect(alert.mock.lastCall![0].message).toContain("konnte nicht ermittelt werden")
+    confirmSave()
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+  })
+
+  it("warns about a VAT rate the community does not use; a new tariff asks billing nothing (AK 9)", async () => {
+    await save({...tariff, id: "", joiningFee: 50, joiningFeeUseVat: true, joiningFeeVatInPercent: 13})
+    expect(alert.mock.lastCall![0].message).toBe("Dieser USt-Satz kommt in der EEG sonst nicht vor. Eine Rechnung kann " +
+      "höchstens zwei verschiedene Sätze über 0 % enthalten; mit einem dritten bricht die Abrechnung ab.")
+    expect(Api.eegService.fetchJoiningFeeState).not.toHaveBeenCalled()
+    confirmSave()
+    expect(onSubmit).toHaveBeenCalledTimes(1)
   })
 })

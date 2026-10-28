@@ -4,6 +4,8 @@ import {IonCard, IonCardContent, IonCol, IonGrid, IonIcon, IonLabel, IonRow} fro
 import {bug, person} from "ionicons/icons";
 import {eegPlug, eegSolar} from "../eegIcons";
 import {useLocale} from "../store/hook/useLocale";
+import {hasJoiningFee} from "../util/JoiningFee.util";
+import {formatDecimal2} from "../util/Number.util";
 
 interface RateCardComponentProps {
   rate: EegTariff;
@@ -86,6 +88,14 @@ const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect
             {!!rate.discount && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
               <p>{t('discount_card')}</p>
               <p>{rate.discount + " %"}</p>
+            </div>}
+            {hasJoiningFee(rate) && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
+              <p>{t('joiningFee.card')}</p>
+              <p>{formatDecimal2(Number(rate.joiningFee)) + " €"}</p>
+            </div>}
+            {hasJoiningFee(rate) && rate.joiningFeeUseVat && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
+              <p>{t('joiningFee.vatInPercent_card')}</p>
+              <p>{Number(rate.joiningFeeVatInPercent ?? 0) + " %"}</p>
             </div>}
           </div>
         )

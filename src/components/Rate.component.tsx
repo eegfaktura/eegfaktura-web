@@ -53,6 +53,7 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
 
     const useVat = watch("useVat");
     const useMeteringPointFee = watch("useMeteringPointFee")
+    const joiningFeeUseVat = watch("joiningFeeUseVat")
 
     // ZVT (zeitvariabler Tarif)
     const useTimeTariff = watch("useTimeTariff")
@@ -255,6 +256,25 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
       </div>
     )
 
+    // platform#217: a one-time joining fee with its own VAT setting, membership fee tariffs only
+    const renderJoiningFee = () => (
+      <>
+        <IonListHeader>{t("joiningFee.header")}</IonListHeader>
+        <NumberInputForm label={t("joiningFee.amount")} control={control} name={"joiningFee"}
+                         rules={{min: {value: 0, message: t("joiningFee.warn_negative")}}}/>
+        <CheckboxComponent label={t("joiningFee.useVat")}
+                           setChecked={(c) => setValue("joiningFeeUseVat", c, {shouldValidate: true, shouldDirty: true})}
+                           checked={!!joiningFeeUseVat}/>
+        {joiningFeeUseVat &&
+            <NumberInputForm label={t("joiningFee.vatInPercent")} control={control} name={"joiningFeeVatInPercent"}
+                             rules={{max: {value: 100, message: t("joiningFee.warn_vat_range")},
+                               min: {value: 0, message: t("joiningFee.warn_vat_range")},
+                               // the backend stores a whole number; „USt anführen“ with 0 % would print 0 %
+                               validate: (v: unknown) => (v !== "" && v !== null && v !== undefined
+                                 && Number.isInteger(Number(v)) && Number(v) > 0) || t("joiningFee.warn_vat_whole")}}/>}
+      </>
+    )
+
     const RateFormType = (rate: EegTariff) => {
       switch (currentRateType) {
         case "EEG":
@@ -266,6 +286,7 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
               <InputFormComponent label={t("discount")} control={control} name={"discount"}
                                   rules={{pattern: {value: /^[0-9]*$/, message: "Nur Zahlen erlaubt"}}} isNumber={true}
                                   error={errors.discount}/>
+              {renderJoiningFee()}
             </div>
           )
         case "EZP":

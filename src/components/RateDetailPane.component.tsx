@@ -14,7 +14,9 @@ import {
 import {trashBin} from "ionicons/icons";
 import RateComponent from "./Rate.component";
 import {useAppDispatch, useAppSelector} from "../store";
-import {archiveRate, selectedRateSelector, selectRate} from "../store/rate";
+import {archiveRate, ratesSelector, selectedRateSelector, selectRate} from "../store/rate";
+import {Api} from "../service";
+import {hasJoiningFee, joiningFeeVatUnusual, membersNotYetEnergyBilled} from "../util/JoiningFee.util";
 import {allParticipantsSelector} from "../store/participant";
 import {FormProvider, useForm} from "react-hook-form";
 import {useTenant} from "../store/hook/Eeg.provider";
@@ -40,6 +42,8 @@ const RateDetailPaneComponent: FC<RateDetailPaneComponentProps> = ({onSubmit, su
   const [showToast] = useIonToast();
   const confirm = useConfirm();
   const {t: errorT} = useLocale("error");
+  const {t} = useLocale("common");
+  const rates = useAppSelector(ratesSelector)
 
   const formMethods = useForm<EegTariff>({defaultValues: selectedTariff, values: selectedTariff, mode: 'all'});
 
@@ -88,6 +92,47 @@ const RateDetailPaneComponent: FC<RateDetailPaneComponentProps> = ({onSubmit, su
     }
   }
 
+  // platform#217: saving a joining fee above 0 warns about an unusual VAT rate and about the active members that get
+  // the fee with their next billing (billing's joiningFeeState; unknown when billing cannot be reached). Saving stays
+  // possible in every case.
+  const onSave = async (data: EegTariff) => {
+    // only when the fee is new or changed: renaming a tariff with a fee does not ask again
+    const before = selectedTariff
+    const feeChanged = !before || !before.id || Number(before.joiningFee ?? 0) !== Number(data.joiningFee ?? 0)
+      || !!before.joiningFeeUseVat !== !!data.joiningFeeUseVat
+      || Number(before.joiningFeeVatInPercent ?? 0) !== Number(data.joiningFeeVatInPercent ?? 0)
+    if (!hasJoiningFee(data) || !feeChanged) {
+      onSubmit(data)
+      return
+    }
+    const warnings: string[] = []
+    if (joiningFeeVatUnusual(data, rates)) {
+      warnings.push(t("joiningFee.warn_vat_unusual"))
+    }
+    // a new tariff has no members yet
+    if (data.id) {
+      const state = await Api.eegService.fetchJoiningFeeState(tenant).catch(() => undefined)
+      if (state === undefined) {
+        warnings.push(t("joiningFee.warn_rollout_unknown"))
+      } else {
+        const count = membersNotYetEnergyBilled(participants, data.id, state)
+        if (count > 0) warnings.push(t("joiningFee.warn_rollout", {count}))
+      }
+    }
+    if (warnings.length === 0) {
+      onSubmit(data)
+      return
+    }
+    presentAlert({
+      header: t("joiningFee.header"),
+      message: warnings.join(" "),
+      buttons: [
+        {text: t("joiningFee.cancel"), role: "cancel"},
+        {text: t("joiningFee.save"), role: "confirm", handler: () => onSubmit(data)},
+      ],
+    })
+  }
+
   const canSubmitted = (): boolean => {
     return !(formMethods.formState.isDirty && formMethods.formState.isValid)
   }
@@ -108,7 +153,7 @@ const RateDetailPaneComponent: FC<RateDetailPaneComponentProps> = ({onSubmit, su
         <FormProvider {...formMethods}>
           <div style={{display: "flex", flexDirection: "column", flexGrow: "1", overflow: "auto"}}>
             <div className={"rate-component"} style={{maxWidth: "600px",}}>
-              <RateComponent rate={selectedTariff} onSubmit={onSubmit} submitId={submitId} mode={getMode()}/>
+              <RateComponent rate={selectedTariff} onSubmit={onSave} submitId={submitId} mode={getMode()}/>
             </div>
           </div>
         <div>

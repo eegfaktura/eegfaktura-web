@@ -47,9 +47,10 @@ export const withOpenProblems = (periodParticipants: EegParticipant[], allPartic
   })
 
 // Gross amount of a member in a billing run: positive is paid by the member, negative is paid to the member.
-// The same items as on the documents and in the Excel export, metering point fees included.
+// The same items as on the documents and in the Excel export, metering point fees and the joining fee included.
 export const billTotal = (bill: ParticipantBillType) =>
-  bill.meteringPoints.reduce((sum, m) => sum + m.amount, bill.participantFee + (bill.meteringPointFeeSum ?? 0))
+  bill.meteringPoints.reduce((sum, m) => sum + m.amount,
+    bill.participantFee + (bill.meteringPointFeeSum ?? 0) + (bill.joiningFee ?? 0))
 
 export const filterMeters = (p: EegParticipant[], hideProducers: boolean, hideConsumers: boolean, showEmptyMembers: boolean = true) => {
   return p

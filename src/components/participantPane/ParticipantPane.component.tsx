@@ -86,6 +86,7 @@ import {filterActiveMeter, filterActiveParticipantAndMeter,} from "../../util/Fi
 import moment from "moment";
 import {Api} from "../../service";
 import {billTotal, buildAllocationMapFromSelected, downloadWithFeedback, filterSearchQuery} from "./ParticipantPane.functions";
+import {exportMasterdataWithJoiningFees, hasJoiningFee, JOINING_FEE_EXPORT_WITHOUT_BILLING} from "../../util/JoiningFee.util";
 import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
 import {withOpenProblems} from "./ParticipantPane.functions";
 import {billingTotals, BillingTotals, salesTaxation} from "./BillingTotals.functions";
@@ -517,7 +518,14 @@ const ParticipantPaneComponent: FC = () => {
         } as ExcelReportRequest
         return Api.energyService.createReport({tenant, ecId, rcNr}, exportdata);
       } else {
-        return Api.eegService.exportMasterdata(tenant);
+        // without a tariff with a joining fee the column stays empty anyway: billing is not asked
+        if (!Object.values(rates).some(r => hasJoiningFee(r))) {
+          return Api.eegService.exportMasterdata(tenant)
+        }
+        return exportMasterdataWithJoiningFees(
+          () => Api.eegService.fetchJoiningFeeState(tenant),
+          (state) => Api.eegService.exportMasterdata(tenant, state),
+          () => toaster({message: JOINING_FEE_EXPORT_WITHOUT_BILLING, duration: 6000, position: "bottom", color: "warning"}));
       }
     }
   };

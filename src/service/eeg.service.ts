@@ -1,4 +1,6 @@
-import {BillingConfig, EdaHistories, Eeg, EegNotification, EegTariff} from "../models/eeg.model";
+import {
+  BillingConfig, EdaHistories, Eeg, EegNotification, EegTariff, JoiningFeeRecord, JoiningFeeState
+} from "../models/eeg.model";
 import {EegParticipant} from "../models/members.model";
 import {
   BillingDocumentAmounts,
@@ -42,6 +44,14 @@ export const parseSyncEnergyResult = async (res: Response): Promise<SyncEnergyRe
   if (!text) return {skipped: []}
   const body = JSON.parse(text)
   return {requested: body.requested, skipped: body.skipped ?? []}
+}
+
+// billing answers 409 when the member's joining fee was charged in a final run meanwhile
+export class JoiningFeeAlreadyBilledError extends Error {
+  constructor() {
+    super("Die Beitrittsgebühr kann gerade nicht geändert werden: Sie wurde inzwischen verrechnet, ein endgültiger "
+      + "Abrechnungslauf läuft oder jemand hat sie gleichzeitig geändert. Der aktuelle Stand wird angezeigt.")
+  }
 }
 
 export class EegService extends EegBaseService {
@@ -241,6 +251,42 @@ export class EegService extends EegBaseService {
         "Content-Type": "application/json",
       },
     }).then(this.handleErrors).then(res => res.json())
+  }
+
+  // platform#217: per member with a final document, energy billed yes/no and the document with the joining fee
+  async fetchJoiningFeeState(tenant: string): Promise<JoiningFeeState[]> {
+    const token = await this.lookupToken()
+    return await fetch(`${BILLING_API_SERVER}/api/billingDocuments/tenant/${tenant.toUpperCase()}/joiningFeeState`, {
+      method: 'GET',
+      headers: {
+        ...this.getSecureHeaders(token, tenant),
+        'Accept': 'application/json',
+      },
+    }).then(this.handleErrors).then(res => res.json())
+  }
+
+  // extension 2026-10-27: request the fee for the next final run or record a payment made outside eegfaktura (PUT),
+  // or take the record back (DELETE); 409 once the fee is charged
+  async saveJoiningFeeRecord(tenant: string, participantId: string, record: JoiningFeeRecord): Promise<void> {
+    return this.joiningFeeRecordCall(tenant, participantId, 'PUT', record)
+  }
+
+  async deleteJoiningFeeRecord(tenant: string, participantId: string): Promise<void> {
+    return this.joiningFeeRecordCall(tenant, participantId, 'DELETE')
+  }
+
+  private async joiningFeeRecordCall(tenant: string, participantId: string, method: 'PUT' | 'DELETE', record?: JoiningFeeRecord) {
+    const token = await this.lookupToken()
+    const response = await fetch(`${BILLING_API_SERVER}/api/billingDocuments/tenant/${tenant.toUpperCase()}/participants/${encodeURIComponent(participantId)}/joiningFee`, {
+      method,
+      headers: {
+        ...this.getSecureHeaders(token, tenant),
+        'Content-Type': 'application/json',
+      },
+      body: record ? JSON.stringify(record) : undefined,
+    })
+    if (response.status === 409) throw new JoiningFeeAlreadyBilledError()
+    await this.handleErrors(response)
   }
 
   async fetchBillingDocumentFiles(tenant: string): Promise<InvoiceDocumentResponse[]> {
@@ -497,14 +543,17 @@ export class EegService extends EegBaseService {
     }).then(this.handleErrors).then(res => res.json());
   }
 
-  async exportMasterdata(tenant: string) {
+  // platform#217: POST with billing's joiningFeeState as body for the column „Beitrittsgebühr verrechnet“; without
+  // a body (billing not reachable) the backend leaves the column empty
+  async exportMasterdata(tenant: string, joiningFeeState?: JoiningFeeState[]) {
     const token = await this.lookupToken()
     return fetch(`${API_API_SERVER}/eeg/export/masterdata`, {
-      method: 'GET',
+      method: 'POST',
       headers: {
         ...this.getSecureHeaders(token, tenant),
         'Content-Type': 'application/json'
       },
+      body: joiningFeeState ? JSON.stringify(joiningFeeState) : undefined,
     })
       .then(this.handleErrors)
       .then( response => this.handleDownload(response, "energy-export"));
