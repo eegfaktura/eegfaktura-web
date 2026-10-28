@@ -16,8 +16,8 @@ this changelog highlights the changes relevant for overview and operations.
 - **Upload by drag & drop** (pilot group). While the upload dialog of the member list (cloud icon) is open, a dropped
   file is taken like one chosen with the star, also when it lands beside the dialog (the browser no longer opens it).
   One file per import, as before: several dropped files are refused with a hint and clear an earlier choice.
-- **Tooltip on the € switch in the member list** (pilot group). It names what a click does: „Abrechnung vorbereiten“
-  opens the billing view, „Abrechnung schließen“ closes it. While the switch is off-limits it shows the reason (no period
+- **Tooltip on the € switch in the member list** (pilot group). It names what a click does: „Abrechnungsmodus
+  aktivieren“ switches to the billing view, „Abrechnungsmodus beenden“ leaves it. While the switch is off-limits it shows the reason (no period
   chosen, energy data loading or not loadable, no billable member in the period).
 
 ### Fixed

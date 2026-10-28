@@ -37,7 +37,7 @@ export const billingSwitchTooltip = (s: {canSwitchOn: boolean, on: boolean, hasP
     if (s.reportError) return "Die Energiedaten des Zeitraums konnten nicht geladen werden."
     if (s.billableCount === 0) return "Im Zeitraum gibt es keine abrechenbaren Mitglieder (aktiv, mit Tarif)."
   }
-  return s.on ? "Abrechnung schließen" : "Abrechnung vorbereiten"
+  return s.on ? "Abrechnungsmodus beenden" : "Abrechnungsmodus aktivieren"
 }
 
 /** The energy of every billable member of the period, from the loaded energy report; built when the run starts. */

@@ -214,10 +214,10 @@ describe("tooltip of the € switch (pilot group 2026-10-28)", () => {
   const state = {canSwitchOn: true, on: false, hasPeriod: true, reportLoading: false, reportError: undefined, billableCount: 3}
 
   it("names what a click does: open or close the billing view", () => {
-    expect(billingSwitchTooltip(state)).toBe("Abrechnung vorbereiten")
-    expect(billingSwitchTooltip({...state, on: true})).toBe("Abrechnung schließen")
+    expect(billingSwitchTooltip(state)).toBe("Abrechnungsmodus aktivieren")
+    expect(billingSwitchTooltip({...state, on: true})).toBe("Abrechnungsmodus beenden")
     // while a report loads the switch keeps its state, and a click still does what the text says
-    expect(billingSwitchTooltip({...state, reportLoading: true})).toBe("Abrechnung vorbereiten")
+    expect(billingSwitchTooltip({...state, reportLoading: true})).toBe("Abrechnungsmodus aktivieren")
   })
 
   it("gives the reason while the switch is off-limits", () => {
@@ -228,7 +228,7 @@ describe("tooltip of the € switch (pilot group 2026-10-28)", () => {
     expect(billingSwitchTooltip({...off, billableCount: 0})).toMatch(/keine abrechenbaren Mitglieder/)
   })
 
-  it("never says „schließen“ on a switch that is shown off and disabled", () => {
+  it("never says „beenden“ on a switch that is shown off and disabled", () => {
     expect(billingSwitchTooltip({...state, canSwitchOn: false, on: true, billableCount: 0})).toMatch(/keine abrechenbaren/)
   })
 })
