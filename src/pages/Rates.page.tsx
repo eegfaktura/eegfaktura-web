@@ -8,6 +8,7 @@ import {
   IonContent,
   IonIcon,
   IonPage,
+  IonSearchbar,
   IonToolbar,
   useIonToast
 } from "@ionic/react";
@@ -33,6 +34,10 @@ const RatesPage: FC = () => {
   const {t} = useLocale("common")
   // collapsed tariff groups, for this visit of the page only: all open by default, so no tariff stays hidden later
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+  // search in the tariff names, as in the member list; while searching, groups with hits are open
+  const [query, setQuery] = useState("")
+  const searching = query.trim().length > 0
+  const matches = (r: EegTariff) => !searching || (r.name ?? "").toLowerCase().includes(query.trim().toLowerCase())
   const toggleGroup = (type: string) => setCollapsed(prev => {
     const next = new Set(prev)
     next.has(type) ? next.delete(type) : next.add(type)
@@ -123,6 +128,12 @@ const RatesPage: FC = () => {
         <div style={{display: "flex", flexDirection: "row", height: "100vh"}}>
           <div className={"ratePane"} style={{overflowY: "auto"}}>
             <IonToolbar color="eeg">
+              <IonSearchbar
+                placeholder="Tarif suchen"
+                style={{"--box-shadow": "undefined"}}
+                debounce={500}
+                onIonInput={(e) => setQuery(e.detail.value ?? "")}
+              ></IonSearchbar>
               <IonButtons slot="end">
                 <IonButton
                   color="primary"
@@ -135,21 +146,23 @@ const RatesPage: FC = () => {
               </IonButtons>
             </IonToolbar>
             <div className={"content"}>
+            {searching && !rates.some(matches) && <p className="rate-search-empty">Kein Tarif gefunden.</p>}
             {/* grouped by kind, headings as in the tariff form; rates come sorted from ratesSelector */}
             {[...TARIFF_TYPE_ORDER, "OTHER"].map(type => {
               // a kind outside the three (none known today) still shows, at the end
               const group = rates.filter(r => type === "OTHER" ? !TARIFF_TYPE_ORDER.includes(r.type) : r.type === type)
+                .filter(matches)
               if (group.length === 0) return null
               return (
                 <section key={type} className="rate-group">
                   <h3 className="rate-group-title">
-                    <button type="button" aria-expanded={!collapsed.has(type)} onClick={() => toggleGroup(type)}>
-                      <IonIcon icon={collapsed.has(type) ? chevronForward : chevronDown} aria-hidden="true"/>
+                    <button type="button" aria-expanded={searching || !collapsed.has(type)} onClick={() => toggleGroup(type)}>
+                      <IonIcon icon={!searching && collapsed.has(type) ? chevronForward : chevronDown} aria-hidden="true"/>
                       <span>{t(RATE_GROUP_TITLE_KEY[type])}</span>
                       <span className="rate-group-count">({group.length})</span>
                     </button>
                   </h3>
-                  {!collapsed.has(type) && group.map((r) => (
+                  {(searching || !collapsed.has(type)) && group.map((r) => (
                     <div key={r.id} className={cn("rates", {"selected": r.id === selectedTariff?.id})}>
                       <RateCardComponent rate={r} editable={true} onSelect={onSelect}/>
                     </div>

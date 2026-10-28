@@ -71,4 +71,24 @@ describe("tariff order (pilot group 2026-10-28)", () => {
     fireEvent.click(heading)
     expect(screen.getByText("Beitritt 2 ZP")).toBeTruthy()
   })
+
+  it("searches the tariff names and opens a collapsed group with hits", () => {
+    const {store, container} = renderWithProviders(<RatesPage/>)
+    act(() => { store.dispatch(fetchRatesModel.fulfilled({rates}, "req", {tenant: "RC100100"} as any)) })
+    fireEvent.click(screen.getByRole("button", {name: /Verbrauchertarife/}))
+    expect(screen.queryByText("Sonnenstrom-Verkauf")).toBeNull()
+    const search = container.querySelector("ion-searchbar") as HTMLElement
+    act(() => { search.dispatchEvent(new CustomEvent("ionInput", {detail: {value: "VERKAUF"}})) })
+    expect(screen.getByText("Sonnenstrom-Verkauf")).toBeTruthy()
+    expect(screen.getByText("Verkauf")).toBeTruthy()
+    // groups without a hit are hidden
+    expect(screen.queryByText("Mitgliedstarife")).toBeNull()
+    expect(screen.queryByText("Einkauf")).toBeNull()
+    act(() => { search.dispatchEvent(new CustomEvent("ionInput", {detail: {value: "gibt es nicht"}})) })
+    expect(screen.getByText("Kein Tarif gefunden.")).toBeTruthy()
+    act(() => { search.dispatchEvent(new CustomEvent("ionInput", {detail: {value: ""}})) })
+    // back to the state before the search: the consumer group is still collapsed
+    expect(screen.queryByText("Sonnenstrom-Verkauf")).toBeNull()
+    expect(screen.getByText("Beitritt 2 ZP")).toBeTruthy()
+  })
 })
