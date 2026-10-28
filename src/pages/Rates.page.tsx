@@ -130,7 +130,8 @@ const RatesPage: FC = () => {
             <IonToolbar color="eeg">
               <IonSearchbar
                 placeholder="Tarif suchen"
-                style={{"--box-shadow": "undefined"}}
+                // left gap as the plus button's 16px on the right
+                style={{"--box-shadow": "undefined", paddingInlineStart: "16px"}}
                 debounce={500}
                 onIonInput={(e) => setQuery(e.detail.value ?? "")}
               ></IonSearchbar>
