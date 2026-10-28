@@ -13,10 +13,12 @@ interface UploadContractFilesDialogProps {
   uploadButtonText?: string;
 }
 
-// the types the filestore accepts (allowed_media_types); a dropped file skips the picker's accept filter
+// the types the filestore accepts (allowed_media_types); a dropped file skips the picker's accept filter. The type is
+// what the upload sends, so a file without one (unknown to the browser) would be refused by the filestore: refuse it here.
 const CONTRACT_TYPES = ["application/pdf", "image/jpeg", "image/png"]
-const CONTRACT_EXTENSIONS = /\.(pdf|jpe?g|png)$/i
-export const isContractFile = (f: File) => f.type ? CONTRACT_TYPES.includes(f.type) : CONTRACT_EXTENSIONS.test(f.name)
+export const isContractFile = (f: File) => CONTRACT_TYPES.includes(f.type)
+// the same file dropped again (name, size, last change) is not listed twice, so it is not uploaded twice
+const sameFile = (a: File, b: File) => a.name === b.name && a.size === b.size && a.lastModified === b.lastModified
 
 const UploadContractFilesDialog: FC<UploadContractFilesDialogProps> = ({participant, onDismiss, children, uploadButtonText}) => {
   const inputFile = useRef<HTMLInputElement | null>(null)
@@ -46,7 +48,7 @@ const UploadContractFilesDialog: FC<UploadContractFilesDialogProps> = ({particip
       const refused = dropped.filter(f => !isContractFile(f))
       setDropHint(refused.length > 0
         ? `Nur PDF, JPEG oder PNG: ${refused.map(f => f.name).join(", ")} nicht übernommen.` : undefined)
-      if (accepted.length > 0) setFiles(prev => [...prev, ...accepted])
+      if (accepted.length > 0) setFiles(prev => [...prev, ...accepted.filter(f => !prev.some(p => sameFile(p, f)))])
     }
     window.addEventListener("dragover", onDragOver)
     window.addEventListener("dragleave", onDragLeave)
@@ -75,6 +77,7 @@ const UploadContractFilesDialog: FC<UploadContractFilesDialogProps> = ({particip
 
   const onFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newfiles = e.target.files
+    setDropHint(undefined)
     if (newfiles && newfiles.length > 0) {
       setFiles([...files, newfiles[0]])
     }

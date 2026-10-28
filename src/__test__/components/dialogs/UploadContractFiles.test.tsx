@@ -48,10 +48,26 @@ describe("contract upload: drag & drop (2026-10-28)", () => {
     expect(drop.defaultPrevented).toBe(false)
   })
 
-  it("decides by the type, or by the extension when the browser gives none", () => {
-    expect(isContractFile(file("a.PDF", ""))).toBe(true)
-    expect(isContractFile(file("a.jpeg", ""))).toBe(true)
-    expect(isContractFile(file("a.txt", ""))).toBe(false)
+  it("decides by the type the upload sends; a file without a type is refused, as the filestore would", () => {
+    expect(isContractFile(file("a.pdf", "application/pdf"))).toBe(true)
+    expect(isContractFile(file("a.PDF", ""))).toBe(false)
     expect(isContractFile(file("a.pdf", "text/plain"))).toBe(false)
+  })
+
+  it("lists the same file only once when it is dropped twice", () => {
+    render(<UploadContractFilesDialog participant={participant} onDismiss={vi.fn()}/>)
+    const zone = screen.getByTestId("contract-drop-zone")
+    const pdf = file("vertrag.pdf", "application/pdf")
+    fireEvent.drop(zone, files(pdf))
+    fireEvent.drop(zone, files(pdf))
+    expect(screen.getAllByText("vertrag.pdf")).toHaveLength(1)
+  })
+
+  it("clears the refusal hint when a file is chosen with the picker", () => {
+    const {container} = render(<UploadContractFilesDialog participant={participant} onDismiss={vi.fn()}/>)
+    fireEvent.drop(screen.getByTestId("contract-drop-zone"), files(file("brief.txt", "text/plain")))
+    expect(screen.getByText(/brief\.txt nicht übernommen/)).toBeTruthy()
+    fireEvent.change(container.querySelector("input[type=file]") as HTMLInputElement, {target: {files: [file("vertrag.pdf", "application/pdf")]}})
+    expect(screen.queryByText(/nicht übernommen/)).toBeNull()
   })
 })
