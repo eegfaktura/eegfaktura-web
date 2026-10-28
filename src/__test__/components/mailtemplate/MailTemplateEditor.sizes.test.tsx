@@ -111,7 +111,7 @@ describe("MailTemplateEditor paste and drop of images", () => {
     fireEvent.paste(pm(), {clipboardData: clipboard([file])})
     await waitFor(() => expect(uploadFile).toHaveBeenCalledWith("backend", "RC100100", "zp-active", file, "bild.png", "image"))
     await waitFor(() => expect(screen.getByText(/bild\.png/).textContent).toContain("Entwurf"))
-    expect(await savedBody(saveTemplate)).toContain(`<img src="mailfile:${UPLOADED}" alt="bild.png">`)
+    expect(await savedBody(saveTemplate)).toContain(`<img src="mailfile:${UPLOADED}" alt="bild.png" width="200">`)
   })
 
   it("uploads a dropped image and inserts it at the drop position", async () => {
@@ -122,7 +122,7 @@ describe("MailTemplateEditor paste and drop of images", () => {
     fireEvent.drop(pm(), {dataTransfer: clipboard([png()]), clientX: 1, clientY: 1})
     await waitFor(() => expect(uploadFile).toHaveBeenCalledTimes(1))
     await waitFor(() => expect(screen.getByText(/bild\.png/)).toBeTruthy())
-    expect(await savedBody(saveTemplate)).toBe(`<p><img src="mailfile:${UPLOADED}" alt="bild.png">Hallo</p>`)
+    expect(await savedBody(saveTemplate)).toBe(`<p><img src="mailfile:${UPLOADED}" alt="bild.png" width="200">Hallo</p>`)
   })
 
   it("uploads a file copied in Explorer/Finder that comes with its name as text", async () => {
@@ -132,7 +132,7 @@ describe("MailTemplateEditor paste and drop of images", () => {
     await waitFor(() => expect(uploadFile).toHaveBeenCalledTimes(1))
     await waitFor(() => expect(screen.getByText(/bild\.png/)).toBeTruthy())
     const body = await savedBody(saveTemplate)
-    expect(body).toContain(`<img src="mailfile:${UPLOADED}" alt="bild.png">`)
+    expect(body).toContain(`<img src="mailfile:${UPLOADED}" alt="bild.png" width="200">`)
     expect(body).not.toContain("bild.pngHallo")
   })
 
@@ -150,7 +150,7 @@ describe("MailTemplateEditor paste and drop of images", () => {
     act(() => editor.commands.insertContentAt(1, "Neu "))
     await act(async () => finish())
     await waitFor(() => expect(screen.getByText(/bild\.png/)).toBeTruthy())
-    expect(await savedBody(saveTemplate)).toBe(`<p>Neu <img src="mailfile:${UPLOADED}" alt="bild.png">Hallo</p>`)
+    expect(await savedBody(saveTemplate)).toBe(`<p>Neu <img src="mailfile:${UPLOADED}" alt="bild.png" width="200">Hallo</p>`)
   })
 
   it("does not take the focus back from the subject when a pasted image arrives", async () => {
@@ -166,7 +166,7 @@ describe("MailTemplateEditor paste and drop of images", () => {
     await act(async () => finish())
     await waitFor(() => expect(screen.getByText(/bild\.png/)).toBeTruthy())
     expect(document.activeElement).toBe(other)
-    expect(await savedBody(saveTemplate)).toContain(`<img src="mailfile:${UPLOADED}" alt="bild.png">`)
+    expect(await savedBody(saveTemplate)).toContain(`<img src="mailfile:${UPLOADED}" alt="bild.png" width="200">`)
     other.remove()
   })
 

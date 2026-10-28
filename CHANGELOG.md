@@ -20,6 +20,10 @@ this changelog highlights the changes relevant for overview and operations.
   aktivieren“ switches to the billing view, „Abrechnungsmodus beenden“ leaves it. While the switch is off-limits it shows the reason (no period
   chosen, energy data loading or not loadable, no billable member in the period).
 
+### Changed
+- **Mail editor: a new image starts small (200 px)** (users' request). Before, it kept its own size until a size was
+  chosen. Applies to „Bild einfügen“, paste and drop; the size buttons change it as before.
+
 ### Fixed
 - **Upload: the sheet name typed in the upload dialog is used** (eegfaktura-dev tracking 261028-mm2). The field never passed
   its value on, so every import read the default sheet („EEG Stammdaten“ / „Energiedaten“); a workbook with another
