@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.17.0] – 2026-10-28
+
 ### Added
 - **Tariff list grouped, collapsible, sorted and searchable, with compact cards** (pilot group). The tariffs page groups the tariffs under
   „Mitgliedstarife“, „Erzeugertarife“ and „Verbrauchertarife“ (the kinds of the tariff form) and sorts them by name,
