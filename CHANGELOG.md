@@ -13,9 +13,19 @@ this changelog highlights the changes relevant for overview and operations.
   the Dynatrace JavaScript tag, Caddy renders the tag into `index.html` at request time, loaded `async` so it never
   blocks the page. Without the variable no tag is emitted: self-hosted installations send no session data. **Operations:**
   set `DYNATRACE_RUM_URL` in the deployments that should report (README, Configuration).
+- **Upload by drag & drop** (pilot group). While the upload dialog of the member list (cloud icon) is open, a dropped
+  file is taken like one chosen with the star, also when it lands beside the dialog (the browser no longer opens it).
+  One file per import, as before: several dropped files are refused with a hint and clear an earlier choice.
 - **Tooltip on the € switch in the member list** (pilot group). It names what a click does: „Abrechnungsmodus
   aktivieren“ switches to the billing view, „Abrechnungsmodus beenden“ leaves it. While the switch is off-limits it shows the reason (no period
+
   chosen, energy data loading or not loadable, no billable member in the period).
+
+### Fixed
+- **Upload: the sheet name typed in the upload dialog is used** (eegfaktura-dev tracking 261028-mm2). The field never passed
+  its value on, so every import read the default sheet („EEG Stammdaten“ / „Energiedaten“); a workbook with another
+  sheet name had to be renamed in Excel first. The name now goes to the selected import type; an emptied field falls
+  back to the default, surrounding spaces are removed.
 
 ### Security
 - **CI: the release workflow pins its actions by commit SHA** (eegfaktura-dev tracking W-261028-mm6). `rolling-release.yml`
