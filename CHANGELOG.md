@@ -20,7 +20,6 @@ this changelog highlights the changes relevant for overview and operations.
   the push credentials. Now every action is pinned to a commit, the same SHAs `pr-checks.yml` and `security-scan.yml` already
   use where the action is the same, otherwise the commit the floating tag pointed to on 2026-10-28.
 
-
 ## [1.16.0] – 2026-10-28
 
 ### Changed
