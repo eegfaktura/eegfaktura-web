@@ -1,4 +1,4 @@
-import React, {FC, MouseEventHandler, useEffect, useState} from "react";
+import React, {DragEvent, FC, MouseEventHandler, useEffect, useRef, useState} from "react";
 import {
   IonButton, IonButtons,
   IonCard, IonCol, IonGrid,
@@ -60,8 +60,50 @@ const ContractDocumentComponent: FC<ContractDocumentComponentProps> = ({tenant, 
   //   }
   // }
 
+  // files dropped on the contract area: the upload dialog opens with them in its list (they are confirmed there)
+  const droppedFiles = useRef<File[]>([])
+  const [dragOver, setDragOver] = useState(false)
+  const isFileDrag = (e: DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes("Files")
+  const onAreaDragOver = (e: DragEvent<HTMLDivElement>) => {
+    if (!isFileDrag(e)) return
+    e.preventDefault()
+    setDragOver(true)
+  }
+  const onAreaDragLeave = (e: DragEvent<HTMLDivElement>) => {
+    // only when leaving the area, not when moving onto one of its elements
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragOver(false)
+  }
+  const onAreaDrop = (e: DragEvent<HTMLDivElement>) => {
+    if (!isFileDrag(e)) return
+    e.preventDefault()
+    setDragOver(false)
+    const files = Array.from(e.dataTransfer?.files ?? [])
+    if (files.length === 0) return
+    droppedFiles.current = files
+    openModal()
+  }
+  // opening with the button starts without dropped files
+  const openFromButton = () => {
+    droppedFiles.current = []
+    openModal()
+  }
+  // while the member page shows the contracts, a file dropped beside the area must not make the browser open it
+  // (and leave the app); the area and an open upload dialog handle their own drops
+  useEffect(() => {
+    const isFiles = (e: globalThis.DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes("Files")
+    const guard = (e: globalThis.DragEvent) => { if (isFiles(e)) e.preventDefault() }
+    window.addEventListener("dragover", guard)
+    window.addEventListener("drop", guard)
+    return () => {
+      window.removeEventListener("dragover", guard)
+      window.removeEventListener("drop", guard)
+    }
+  }, [])
+
   const [present, dismiss] = useIonModal(UploadContractFilesDialog, {
     participant,
+    // read when the dialog mounts; side-effect free, as StrictMode calls a state initializer twice
+    initialFiles: () => droppedFiles.current,
     onDismiss: (data: FormData, role: string) => dismiss(data, role),
     uploadButtonText: "Hochladen",
     children: (
@@ -153,7 +195,7 @@ const ContractDocumentComponent: FC<ContractDocumentComponentProps> = ({tenant, 
              <IonLabel>Noch keine Verträge für das Mitglied {participant.lastname} hochgeladen.</IonLabel>
            </IonItem>
            <IonItem lines="none" color="warning-light">
-             <IonButton slot="end" color="warning" size="default" onClick={openModal}>Hochladen</IonButton>
+             <IonButton slot="end" color="warning" size="default" onClick={openFromButton}>Hochladen</IonButton>
            </IonItem>
          </IonCard>
        </div>
@@ -164,7 +206,7 @@ const ContractDocumentComponent: FC<ContractDocumentComponentProps> = ({tenant, 
       <div className="ion-padding">
         <IonToolbar>
           <IonLabel><h1>Verträge</h1></IonLabel>
-          <IonButton slot="end" onClick={openModal}>Hinzufügen</IonButton>
+          <IonButton slot="end" onClick={openFromButton}>Hinzufügen</IonButton>
         </IonToolbar>
         <IonList>
         {
@@ -186,7 +228,8 @@ const ContractDocumentComponent: FC<ContractDocumentComponentProps> = ({tenant, 
   }
 
   return (
-    <div>
+    <div className={dragOver ? "contract-drop-area drag-over" : "contract-drop-area"} data-testid="contract-area"
+         onDragOver={onAreaDragOver} onDragLeave={onAreaDragLeave} onDrop={onAreaDrop}>
       {renderContent()}
     </div>  )
 }
