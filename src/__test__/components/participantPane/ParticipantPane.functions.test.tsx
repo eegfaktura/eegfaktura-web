@@ -3,7 +3,7 @@ import {AccountInfo, Address, Contact, Optionals} from "../../../models/eeg.mode
 import {Metering, ParticipantBillType} from "../../../models/meteringpoint.model";
 import {EegParticipant} from "../../../models/members.model";
 
-// buildAllocationMapFromSelected reads the per-participant energy report from the
+// buildAllocationMap reads the per-participant energy report from the
 // redux store (meteringEnergyGroup1), not from an argument. Mock both so the unit
 // test is deterministic without booting the store.
 vi.mock("../../../store", () => ({store: {getState: () => ({})}}));
@@ -33,7 +33,7 @@ vi.mock("../../../store/rate", () => ({
   }),
 }));
 
-import {billTotal, buildAllocationMapFromSelected, uploadActivationDocuments, withOpenProblems} from "../../../components/participantPane/ParticipantPane.functions";
+import {billingRunBlocker, billTotal, buildAllocationMap, isBillableParticipant, uploadActivationDocuments, withOpenProblems} from "../../../components/participantPane/ParticipantPane.functions";
 
 describe("<ParticipantPane/> Functions", () => {
   it("allocate invoice member and metering points", async () => {
@@ -67,9 +67,7 @@ describe("<ParticipantPane/> Functions", () => {
       titleBefore: ""} as EegParticipant
     ]
 
-    const checkedParticipants = {"1234567890": true}
-
-    const r = buildAllocationMapFromSelected(participants, checkedParticipants)
+    const r = buildAllocationMap(participants)
 
     // Current behaviour: energy comes from the store; zero-kWh meters are NOT
     // filtered out (the >0 filter is intentionally disabled) and each entry
@@ -99,7 +97,7 @@ describe("<ParticipantPane/> Functions", () => {
       } as Metering],
     } as EegParticipant]
 
-    const r = buildAllocationMapFromSelected(participants, {"1234567890": true})
+    const r = buildAllocationMap(participants)
 
     expect(r).toEqual([
       {
@@ -171,5 +169,43 @@ describe("billTotal", () => {
     expect(billTotal(bill)).toBeCloseTo(53.75, 10)
     expect(billTotal({id: "1", amount: 0, participantFee: 0, joiningFee: 49.9, meteringPoints: []})).toBe(49.9)
     expect(billTotal({id: "1", amount: 0, participantFee: 2, meteringPoints: []})).toBe(2)
+  })
+})
+
+describe("billing always the whole community (platform#194)", () => {
+  const member = (over: Partial<EegParticipant>, meters: Partial<Metering>[]) =>
+    ({id: "1234567890", status: 'ACTIVE', tariffId: undefined, meters: meters as Metering[], ...over}) as unknown as EegParticipant
+  const meter = (over: Partial<Metering> = {}) =>
+    ({meteringPoint: "AT0000000000000000000000000000001", direction: 'CONSUMPTION', status: 'ACTIVE', ...over}) as Metering
+
+  it("bills an active member with a tariff on the member or on a registered metering point", () => {
+    expect(isBillableParticipant(member({tariffId: "m1"}, [meter()]))).toBe(true)
+    expect(isBillableParticipant(member({}, [meter({tariff_id: "t1"})]))).toBe(true)
+  })
+
+  it("leaves out members that are not active or have no tariff (they are named by „Daten prüfen“)", () => {
+    expect(isBillableParticipant(member({tariffId: "m1", status: 'INACTIVE'} as any, [meter()]))).toBe(false)
+    expect(isBillableParticipant(member({}, [meter()]))).toBe(false)
+    // a tariff only on a metering point still in registration does not count
+    expect(isBillableParticipant(member({}, [meter({tariff_id: "t1", status: 'INIT'})]))).toBe(false)
+  })
+
+  it("sends nothing for a member that is not billable, with no selection involved", () => {
+    expect(buildAllocationMap([member({status: 'INACTIVE'} as any, [meter({tariff_id: "t1"})])])).toEqual([])
+    // the report holds two metering points of the member; only the one the member still has in the list is sent
+    expect(buildAllocationMap([member({}, [meter({tariff_id: "t1"})])]).map(a => a.meteringPoint))
+      .toEqual(["AT0000000000000000000000000000001"])
+  })
+})
+
+describe("no billing run without energy (platform#189)", () => {
+  it("blocks while the report loads, after it failed and without any billable entry", () => {
+    expect(billingRunBlocker(true, undefined, 5)).toMatch(/noch geladen/)
+    expect(billingRunBlocker(false, "Bad Gateway", 5)).toMatch(/nicht geladen werden/)
+    expect(billingRunBlocker(false, undefined, 0)).toMatch(/keine abrechenbaren Mitglieder/)
+  })
+
+  it("lets the run start with a loaded report holding entries", () => {
+    expect(billingRunBlocker(false, undefined, 1)).toBeUndefined()
   })
 })

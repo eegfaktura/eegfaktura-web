@@ -55,3 +55,18 @@ describe("energy reducer: a failed report load is kept as an error (261024-ca6)"
     expect(s.reportError).toBeUndefined()
   })
 })
+
+describe("energy reducer: the report of the period is loading (platform#189)", () => {
+  it("is loading from the request until the latest one answers or fails", () => {
+    let s = reducer(initialState, pending("old"))
+    expect(s.reportLoading).toBe(true)
+    s = reducer(s, pending("new"))
+    s = reducer(s, fulfilled("old", "p-old"))
+    expect(s.reportLoading).toBe(true)
+    s = reducer(s, fulfilled("new", "p-new"))
+    expect(s.reportLoading).toBe(false)
+    s = reducer(s, pending("again"))
+    s = reducer(s, rejected("again"))
+    expect(s.reportLoading).toBe(false)
+  })
+})

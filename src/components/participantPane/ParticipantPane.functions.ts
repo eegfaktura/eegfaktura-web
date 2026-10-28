@@ -4,12 +4,34 @@ import {meteringEnergyGroup1} from "../../store/energy";
 import {store} from "../../store";
 import {hasOpenProblem} from "../../util/FilterHelper.unit";
 
-export const buildAllocationMapFromSelected = (participants: EegParticipant[], checkedParticipant: Record<string, boolean>): MeteringEnergyGroupType[] => {
+/**
+ * A member a billing run includes (platform#194: always the whole community, no selection): active, with a tariff
+ * on the member or on a registered metering point — the rule of the former „alle auswählen“. Members without a
+ * tariff are named by „Daten prüfen“.
+ */
+export const isBillableParticipant = (p: EegParticipant): boolean =>
+  p.status === "ACTIVE" && p.meters.reduce((c, e) => c || (e.tariff_id !== undefined && e.tariff_id !== null && e.status !== 'INIT'),
+    p.tariffId !== undefined && p.tariffId != null)
+
+/**
+ * Why a billing run cannot start now (platform#189), or undefined when it can: the report of the period is still
+ * loading, its load failed, or it holds no entry of a billable member. A run is never started with an empty list.
+ */
+export const billingRunBlocker = (reportLoading: boolean, reportError: string | undefined, allocationCount: number): string | undefined => {
+  if (reportLoading) return "Die Energiedaten des Zeitraums werden noch geladen. Bitte kurz warten und erneut starten."
+  if (reportError) return "Die Energiedaten des Zeitraums konnten nicht geladen werden. Bitte die Seite neu laden und erneut starten."
+  if (allocationCount === 0) return "Im gewählten Zeitraum gibt es keine abrechenbaren Mitglieder (aktiv, mit Tarif) in den geladenen Energiedaten. „Daten prüfen“ zeigt Zählpunkte ohne Tarif."
+  return undefined
+}
+
+/** The energy of every billable member of the period, from the loaded energy report; built when the run starts. */
+export const buildAllocationMap = (participants: EegParticipant[]): MeteringEnergyGroupType[] => {
   const participantReport = meteringEnergyGroup1(store.getState())
   const activeMeters = participants.flatMap(p => p.meters.filter(m=>m.status !== "INIT").map(m => m.meteringPoint))
+  const billable = new Set(participants.filter(isBillableParticipant).map(p => p.id))
 
   return participantReport
-    .filter(p => checkedParticipant[p.participantId] !== undefined && checkedParticipant[p.participantId])
+    .filter(p => billable.has(p.participantId))
     .flatMap(p => {
       return p.meters.filter(m => activeMeters.includes(m.meterId)).map(m => {
         // ZVT: die Fenster-Teilsummen (buckets) mit genau den Fenstern mitgeben, fuer die der energystore sie

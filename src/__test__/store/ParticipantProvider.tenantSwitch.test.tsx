@@ -11,7 +11,7 @@ import {EegContext, EegState} from "../../store/hook/Eeg.provider";
 import ParticipantProvider, {ParticipantContext} from "../../store/hook/ParticipantProvider";
 import {Api} from "../../service";
 
-// 261024-ca13: after a community switch the member list, the checked members (billing selection) and the
+// 261024-ca13: after a community switch the member list and the
 // open details pane of the previous community are gone while the new community loads.
 
 let ctx: any
@@ -28,7 +28,7 @@ const tree = (store: any, tenant: string, isFetching: boolean) => (
 )
 
 describe("ParticipantProvider on a community switch (261024-ca13)", () => {
-  it("drops the previous community's members, checked members and open details", () => {
+  it("drops the previous community's members and open details", () => {
     // the energy report the provider requests for the listed members (Api is not set up in tests)
     Api.energyService = {fetchReportV2: vi.fn().mockResolvedValue(
       {totalConsumption: 0, totalProduction: 0, meta: [], participantReports: []})} as any
@@ -39,11 +39,9 @@ describe("ParticipantProvider on a community switch (261024-ca13)", () => {
 
     const {rerender} = render(tree(store, "RC100100", false))
     act(() => {
-      ctx.setCheckedParticipant("a1", true)
       ctx.showDetailsPage({id: "a1"})
     })
     expect(ctx.participants.map((p: any) => p.id)).toEqual(["a1"])
-    expect(ctx.checkedParticipant).toEqual({a1: true})
     expect(ctx.detailsPageOpen).toBe(true)
 
     // the switch: the store is cleared, the new community is still loading
@@ -52,7 +50,6 @@ describe("ParticipantProvider on a community switch (261024-ca13)", () => {
 
     expect(ctx.participants).toEqual([])
     expect(ctx.allParticipants).toEqual([])
-    expect(ctx.checkedParticipant).toEqual({})
     expect(ctx.detailsPageOpen).toBe(false)
   })
 })

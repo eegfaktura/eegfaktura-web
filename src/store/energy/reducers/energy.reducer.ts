@@ -16,6 +16,7 @@ export const reducer = createReducer(initialState, builder =>
     .addCase(fetchEnergyReportV2.pending, (state, action) => {
       state.reportRequestId = action.meta.requestId
       state.reportError = undefined
+      state.reportLoading = true
     })
     .addCase(fetchEnergyReportV2.fulfilled, (state, action) => {
       // an older request answering after a newer one (e.g. without and then with ZVT time windows) is ignored
@@ -27,17 +28,20 @@ export const reducer = createReducer(initialState, builder =>
       participantReportAdapter.setAll(state.participantReports, report.participantReports)
       metaAdapter.setAll(state.meta, report.meta)
       state.reportError = undefined
+      state.reportLoading = false
     })
     .addCase(fetchEnergyReportV2.rejected, (state, action) => {
       if (state.reportRequestId && action.meta.requestId !== state.reportRequestId) return
       participantReportAdapter.removeAll(state.participantReports)
       metaAdapter.removeAll(state.meta)
       state.reportError = action.error.message || "unbekannter Fehler"
+      state.reportLoading = false
     })
     .addCase(clearEnergyState, (state, action) => {
       // a request still running for the previous selection must not fill the cleared store
       state.reportRequestId = "cleared"
       state.reportError = undefined
+      state.reportLoading = false
       participantReportAdapter.removeAll(state.participantReports)
       metaAdapter.removeAll(state.meta)
     })

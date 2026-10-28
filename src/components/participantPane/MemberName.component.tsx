@@ -1,7 +1,7 @@
 import React, {FC, useContext} from "react";
 import {memberActivity} from "../../util/MemberActivity.util";
 import {selectParticipantById} from "../../store/participant";
-import {CheckboxCustomEvent, IonButton, IonCheckbox, IonCol, IonIcon, IonItem, IonLabel,} from "@ionic/react";
+import {IonButton, IonCol, IonIcon, IonItem, IonLabel,} from "@ionic/react";
 import {eegExclamation} from "../../eegIcons";
 import {EegParticipant} from "../../models/members.model";
 import {EegTariff} from "../../models/eeg.model";
@@ -13,16 +13,14 @@ import {ParticipantContext} from "../../store/hook/ParticipantProvider";
 
 interface MemberNameComponentProps {
   participant: EegParticipant;
-  isChecked: boolean;
   showAmount: boolean;
   tariff?: EegTariff | undefined;
-  onCheck: (e: CheckboxCustomEvent) => void;
   onSelect?: (e: React.MouseEvent<HTMLIonCardElement, MouseEvent>) => void
   onAdd: (p: EegParticipant) => (e: React.MouseEvent<HTMLIonButtonElement, MouseEvent>) => void
 }
 
 const MemberNameComponent: FC<MemberNameComponentProps> =
-  ({participant, isChecked, showAmount, tariff, onCheck, onSelect, onAdd}) => {
+  ({participant, showAmount, tariff, onSelect, onAdd}) => {
 
   const bill = useAppSelector(selectBillByParticipant(participant.id))
   // the list entry can hold only some metering points (filters, period): the status needs all of them
@@ -57,12 +55,7 @@ const MemberNameComponent: FC<MemberNameComponentProps> =
 
   return (
     <>
-      <IonCol size="2" style={{flexWrap: "nowrap"}}>
-        <IonItem lines="none" style={{background: "transparent", "--min-height": "24px"}}>
-          <IonCheckbox style={{"--size": "16px", margin: "0px"}} onIonChange={onCheck} checked={isChecked} disabled={true} aria-label=""></IonCheckbox>
-        </IonItem>
-      </IonCol>
-      <IonCol size="10">
+      <IonCol size="12">
         <IonItem detail={!showAmount} lines="none" onClick={onSelect} style={{"--min-height": "24px", "--padding-start": "0"}}>
           {isPending() ? (
             <IonLabel style={{margin: "0px", color: "#DC631E"}}>

@@ -34,8 +34,6 @@ export interface ParicipantState {
   setBillingEnabled: (enabled: boolean) => void
   showAddMeterPane: boolean
   setShowAddMeterPane: (show: boolean) => void
-  checkedParticipant: Record<string, boolean>
-  setCheckedParticipant: (participantId: string, checked: boolean) => void
   // loads the energy report of the shown period again, e.g. after a failed load (261024-ca26)
   reloadEnergyReport: () => void
 }
@@ -56,8 +54,6 @@ const initialState: ParicipantState = {
   setBillingEnabled: (enabled: boolean) => {},
   showAddMeterPane: false,
   setShowAddMeterPane: (show: boolean) => {},
-  checkedParticipant: {},
-  setCheckedParticipant: (participantId: string, checked: boolean) => {},
   reloadEnergyReport: () => {},
 }
 
@@ -82,7 +78,6 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
   const [detailOpen, setDetailOpen] = useState<boolean>(false);
   const [enableBilling, setEnableBilling] = useState<boolean>(false)
   const [showAddMeterPane, setShowAddMeterPane] = useState<boolean>(false)
-  const [checkedParticipants, setCheckedParticipants] = useState<Record<string, boolean>>({})
   // the members active in the selected period, derived from the store (empty after a community switch, 261024-ca13)
   const activeParticipants = useMemo(() => {
     if (!activePeriod || !allParticipants) return []
@@ -200,9 +195,8 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
     setEnableBilling(state);
   }
 
-  // another community (261024-ca13): nothing of the previous one stays checked or open
+  // another community (261024-ca13): nothing of the previous one stays open
   useEffect(() => {
-    setCheckedParticipants({})
     setDetailOpen(false)
     setShowAddMeterPane(false)
   }, [tenant.tenant?.toUpperCase()]);
@@ -231,20 +225,9 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
     closeDetailPage: closeDetailPageFn,
     billingEnabled: enableBilling,
     setBillingEnabled: setEnableBillingFn,
-    checkedParticipant: checkedParticipants,
     showAddMeterPane: showAddMeterPane,
     setShowAddMeterPane: setShowAddMeterPane,
     reloadEnergyReport: () => fetchEnergyReport(activeParticipants),
-    setCheckedParticipant: (participantId: string, checked: boolean) => { setCheckedParticipants((s) => {
-      const newS = {...s}
-      if (!checked) {
-        delete newS[participantId];
-      } else {
-        newS[participantId] = checked
-      }
-      return newS;
-      }
-    )}
   } as ParicipantState
 
   const fetchEnergyReport = (aps: EegParticipant[]) => {

@@ -2,7 +2,6 @@ import React, {FC, useContext, useEffect, useMemo, useRef, useState} from "react
 
 import {EegParticipant} from "../../models/members.model";
 import {
-  CheckboxCustomEvent,
   IonAlert,
   IonButton,
   IonButtons,
@@ -20,8 +19,6 @@ import {
   useIonPopover,
   useIonToast,
 } from "@ionic/react";
-import {CheckboxChangeEventDetail} from "@ionic/core";
-import {IonCheckboxCustomEvent} from "@ionic/core/dist/types/components";
 import {createPeriodIdentifier, SelectedPeriod,} from "../../models/energy.model";
 import ParticipantPeriodHeaderComponent from "./ParticipantPeriodHeader.component";
 import MemberComponent from "./Member.component";
@@ -43,7 +40,13 @@ import {
   selectBillFetchingSelector,
   selectBillPollingSelector,
 } from "../../store/billing";
-import {selectMetaRecord, setSelectedPeriod,} from "../../store/energy";
+import {
+  energyReportErrorSelector,
+  energyReportLoadingSelector,
+  meteringEnergyGroup1,
+  selectMetaRecord,
+  setSelectedPeriod,
+} from "../../store/energy";
 import ButtonGroup from "../ButtonGroup.component";
 import {
   add,
@@ -66,7 +69,7 @@ import {
   selectParticipant,
 } from "../../store/participant";
 import cn from "classnames";
-import {isParticipantActivated, reformatDateTimeStamp,} from "../../util/Helper.util";
+import {reformatDateTimeStamp,} from "../../util/Helper.util";
 import DatepickerPopover from "../dialogs/datepicker.popover";
 import {ExcelReportRequest, ParticipantCp} from "../../models/reports.model";
 import UploadPopup from "../dialogs/upload.popup";
@@ -85,7 +88,7 @@ import DatePickerCoreElement from "../core/elements/DatePickerCore.element";
 import {filterActiveMeter, filterActiveParticipantAndMeter,} from "../../util/FilterHelper.unit";
 import moment from "moment";
 import {Api} from "../../service";
-import {billTotal, buildAllocationMapFromSelected, downloadWithFeedback, filterSearchQuery} from "./ParticipantPane.functions";
+import {billingRunBlocker, billTotal, buildAllocationMap, downloadWithFeedback, filterSearchQuery} from "./ParticipantPane.functions";
 import {exportMasterdataWithJoiningFees, hasJoiningFee, JOINING_FEE_EXPORT_WITHOUT_BILLING} from "../../util/JoiningFee.util";
 import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
 import {withOpenProblems} from "./ParticipantPane.functions";
@@ -141,8 +144,6 @@ const ParticipantPaneComponent: FC = () => {
     activePeriod,
     billingEnabled,
     setBillingEnabled,
-    checkedParticipant,
-    setCheckedParticipant,
     showDetailsPage,
     setShowAddMeterPane,
   } = useContext(ParticipantContext);
@@ -252,16 +253,18 @@ const ParticipantPaneComponent: FC = () => {
     return () => { current = false };
   }, [tenant, billingRun?.id, billingInfo, showAmount]);
 
+  // platform#194/#189: the whole community is billed, no selection. The billing mode can be switched on with the loaded
+  // energy report of the shown period holding an entry of at least one billable member; while a report loads the mode
+  // stays as it is. billingEnabled means "can be switched on" and is set only here.
+  const energyReport = useAppSelector(meteringEnergyGroup1);
+  const reportLoading = useAppSelector(energyReportLoadingSelector);
+  const reportError = useAppSelector(energyReportErrorSelector);
   useEffect(() => {
-    if (checkedParticipant) {
-      const nextBillingEnabled = Object.entries(checkedParticipant).reduce(
-        (r, e) => (isParticipantActivated(participants, e[0]) && e[1]) || r,
-        false
-      );
-      setBillingEnabled(nextBillingEnabled);
-      if (!nextBillingEnabled) toggleShowAmount(false);
-    }
-  }, [checkedParticipant]);
+    if (reportLoading) return;
+    const nextBillingEnabled = !!activePeriod && !billingRunBlocker(false, reportError, buildAllocationMap(participants).length);
+    setBillingEnabled(nextBillingEnabled);
+    if (!nextBillingEnabled) toggleShowAmount(false);
+  }, [activePeriod, participants, energyReport, reportLoading, reportError]);
 
   useEffect(() => {
     if (billingRunErrorMessage) {
@@ -339,31 +342,12 @@ const ParticipantPaneComponent: FC = () => {
     });
   };
 
-  const selectAll = (event: IonCheckboxCustomEvent<CheckboxChangeEventDetail>) => {
-    participants.forEach((p) => {
-      if (p.status === "ACTIVE") {
-        const tariffConfigured =
-          p.meters.reduce((c, e) => c || (e.tariff_id !== undefined && e.tariff_id !== null && e.status !== 'INIT'),
-            p.tariffId !== undefined && p.tariffId != null);
-        if (tariffConfigured) {
-          setCheckedParticipant(p.id, event.detail.checked);
-        }
-      }
-    });
-  };
-
-  const onCheckParticipant = (p: EegParticipant) => (e: CheckboxCustomEvent) => {
-    if (p.status === "ACTIVE") {
-      setCheckedParticipant(p.id, e.detail.checked);
-    }
-  };
-
   const activateBilling = (c: boolean) => {
     if (c) {
       presentAlert({
         subHeader: "Abrechnungsmodus",
         message:
-          "Im Abrechnungsmodus siehst Du je Mitglied die Beträge des gewählten Zeitraums und wählst aus, wer abgerechnet wird. Mit „Vorschau erstellen“ werden Rechnungs- und Gutschriftsentwürfe mit dem Zusatz „VORSCHAU“ erstellt. Dazu kannst Du eine Zusammenstellung als Excel-Datei und alle Belege gesammelt als ZIP-Datei herunterladen. Änderst Du danach Stammdaten, Energiedaten oder Tarife, erstellt „Vorschau Akt.“ die Entwürfe beliebig oft neu. Erst „Abrechnung durchführen“ erstellt die endgültigen Belege mit fortlaufenden Rechnungsnummern; das ist nicht umkehrbar.",
+          "Im Abrechnungsmodus siehst Du je Mitglied die Beträge des gewählten Zeitraums. Abgerechnet werden immer alle aktiven Mitglieder mit Tarif; wer keinen Tarif hat, zeigt „Daten prüfen“. Mit „Vorschau erstellen“ werden Rechnungs- und Gutschriftsentwürfe mit dem Zusatz „VORSCHAU“ erstellt. Dazu kannst Du eine Zusammenstellung als Excel-Datei und alle Belege gesammelt als ZIP-Datei herunterladen. Änderst Du danach Stammdaten, Energiedaten oder Tarife, erstellt „Vorschau Akt.“ die Entwürfe beliebig oft neu. Erst „Abrechnung durchführen“ erstellt die endgültigen Belege mit fortlaufenden Rechnungsnummern; das ist nicht umkehrbar.",
         buttons: [
           {
             text: "Abbrechen",
@@ -397,7 +381,6 @@ const ParticipantPaneComponent: FC = () => {
       });
     } else {
       toggleShowAmount(false);
-      setBillingEnabled(false);
     }
   };
 
@@ -573,9 +556,20 @@ const ParticipantPaneComponent: FC = () => {
     && billingRun.runStatus !== "RUNNING" && billingRun.runStatus !== "FAILED" ? runTotals.totals : undefined;
   const onDoBilling =(preview: boolean, documentDate: Date) => {
     if (activePeriod) {
+      // platform#189: never start a run without energy (an empty list gave a finished run without documents). Read
+      // from the store now: this runs from the dialog's closure, the rendered values can be older than the report.
+      const state = store.getState();
+      const loading = energyReportLoadingSelector(state);
+      const error = energyReportErrorSelector(state);
+      const allocations = loading || error ? [] : buildAllocationMap(participants);
+      const blocker = billingRunBlocker(loading, error, allocations.length);
+      if (blocker) {
+        presentAlert({subHeader: "Abrechnung nicht möglich", message: blocker, buttons: ["OK"]});
+        return;
+      }
       documentDate?.setHours(12);
       const invoiceRequest = {
-        allocations: buildAllocationMapFromSelected(participants, checkedParticipant),
+        allocations: allocations,
         tenantId: tenant,
         preview: preview,
         clearingPeriodIdentifier: createPeriodIdentifier(
@@ -704,10 +698,6 @@ const ParticipantPaneComponent: FC = () => {
         >
           <MemberComponent
             participant={command}
-            onCheck={onCheckParticipant(command)}
-            isChecked={
-              checkedParticipant && (checkedParticipant[command.id] || false)
-            }
             hideMeter={hideMeter}
             hideMember={hideMember}
             showAmount={showAmount}
@@ -740,10 +730,6 @@ const ParticipantPaneComponent: FC = () => {
         >
           <MemberComponent
             participant={command}
-            onCheck={onCheckParticipant(command)}
-            isChecked={
-              checkedParticipant && (checkedParticipant[command.id] || false)
-            }
             hideMeter={hideMeter}
             hideMember={hideMember}
             showAmount={showAmount}
@@ -806,7 +792,6 @@ const ParticipantPaneComponent: FC = () => {
                                   memberSort={memberSort} actionFirst={actionFirst} setMemberSort={onChangeMemberSort}/>
           <ParticipantPeriodHeaderComponent
             activePeriod={activePeriod}
-            selectAll={selectAll}
             onUpdatePeriod={onUpdatePeriodSelection}
           />
           {/*<div className={"scroll-container"} ref={viewPortRef}>*/}
@@ -885,10 +870,6 @@ const ParticipantPaneComponent: FC = () => {
                           >
                             <MemberComponent
                               participant={command}
-                              onCheck={onCheckParticipant(command)}
-                              isChecked={
-                                checkedParticipant && (checkedParticipant[command.id] || false)
-                              }
                               hideMeter={hideMeter}
                               hideMember={hideMember}
                               showAmount={showAmount}
@@ -921,10 +902,6 @@ const ParticipantPaneComponent: FC = () => {
                           >
                             <MemberComponent
                               participant={command}
-                              onCheck={onCheckParticipant(command)}
-                              isChecked={
-                                checkedParticipant && (checkedParticipant[command.id] || false)
-                              }
                               hideMeter={hideMeter}
                               hideMember={hideMember}
                               showAmount={showAmount}

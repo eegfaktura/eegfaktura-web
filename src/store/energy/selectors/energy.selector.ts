@@ -167,6 +167,11 @@ export const energyReportErrorSelector = createSelector(
   state => state.reportError
 )
 
+export const energyReportLoadingSelector = createSelector(
+  featureStateSelector,
+  state => !!state.reportLoading
+)
+
 export const selectedPeriodSelector = createSelector(
   featureStateSelector,
   items => items.selectedPeriod

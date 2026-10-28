@@ -31,10 +31,6 @@ export const formatMeteringPointString = (m: string | undefined) => {
   return m
 }
 
-export const isParticipantActivated = (participants: EegParticipant[], id: string) => {
-  return participants.find((p) => p.id === id && p.status === 'ACTIVE') !== undefined
-}
-
 export const getPeriodSegment = (period: string, month: number) => {
   switch (period) {
     case 'Y': return 0
