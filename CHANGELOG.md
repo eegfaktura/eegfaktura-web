@@ -58,6 +58,12 @@ this changelog highlights the changes relevant for overview and operations.
   and the run's sum include it. Without the fee the amounts are unchanged; an older billing without the field counts
   as 0 (before, such a billing would show a joining fee as „Mitgliedsbeitrag“).
 
+### Fixed
+- **CI: the Snyk Code scan fails visibly when it cannot run.** An invalid `SNYK_TOKEN` ended the weekly and
+  push scan green without any result (`continue-on-error`); now only „issues found“ keeps the run green (the
+  issues go to Code Scanning), an authentication or tool error fails it. The Snyk CLI is pinned to 1.1308.1
+  instead of the latest version.
+
 ## [1.14.0] – 2026-10-27
 
 ### Changed
