@@ -15,7 +15,7 @@ this changelog highlights the changes relevant for overview and operations.
   dropped twice is listed once.
   Files can also be dropped right on the „Verträge“ area of a member: the upload dialog opens with them in its list,
   to be confirmed with „Hochladen“. A file dropped beside the area no longer makes the browser open it (and leave the
-  app) while the member's contracts are shown.
+  app); this holds once a member's contracts have been shown, also on other pages, as the app keeps them mounted.
 
 ## [1.17.0] – 2026-10-28
 

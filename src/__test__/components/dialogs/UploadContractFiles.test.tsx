@@ -79,7 +79,7 @@ describe("contract upload: drag & drop (2026-10-28)", () => {
     expect(screen.getByText(/brief\.txt nicht übernommen/)).toBeTruthy()
   })
 
-  it("keeps the initial files under StrictMode, which calls the state initializer twice", () => {
+  it("shows the initial files under StrictMode (the getter purity itself is tested in ContractDocument.drop)", () => {
     const pdf = file("vertrag.pdf", "application/pdf")
     render(<React.StrictMode><UploadContractFilesDialog participant={participant} onDismiss={vi.fn()} initialFiles={() => [pdf]}/></React.StrictMode>)
     expect(screen.getByText("vertrag.pdf")).toBeTruthy()
