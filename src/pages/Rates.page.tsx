@@ -1,7 +1,7 @@
 import React, {FC} from "react";
 import {useAppDispatch, useAppSelector} from "../store";
-import {ratesSelector, saveNewRate, selectedRateSelector, selectRate, updateRate} from "../store/rate";
-import {TARIFF_TYPE_ORDER} from "../store/rate/selectors/rate.selector";
+import {ratesSelector, saveNewRate, selectedRateSelector, selectRate, TARIFF_TYPE_ORDER, updateRate} from "../store/rate";
+import {useLocale} from "../store/hook/useLocale";
 import RateCardComponent from "../components/RateCard.component";
 import {
   IonButton, IonButtons,
@@ -22,13 +22,15 @@ import {useRateType} from "../store/hook/Rate.provider";
 import { get } from "react-hook-form";
 import {useTenant} from "../store/hook/Eeg.provider";
 
-const RATE_GROUP_TITLE: Record<string, string> = {EEG: "Mitglied", EZP: "Erzeuger", VZP: "Verbraucher", OTHER: "Sonstige"}
+// group headings: the kinds of the tariff form
+const RATE_GROUP_TITLE_KEY: Record<string, string> = {EEG: "participant", EZP: "producer", VZP: "consumer", OTHER: "rateGroupOther"}
 
 const RatesPage: FC = () => {
 
   const dispatcher = useAppDispatch();
   const selectedTariff = useAppSelector(selectedRateSelector)
   const rates = useAppSelector(ratesSelector)
+  const {t} = useLocale("common")
   const {tenant} = useTenant()
 
   const [showToast] = useIonToast();
@@ -133,7 +135,7 @@ const RatesPage: FC = () => {
               if (group.length === 0) return null
               return (
                 <section key={type} className="rate-group">
-                  <h3 className="rate-group-title">{RATE_GROUP_TITLE[type]}</h3>
+                  <h3 className="rate-group-title">{t(RATE_GROUP_TITLE_KEY[type])}</h3>
                   {group.map((r) => (
                     <div key={r.id} className={cn("rates", {"selected": r.id === selectedTariff?.id})}>
                       <RateCardComponent rate={r} editable={true} onSelect={onSelect}/>

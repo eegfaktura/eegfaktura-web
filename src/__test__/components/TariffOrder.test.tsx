@@ -2,7 +2,7 @@ import {describe, expect, it, vi} from "vitest";
 import {act, screen} from "@testing-library/react";
 import {renderWithProviders} from "../test-utils";
 import {EegTariff} from "../../models/eeg.model";
-import {compareTariffs, ratesSelector} from "../../store/rate/selectors/rate.selector";
+import {compareTariffs, ratesSelector} from "../../store/rate";
 import {fetchRatesModel} from "../../store/rate";
 import "../../util/I18n";
 
@@ -42,5 +42,18 @@ describe("tariff order (pilot group 2026-10-28)", () => {
     expect(at("Erzeuger")).toBeLessThan(at("Einkauf"))
     expect(at("Einkauf")).toBeLessThan(at("Verbraucher"))
     expect(at("Verbraucher")).toBeLessThan(at("Sonnenstrom-Verkauf"))
+  })
+
+  it("shows a tariff of an unknown kind at the end under „Sonstige“ instead of hiding it", () => {
+    const {store} = renderWithProviders(<RatesPage/>)
+    act(() => { store.dispatch(fetchRatesModel.fulfilled({rates: [...rates, tariff("7", "AKONTO", "Alt")]}, "req", {tenant: "RC100100"} as any)) })
+    const text = document.body.textContent ?? ""
+    expect(text.indexOf("Sonstige")).toBeGreaterThan(text.indexOf("Verkauf"))
+    expect(text.indexOf("Alt")).toBeGreaterThan(text.indexOf("Sonstige"))
+  })
+
+  it("keeps a fixed order for equal names", () => {
+    const a = tariff("b", "VZP", "Strom"), b = tariff("a", "VZP", "strom")
+    expect([a, b].sort(compareTariffs).map(r => r.id)).toEqual(["a", "b"])
   })
 })

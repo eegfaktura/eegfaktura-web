@@ -23,19 +23,10 @@ export const isFetchingSelector = createSelector(
 //   selectAll
 // );
 
-// tariffs in a fixed order (pilot group 2026-10-28): by kind as in the tariff form (Mitglied, Erzeuger, Verbraucher),
-// then by name with numbers in natural order („Beitritt 2 ZP“ before „Beitritt 10 ZP“)
-export const TARIFF_TYPE_ORDER: EegTariff["type"][] = ["EEG", "EZP", "VZP"]
-const typeRank = (t: EegTariff["type"]) => {
-  const i = TARIFF_TYPE_ORDER.indexOf(t)
-  return i < 0 ? TARIFF_TYPE_ORDER.length : i
-}
-export const compareTariffs = (a: EegTariff, b: EegTariff) =>
-  typeRank(a.type) - typeRank(b.type) || (a.name ?? "").localeCompare(b.name ?? "", "de", {numeric: true, sensitivity: "base"})
-
+// sorted by the adapter's sortComparer (compareTariffs in states)
 export const ratesSelector = createSelector(
   featureStateSelector,
-  (state) => [...selectAll(state)].sort(compareTariffs)
+  selectAll
 )
 
 export const ratesMapSelector = createSelector(

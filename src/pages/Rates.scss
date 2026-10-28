@@ -14,14 +14,14 @@
 
 .rates {
   @include eeg-cards;
+  // compact (pilot group 2026-10-28): less vertical padding than the shared card mixin
+  padding-top: 2px;
+  padding-bottom: 2px;
 }
 
 // compact cards on the tariff page (pilot group 2026-10-28), in the size of the member list; the same card in the
 // invoice details of a member keeps its layout
 .rates {
-  padding-top: 2px;
-  padding-bottom: 2px;
-
   ion-card {
     margin: 0;
   }
@@ -32,11 +32,11 @@
     padding-top: 0;
     padding-bottom: 0;
   }
-  h2 {
+  ion-label h2 {
     font-size: 15px;
     margin: 0 0 2px;
   }
-  p {
+  ion-label p {
     font-size: 13px;
     margin: 0;
     line-height: 1.35;
