@@ -58,11 +58,20 @@ this changelog highlights the changes relevant for overview and operations.
   and the run's sum include it. Without the fee the amounts are unchanged; an older billing without the field counts
   as 0 (before, such a billing would show a joining fee as „Mitgliedsbeitrag“).
 
+### Changed
+- **Member list: one choice „Anzeige“ instead of the two tabs.** The tab „Periode“ and the filter tab (Alle / Aktive /
+  Inaktive behind the filter icon) are one entry „Anzeige: …“; a click opens the choice Standard, Alle, Aktive,
+  Inaktive. „Standard“ is the former „Periode“ (members with metering points active in the selected period plus
+  metering points with an open problem, the view for billing) and stays the default; the others are unchanged
+  (status as of today, independent of the period). A tooltip explains the chosen view. The four buttons below the
+  list (members only, metering points only, hide producers, hide consumers) got tooltips.
+
 ### Fixed
 - **CI: the Snyk Code scan fails visibly when it cannot run.** An invalid `SNYK_TOKEN` ended the weekly and
   push scan green without any result (`continue-on-error`); now only „issues found“ keeps the run green (the
   issues go to Code Scanning), an authentication or tool error fails it. The Snyk CLI is pinned to 1.1308.1
   instead of the latest version.
+
 
 ## [1.14.0] – 2026-10-27
 
