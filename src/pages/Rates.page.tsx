@@ -144,14 +144,14 @@ const RatesPage: FC = () => {
       <IonContent fullscreen color="eeg">
         <div style={{display: "flex", flexDirection: "row", height: "100vh"}}>
           <div className={"ratePane"} style={{overflowY: "auto"}}>
-            <IonToolbar color="eeg">
+            <IonToolbar color="eeglight">
               <IonButtons slot="end">
                 <HeaderFavButtonComponent icon={search} onClick={toggleSearch}/>
                 <HeaderFavButtonComponent icon={add} onClick={() => onNew()}/>
               </IonButtons>
             </IonToolbar>
             {searchActive && (
-              <IonToolbar color="eeg">
+              <IonToolbar color="eeglight">
                 <IonSearchbar
                   placeholder={t("rateSearchPlaceholder")}
                   // gaps left and right, so the field does not stick to the edges
