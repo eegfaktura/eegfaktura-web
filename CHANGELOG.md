@@ -8,6 +8,12 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **Contract upload by drag & drop.** While the upload dialog for a member's documents is open, dropped files join the
+  list as if chosen one by one, several at once, also when they land beside the dialog (the browser no longer opens
+  them). Only PDF, JPEG and PNG are taken, the types the filestore accepts; other files are named in a hint. A file
+  dropped twice is listed once.
+
 ## [1.17.0] – 2026-10-28
 
 ### Added
