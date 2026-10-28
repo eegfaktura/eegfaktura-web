@@ -23,7 +23,8 @@ this changelog highlights the changes relevant for overview and operations.
   billable member from the loaded report of the selected period; while the report loads, after it failed or without
   any such entry, „Vorschau“ / „Abrechnung durchführen“ say why („Abrechnung nicht möglich“) instead of sending an
   empty list (which billing finished as a run without documents). Switching the billing mode off no longer greys
-  out the switch.
+  out the switch. A period without any energy gives no run, also for members marked „Beitrittsgebühr
+  nachverrechnen“: the fee stays requested for the first run with energy (decided 28.10.2026).
 
 ### Security
 - Runtime image `caddy:2.8.4` → `caddy:2.11.7` (release 2026-10-03, Docker image tag 2026-10-05). 2.8.4 sat on
