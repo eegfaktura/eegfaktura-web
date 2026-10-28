@@ -144,7 +144,7 @@ const RatesPage: FC = () => {
       <IonContent fullscreen color="eeg">
         <div style={{display: "flex", flexDirection: "row", height: "100vh"}}>
           <div className={"ratePane"} style={{overflowY: "auto"}}>
-            <IonToolbar color="eeg">
+            <IonToolbar color="eeg" style={{"--padding-bottom": "0"}}>
               <IonButtons slot="end">
                 <HeaderFavButtonComponent icon={search} onClick={toggleSearch}/>
                 <HeaderFavButtonComponent icon={add} onClick={() => onNew()}/>

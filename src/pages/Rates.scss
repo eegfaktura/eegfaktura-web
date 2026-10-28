@@ -47,6 +47,11 @@
 .rate-group-title {
   margin: 12px 15px 4px 10px;
 
+  // no extra space above the first group, right below the toolbar
+  .rate-group:first-of-type > & {
+    margin-top: 0;
+  }
+
   // the heading is a button: click (or Enter/Space) collapses or expands the group
   button {
     display: flex;
