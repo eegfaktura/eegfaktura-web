@@ -33,7 +33,7 @@ vi.mock("../../../store/rate", () => ({
   }),
 }));
 
-import {billingRunBlocker, billTotal, buildAllocationMap, isBillableParticipant, uploadActivationDocuments, withOpenProblems} from "../../../components/participantPane/ParticipantPane.functions";
+import {billingRunBlocker, billingSwitchTooltip, billTotal, buildAllocationMap, isBillableParticipant, uploadActivationDocuments, withOpenProblems} from "../../../components/participantPane/ParticipantPane.functions";
 
 describe("<ParticipantPane/> Functions", () => {
   it("allocate invoice member and metering points", async () => {
@@ -207,5 +207,28 @@ describe("no billing run without energy (platform#189)", () => {
 
   it("lets the run start with a loaded report holding entries", () => {
     expect(billingRunBlocker(false, undefined, 1)).toBeUndefined()
+  })
+})
+
+describe("tooltip of the € switch (pilot group 2026-10-28)", () => {
+  const state = {canSwitchOn: true, on: false, hasPeriod: true, reportLoading: false, reportError: undefined, billableCount: 3}
+
+  it("names what a click does: open or close the billing view", () => {
+    expect(billingSwitchTooltip(state)).toBe("Abrechnung vorbereiten")
+    expect(billingSwitchTooltip({...state, on: true})).toBe("Abrechnung schließen")
+    // while a report loads the switch keeps its state, and a click still does what the text says
+    expect(billingSwitchTooltip({...state, reportLoading: true})).toBe("Abrechnung vorbereiten")
+  })
+
+  it("gives the reason while the switch is off-limits", () => {
+    const off = {...state, canSwitchOn: false}
+    expect(billingSwitchTooltip({...off, hasPeriod: false})).toBe("Bitte zuerst einen Zeitraum wählen.")
+    expect(billingSwitchTooltip({...off, reportLoading: true})).toMatch(/werden geladen/)
+    expect(billingSwitchTooltip({...off, reportError: "Bad Gateway"})).toMatch(/nicht geladen werden/)
+    expect(billingSwitchTooltip({...off, billableCount: 0})).toMatch(/keine abrechenbaren Mitglieder/)
+  })
+
+  it("never says „schließen“ on a switch that is shown off and disabled", () => {
+    expect(billingSwitchTooltip({...state, canSwitchOn: false, on: true, billableCount: 0})).toMatch(/keine abrechenbaren/)
   })
 })

@@ -88,7 +88,7 @@ import DatePickerCoreElement from "../core/elements/DatePickerCore.element";
 import {filterActiveMeter, filterActiveParticipantAndMeter,} from "../../util/FilterHelper.unit";
 import moment from "moment";
 import {Api} from "../../service";
-import {billingRunBlocker, billTotal, buildAllocationMap, downloadWithFeedback, filterSearchQuery} from "./ParticipantPane.functions";
+import {billingRunBlocker, billingSwitchTooltip, billTotal, buildAllocationMap, downloadWithFeedback, filterSearchQuery} from "./ParticipantPane.functions";
 import {exportMasterdataWithJoiningFees, hasJoiningFee, JOINING_FEE_EXPORT_WITHOUT_BILLING} from "../../util/JoiningFee.util";
 import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
 import {withOpenProblems} from "./ParticipantPane.functions";
@@ -265,6 +265,12 @@ const ParticipantPaneComponent: FC = () => {
     setBillingEnabled(nextBillingEnabled);
     if (!nextBillingEnabled) toggleShowAmount(false);
   }, [activePeriod, participants, energyReport, reportLoading, reportError]);
+
+  // the tooltip is derived on render, so it follows a loading report and a period change at once
+  const billingSwitchTitle = useMemo(() => billingSwitchTooltip({
+    canSwitchOn: billingEnabled, on: showAmount, hasPeriod: !!activePeriod, reportLoading, reportError,
+    billableCount: billingEnabled || reportLoading || reportError || !activePeriod ? 1 : buildAllocationMap(participants).length,
+  }), [billingEnabled, showAmount, activePeriod, reportLoading, reportError, participants, energyReport]);
 
   useEffect(() => {
     if (billingRunErrorMessage) {
@@ -1111,6 +1117,7 @@ const ParticipantPaneComponent: FC = () => {
               <SlideButtonComponent
                 checked={showAmount}
                 disabled={!billingEnabled}
+                title={billingSwitchTitle}
                 setChecked={(c) => activateBilling(c)}
               ></SlideButtonComponent>
             </div>
