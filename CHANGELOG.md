@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.15.0] – 2026-10-28
+
 ### Added
 - **Member export with the joining fee (platform#217).** „Stammdaten exportieren“ first reads billing's
   `joiningFeeState` and sends it as JSON body of **`POST /eeg/export/masterdata`** (before `GET` without body); the
