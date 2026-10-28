@@ -15,6 +15,8 @@ export interface EnergyEntitieState {
   reportRequestId?: string
   // reason of the failed latest report load; undefined while it loads or after it worked (261024-ca6)
   reportError?: string
+  // the latest report load is still running (platform#189: no billing run before the period's report is loaded)
+  reportLoading?: boolean
 }
 
 export interface EnergyMetaState extends EntityState<EnergyMeta, string> {
