@@ -1,4 +1,4 @@
-import React, {FC} from "react";
+import React, {FC, useState} from "react";
 import {useAppDispatch, useAppSelector} from "../store";
 import {ratesSelector, saveNewRate, selectedRateSelector, selectRate, TARIFF_TYPE_ORDER, updateRate} from "../store/rate";
 import {useLocale} from "../store/hook/useLocale";
@@ -15,7 +15,7 @@ import {EegTariff} from "../models/eeg.model";
 import cn from "classnames";
 
 import "./Rates.scss"
-import {add} from "ionicons/icons";
+import {add, chevronDown, chevronForward} from "ionicons/icons";
 import RateDetailPaneComponent from "../components/RateDetailPane.component";
 import {selectedTenant} from "../store/eeg";
 import {useRateType} from "../store/hook/Rate.provider";
@@ -31,6 +31,13 @@ const RatesPage: FC = () => {
   const selectedTariff = useAppSelector(selectedRateSelector)
   const rates = useAppSelector(ratesSelector)
   const {t} = useLocale("common")
+  // collapsed tariff groups, for this visit of the page only: all open by default, so no tariff stays hidden later
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+  const toggleGroup = (type: string) => setCollapsed(prev => {
+    const next = new Set(prev)
+    next.has(type) ? next.delete(type) : next.add(type)
+    return next
+  })
   const {tenant} = useTenant()
 
   const [showToast] = useIonToast();
@@ -135,8 +142,14 @@ const RatesPage: FC = () => {
               if (group.length === 0) return null
               return (
                 <section key={type} className="rate-group">
-                  <h3 className="rate-group-title">{t(RATE_GROUP_TITLE_KEY[type])}</h3>
-                  {group.map((r) => (
+                  <h3 className="rate-group-title">
+                    <button type="button" aria-expanded={!collapsed.has(type)} onClick={() => toggleGroup(type)}>
+                      <IonIcon icon={collapsed.has(type) ? chevronForward : chevronDown} aria-hidden="true"/>
+                      <span>{t(RATE_GROUP_TITLE_KEY[type])}</span>
+                      <span className="rate-group-count">({group.length})</span>
+                    </button>
+                  </h3>
+                  {!collapsed.has(type) && group.map((r) => (
                     <div key={r.id} className={cn("rates", {"selected": r.id === selectedTariff?.id})}>
                       <RateCardComponent rate={r} editable={true} onSelect={onSelect}/>
                     </div>

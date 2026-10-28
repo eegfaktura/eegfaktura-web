@@ -1,5 +1,5 @@
 import {describe, expect, it, vi} from "vitest";
-import {act, screen} from "@testing-library/react";
+import {act, fireEvent, screen} from "@testing-library/react";
 import {renderWithProviders} from "../test-utils";
 import {EegTariff} from "../../models/eeg.model";
 import {compareTariffs, ratesSelector} from "../../store/rate";
@@ -37,6 +37,7 @@ describe("tariff order (pilot group 2026-10-28)", () => {
     const text = document.body.textContent ?? ""
     const at = (s: string) => text.indexOf(s)
     expect(screen.getByText("Mitgliedstarife")).toBeTruthy()
+    expect(screen.getByText("(3)")).toBeTruthy()
     expect(at("Mitgliedstarife")).toBeLessThan(at("beitritt 1 ZP"))
     expect(at("Beitritt 10 ZP")).toBeLessThan(at("Erzeugertarife"))
     expect(at("Erzeugertarife")).toBeLessThan(at("Einkauf"))
@@ -55,5 +56,19 @@ describe("tariff order (pilot group 2026-10-28)", () => {
   it("keeps a fixed order for equal names", () => {
     const a = tariff("b", "VZP", "Strom"), b = tariff("a", "VZP", "strom")
     expect([a, b].sort(compareTariffs).map(r => r.id)).toEqual(["a", "b"])
+  })
+
+  it("collapses and expands a group with its heading", () => {
+    const {store} = renderWithProviders(<RatesPage/>)
+    act(() => { store.dispatch(fetchRatesModel.fulfilled({rates}, "req", {tenant: "RC100100"} as any)) })
+    const heading = screen.getByRole("button", {name: /Mitgliedstarife/})
+    expect(heading.getAttribute("aria-expanded")).toBe("true")
+    fireEvent.click(heading)
+    expect(heading.getAttribute("aria-expanded")).toBe("false")
+    expect(screen.queryByText("Beitritt 2 ZP")).toBeNull()
+    // the other groups stay open
+    expect(screen.getByText("Einkauf")).toBeTruthy()
+    fireEvent.click(heading)
+    expect(screen.getByText("Beitritt 2 ZP")).toBeTruthy()
   })
 })
