@@ -45,6 +45,13 @@ describe("EegService: joining fee calls", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 
+  it("asks a second time when the token lookup fails once", async () => {
+    vi.spyOn(service as any, "lookupToken").mockRejectedValueOnce(new Error()).mockResolvedValue("token")
+    fetchMock.mockResolvedValue(new Response(JSON.stringify(state), {status: 200}))
+    expect(await service.fetchJoiningFeeState("TE100200")).toEqual(state)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
   it("posts the member export with the state as body", async () => {
     fetchMock.mockResolvedValue(new Response("xlsx", {status: 200}))
     await service.exportMasterdata("TE100200", state)

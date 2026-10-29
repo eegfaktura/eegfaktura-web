@@ -127,7 +127,7 @@ export const joiningFeeActions = (state: JoiningFeeState | undefined, tariff?: E
 }
 
 export const JOINING_FEE_EXPORT_WITHOUT_BILLING =
-  "Die Abrechnung ist nicht erreichbar: Der Export enthält alle Mitglieder, die Spalte „Beitrittsgebühr Status“ bleibt aber leer."
+  "Der Stand der Beitrittsgebühren konnte gerade nicht von der Abrechnung abgefragt werden: Der Export enthält alle Mitglieder, die Spalte „Beitrittsgebühr Status“ bleibt aber leer."
 
 /**
  * Member export (decision 2026-10-27, web orchestrates): billing's joiningFeeState goes to the backend with the export

@@ -255,7 +255,7 @@ export class EegService extends EegBaseService {
 
   // platform#217: per member with a final document, energy billed yes/no and the document with the joining fee
   // asked once more after a failure: in prod (29.10.) a single call failed in the browser while billing answered every
-  // request, most likely while the access token was renewed; a second call then gets the new token
+  // request with 200; the cause is unknown (network or token lookup), a second call usually succeeds
   async fetchJoiningFeeState(tenant: string): Promise<JoiningFeeState[]> {
     return this.loadJoiningFeeState(tenant).catch(() => this.loadJoiningFeeState(tenant))
   }
