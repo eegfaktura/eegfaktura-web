@@ -23,6 +23,11 @@ describe("NumberInputForm shows the stored value (261005-ca5)", () => {
     expect(shown(container)).toBe("12,5")
   })
 
+  it("leaves a value that is no number empty instead of showing NaN", () => {
+    const {container} = render(<Form value={NaN}/>)
+    expect(shown(container)).toBe("")
+  })
+
   it("leaves a field without a value empty", () => {
     const {container} = render(<Form value={undefined}/>)
     expect(shown(container)).toBe("")

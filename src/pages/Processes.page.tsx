@@ -20,6 +20,7 @@ import {activeParticipantsSelector1, meterSelector, allParticipantsSelector} fro
 import {selectedPeriodSelector} from "../store/energy";
 import {useLocale} from "../store/hook/useLocale";
 import MenuHeaderComponent from "../components/core/MenuHeader.component";
+import EegLoadStateComponent from "../components/EegLoadState.component";
 
 const ProcessesPage: FC = () => {
 
@@ -80,7 +81,7 @@ const ProcessesPage: FC = () => {
   }
 
   if (!eeg) {
-    return <></>
+    return <EegLoadStateComponent/>
   } else {
     return (
       <IonPage>

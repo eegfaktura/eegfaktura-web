@@ -58,7 +58,9 @@ const NumberInput: FC<NumberInput> = ({
 
 
   useEffect(() => {
-    setValue(initialValue !== undefined && initialValue !== null ? formatValue(initialValue.toString()) : "")
+    // a value that is no number (e.g. only "," or "-" typed and committed) stays an empty field, as before
+    setValue(initialValue !== undefined && initialValue !== null && Number.isFinite(Number(initialValue))
+      ? formatValue(initialValue.toString()) : "")
   }, [initialValue]);
 
   // useEffect(() => {

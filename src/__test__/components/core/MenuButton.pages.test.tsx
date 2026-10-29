@@ -56,13 +56,14 @@ describe("menu button below 992 px (261024-ca9)", () => {
     const dir = join(__dirname, "../../../pages")
     const pages = readdirSync(dir).filter(f => f.endsWith(".tsx"))
       .map(f => [f, readFileSync(join(dir, f), "utf-8")] as const)
-      .filter(([, src]) => /^\s*<IonPage/m.test(src))
+      // the login page is shown before signing in, without the menu
+      .filter(([file, src]) => file !== "Login.tsx" && /<IonPage[\s>]/.test(src))
     expect(pages.length).toBeGreaterThan(5)
     for (const [file, src] of pages) {
       // the member page shows the member pane, whose toolbar has the button
       const own = file === "Participants.tsx" ? readFileSync(join(__dirname,
         "../../../components/participantPane/ParticipantPane.component.tsx"), "utf-8") : src
-      expect(/<MenuHeaderComponent\/>|<IonMenuButton/.test(own), file).toBe(true)
+      expect(/<MenuHeaderComponent\s*\/>|<IonMenuButton/.test(own), file).toBe(true)
     }
   })
 })

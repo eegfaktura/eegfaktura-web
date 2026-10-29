@@ -81,7 +81,7 @@ const NotificationPage: FC = () => {
       <IonHeader>
         <IonToolbar>
           {/* opens the side menu below 992 px, hidden while the menu is shown beside the page (261024-ca9) */}
-          <IonButtons slot="start">
+          <IonButtons slot="start" className="ion-hide-lg-up">
             <IonMenuButton/>
           </IonButtons>
           <div style={{paddingLeft: "16px"}}><h3>Nachrichten</h3></div>
