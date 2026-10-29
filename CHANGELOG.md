@@ -8,6 +8,13 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **Joining fee: the count of members who get the fee is asked a second time when the first call fails.** In prod one
+  save showed „konnte nicht ermittelt werden (Abrechnung nicht erreichbar)“ while billing answered every request with
+  200; the call most likely failed in the browser while the access token was renewed. The tariff dialog, the member's
+  joining fee status and the master data export all use this call. The dialog now says the count could not be
+  determined *right now* (the request to billing failed) instead of „Abrechnung nicht erreichbar“.
+
 ## [1.18.0] – 2026-10-28
 
 ### Added

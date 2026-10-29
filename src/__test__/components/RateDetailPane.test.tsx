@@ -131,7 +131,7 @@ describe("RateDetailPane: saving a joining fee warns first (platform#217)", () =
   it("says the count is unknown when billing cannot be reached, saving stays possible", async () => {
     vi.mocked(Api.eegService.fetchJoiningFeeState).mockRejectedValue(new Error("503"))
     await save({...tariff, joiningFee: 50}, [active("p1")])
-    expect(alert.mock.lastCall![0].message).toContain("konnte nicht ermittelt werden")
+    expect(alert.mock.lastCall![0].message).toContain("konnte gerade nicht ermittelt werden (die Abfrage bei der Abrechnung ist fehlgeschlagen)")
     confirmSave()
     expect(onSubmit).toHaveBeenCalledTimes(1)
   })
