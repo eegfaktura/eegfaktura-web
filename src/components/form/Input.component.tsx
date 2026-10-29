@@ -104,17 +104,19 @@ function Input<TValue, IsNumber extends boolean = false>(props: Omit<ControllerR
     return value ? value as string : ""
   }
 
-  // the field shows what is typed; the form's value is written into it only when it differs (e.g. after a reset or
+  // a text field shows what is typed; the form's value is written into it only when it differs (e.g. after a reset or
   // when another tariff is selected). Writing it again on every render could move the caret to the end while typing.
+  // Number fields stay controlled as before: their text is normalised to the parsed number.
   const shown = parseValue(defaultValue)
   useEffect(() => {
     const input = ionInput.current
-    if (input && String(input.value ?? "") !== shown) input.value = shown
-  }, [shown])
+    if (!isNumber && input && String(input.value ?? "") !== shown) input.value = shown
+  }, [shown, isNumber])
 
   return (
     <IonInput fill="outline" labelPlacement="floating"
               type={isEmail ? "email" : "text"}
+              {...(isNumber ? {value: shown} : {})}
               onIonInput={handleInput}
               onIonChange={handleChange}
               ref={inputRef(controlRef)}

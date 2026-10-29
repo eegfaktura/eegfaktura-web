@@ -41,6 +41,12 @@ const spyOnValue = (el: any, shown: string) => {
 }
 
 describe("InputForm: typing keeps the caret where it is", () => {
+  it("shows the form's value when it opens", () => {
+    const {container} = render(<Form/>)
+    const el = container.querySelector('ion-input[name="name"]') as any
+    expect(el.value).toBe("Beitritt weiterer ZP")
+  })
+
   it("writes nothing into the field while typing", async () => {
     const {container} = render(<Form/>)
     const el = container.querySelector('ion-input[name="name"]') as any
