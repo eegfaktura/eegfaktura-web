@@ -8,6 +8,13 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **Text fields: the caret no longer jumps to the end while typing.** Renaming a tariff moved the caret to the end of
+  the field after the first typed character, so the rest landed at the end („Beitritt2 weiterer ZP026“). The input
+  wrote the form's value back into the field on every render; it now does so only when the value differs from what the
+  field shows (after a reset or when another record is selected). All text fields of the app use this input; the
+  tariff dialog showed it at once because it validates on every keystroke.
+
 ## [1.18.0] – 2026-10-28
 
 ### Added
