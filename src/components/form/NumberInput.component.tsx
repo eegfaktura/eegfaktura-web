@@ -5,13 +5,15 @@ import {IonInputCustomEvent} from "@ionic/core/dist/types/components";
 import {InputInputEventDetail} from "@ionic/core/dist/types/components/input/input-interface";
 
 import "./form-element.css";
+import {parseDecimal} from "../../util/Number.util";
 
 function noop() {
 }
 
 // The number an input sends to the form: an emptied field is 0 (it used to keep the old value, 261027-mm1).
+// German notation with thousands separators ("1.234,56") is read via parseDecimal (261005-ca5).
 export const numberInputValue = (value: string | number | null | undefined): number =>
-  value === null || value === undefined || value.toString().trim() === '' ? 0 : parseFloat(value.toString().replace(",", "."))
+  value === null || value === undefined || value.toString().trim() === '' ? 0 : parseDecimal(value.toString())
 
 type NumberInputFormProps<T extends FieldValues> = {
   control: Control<T>,
@@ -56,7 +58,7 @@ const NumberInput: FC<NumberInput> = ({
 
 
   useEffect(() => {
-    setValue(initialValue ? formatValue(initialValue.toString()) : "")
+    setValue(initialValue !== undefined && initialValue !== null ? formatValue(initialValue.toString()) : "")
   }, [initialValue]);
 
   // useEffect(() => {
@@ -65,15 +67,8 @@ const NumberInput: FC<NumberInput> = ({
   // }, [inputRef, cursor]);
 
 
-  const formatValue = (value: string): string => {
-    let numValue: number
-    try {
-      numValue = parseFloat(value)
-    } catch (e) {
-      numValue = 0
-    }
-    return numValue === 0 ? '' : value.replace(".", ",")
-  }
+  // 0 is shown as "0", not as an empty field that looks "not set" (261005-ca5)
+  const formatValue = (value: string): string => value.replace(".", ",")
 
   // const isNumeric = (value: any): boolean => !new RegExp(/[^\d,]/g).test(value.trim())
   const isNumeric = (value: any): boolean => new RegExp(/^[-]{0,1}\d*,{0,1}\d{0,2}$/).test(value.trim())
@@ -206,7 +201,7 @@ const NumberInputForm = <T extends FieldValues>(props: NumberInputFormProps<T>) 
         render={({field, fieldState, formState}) => {
           const {onChange, value, name, ref} = field;
           return (
-            <NumberInput onChange={onChange} name={name} label={label} placeholder={placeholder} initialValue={value || undefined}
+            <NumberInput onChange={onChange} name={name} label={label} placeholder={placeholder} initialValue={value ?? undefined}
                          decimalScale={2} helperText={fieldState.error?.message}/>)
         }}
       />

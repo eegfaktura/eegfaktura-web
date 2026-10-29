@@ -8,6 +8,12 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **Tariff amounts: 0 is shown, thousands separators are read** (261005-ca5). The amount fields of the tariff form
+  (price per kWh, metering point fee and its VAT, member fee, joining fee and its VAT, time-window prices) showed a
+  stored 0 as an empty field, as if nothing were set; they now show „0“. Their value is now read like the other amount
+  fields: „1.234,56“ is 1234.56 (before 1.234), „1234.56“ stays 1234.56. Stored values do not change.
+
 ## [1.18.0] – 2026-10-28
 
 ### Added

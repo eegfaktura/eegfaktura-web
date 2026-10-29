@@ -17,6 +17,12 @@ describe("numberInputValue (261027-mm1)", () => {
     expect(numberInputValue("20")).toBe(20)
     expect(numberInputValue(7.5)).toBe(7.5)
   })
+
+  it("reads thousands separators and a decimal point (261005-ca5)", () => {
+    expect(numberInputValue("1.234,56")).toBe(1234.56)
+    expect(numberInputValue("1234.56")).toBe(1234.56)
+    expect(numberInputValue("1.234.567,8")).toBe(1234567.8)
+  })
 })
 
 describe("VAT range messages of the tariff dialog (261027-mm2)", () => {
