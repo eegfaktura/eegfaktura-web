@@ -7,6 +7,7 @@ import {
   IonButtons,
   IonContent,
   IonIcon,
+  IonMenuButton,
   IonPage,
   IonSearchbar,
   IonToolbar,
@@ -145,6 +146,10 @@ const RatesPage: FC = () => {
         <div style={{display: "flex", flexDirection: "row", height: "100vh"}}>
           <div className={"ratePane"} style={{overflowY: "auto"}}>
             <IonToolbar color="eeglight">
+              {/* opens the side menu below 992 px, hidden while the menu is shown beside the page (261024-ca9) */}
+              <IonButtons slot="start">
+                <IonMenuButton/>
+              </IonButtons>
               <IonButtons slot="end">
                 <HeaderFavButtonComponent icon={search} onClick={toggleSearch}/>
                 <HeaderFavButtonComponent icon={add} onClick={() => onNew()}/>

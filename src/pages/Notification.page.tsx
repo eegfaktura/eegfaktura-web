@@ -1,5 +1,15 @@
 import React, {FC, useCallback, useEffect, useRef, useState} from "react";
-import {IonContent, IonHeader, IonItem, IonPage, IonToolbar, useIonViewWillEnter, useIonViewWillLeave} from "@ionic/react";
+import {
+  IonButtons,
+  IonContent,
+  IonHeader,
+  IonItem,
+  IonMenuButton,
+  IonPage,
+  IonToolbar,
+  useIonViewWillEnter,
+  useIonViewWillLeave
+} from "@ionic/react";
 import {EegNotification, Message} from "../models/eeg.model";
 import {useAppDispatch, useAppSelector} from "../store";
 import {ErrorState, selectedTenant, setErrorState} from "../store/eeg";
@@ -70,6 +80,10 @@ const NotificationPage: FC = () => {
     <IonPage>
       <IonHeader>
         <IonToolbar>
+          {/* opens the side menu below 992 px, hidden while the menu is shown beside the page (261024-ca9) */}
+          <IonButtons slot="start">
+            <IonMenuButton/>
+          </IonButtons>
           <div style={{paddingLeft: "16px"}}><h3>Nachrichten</h3></div>
         </IonToolbar>
       </IonHeader>

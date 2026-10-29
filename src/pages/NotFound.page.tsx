@@ -1,9 +1,11 @@
 import React, {FC} from "react";
 import {IonButton, IonContent, IonPage} from "@ionic/react";
+import MenuHeaderComponent from "../components/core/MenuHeader.component";
 
 // An unknown URL (e.g. an old bookmark) used to render an empty page (261024-ca12).
 const NotFoundPage: FC = () => (
   <IonPage>
+    <MenuHeaderComponent/>
     <IonContent fullscreen color="eeg">
       <div className="full-screen-center" style={{flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "16px"}}>
         <div>Diese Seite gibt es nicht.</div>

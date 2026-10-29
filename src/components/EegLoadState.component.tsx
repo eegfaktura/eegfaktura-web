@@ -5,10 +5,12 @@ import {eegLoadErrorSelector} from "../store/eeg";
 import {useTenants} from "../store/hook/AuthProvider";
 import {useRefresh} from "../store/hook/Eeg.provider";
 import {useLocale} from "../store/hook/useLocale";
+import MenuHeaderComponent from "./core/MenuHeader.component";
 
 // an IonPage: it is the whole page content, and the outlet shows only IonPages over the previous page
 const Page: FC<{children: ReactNode}> = ({children}) => (
   <IonPage>
+    <MenuHeaderComponent/>
     <IonContent fullscreen color="eeg">{children}</IonContent>
   </IonPage>
 )

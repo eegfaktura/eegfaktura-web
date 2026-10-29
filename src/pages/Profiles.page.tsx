@@ -14,6 +14,7 @@ import cn from "classnames";
 import {syncCircle} from "ionicons/icons";
 import {EegContext} from "../store/hook/Eeg.provider";
 import CorePageTemplate from "../components/core/CorePage.template";
+import MenuHeaderComponent from "../components/core/MenuHeader.component";
 import {useTenants, useUser} from "../store/hook/AuthProvider";
 
 
@@ -78,6 +79,7 @@ const ProfilesPage: FC = () => {
 
   return (
     <IonPage>
+      <MenuHeaderComponent/>
       <IonContent fullscreen color="eeg">
         <div style={{display: "flex", flexDirection: "row", height: "100vh"}}>
           <div className={"ratePane"}>

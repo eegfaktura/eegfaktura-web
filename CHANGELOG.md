@@ -9,6 +9,11 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Fixed
+- **Menu reachable below 992 px** (261024-ca9). Below 992 px window width (tablet in portrait, half-width laptop
+  window) the side menu is hidden, and only the register page had a button to open it. Every page now has one: in the
+  existing toolbar on the member and tariff lists and on „Nachrichten“; the other pages (Dashboard, Meine EEG,
+  E-Mail-Texte, Prozesse, Profile, the not-found page and the EEG load/error page) get a small header with the menu
+  button that shows only below 992 px. From 992 px on nothing changes.
 - **Tariff amounts: 0 is shown, thousands separators are read** (261005-ca5). The amount fields of the tariff form
   (price per kWh, metering point fee and its VAT, member fee, joining fee and its VAT, time-window prices) showed a
   stored 0 as an empty field, as if nothing were set; they now show „0“. Their value is now read like the other amount
