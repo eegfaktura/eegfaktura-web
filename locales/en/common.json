@@ -1,4 +1,10 @@
 {
+  "saveStatus": {
+    "saved": "All changes saved",
+    "saving": "Saving …",
+    "failed": "Not saved",
+    "retry": "try again"
+  },
   "rateGroupMember": "Member tariffs",
   "rateGroupProducer": "Producer tariffs",
   "rateGroupConsumer": "Consumer tariffs",

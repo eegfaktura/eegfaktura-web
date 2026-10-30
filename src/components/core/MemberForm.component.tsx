@@ -23,6 +23,7 @@ import {isValidEmailList} from "../../util/EmailAddress.util";
 import {isDirectDebit} from "../../util/MandateReference.util";
 import JoiningFeeMember from "./JoiningFeeMember.component";
 import {hasJoiningFee} from "../../util/JoiningFee.util";
+import SaveStatus, {useSaveStatus} from "./SaveStatus.component";
 
 interface MemberFormComponentProps {
   participant: EegParticipant
@@ -82,8 +83,11 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
   const sepaMode = watch ? watch("accountInfo.sepaDirectDebit") : "NONE"
   const tariffId = watch("tariffId")
 
+  // every field saves on its own: the status shows whether all changes are saved and offers a retry (platform#228 step 4)
+  const saveStatus = useSaveStatus((name, value) => onSubmitPartial(participant.id, {[name]: value}))
+
   const onUpdateBaseData = (name: string, value: any) => {
-    return onSubmitPartial(participant.id, {[name]: value})
+    return saveStatus.save(name, value)
   }
 
   if (!participant) {
@@ -123,6 +127,7 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
               </IonCol>}
         </IonRow>
       </IonGrid>
+      <SaveStatus status={saveStatus}/>
       {/*<form onBlur={handleSubmit(onSubmit)}>*/}
         <IonList>
           <IonListHeader>Kontakt</IonListHeader>

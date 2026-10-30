@@ -14,6 +14,10 @@ this changelog highlights the changes relevant for overview and operations.
   selecting another member or metering point while „Zählpunkt hinzufügen“ holds input, now ask „Die Eingaben sind noch
   nicht gespeichert. Verwerfen und fortfahren?“. Leaving the page through the menu, browser back, reload or closing the
   tab asks as well (the existing `UnsavedChangesGuard`, as in the mail templates).
+- **Member details show whether every change is saved** (platform#228 step 4). The member details save each field on
+  its own; a status above the form now says „Alle Änderungen gespeichert“, „Wird gespeichert …“ or „Nicht gespeichert –
+  erneut versuchen“. A failed save keeps the typed value in the field, and „erneut versuchen“ sends every failed
+  change again.
 
 ### Fixed
 - **Text fields: the caret no longer jumps to the end while typing.** Renaming a tariff moved the caret to the end of

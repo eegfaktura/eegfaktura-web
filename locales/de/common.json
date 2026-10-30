@@ -1,4 +1,10 @@
 {
+  "saveStatus": {
+    "saved": "Alle Änderungen gespeichert",
+    "saving": "Wird gespeichert …",
+    "failed": "Nicht gespeichert",
+    "retry": "erneut versuchen"
+  },
   "rateGroupMember": "Mitgliedstarife",
   "rateGroupProducer": "Erzeugertarife",
   "rateGroupConsumer": "Verbrauchertarife",
