@@ -19,6 +19,13 @@ this changelog highlights the changes relevant for overview and operations.
   erneut versuchen“. A failed save keeps the typed value in the field, and „erneut versuchen“ sends every failed
   change again.
 
+### Changed
+- **Tariff names may contain umlauts and ß** (platform#228 step 4). The tariff editor rejected „ä ö ü Ä Ö Ü ß“. Checked
+  before: the backend stores the name unchecked (`text`), billing prints it on the invoice PDF (Helvetica/WinAnsi,
+  covers these letters, as member names already do) and in the XLSX „Details“ sheet; the SEPA file is built from the
+  „Liste“ sheet, which has no tariff name; no mail text uses it. Other characters stay rejected, they may not print in
+  the PDF.
+
 ### Fixed
 - **Text fields: the caret no longer jumps to the end while typing.** Renaming a tariff moved the caret to the end of
   the field after the first typed character, so the rest landed at the end („Beitritt2 weiterer ZP026“). The input
