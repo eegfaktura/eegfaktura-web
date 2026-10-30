@@ -29,4 +29,19 @@ describe("buildNotificationText — Mail", () => {
     ]})}
     expect(text(n)).toBe("E-Mail-Texte: Neuer Standard.Mailversand fehlgeschlagen: AT001 — invalid address")
   })
+
+  it("shows an unconfirmed send as not confirmed, not as failed", () => {
+    const t = text(mail("WARNING", "W_MAIL_UNCONFIRMED",
+      "Versand nicht bestätigt – die Mail wurde wahrscheinlich zugestellt, bitte nicht erneut senden", "AT001"))
+    expect(t).toBe("Mailversand nicht bestätigt: AT001 — Versand nicht bestätigt – die Mail wurde wahrscheinlich zugestellt, bitte nicht erneut senden")
+    expect(t).not.toContain("fehlgeschlagen")
+  })
+
+  it("shows an unconfirmed send and a failed mail of the same notification separately", () => {
+    const n = {message: new Message({type: "Mail", messages: [
+      {kind: "WARNING", metering_point: "AT001", message_code: "W_MAIL_UNCONFIRMED", message: "Versand nicht bestätigt"},
+      {kind: "ERROR", metering_point: "AT002", message_code: "E_MAIL", message: "invalid address"},
+    ]})}
+    expect(text(n)).toBe("Mailversand nicht bestätigt: AT001 — Versand nicht bestätigtMailversand fehlgeschlagen: AT002 — invalid address")
+  })
 })
