@@ -62,11 +62,13 @@ describe("registration: the metering point form asks before its input is lost (p
     expect(screen.queryByText("eingeben")).toBeNull()
   })
 
-  it("„Zählpunkt hinzufügen“ with input asks first", () => {
+  it("„Zählpunkt hinzufügen“ with input asks; confirmed, the form starts empty", () => {
     setup()
     fireEvent.click(screen.getByText("eingeben"))
     fireEvent.click(screen.getByText("Zählpunkt hinzufügen"))
     expect(alert.mock.lastCall![0].message).toBe(UNSAVED_DISCARD_MESSAGE)
+    answer("confirm")
+    expect(screen.getByTestId("meteringPoint").textContent).toBe("")
   })
 
   it("tells the register page about the input, so leaving the page asks", () => {

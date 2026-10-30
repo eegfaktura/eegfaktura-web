@@ -30,6 +30,9 @@ this changelog highlights the changes relevant for overview and operations.
   the PDF.
 
 ### Fixed
+- **Registration: another metering point no longer shows the input of the one before.** With the metering point form
+  open, selecting another metering point card (or „Zählpunkt hinzufügen“) kept the old values in the form, and
+  „Hinzufügen“ then wrote them to the old metering point. The form now starts anew for every opened metering point.
 - **Text fields: the caret no longer jumps to the end while typing.** Renaming a tariff moved the caret to the end of
   the field after the first typed character, so the rest landed at the end („Beitritt2 weiterer ZP026“). The input
   wrote the form's value back into the field on every render; it now does so only when the value differs from what the

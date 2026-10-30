@@ -33,6 +33,9 @@ const ParticipantRegisterMeterPaneComponent: FC<ParticipantRegisterMeterPaneComp
   const [addMeterPaneActive, setAddMeterPaneActive] = useState(false)
   const [meteringPoint, setMeteringPoint] = useState<Metering | undefined>()
   const [meterDirty, setMeterDirty] = useState(false)
+  // a new form per opened metering point: the form takes its values only when it mounts, so another metering point
+  // used to show the input of the one before
+  const [formKey, setFormKey] = useState(0)
   const confirmDiscard = useConfirmDiscard()
   const onMeterDirtyChange = (dirty: boolean) => {
     setMeterDirty(dirty)
@@ -51,6 +54,7 @@ const ParticipantRegisterMeterPaneComponent: FC<ParticipantRegisterMeterPaneComp
   // another metering point or a new one replaces the open form: ask first while it holds unsaved input
   const showMeter = (meter: Metering) => confirmDiscard(addMeterPaneActive && meterDirty, () => {
     setMeteringPoint(meter);
+    setFormKey(k => k + 1);
     setAddMeterPaneActive(true);
   })
 
@@ -112,7 +116,7 @@ const ParticipantRegisterMeterPaneComponent: FC<ParticipantRegisterMeterPaneComp
           </IonGrid>
         </div>
         <div style={{flexGrow: 1}}>
-          {addMeterPaneActive && meteringPoint && <RegisterMeterPaneComponent meteringPoint={meteringPoint} onAdd={appendMeter} onChancel={removeMeter}
+          {addMeterPaneActive && meteringPoint && <RegisterMeterPaneComponent key={formKey} meteringPoint={meteringPoint} onAdd={appendMeter} onChancel={removeMeter}
                                                                                     onDirtyChange={onMeterDirtyChange}/>}
         </div>
       </div>
