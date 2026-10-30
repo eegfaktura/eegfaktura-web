@@ -23,7 +23,7 @@ import {isValidEmailList} from "../../util/EmailAddress.util";
 import {isDirectDebit} from "../../util/MandateReference.util";
 import JoiningFeeMember from "./JoiningFeeMember.component";
 import {hasJoiningFee} from "../../util/JoiningFee.util";
-import SaveStatus, {hasUnsaved, useSaveStatus} from "./SaveStatus.component";
+import SaveStatus, {hasErrorOnChangedField, hasUnsaved, useSaveStatus} from "./SaveStatus.component";
 import UnsavedChangesGuard from "./UnsavedChangesGuard.component";
 import {useReportUnsaved} from "../../store/hook/ParticipantProvider";
 
@@ -50,7 +50,7 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
   const formMethods = useForm({
     defaultValues: participant, mode: "all"})
 
-  const { setValue, control, watch, reset, formState: {errors} } = formMethods;
+  const { setValue, control, watch, reset, formState: {errors, dirtyFields} } = formMethods;
 
   const isChangeable = () => {
     if (changeable === undefined) {
@@ -94,8 +94,8 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
     if (name === "joiningFee") return value()
     return onSubmitPartial(participant.id, {[name]: value})
   })
-  // an invalid field is not saved: the status says so, and switching the member or leaving the page asks
-  const invalid = Object.keys(errors).length > 0
+  // an invalid field the user changed is not saved: the status says so, and switching the member or leaving the page asks
+  const invalid = hasErrorOnChangedField(errors, dirtyFields)
   const unsaved = hasUnsaved(saveStatus, invalid)
   useReportUnsaved("details", unsaved)
 

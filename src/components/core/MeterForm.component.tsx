@@ -13,7 +13,7 @@ import MeterFormElement from "./MeterForm.element";
 import EegPaneTemplate from "./EegPane.template";
 import MeterAddressFormElement from "./forms/MeterAddressForm/MeterAddressForm.element";
 import {useOnlineState, useTenant} from "../../store/hook/Eeg.provider";
-import SaveStatus, {hasUnsaved, useSaveStatus} from "./SaveStatus.component";
+import SaveStatus, {hasErrorOnChangedField, hasUnsaved, useSaveStatus} from "./SaveStatus.component";
 import UnsavedChangesGuard from "./UnsavedChangesGuard.component";
 import {useReportUnsaved} from "../../store/hook/ParticipantProvider";
 
@@ -72,8 +72,8 @@ const MeterFormComponent: FC<MeterFromComponentProps> = ({meteringPoint}) => {
     return name === "meter" ? saveMeter(participantId, value) : savePartFact(participantId, metering.meteringPoint, name, value)
   })
 
-  // an invalid field is not saved: the status says so, and switching the member or leaving the page asks
-  const invalid = Object.keys(errors).length > 0
+  // an invalid field the user changed is not saved: the status says so, and switching the member or leaving the page asks
+  const invalid = hasErrorOnChangedField(errors, dirtyFields)
   const unsaved = hasUnsaved(saveStatus, invalid)
   useReportUnsaved("details", unsaved)
 

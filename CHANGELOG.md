@@ -24,8 +24,9 @@ this changelog highlights the changes relevant for overview and operations.
   erneut versuchen“. A failed save keeps the typed value in the field, and „erneut versuchen“ sends every failed
   change again.
   The metering point details (they save on their own as well, the participation factor separately) show the same
-  status, and so do the business type switch and the joining fee actions of the member. Invalid fields (e.g. an empty
-  required field) are not saved; the status then says „Nicht gespeichert – bitte die markierten Felder prüfen“.
+  status, and so do the business type switch and the joining fee actions of the member. Invalid input (e.g. a required
+  field emptied) is not saved; the status then says „Nicht gespeichert – bitte die markierten Felder prüfen“. Stored
+  incomplete data the user did not change does not count.
   Invalid or failed changes count as unsaved: selecting another member or metering point, the billing view, another
   community and leaving the page ask first. Only the answer to the latest save of a field counts, and input typed
   while a metering point save runs stays.

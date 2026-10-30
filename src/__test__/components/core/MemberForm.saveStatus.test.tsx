@@ -33,13 +33,14 @@ const participant = {
 const ctx = (admin = false) =>
   ({tenant: "RC100100", isAdmin: () => admin, isOwner: () => false, isUser: () => true} as unknown as EegState)
 
-const setup = (onSubmitPartial: (id: string, value: Record<string, any>) => Promise<unknown>, admin = false) => {
+const setup = (onSubmitPartial: (id: string, value: Record<string, any>) => Promise<unknown>, admin = false,
+               member: EegParticipant = participant) => {
   const setUnsaved = vi.fn()
   const r = renderWithProviders(
     <MemoryRouter>
       <EegContext.Provider value={ctx(admin)}>
         <ParticipantContext.Provider value={{setUnsaved} as any}>
-          <MemberFormComponent participant={participant} rates={[]} formId="" onSubmit={vi.fn()}
+          <MemberFormComponent participant={member} rates={[]} formId="" onSubmit={vi.fn()}
                                onSubmitPartial={onSubmitPartial} changeable={false}/>
         </ParticipantContext.Provider>
       </EegContext.Provider>
@@ -121,5 +122,17 @@ describe("member details: save status for the auto-saving form (platform#228 ste
     await act(async () => fireEvent.click(screen.getByText("erneut versuchen")))
     expect(persistBusinessType).toHaveBeenCalledTimes(2)
     expect(screen.getByRole("status").textContent).toBe("Alle Änderungen gespeichert")
+  })
+
+  it("a blur on a stored empty street asks nothing; an invalid change does (re-review PR #244)", async () => {
+    const noStreet = {...participant, billingAddress: {...participant.billingAddress, street: ""}} as EegParticipant
+    const {container, type, setUnsaved} = setup(vi.fn().mockResolvedValue(true), false, noStreet)
+    const street = container.querySelector('ion-input[name="billingAddress.street"]') as any
+    await act(async () => { fireEvent(street, new CustomEvent("ionFocus")); fireEvent(street, new CustomEvent("ionBlur")) })
+    expect(screen.getByRole("status").textContent).toBe("Alle Änderungen gespeichert")
+    expect(setUnsaved).not.toHaveBeenCalledWith("details", true)
+    await type("")
+    expect(screen.getByRole("status").textContent).toBe("Nicht gespeichert – bitte die markierten Felder prüfen")
+    expect(setUnsaved).toHaveBeenLastCalledWith("details", true)
   })
 })

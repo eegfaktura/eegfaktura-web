@@ -52,6 +52,18 @@ export const useSaveStatus = (fieldSave: FieldSave): SaveStatusState => {
   return {saving: running > 0, failed, save, retry}
 }
 
+// The form's errors on fields the user changed: a stored incomplete value (e.g. an empty street) that only got
+// validated on blur is no unsaved input. errors and dirtyFields are react-hook-form's nested objects.
+export const hasErrorOnChangedField = (errors: object, dirtyFields: object): boolean => {
+  const walk = (err: any, dirty: any): boolean => {
+    if (!err || typeof err !== "object") return false
+    // a field's error carries its type; dirty is then true for the field
+    if ("type" in err && typeof err.type === "string") return dirty === true || (typeof dirty === "object" && dirty !== null)
+    return Object.keys(err).some(k => walk(err[k], dirty?.[k]))
+  }
+  return walk(errors, dirtyFields)
+}
+
 // unsaved: changes failed to save, or fields are invalid (an invalid value is not sent at all)
 export const hasUnsaved = (status: SaveStatusState, invalid: boolean) => invalid || Object.keys(status.failed).length > 0
 
