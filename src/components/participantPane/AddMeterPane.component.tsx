@@ -14,6 +14,7 @@ import {selectedTenant} from "../../store/eeg";
 import MeterAddressFormElement from "../core/forms/MeterAddressForm/MeterAddressForm.element";
 import {useOnlineState, useTenant} from "../../store/hook/Eeg.provider";
 import moment from "moment";
+import UnsavedChangesGuard, {useConfirmDiscard} from "../core/UnsavedChangesGuard.component";
 
 const AddMeterPaneComponent: FC = () => {
 
@@ -40,17 +41,25 @@ const AddMeterPaneComponent: FC = () => {
 
   const {
     setShowAddMeterPane,
+    setAddMeterDirty,
   } = useContext(ParticipantContext);
+  const confirmDiscard = useConfirmDiscard()
+
+  // the member list asks before another member replaces unsaved input (platform#228 step 4)
+  useEffect(() => {
+    setAddMeterDirty(isDirty)
+  }, [isDirty])
+  useEffect(() => () => setAddMeterDirty(false), [])
 
   useEffect(() => {
     reset(meter)
     // setShowAddMeterPane(false);
   }, [participant])
 
-  const onChancel = () => {
+  const onChancel = () => confirmDiscard(isDirty, () => {
     reset(meter)
     setShowAddMeterPane(false);
-  }
+  })
 
   const onSubmit = (meter: Metering) => {
     if (isDirty && participant) {
@@ -69,6 +78,7 @@ const AddMeterPaneComponent: FC = () => {
   }
   return (
     <EegWebContentPaneComponent>
+      <UnsavedChangesGuard dirty={isDirty}/>
       <CorePageTemplate>
         <form id="submit-register-meter" onSubmit={handleSubmit((data) => onSubmit(data))}>
           <EegPaneTemplate>

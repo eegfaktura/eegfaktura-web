@@ -1,6 +1,7 @@
 import React, {FC, useEffect, useRef} from "react";
 import {Prompt} from "react-router";
 import {useIonViewWillEnter, useIonViewWillLeave} from "@ionic/react";
+import {useConfirm} from "./useConfirm";
 
 export const UNSAVED_CHANGES_MESSAGE = "Die Eingaben sind noch nicht gespeichert. Seite trotzdem verlassen?"
 
@@ -32,6 +33,18 @@ const UnsavedChangesGuard: FC<UnsavedChangesGuardProps> = ({dirty, allowLeave}) 
   }, [dirty, allowLeave])
 
   return <Prompt when={dirty} message={() => pass() ? true : UNSAVED_CHANGES_MESSAGE}/>
+}
+
+// Leaving inside a page (closing a pane, selecting another entry) is no navigation the guard sees: such an action
+// asks first with this hook while the form holds unsaved input (platform#228 step 4).
+export const UNSAVED_DISCARD_HEADER = "Ungespeicherte Änderungen"
+export const UNSAVED_DISCARD_MESSAGE = "Die Eingaben sind noch nicht gespeichert. Verwerfen und fortfahren?"
+export const UNSAVED_DISCARD_BUTTON = "Verwerfen"
+
+export const useConfirmDiscard = () => {
+  const confirm = useConfirm()
+  return (dirty: boolean, action: () => void) =>
+    dirty ? confirm(UNSAVED_DISCARD_HEADER, UNSAVED_DISCARD_MESSAGE, UNSAVED_DISCARD_BUTTON, action) : action()
 }
 
 export default UnsavedChangesGuard

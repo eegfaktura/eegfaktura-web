@@ -8,6 +8,13 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **Unsaved input in the tariff editor and in „add metering point“ asks before it is lost** (platform#228 step 4).
+  Selecting another tariff, „+“ (new tariff) or „Zurück“ with unsaved changes in the tariff editor, and „Zurück“ or
+  selecting another member or metering point while „Zählpunkt hinzufügen“ holds input, now ask „Die Eingaben sind noch
+  nicht gespeichert. Verwerfen und fortfahren?“. Leaving the page through the menu, browser back, reload or closing the
+  tab asks as well (the existing `UnsavedChangesGuard`, as in the mail templates).
+
 ### Fixed
 - **Text fields: the caret no longer jumps to the end while typing.** Renaming a tariff moved the caret to the end of
   the field after the first typed character, so the rest landed at the end („Beitritt2 weiterer ZP026“). The input

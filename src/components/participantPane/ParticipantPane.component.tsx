@@ -111,6 +111,7 @@ import {types} from "sass";
 import {DownloadBillingDialog} from "./DownloadBilling.dialog";
 import {BillingCheckDialog, BillingCheckMode} from "./BillingCheck.dialog";
 import {ratesMapSelector} from "../../store/rate";
+import {useConfirmDiscard} from "../core/UnsavedChangesGuard.component";
 
 const ParticipantPaneComponent: FC = () => {
   const dispatcher = useAppDispatch();
@@ -147,7 +148,12 @@ const ParticipantPaneComponent: FC = () => {
     setBillingEnabled,
     showDetailsPage,
     setShowAddMeterPane,
+    showAddMeterPane,
+    addMeterDirty,
   } = useContext(ParticipantContext);
+  // another member or metering point replaces the "add metering point" pane: ask first while it holds unsaved input
+  const confirmDiscard = useConfirmDiscard()
+  const leaveAddMeter = (action: () => void) => confirmDiscard(showAddMeterPane && addMeterDirty, action)
   const {
     toggleMembersMeter,
     toggleMetering,
@@ -407,22 +413,24 @@ const ParticipantPaneComponent: FC = () => {
   };
 
   const onSelectParticipant =
-    (p: EegParticipant) => (e: React.MouseEvent<Element, MouseEvent>) => {
+    (p: EegParticipant) => (e: React.MouseEvent<Element, MouseEvent>) => leaveAddMeter(() => {
       dispatcher(selectParticipant(p.id));
       if (p.meters.length > 0) {
         dispatcher(selectMetering(p.meters[0].meteringPoint));
       }
       setShowAddMeterPane(false);
-    };
+    });
 
   const onShowAddMeterPage = (p: EegParticipant) => (e: React.MouseEvent<HTMLIonButtonElement, MouseEvent>) => {
-    dispatcher(selectParticipant(p.id));
-    if (p.meters.length > 0) {
-      dispatcher(selectMetering(p.meters[0].meteringPoint));
-    }
-    setShowAddMeterPane(true);
     e.preventDefault();
     e.stopPropagation();
+    leaveAddMeter(() => {
+      dispatcher(selectParticipant(p.id));
+      if (p.meters.length > 0) {
+        dispatcher(selectMetering(p.meters[0].meteringPoint));
+      }
+      setShowAddMeterPane(true);
+    })
   };
 
   const onSelectMeter = (
@@ -430,10 +438,12 @@ const ParticipantPaneComponent: FC = () => {
     participantId: string,
     meter: Metering
   ) => {
-    dispatcher(selectParticipant(participantId));
-    dispatcher(selectMetering(meter.meteringPoint));
     e.stopPropagation();
-    setShowAddMeterPane(false);
+    leaveAddMeter(() => {
+      dispatcher(selectParticipant(participantId));
+      dispatcher(selectMetering(meter.meteringPoint));
+      setShowAddMeterPane(false);
+    })
   };
 
   const billingSum = () => {
