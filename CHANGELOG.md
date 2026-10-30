@@ -21,6 +21,8 @@ this changelog highlights the changes relevant for overview and operations.
   its own; a status above the form now says „Alle Änderungen gespeichert“, „Wird gespeichert …“ or „Nicht gespeichert –
   erneut versuchen“. A failed save keeps the typed value in the field, and „erneut versuchen“ sends every failed
   change again.
+  The metering point details (they save on their own as well, the participation factor separately) show the same
+  status.
 
 ### Changed
 - **Tariff names may contain umlauts and ß** (platform#228 step 4). The tariff editor rejected „ä ö ü Ä Ö Ü ß“. Checked
