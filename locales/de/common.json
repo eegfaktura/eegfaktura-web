@@ -309,6 +309,11 @@
     "cancel": "Abbrechen",
     "apply": "Übernehmen"
   },
+  "dashboardCharts": {
+    "load_failed": "Die Diagrammdaten konnten nicht geladen werden.",
+    "no_data": "Für diesen Zeitraum liegen keine Diagrammdaten vor.",
+    "retry": "Erneut versuchen"
+  },
   "mailtemplates": {
     "header": "E-Mail-Texte",
     "card_text": "Betreff und Text der automatischen Mails an Mitglieder anpassen.",

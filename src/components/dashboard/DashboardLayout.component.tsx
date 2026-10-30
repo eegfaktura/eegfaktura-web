@@ -15,6 +15,7 @@ import {useTenant} from "../../store/hook/Eeg.provider";
 import {Api} from "../../service";
 import {IonButton, IonSpinner} from "@ionic/react";
 import {dayBounds, formatDay} from "./DayView.functions";
+import {useLocale} from "../../store/hook/useLocale";
 
 interface LoadSharingComponentProps {
   participants: EegParticipant[]
@@ -28,27 +29,36 @@ const DashboardLayoutComponent: FC<LoadSharingComponentProps> = ({consumed, prod
   // const activePeriod = useAppSelector(selectedPeriodSelector);
   const periods = useAppSelector(periodsSelector);
   const tenant = useTenant()
+  const {t} = useLocale("common")
 
   const [combinedReport, setCombinedReport] = useState<Record<string, ReportNamedData[] | undefined>>({intraday: undefined, loadcurve: undefined})
-  // a failed load showed the spinner forever (platform#228); it now shows an error with "Erneut versuchen"
+  // a failed load or an answer without data showed the spinner forever (platform#228); a failure now shows an error
+  // with "Erneut versuchen", an answer without a report "no data"
   const [reportFailed, setReportFailed] = useState(false)
+  const [reportLoaded, setReportLoaded] = useState(false)
   const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
+    let ignore = false   // a late answer for an earlier period or participant list sets nothing
     if (tenant && activePeriod) {
       setReportFailed(false)
+      setReportLoaded(false)
       // dismissLoading(true)
       Api.energyService.fetchCombinedReportV2(tenant, ["intraday", "loadcurve"], activePeriod).then((d) => {
         // dismissLoading(false)
-        d !== null && setCombinedReport(d.reduce((r, d) => {
+        if (ignore) return
+        setCombinedReport((d ?? []).reduce((r, d) => {
           return {...r, [d.reportName]: d.reportData}
-        }, {}))
+        }, {} as Record<string, ReportNamedData[] | undefined>))
+        setReportLoaded(true)
       }).catch(() => {
         // dismissLoading(false)
+        if (ignore) return
         setCombinedReport({intraday: undefined, loadcurve: undefined})
         setReportFailed(true)
       })
     }
+    return () => { ignore = true }
   }, [activePeriod, participants, attempt]);
 
   const energyDate = useMemo(() => periods, [periods])
@@ -61,10 +71,13 @@ const DashboardLayoutComponent: FC<LoadSharingComponentProps> = ({consumed, prod
     if (reportFailed) {
       return (
         <div style={{height: "100%", display: "flex", flexFlow: "column", alignItems: "center", justifyContent: "center", gap: "10px"}}>
-          <div>Die Diagrammdaten konnten nicht geladen werden.</div>
-          <IonButton size="small" onClick={() => setAttempt(a => a + 1)}>Erneut versuchen</IonButton>
+          <div>{t("dashboardCharts.load_failed")}</div>
+          <IonButton size="small" onClick={() => setAttempt(a => a + 1)}>{t("dashboardCharts.retry")}</IonButton>
         </div>
       )
+    }
+    if (!report && reportLoaded) {
+      return <div style={{height: "100%", display: "flex", alignItems: "center", justifyContent: "center"}}>{t("dashboardCharts.no_data")}</div>
     }
     if (report) {
       return children

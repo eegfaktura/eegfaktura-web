@@ -10,8 +10,10 @@ this changelog highlights the changes relevant for overview and operations.
 
 ### Fixed
 - **Dashboard: a failed chart load shows an error instead of an endless spinner** (platform#228 step 2). When the
-  load and day curve data could not be loaded, both chart cards kept spinning. They now show „Die Diagrammdaten
-  konnten nicht geladen werden.“ with „Erneut versuchen“, which loads them again.
+  load and day curve data could not be loaded, or the answer held no data, both chart cards kept spinning. A failed
+  load now shows „Die Diagrammdaten konnten nicht geladen werden.“ with „Erneut versuchen“, which loads them again; an
+  answer without data shows „Für diesen Zeitraum liegen keine Diagrammdaten vor.“ A late answer for a period that is no
+  longer selected is ignored.
 - **Dashboard: inactive metering points are counted** (platform#228 step 2). „Übersicht EEG“ showed a fixed
   „0 inaktive“ next to the metering points. It now counts the metering points whose current participation is inactive
   (left or revoked), over all members and marked „(Stand heute)“ like the member counts; a metering point that moved to
@@ -21,8 +23,8 @@ this changelog highlights the changes relevant for overview and operations.
 - **Member details: an empty company name shows „Firmenname fehlt!“** (pre-existing error found in platform#228 step 2).
   It showed the raw text key „company-name_missing“.
 - **Member and metering point forms: invalid input shows a message** (platform#228 step 2). A participation or
-  allocation factor outside 0–100 was rejected with an empty message; it now reads „Teilnahmefaktor (Verteilungsfaktor)
-  muss größer als 0 und höchstens 100 sein!“. An empty street in the member details showed no red message, because the
+  allocation factor outside 0–100 was rejected with an empty message; it now reads „Teilnahmefaktor muss größer als 0
+  und höchstens 100 sein!“ or „Verteilungsfaktor muss größer als 0 und höchstens 100 sein!“. An empty street in the member details showed no red message, because the
   message was read from the resident address while the rule sits on the billing address; it now shows „Straße fehlt!“.
 - **Text fields: the caret no longer jumps to the end while typing.** Renaming a tariff moved the caret to the end of
   the field after the first typed character, so the rest landed at the end („Beitritt2 weiterer ZP026“). The input
