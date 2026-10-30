@@ -173,6 +173,8 @@ describe("Datenfreigabe aufheben", () => {
     await submit("Anfordern")
     expect(alert.mock.lastCall![0].message).toBe(`Soll die Datenfreigabe für den Zählpunkt ${m1.meteringPoint} beim `
       + `Netzbetreiber aufgehoben werden? Ende der Datenfreigabe: 31.10.2026.`)
+    // no second revoke from a double click: disabled while the dialog is open
+    expect(isDisabled(submitButton("Anfordern"))).toBe(true)
     await dismiss("cancel")
     expect(Api.eegService.revokeMeteringPoint).not.toHaveBeenCalled()
 
