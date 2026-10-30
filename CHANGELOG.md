@@ -28,10 +28,13 @@ this changelog highlights the changes relevant for overview and operations.
 
 ### Fixed
 - **„Datenfreigabe aufheben“: the optional „Begründung“ reaches the grid operator** (revoke reason, 2026-10-30). The
-  field was never read: the request always went out without a reason. It is now sent as `reason` (trimmed; blank is
-  not sent), limited to 50 characters with a counter (the length CMRevoke allows), and the confirmation names it. Needs
-  backend with the `reason` key (eegfaktura-backend fix/revoke-reason-2026-10-30) — an older backend ignores the field;
-  eda-xp then sends it to the grid operator as ReasonKey 0 + Reason.
+  field was never read: the request always went out without a reason. It is now sent as `reason`, cleaned as the
+  backend cleans it (control characters and runs of white space become one space, ends trimmed; blank is not sent).
+  A counter under the field counts the cleaned text in characters (as the backend and CMRevoke count them) up to 50;
+  above 50 „Höchstens 50 Zeichen.“ appears and „Anfordern“ stays disabled. A hint says that the reason goes to the grid
+  operator and is stored in the history (user decision 2026-10-30) and asks not to enter personal data. The
+  confirmation names the reason. Needs eegfaktura/eegfaktura-backend#127 (reads `reason`; an older backend ignores the
+  field) and eegfaktura/eegfaktura-eda-xp#59 (ReasonKey 0 + Reason); deploy order eda-xp → backend → web.
 - **A refused send of the billing mails is shown** (web 261030-mm1). When billing refuses the send (the run is busy,
   409, or it was sent from elsewhere meanwhile) the pane now says „Der Mailversand ist fehlgeschlagen.“ with billing's reason;
   before, the result was ignored and nothing (or only a generic text) appeared.

@@ -1,4 +1,5 @@
 import moment from "moment";
+import i18n from "../../util/I18n";
 import {Metering} from "../../models/meteringpoint.model";
 import {meterCount} from "../notification/EnergyRequestSummary.functions";
 
@@ -34,10 +35,16 @@ export const requestValuesSummary = (meters: Metering[], start: Date, end: Date,
 // the CMRevoke schema allows 50 characters in Reason; the backend refuses a longer one
 export const REVOKE_REASON_MAX = 50
 
+// the reason as the backend sends it: control characters and runs of white space become one space, ends trimmed
+export const cleanRevokeReason = (raw?: string) => (raw ?? "").replace(/[\u0000-\u001f\u007f-\u009f\s]+/g, " ").trim()
+
+// its length as the backend and CMRevoke count it: characters (code points), not UTF-16 units
+export const revokeReasonLength = (raw?: string) => [...cleanRevokeReason(raw)].length
+
 export const revokeSummary = (meters: Metering[], consentEnd: Date, reason?: string) =>
   `Soll die Datenfreigabe ${forMeters(meters.map(m => m.meteringPoint))} beim Netzbetreiber aufgehoben werden? `
   + `Ende der Datenfreigabe: ${date(consentEnd)}.`
-  + (reason ? ` Begründung: „${reason}“.` : "")
+  + (reason ? ` ${i18n.t("process.revokeMeter.reason_summary")}: „${reason}“.` : "")
 
 export const registerSummary = (meteringPoint: string, member: string, offline: boolean) =>
   `Zählpunkt ${meteringPoint} (${member}) ${offline ? "offline (mit Aktivierungs-Code)" : "online"} `

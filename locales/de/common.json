@@ -233,7 +233,10 @@
     "revokeMeter": {
       "title": "Zählpunkt abmelden",
       "desc": "Der Marktteilnehmer wird über die Aufhebung einer erteilten Datenfreigabe in Kenntnis gesetzt.",
-      "reason": "Begründung (optional)"
+      "reason": "Begründung (optional)",
+      "reason_hint": "Wird an den Netzbetreiber gesendet und in der Historie gespeichert – bitte keine personenbezogenen Daten eintragen.",
+      "reason_too_long": "Höchstens {{max}} Zeichen.",
+      "reason_summary": "Begründung"
     },
     "EC_PRTFACT_CHANGE": "Änderung des Teilnahmefaktors",
     "EC_REQ_ONL": "Anmeldung Teilnahme Online",
