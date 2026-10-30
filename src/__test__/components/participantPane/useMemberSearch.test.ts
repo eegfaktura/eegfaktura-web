@@ -22,6 +22,15 @@ describe("useMemberSearch", () => {
     expect(result.current.searchQuery).toBeUndefined()
   })
 
+  it("ignores a debounced input that arrives after the bar was closed", () => {
+    const {result} = renderHook(() => useMemberSearch())
+    act(() => result.current.toggleSearch())
+    const lateInput = result.current.onSearchInput   // the handler the open bar was rendered with
+    act(() => result.current.toggleSearch())
+    act(() => lateInput("muster"))
+    expect(result.current.searchQuery).toBeUndefined()
+  })
+
   it("reopening starts with an empty search", () => {
     const {result} = renderHook(() => useMemberSearch())
     act(() => result.current.toggleSearch())

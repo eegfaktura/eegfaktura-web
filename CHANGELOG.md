@@ -23,7 +23,8 @@ this changelog highlights the changes relevant for overview and operations.
   (left or revoked), over all members and marked „(Stand heute)“ like the member counts; a metering point that moved to
   another member and is active there is not counted. The „aktive“ count of the period is unchanged.
 - **Member list: closing the search clears it** (platform#228 step 2). After closing the search bar the list kept
-  filtering by the last search text, so members were missing without a visible reason. Reopening starts empty.
+  filtering by the last search text, so members were missing without a visible reason. Reopening starts empty; text
+  typed just before closing is not applied afterwards.
 - **Member details: an empty company name shows „Firmenname fehlt!“** (pre-existing error found in platform#228 step 2).
   It showed the raw text key „company-name_missing“.
 - **Member and metering point forms: invalid input shows a message** (platform#228 step 2). A participation or
