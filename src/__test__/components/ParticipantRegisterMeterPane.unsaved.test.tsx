@@ -21,6 +21,8 @@ vi.mock("../../components/core/MeterForm.element", () => ({
     return <>
       <button onClick={() => setValue("meteringPoint", "AT0030000000000000000000000000001", {shouldDirty: true})}>eingeben</button>
       <span data-testid="meteringPoint">{watch("meteringPoint")}</span>
+      <button onClick={() => setValue("equipmentName", "Wärmepumpe", {shouldDirty: true})}>Anlage</button>
+      <span data-testid="equipmentName">{watch("equipmentName")}</span>
     </>
   }
 }))
@@ -78,5 +80,21 @@ describe("registration: the metering point form asks before its input is lost (p
     fireEvent.click(screen.getByText("Abbrechen"))
     answer("confirm")
     expect(dirtyReports.at(-1)).toBe(false)
+  })
+
+  it("the card of the open metering point asks nothing and keeps the input (review PR #244)", async () => {
+    const {dirtyReports} = setup()
+    fireEvent.click(screen.getByText("eingeben"))
+    await act(async () => fireEvent.click(screen.getByText("Hinzufügen")))
+    expect(screen.queryByText("Anlage")).toBeNull()
+    // the added metering point is listed as a card: open it, change it, click its card again
+    const card = () => document.querySelector("ion-card")
+    fireEvent.click(card()!)
+    fireEvent.click(screen.getByText("Anlage"))
+    expect(dirtyReports.at(-1)).toBe(true)
+    alert.mockReset()
+    fireEvent.click(card()!)
+    expect(alert).not.toHaveBeenCalled()
+    expect(screen.getByTestId("equipmentName").textContent).toBe("Wärmepumpe")
   })
 })

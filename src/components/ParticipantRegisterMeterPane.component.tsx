@@ -51,12 +51,18 @@ const ParticipantRegisterMeterPaneComponent: FC<ParticipantRegisterMeterPaneComp
 
  const meters = watch("meters")
 
-  // another metering point or a new one replaces the open form: ask first while it holds unsaved input
-  const showMeter = (meter: Metering) => confirmDiscard(addMeterPaneActive && meterDirty, () => {
-    setMeteringPoint(meter);
-    setFormKey(k => k + 1);
-    setAddMeterPaneActive(true);
-  })
+  // another metering point or a new one replaces the open form: ask first while it holds unsaved input. The card of the
+  // open metering point keeps the form as it is.
+  const isOpen = (meter: Metering) => addMeterPaneActive && !!meteringPoint && meter.meteringPoint !== ""
+    && meter.meteringPoint === meteringPoint.meteringPoint
+  const showMeter = (meter: Metering) => {
+    if (isOpen(meter)) return
+    confirmDiscard(addMeterPaneActive && meterDirty, () => {
+      setMeteringPoint(meter);
+      setFormKey(k => k + 1);
+      setAddMeterPaneActive(true);
+    })
+  }
 
   const appendMeter = (meter: Metering) => {
     setAddMeterPaneActive(false)
