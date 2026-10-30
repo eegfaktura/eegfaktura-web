@@ -16,6 +16,9 @@ import {TariffService} from "./service/tariff.service";
 import {MailTemplateService} from "./service/mailtemplate.service";
 import {I18nextProvider} from "react-i18next";
 import i18n from "./util/I18n";
+import {registerDatePickerLocale} from "./util/DateFormat.util";
+
+registerDatePickerLocale();
 
 // import './util/I18n';
 

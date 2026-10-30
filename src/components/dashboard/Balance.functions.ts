@@ -33,8 +33,6 @@ export const daysOfBar = (name: string | undefined) => {
   }
 }
 
-export {formatKwh}
-
 // marked: number of bars that do not balance; a period with such a bar is not "ausgeglichen", even if the signed
 // differences of its bars cancel out (missing producer data on one day, missing consumer data on another).
 export const balanceText = (difference: number, days: number, marked = 0) =>

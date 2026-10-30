@@ -1,6 +1,6 @@
 import moment from "moment";
 import {formatNumber} from "../../util/Number.util";
-import {formatDate} from "../../util/DateFormat.util";
+import {formatDate, formatDateTime} from "../../util/DateFormat.util";
 import {Metering} from "../../models/meteringpoint.model";
 import {EegNotification} from "../../models/eeg.model";
 import {EegParticipant} from "../../models/members.model";
@@ -59,7 +59,7 @@ export const formatDay = (ms: number) => formatDate(ms)
 
 // a time of today as 14:32, of another day with the date
 export const formatUntil = (ms: number, now = Date.now()) =>
-  moment(ms).format(moment(ms).isSame(now, 'day') ? "HH:mm" : "DD.MM.YYYY HH:mm")
+  moment(ms).isSame(now, 'day') ? moment(ms).format("HH:mm") : formatDateTime(ms)
 
 // The problem groups in display order, the complete metering points last; groups without metering points are left
 // out. While the request runs, the metering points without an answer are still open.

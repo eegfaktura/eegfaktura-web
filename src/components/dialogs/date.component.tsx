@@ -5,7 +5,7 @@ import {IonButton, IonIcon, IonInput, IonLabel, IonRow} from "@ionic/react";
 import "react-datepicker/dist/react-datepicker.css";
 import "./data.component.scss"
 import {calendar} from "ionicons/icons";
-import {DATE_PICKER_FORMAT, DATE_PICKER_LOCALE, formatDate} from "../../util/DateFormat.util";
+import {DATE_PICKER_PROPS, formatDate} from "../../util/DateFormat.util";
 
 interface DateComponentProps {
   initialDate: [Date|null, Date|null]
@@ -45,8 +45,7 @@ const DateComponent: FC<DateComponentProps> = ({range, initialDate}) => {
         customInput={
           <DateInputComponent/>
         }
-        dateFormat={DATE_PICKER_FORMAT}
-        locale={DATE_PICKER_LOCALE}
+        {...DATE_PICKER_PROPS}
         portalId="root-portal"
       />
   )

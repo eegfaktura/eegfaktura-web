@@ -7,7 +7,7 @@ import "./DatePickerForm.element.scss"
 import {IonInputCustomEvent} from "@ionic/core/dist/types/components";
 import {InputInputEventDetail} from "@ionic/core/dist/types/components/input/input-interface";
 import moment from "moment";
-import {DATE_PICKER_EXAMPLE, DATE_PICKER_FORMAT, DATE_PICKER_LOCALE} from "../../util/DateFormat.util";
+import {DATE_PICKER_EXAMPLE, DATE_PICKER_PROPS} from "../../util/DateFormat.util";
 
 interface DatePickerFormProps {
   control: Control<any, any>,
@@ -86,8 +86,7 @@ const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, l
               }}
               customInput={<Component />}
               onCalendarClose={handleUpdate(onChange)}
-              dateFormat={DATE_PICKER_FORMAT}
-              locale={DATE_PICKER_LOCALE}
+              {...DATE_PICKER_PROPS}
               ref={ref}
               portalId="root-portal"
             />

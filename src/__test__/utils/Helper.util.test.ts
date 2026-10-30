@@ -16,6 +16,16 @@ describe("reformatDateTimeStamp", () => {
     expect(reformatDateTimeStamp(input)).toBe(localOfUtc(input));
   });
 
+  it("accepts a timestamp without fractional seconds", () => {
+    const input = "2026-07-05T17:26:00";
+    expect(reformatDateTimeStamp(input)).toBe(localOfUtc(input));
+    expect(reformatDateTimeStamp("2026-07-05T17:26:00.123456")).toBe(localOfUtc("2026-07-05T17:26:00.123"));
+  });
+
+  it("returns empty string for a timestamp that is no real date", () => {
+    expect(reformatDateTimeStamp("2026-13-05T17:26:00.000")).toBe("");
+  });
+
   it("returns empty string for malformed / non-datetime input", () => {
     expect(reformatDateTimeStamp("")).toBe("");
     expect(reformatDateTimeStamp("2026-07-05")).toBe("");

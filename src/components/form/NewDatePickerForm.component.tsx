@@ -6,7 +6,7 @@ import React, {forwardRef} from "react";
 import {IonInput, IonItem, IonLabel} from "@ionic/react";
 import moment, {Moment} from "moment";
 import {LocalDate} from "local-date";
-import {DATE_PICKER_FORMAT, DATE_PICKER_LOCALE, MONTH_NAMES} from "../../util/DateFormat.util";
+import {DATE_PICKER_PROPS, MONTH_NAMES} from "../../util/DateFormat.util";
 
 // --- Custom IonInput Component for DatePicker ---
 interface CustomIonInputProps {
@@ -31,7 +31,7 @@ const CustomIonInput = forwardRef<HTMLIonInputElement, CustomIonInputProps>(
         readonly={readOnly}
         disabled={disabled}
         ref={ref} // Pass the ref to IonInput
-        placeholder="Select Date"
+        placeholder="TT.MM.JJJJ"
         fill="outline"
         labelPlacement={"floating"}
       />
@@ -183,8 +183,7 @@ const DatePickerInput = <TFieldValues extends FieldValues>({
               selected={showDate(field.value)?.toDate()} // Cast to Date | null
               onChange={onDateChange(field)}
               onBlur={field.onBlur}
-              dateFormat={DATE_PICKER_FORMAT}
-              locale={DATE_PICKER_LOCALE}
+              {...DATE_PICKER_PROPS}
               customInput={
                 <CustomIonInput
                   label={label}

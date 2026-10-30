@@ -7,7 +7,7 @@ import {
   IonRow,
 } from "@ionic/react";
 import DatePicker from "react-datepicker";
-import {DATE_PICKER_FORMAT, DATE_PICKER_LOCALE} from "../../util/DateFormat.util";
+import {DATE_PICKER_PROPS} from "../../util/DateFormat.util";
 
 import "./upload.popover.scss"
 import "react-datepicker/dist/react-datepicker.css";
@@ -56,8 +56,7 @@ const DatepickerPopover: FC<{
                   }}
                   // isClearable={true}
                   customInput={<DateInputComponent/>}
-                  dateFormat={DATE_PICKER_FORMAT}
-                  locale={DATE_PICKER_LOCALE}
+                  {...DATE_PICKER_PROPS}
                   portalId="root-portal"
                 />
               </IonCol>

@@ -24,3 +24,16 @@ describe("RateCard number notation", () => {
     expect(screen.getByText("12,50 €")).toBeInTheDocument()
   })
 })
+
+describe("RateCard missing fee", () => {
+  it("shows a dash for a missing member fee or metering point fee, never NaN € or 0,00 €", () => {
+    const {container, unmount} = render(<RateCardComponent rate={rate({type: "EEG", useVat: false})}/>)
+    expect(container.textContent).toContain("–")
+    expect(container.textContent).not.toMatch(/NaN|0,00 €/)
+    unmount()
+    const vzp = render(<RateCardComponent rate={rate({type: "VZP", centPerKWh: 10, useMeteringPointFee: true,
+      meteringPointFee: null as unknown as number})}/>)
+    expect(vzp.container.textContent).not.toMatch(/NaN|0,00 €/)
+    expect(vzp.container.textContent).toContain("–")
+  })
+})

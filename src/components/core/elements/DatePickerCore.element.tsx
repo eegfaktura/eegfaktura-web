@@ -8,7 +8,7 @@ import {InputInputEventDetail} from "@ionic/core/dist/types/components/input/inp
 import moment from "moment/moment";
 
 import "./DatePickerCore.element.scss"
-import {DATE_PICKER_EXAMPLE, DATE_PICKER_FORMAT, DATE_PICKER_LOCALE, MONTH_NAMES} from "../../../util/DateFormat.util";
+import {DATE_PICKER_EXAMPLE, DATE_PICKER_PROPS, MONTH_NAMES} from "../../../util/DateFormat.util";
 
 interface DatePickerCoreProps {
   initialValue: Date | null
@@ -146,8 +146,7 @@ const DatePickerCoreElement: FC<DatePickerCoreProps> = ({name, initialValue, onC
         }}
         customInput={<Component />}
         onCalendarClose={onUpdate}
-        dateFormat={DATE_PICKER_FORMAT}
-        locale={DATE_PICKER_LOCALE}
+        {...DATE_PICKER_PROPS}
         portalId="root-portal"
       />
       {/*{error && <div className={"error-line"}>{error.message}</div>}*/}

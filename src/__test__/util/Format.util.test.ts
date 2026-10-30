@@ -24,6 +24,10 @@ describe("number notation: decimal comma, thousands dot", () => {
 
   it("shows no minus zero", () => {
     expect(formatDecimal2(-0)).toBe("0,00")
+    expect(formatDecimal2(-1e-10)).toBe("0,00")
+    expect(formatDecimal2(-0.004)).toBe("0,00")
+    expect(formatKwh(-0.0004)).toBe("0,000 kWh")
+    expect(formatDecimal2(-0.005)).toBe("-0,01")
   })
 
   it("tariff prices keep their decimals, euro values get at least two", () => {
@@ -32,6 +36,14 @@ describe("number notation: decimal comma, thousands dot", () => {
     expect(formatTariffEuro(1.5)).toBe("1,50 €")
     expect(formatTariffEuro(0.125)).toBe("0,125 €")
     expect(formatTariffEuro(1234)).toBe("1.234,00 €")
+    expect(formatTariffEuro(0)).toBe("0,00 €")
+  })
+
+  it("a missing tariff fee shows a dash, never 0,00 € or NaN €", () => {
+    expect(formatTariffEuro(undefined)).toBe("–")
+    expect(formatTariffEuro(null)).toBe("–")
+    expect(formatTariffEuro("")).toBe("–")
+    expect(formatTariffEuro("abc")).toBe("–")
   })
 
   it("reads tariff values that arrive as text", () => {

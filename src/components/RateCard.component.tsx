@@ -80,7 +80,7 @@ const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect
           <div>
             <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
               <p>{t("participantFee_card")}</p>
-              <p>{formatTariffEuro(Number(rate.participantFee))}</p>
+              <p>{formatTariffEuro(rate.participantFee)}</p>
             </div>
             {rate.useVat && (<div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <p>{t('vatInPercent_card')}</p>
@@ -115,7 +115,7 @@ const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect
             </div>}
             {rate.useMeteringPointFee && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <p>{t('meteringPointFee_card')}</p>
-                <p>{formatTariffEuro(Number(rate.meteringPointFee))}</p>
+                <p>{formatTariffEuro(rate.meteringPointFee)}</p>
             </div>}
             {!rate.useTimeTariff && !!rate.freeKWh && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
               <p>{t('freeKWh_card')}</p>
@@ -142,7 +142,7 @@ const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect
             </div>}
             {rate.useMeteringPointFee && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <p>{t('meteringPointFee_card')}</p>
-                <p>{formatTariffEuro(Number(rate.meteringPointFee))}</p>
+                <p>{formatTariffEuro(rate.meteringPointFee)}</p>
             </div>}
           </div>
         )
