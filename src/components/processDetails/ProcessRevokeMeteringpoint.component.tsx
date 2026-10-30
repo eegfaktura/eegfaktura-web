@@ -3,6 +3,7 @@ import {IonButton, IonContent, IonInput, IonItem, useIonToast} from "@ionic/reac
 import InputForm from "../form/InputForm.component";
 import SelectForm from "../form/SelectForm.component";
 import DatePicker from "react-datepicker";
+import {DATE_PICKER_FORMAT, DATE_PICKER_LOCALE} from "../../util/DateFormat.util";
 import {useForm} from "react-hook-form";
 import {Metering} from "../../models/meteringpoint.model";
 import {EdaProcess, Eeg} from "../../models/eeg.model";
@@ -155,6 +156,8 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
                   setConsentEndDate(update);
                 }}
                 customInput={<Component/>}
+                dateFormat={DATE_PICKER_FORMAT}
+                locale={DATE_PICKER_LOCALE}
                 minDate={moment(Date.now()).add(1, 'day').toDate()}
               />
             </div>

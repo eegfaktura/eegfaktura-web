@@ -5,7 +5,7 @@ import {bug, person} from "ionicons/icons";
 import {eegPlug, eegSolar} from "../eegIcons";
 import {useLocale} from "../store/hook/useLocale";
 import {hasJoiningFee} from "../util/JoiningFee.util";
-import {formatDecimal2} from "../util/Number.util";
+import {formatCent, formatDecimal2, formatNumber, formatTariffEuro} from "../util/Number.util";
 
 interface RateCardComponentProps {
   rate: EegTariff;
@@ -39,8 +39,9 @@ const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect
     return !(!!value && value > 0);
   }
 
-  const priceLabel = (v?: number): string => v !== undefined && v !== null
-    ? (v.toString().replace(".", ",") + " Cent") : ""
+  const priceLabel = (v?: number): string => v !== undefined && v !== null ? formatCent(v) : ""
+
+  const percent = (v: number | string): string => formatNumber(v, 0, 6) + " %"
 
   // ZVT: Basispreis + aktive Zeitfenster (Name/Von-Bis/Preis) statt des
   // einen Arbeitspreises. Kompakte Read-Darstellung in der Tarif-Karte.
@@ -79,15 +80,15 @@ const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect
           <div>
             <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
               <p>{t("participantFee_card")}</p>
-              <p>{(Number(rate.participantFee)) + " €"}</p>
+              <p>{formatTariffEuro(Number(rate.participantFee))}</p>
             </div>
             {rate.useVat && (<div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <p>{t('vatInPercent_card')}</p>
-                <p>{(rate.vatInPercent != null && String(rate.vatInPercent).length > 0 ? rate.vatInPercent : "0") + " %"}</p>
+                <p>{percent(rate.vatInPercent != null && String(rate.vatInPercent).length > 0 ? rate.vatInPercent : "0")}</p>
             </div>)}
             {!!rate.discount && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
               <p>{t('discount_card')}</p>
-              <p>{rate.discount + " %"}</p>
+              <p>{percent(rate.discount)}</p>
             </div>}
             {hasJoiningFee(rate) && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
               <p>{t('joiningFee.card')}</p>
@@ -95,7 +96,7 @@ const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect
             </div>}
             {hasJoiningFee(rate) && rate.joiningFeeUseVat && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
               <p>{t('joiningFee.vatInPercent_card')}</p>
-              <p>{Number(rate.joiningFeeVatInPercent ?? 0) + " %"}</p>
+              <p>{percent(Number(rate.joiningFeeVatInPercent ?? 0))}</p>
             </div>}
           </div>
         )
@@ -106,23 +107,23 @@ const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect
               ? renderTimeTariffLines(rate)
               : <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                   <p>{t("centPerKWh_card")}</p>
-                  <p>{rate.centPerKWh ? (rate.centPerKWh.toString().replace(".", ",") + " Cent") : ''}</p>
+                  <p>{rate.centPerKWh ? formatCent(rate.centPerKWh) : ''}</p>
                 </div>}
             {rate.useVat && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <p>{t('vatInPercent_card')}</p>
-                <p>{(rate.vatInPercent != null && String(rate.vatInPercent).length > 0 ? rate.vatInPercent : "0") + " %"}</p>
+                <p>{percent(rate.vatInPercent != null && String(rate.vatInPercent).length > 0 ? rate.vatInPercent : "0")}</p>
             </div>}
             {rate.useMeteringPointFee && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <p>{t('meteringPointFee_card')}</p>
-                <p>{rate.meteringPointFee + " €"}</p>
+                <p>{formatTariffEuro(Number(rate.meteringPointFee))}</p>
             </div>}
             {!rate.useTimeTariff && !!rate.freeKWh && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
               <p>{t('freeKWh_card')}</p>
-              <p>{rate.freeKWh + " kWh"}</p>
+              <p>{formatNumber(rate.freeKWh, 0, 6) + " kWh"}</p>
             </div>}
             {!!rate.discount && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
               <p>{t('discount_card')}</p>
-              <p>{rate.discount + " %"}</p>
+              <p>{percent(rate.discount)}</p>
             </div>}
           </div>
         )
@@ -133,15 +134,15 @@ const RateCardComponent: FC<RateCardComponentProps> = ({rate, editable, onSelect
               ? renderTimeTariffLines(rate)
               : <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                   <p>{t("centPerKWh_card")}</p>
-                  <p>{rate.centPerKWh ? (rate.centPerKWh.toString().replace(".", ",") + " Cent") : ''}</p>
+                  <p>{rate.centPerKWh ? formatCent(rate.centPerKWh) : ''}</p>
                 </div>}
             {rate.useVat && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <p>{t('vatInPercent_card')}</p>
-                <p>{(rate.vatInPercent != null && String(rate.vatInPercent).length > 0 ? rate.vatInPercent : "0") + " %"}</p>
+                <p>{percent(rate.vatInPercent != null && String(rate.vatInPercent).length > 0 ? rate.vatInPercent : "0")}</p>
             </div>}
             {rate.useMeteringPointFee && <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
                 <p>{t('meteringPointFee_card')}</p>
-                <p>{rate.meteringPointFee + " €"}</p>
+                <p>{formatTariffEuro(Number(rate.meteringPointFee))}</p>
             </div>}
           </div>
         )

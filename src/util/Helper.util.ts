@@ -2,6 +2,7 @@ import {EegParticipant} from "../models/members.model";
 import {ReportType, SelectedPeriod, TariffTimeWindow} from "../models/energy.model";
 import {CpPeriodType} from "../models/reports.model";
 import {EegTariff, MONTHNAME} from "../models/eeg.model";
+import {formatDateTime} from "./DateFormat.util";
 
 
 export const formatedName = (participant: EegParticipant) => {
@@ -273,19 +274,18 @@ export function findPartial<O extends object, OT extends keyof object>(obj: O, k
   return result
 }
 
-// Kuerzt lange Timestampangaben. Z.B.: 2023-07-31T19:55:04.234769 -> 2023-07-31, 19:55
+// Kuerzt lange Timestampangaben. Z.B.: 2023-07-31T19:55:04.234769 -> 31.07.2023 21:55 (Ortszeit)
 export function reformatDateTimeStamp(dateTimeStampString : string) : string {
   if (dateTimeStampString && /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d*$/.test(dateTimeStampString)) {
     // billing serialises these status timestamps from LocalDateTime.now() in a UTC container,
     // i.e. a naive UTC wall-clock without offset. Interpret it as UTC and render in the
     // viewer's local time instead of slicing the raw (UTC) string (which showed 2h early in
-    // summer). Output format unchanged: "YYYY-MM-DD, HH:mm".
+    // summer). Output in the app's date notation "DD.MM.YYYY HH:mm" (platform#228).
     const d = new Date(dateTimeStampString + "Z");
     if (isNaN(d.getTime())) {
       return dateTimeStampString.substring(0,10)+", "+dateTimeStampString.substring(11,16)
     }
-    const pad = (n: number) => n.toString().padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}, ${pad(d.getHours())}:${pad(d.getMinutes())}`
+    return formatDateTime(d)
   } else {
     return "";
   }

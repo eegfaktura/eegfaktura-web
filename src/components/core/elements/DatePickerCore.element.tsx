@@ -8,6 +8,7 @@ import {InputInputEventDetail} from "@ionic/core/dist/types/components/input/inp
 import moment from "moment/moment";
 
 import "./DatePickerCore.element.scss"
+import {DATE_PICKER_EXAMPLE, DATE_PICKER_FORMAT, DATE_PICKER_LOCALE, MONTH_NAMES} from "../../../util/DateFormat.util";
 
 interface DatePickerCoreProps {
   initialValue: Date | null
@@ -68,7 +69,7 @@ const DatePickerCoreElement: FC<DatePickerCoreProps> = ({name, initialValue, onC
         }}
         style={{flexDirection: "row-reverse"}}
         label={label}
-        placeholder={placeholder + " z.B. April 2, 2024"}
+        placeholder={placeholder + " " + DATE_PICKER_EXAMPLE}
         fill="outline"
         labelPlacement={"floating"}
         ref={ref}
@@ -85,20 +86,7 @@ const DatePickerCoreElement: FC<DatePickerCoreProps> = ({name, initialValue, onC
   const getMonth = (date: Date) => date.getMonth()
 
   const years = range(2020, getYear(new Date()) + 1);
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
+  const months = MONTH_NAMES;
   return (
     <div className="form-element">
       <DatePicker
@@ -158,7 +146,8 @@ const DatePickerCoreElement: FC<DatePickerCoreProps> = ({name, initialValue, onC
         }}
         customInput={<Component />}
         onCalendarClose={onUpdate}
-        dateFormat="MMMM d, yyyy"
+        dateFormat={DATE_PICKER_FORMAT}
+        locale={DATE_PICKER_LOCALE}
         portalId="root-portal"
       />
       {/*{error && <div className={"error-line"}>{error.message}</div>}*/}

@@ -10,7 +10,7 @@ import BalanceValue from "./BalanceValue.component";
 
 import "./eeg-card.scss"
 
-const formatKwh = (value: unknown) => Number(value).toFixed(3) + " kWh"
+const formatKwh = (value: unknown) => kwh(Number(value))
 
 // A card in day mode ("Tag" chosen in its period popover): its own day, arrows and gear.
 export interface DayChartProps {

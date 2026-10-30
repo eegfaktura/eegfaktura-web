@@ -1,4 +1,6 @@
 import moment from "moment";
+import {formatNumber} from "../../util/Number.util";
+import {formatDate} from "../../util/DateFormat.util";
 import {Metering} from "../../models/meteringpoint.model";
 import {EegNotification} from "../../models/eeg.model";
 import {EegParticipant} from "../../models/members.model";
@@ -53,7 +55,7 @@ const SKIP_REASONS: Record<string, string> = {
 const COMPLETE = "COMPLETE"
 const ALREADY_REQUESTED = "ALREADY_REQUESTED"
 
-export const formatDay = (ms: number) => moment(ms).format("DD.MM.YYYY")
+export const formatDay = (ms: number) => formatDate(ms)
 
 // a time of today as 14:32, of another day with the date
 export const formatUntil = (ms: number, now = Date.now()) =>
@@ -154,6 +156,6 @@ export const hasLiveEntry = (notifications: EegNotification[]) =>
   notifications.some(n => n.message?.properties?.type === "ZUSAMMENFASSUNG_PT" && n.message.properties.live === true)
 
 // Counts with a dot as thousands separator, as in "2.380"
-export const count = (n: number) => n.toLocaleString("de-DE")
+export const count = (n: number) => formatNumber(n)
 
 export const meterCount = (n: number) => n === 1 ? "1 Zählpunkt" : `${count(n)} Zählpunkte`

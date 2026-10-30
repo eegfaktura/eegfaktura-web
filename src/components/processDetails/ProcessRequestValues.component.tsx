@@ -3,6 +3,7 @@ import {IonButton, IonContent, IonInput, IonItem, useIonAlert} from "@ionic/reac
 import InputForm from "../form/InputForm.component";
 import SelectForm from "../form/SelectForm.component";
 import DatePicker from "react-datepicker";
+import {DATE_PICKER_FORMAT, DATE_PICKER_LOCALE} from "../../util/DateFormat.util";
 import {useForm} from "react-hook-form";
 import {Metering} from "../../models/meteringpoint.model";
 import {EdaProcess, Eeg} from "../../models/eeg.model";
@@ -217,6 +218,8 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
                   setDateRange(update);
                 }}
                 customInput={<Component/>}
+                dateFormat={DATE_PICKER_FORMAT}
+                locale={DATE_PICKER_LOCALE}
               />
             </div>
             <IonItem lines="none" style={{zIndex: "0"}}>

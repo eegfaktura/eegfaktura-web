@@ -1,3 +1,5 @@
+import {formatKwh} from "../../util/Number.util";
+
 // Bilanzdifferenz: with complete energy data, Produktion = Eigendeckung + Überschuss (checked on pilot data
 // 25.10.2026, also for one EEG with multiple participation; production check open, platform#220). A difference means
 // energy data of single metering points is missing: negative → probably producers, positive → probably consumers.
@@ -31,8 +33,7 @@ export const daysOfBar = (name: string | undefined) => {
   }
 }
 
-export const formatKwh = (v: number) =>
-  `${v.toLocaleString("de-AT", {minimumFractionDigits: 3, maximumFractionDigits: 3})} kWh`
+export {formatKwh}
 
 // marked: number of bars that do not balance; a period with such a bar is not "ausgeglichen", even if the signed
 // differences of its bars cancel out (missing producer data on one day, missing consumer data on another).

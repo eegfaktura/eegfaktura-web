@@ -6,6 +6,7 @@ import React, {forwardRef} from "react";
 import {IonInput, IonItem, IonLabel} from "@ionic/react";
 import moment, {Moment} from "moment";
 import {LocalDate} from "local-date";
+import {DATE_PICKER_FORMAT, DATE_PICKER_LOCALE, MONTH_NAMES} from "../../util/DateFormat.util";
 
 // --- Custom IonInput Component for DatePicker ---
 interface CustomIonInputProps {
@@ -55,20 +56,7 @@ const customHeader = ({
   );
 
   const years = range(2020, getYear(new Date()) + 1);
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
+  const months = MONTH_NAMES;
 
   return (
   <div
@@ -195,7 +183,8 @@ const DatePickerInput = <TFieldValues extends FieldValues>({
               selected={showDate(field.value)?.toDate()} // Cast to Date | null
               onChange={onDateChange(field)}
               onBlur={field.onBlur}
-              dateFormat="MMMM d, yyyy"
+              dateFormat={DATE_PICKER_FORMAT}
+              locale={DATE_PICKER_LOCALE}
               customInput={
                 <CustomIonInput
                   label={label}
