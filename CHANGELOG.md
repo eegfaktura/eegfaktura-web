@@ -38,6 +38,22 @@ this changelog highlights the changes relevant for overview and operations.
   covers these letters, as member names already do) and in the XLSX „Details“ sheet; the SEPA file is built from the
   „Liste“ sheet, which has no tariff name; no mail text uses it. Other characters stay rejected, they may not print in
   the PDF.
+- **Processes to the grid operator ask first, with a summary** (platform#228 step 3). Changing the participation
+  factor, registering a metering point, requesting energy data without „Smart“, revoking the data consent and requesting
+  the metering point list now show what is sent before sending it: the metering point(s), the old and new factor, the
+  period, the end of the consent or the grid operator. „Abbrechen“ sends nothing; „Senden“/„Anfordern“/„Aufheben“ sends
+  the same request as before. The smart energy data request already asked and is unchanged; the approval of a new
+  member keeps its own dialog.
+- **Billing mails: „Senden“ names the number of documents; after the send the button is disabled** (platform#228
+  step 3). The question before sending the billing mails of a run says how many documents go out by mail. billing
+  refuses every further send of a run once it recorded the send (since bc52c5b), so the button no longer offers it: it
+  is disabled and reads „Bereits versendet (<Datum, Uhrzeit>)“, and „Wird versendet …“ while billing sends (with a hint
+  to contact support if it stays). The line „Versand gestartet (…)“ above it is gone, the button shows it. Invoice
+  mails could not go out twice before either; the button just led to a refusal.
+  A double click opens one dialog; the process forms stay disabled while their dialog is open and the request runs
+  (before, the metering point list and the revoke could be sent twice). The participation factor is checked against
+  the time window again after the confirmation.
+- All these confirmations use the shared confirmation dialog (`useConfirm`).
 - **One German notation for numbers and dates on screen** (platform#228, step 1). Numbers use a decimal comma and a
   thousands dot everywhere: the dashboard showed „185.337 kWh“ for 185,337 kWh, which reads as 185 thousand; it now
   shows „185,337 kWh“ (energy overview, load curve and day charts, meter chart tooltips). The tariff card shows
@@ -74,6 +90,9 @@ this changelog highlights the changes relevant for overview and operations.
 - **Registration: another metering point no longer shows the input of the one before.** With the metering point form
   open, selecting another metering point card (or „Zählpunkt hinzufügen“) kept the old values in the form, and
   „Hinzufügen“ then wrote them to the old metering point. The form now starts anew for every opened metering point.
+- **A refused send of the billing mails is shown** (web 261030-mm1). When billing refuses the send (the run is busy,
+  409, or it was sent from elsewhere meanwhile) the pane now says „Der Mailversand ist fehlgeschlagen.“ with billing's reason;
+  before, the result was ignored and nothing (or only a generic text) appeared.
 - **Dashboard: the load curve card waits for the load curve, the first chart request waits for the community**
   (pre-existing errors found in platform#228 step 2). The load curve card was shown as soon as the day curve data was
   there. The chart data was requested before the community was loaded (to `/eeg/v2/undefined/…`) and not again once
@@ -115,6 +134,12 @@ this changelog highlights the changes relevant for overview and operations.
   (price per kWh, metering point fee and its VAT, member fee, joining fee and its VAT, time-window prices) showed a
   stored 0 as an empty field, as if nothing were set; they now show „0“. Their value is now read like the other amount
   fields: „1.234,56“ is 1234.56 (before 1.234), „1234.56“ stays 1234.56. Stored values do not change.
+
+### Security
+- **`i18next-http-backend` removed** (Dependabot alerts GHSA-3cmx-xjww-583x, GHSA-9jhj-wvmw-cfx5, GHSA-xvq9-wjp8-hwqf,
+  GHSA-q89c-q3h5-w34g; supersedes Dependabot #248, which would have bumped it 2 → 4). The package was never imported:
+  the translations are bundled at build time by `vite-plugin-i18next-loader`. Its now-unused transitive dependencies
+  (`cross-fetch`, `node-fetch` 2 and their helpers) leave the lockfile too. No change in behaviour.
 
 ## [1.18.0] – 2026-10-28
 

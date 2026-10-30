@@ -183,9 +183,6 @@ export const sendFeedback = (r: SyncEnergyResult, note?: string): { kind: 'sent'
   return {kind: 'sent', text: detail || undefined}
 }
 
-export const entireConfirmation = (n: number) =>
-  `Für die ganze Gemeinschaft werden ${meterCount(n)} für den ganzen Zeitraum angefordert. Jetzt anfordern?`
-
 // After sending: the metering points the backend skipped because they were requested in the last hour
 export const alreadyRequestedInfo = (skipped: SyncEnergySkipped[], now = Date.now()): string | undefined => {
   const locked = skipped.filter(s => s.reason === 'ALREADY_REQUESTED')

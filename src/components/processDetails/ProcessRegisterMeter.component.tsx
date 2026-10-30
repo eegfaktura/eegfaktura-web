@@ -15,6 +15,8 @@ import {meteringDisplayName} from "../../util/FilterHelper";
 import {TFunction} from "i18next";
 import {useLocale} from "../../store/hook/useLocale";
 import {useProcessFeedback} from "./useProcessFeedback";
+import {useConfirm} from "../core/useConfirm";
+import {registerSummary} from "./ProcessConfirm.functions";
 
 interface ProcessValues {
   communityId: string | undefined
@@ -45,6 +47,7 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
 
   const {t} = useLocale("common")
   const {sent, failed} = useProcessFeedback()
+  const confirm = useConfirm()
   const {
     handleSubmit, reset,
     control, watch,
@@ -73,11 +76,14 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
     }
   }, [participantId])
 
-  const onRequest = (data: ProcessValues) => {
+  const onRequest = async (data: ProcessValues) => {
     if (data.meteringPoint) {
       const p = participants.find(p => p.meters.find(m => m.meteringPoint === data.meteringPoint))
       const meter = p?.meters.find(m => m.meteringPoint === data.meteringPoint)
       if (p && meter) {
+        // goes to the grid operator: ask first; the submit button stays disabled while the dialog is open
+        const member = JoinStrings(" ", "-", p.participantNumber, (p.lastname ? p.lastname : ""), p.firstname)
+        if (!await confirm(edaProcess.name, registerSummary(data.meteringPoint, member), "Senden")) return
         return Api.eegService.registerMeteringPoint(eeg.id.toUpperCase(), p.id, data.meteringPoint, meter.direction)
           .then(() => {
             sent()

@@ -19,6 +19,7 @@ import {JoinStrings} from "../../util/Helper.util";
 import moment from "moment";
 import {useProcessFeedback} from "./useProcessFeedback";
 import {useConfirm} from "../core/useConfirm";
+import {revokeSummary} from "./ProcessConfirm.functions";
 
 interface ProcessValues {
   communityId: string | undefined
@@ -55,7 +56,6 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
 
   const [toaster] = useIonToast();
   const confirm = useConfirm()
-  const [sending, setSending] = useState(false)  // the request runs after the dialog, outside isSubmitting
 
   const infoToast = (message: string) => {
     toaster({
@@ -86,7 +86,7 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
     }
   }, [participantId])
 
-  const onRequest = (data: ProcessValues) => {
+  const onRequest = async (data: ProcessValues) => {
     if (data.participantId && data.meteringPoints && consentEndDate) {
 
       const meter = selectedMeters(useableMeters, data.meteringPoints)
@@ -94,22 +94,18 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
         if (meter.filter(m => !(m.consentId && m.consentId.length > 0)).length === 0) {
           // revoking ends the data consent at the grid operator: ask first
           const participantId = data.participantId, endDate = consentEndDate
-          confirm("Datenfreigabe aufheben",
-            `Soll die Datenfreigabe für ${meter.length === 1 ? "den Zählpunkt " + meter[0].meteringPoint : meter.length + " Zählpunkte"} beim Netzbetreiber aufgehoben werden?`,
-            "Aufheben", () => {
-              setSending(true)
-              Api.eegService.revokeMeteringPoint(
-                eeg.id.toUpperCase(), participantId,
-                meter.map(m => {return {meter: m.meteringPoint, direction: m.direction, consentId: m.consentId}}),
-                endDate.getTime(), reason)
-                .then(() => {
-                  sent()
-                  reset()
-                  setConsentEndDate(null)
-                })
-                .catch(failed)  // keep the input on failure
-                .finally(() => setSending(false))
+          // awaited: the submit stays disabled while the dialog is open and the request runs (no second revoke)
+          if (!await confirm("Datenfreigabe aufheben", revokeSummary(meter, endDate), "Aufheben")) return
+          return Api.eegService.revokeMeteringPoint(
+            eeg.id.toUpperCase(), participantId,
+            meter.map(m => {return {meter: m.meteringPoint, direction: m.direction, consentId: m.consentId}}),
+            endDate.getTime(), reason)
+            .then(() => {
+              sent()
+              reset()
+              setConsentEndDate(null)
             })
+            .catch(failed)  // keep the input on failure
         } else {
           errorToast(errorT("process.revoke_consentIdEmpty"))
         }
@@ -161,7 +157,7 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
               />
             </div>
             <IonItem lines="none" style={{zIndex: "0"}}>
-              <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={(!formState.isValid || !consentEndDate || sending)}>
+              <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={(!formState.isValid || !consentEndDate || formState.isSubmitting)}>
                 {t("process.submit")}
               </IonButton>
             </IonItem>
