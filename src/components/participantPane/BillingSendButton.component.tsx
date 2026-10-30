@@ -2,7 +2,7 @@ import React, {FC} from "react";
 import {IonButton, IonIcon, useIonToast} from "@ionic/react";
 import {mailOutline} from "ionicons/icons";
 import {BillingRun} from "../../models/meteringpoint.model";
-import {reformatDateTimeStamp} from "../../util/Helper.util";
+import moment from "moment";
 import {useConfirm} from "../core/useConfirm";
 import {BillingTotals} from "./BillingTotals.functions";
 import {count} from "../notification/EnergyRequestSummary.functions";
@@ -14,24 +14,23 @@ import {withReason} from "../../service/error.text";
 export const documentCount = (totals: BillingTotals | undefined) =>
   totals ? totals.invoices.count + totals.creditNotes.count + totals.infos.count : undefined
 
-// platform#228 step 3: sending the billing mails of a run asks first and names the number of mails. The count comes
-// from the documents loaded for the totals (undefined while they load). billing records the mail run in mailStatus
-// ("IN PROGRESS", then "SENT"): once it is set, the button reads "Erneut senden" and the question names the earlier send.
-export const sendMailConfirmation = (run: BillingRun, documentCount: number | undefined) => {
-  const alreadySent = !!run.mailStatus
+// billing writes the time as LocalDateTime in a UTC container (no offset): read as UTC, shown in local time
+const sentAt = (dateTime: string | undefined) => {
+  const d = dateTime ? moment.utc(dateTime) : undefined
+  return d && d.isValid() ? ` am ${d.local().format("DD.MM.YYYY HH:mm")}` : ""
+}
+
+// platform#228 step 3: the billing mails of a run can be sent once. billing records the send in mailStatus
+// ("IN PROGRESS", then "SENT") and refuses every further send of the run (since bc52c5b), so the button is disabled
+// then and says why. Before the send it asks and names the number of mails (one per document; the count comes from the
+// documents loaded for the totals, undefined while they load).
+export const sendMailState = (run: BillingRun, documentCount: number | undefined) => {
+  if (run.mailStatus === "SENT") return {disabled: true, label: `Bereits versendet${sentAt(run.mailStatusDateTime)}`}
+  if (run.mailStatus) return {disabled: true, label: "Wird versendet …"}
   const mails = documentCount === undefined
     ? "alle Abrechnungsdokumente"
     : documentCount === 1 ? "1 Abrechnungsdokument" : `${count(documentCount)} Abrechnungsdokumente`
-  const earlier = run.mailStatus === "SENT"
-    ? `Die Abrechnungsdokumente dieses Laufs wurden bereits versendet (${reformatDateTimeStamp(run.mailStatusDateTime)}). `
-    : alreadySent ? "Der Versand für diesen Lauf wurde bereits gestartet. " : ""
-  return {
-    // upper case like the buttons next to it
-    label: alreadySent ? "ERNEUT SENDEN" : "SENDEN",
-    subHeader: alreadySent ? "Erneut senden" : "Senden",
-    message: `${earlier}${alreadySent ? "Erneut" : "Jetzt"} ${mails} per E-Mail an die Mitglieder versenden?`,
-    confirmText: alreadySent ? "Erneut senden" : "Senden",
-  }
+  return {disabled: false, label: "SENDEN", message: `Jetzt ${mails} per E-Mail an die Mitglieder versenden?`}
 }
 
 interface BillingSendButtonProps {
@@ -44,13 +43,13 @@ const BillingSendButton: FC<BillingSendButtonProps> = ({tenant, run, documentCou
   const dispatcher = useAppDispatch()
   const confirm = useConfirm()
   const [toaster] = useIonToast()
-  const c = sendMailConfirmation(run, documentCount)
+  const state = sendMailState(run, documentCount)
 
   const send = async () => {
     const billingRunId = run.id
     const result = await dispatcher(billingRunSendmail({tenant, billingRunId}))
     if (billingRunSendmail.rejected.match(result)) {
-      // billing refuses a busy run (409) or one whose mails were already sent: say so, with billing's reason
+      // billing refuses e.g. a busy run (409) or one sent meanwhile from elsewhere: say so, with billing's reason
       // (web 261030-mm1: the result was ignored)
       toaster({message: withReason("Der Mailversand ist fehlgeschlagen.", result.error.message), duration: 8000,
         position: "bottom", color: "danger"})
@@ -59,9 +58,10 @@ const BillingSendButton: FC<BillingSendButtonProps> = ({tenant, run, documentCou
   }
 
   return (
-    <IonButton onClick={() => confirm(c.subHeader, c.message, c.confirmText, send)}>
+    <IonButton disabled={state.disabled}
+               onClick={() => state.message && confirm("Senden", state.message, "Senden", send)}>
       <IonIcon slot="end" icon={mailOutline}></IonIcon>
-      {c.label}
+      {state.label}
     </IonButton>
   )
 }

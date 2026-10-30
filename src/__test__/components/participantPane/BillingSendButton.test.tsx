@@ -11,7 +11,7 @@ vi.mock("@ionic/react", async (importOriginal) => ({
   useIonToast: () => [toaster],
 }))
 
-import BillingSendButton, {documentCount, sendMailConfirmation} from "../../../components/participantPane/BillingSendButton.component";
+import BillingSendButton, {documentCount, sendMailState} from "../../../components/participantPane/BillingSendButton.component";
 import {Api} from "../../../service";
 import {sendmailRefusal} from "../../../service/eeg.service";
 import {BillingRun} from "../../../models/meteringpoint.model";
@@ -24,31 +24,32 @@ const sum = (count: number) => ({count, net: 0, vat: 0, gross: 0})
 const flush = () => act(async () => { await new Promise(r => setTimeout(r, 0)) })
 const dismiss = (role: string) => act(async () => alert.mock.lastCall![0].onDidDismiss({detail: {role}}))
 
-describe("sendMailConfirmation (platform#228 step 3)", () => {
+describe("sendMailState (platform#228 step 3)", () => {
   it("counts every document of the run once", () => {
     expect(documentCount({invoices: sum(30), creditNotes: sum(12), infos: sum(1)} as BillingTotals)).toBe(43)
     expect(documentCount(undefined)).toBeUndefined()
   })
 
-  it("names the number of mails before the first send", () => {
-    const c = sendMailConfirmation(run(), 1234)
-    expect(c.label).toBe("SENDEN")
-    expect(c.message).toBe("Jetzt 1.234 Abrechnungsdokumente per E-Mail an die Mitglieder versenden?")
+  it("names the number of mails before the send; without loaded documents it says „alle“", () => {
+    expect(sendMailState(run(), 1234)).toEqual({disabled: false, label: "SENDEN",
+      message: "Jetzt 1.234 Abrechnungsdokumente per E-Mail an die Mitglieder versenden?"})
+    expect(sendMailState(run(), undefined).message)
+      .toBe("Jetzt alle Abrechnungsdokumente per E-Mail an die Mitglieder versenden?")
   })
 
-  it("reads „Erneut senden“ once the mails were sent and names the earlier send", () => {
-    const c = sendMailConfirmation(run({mailStatus: "SENT", mailStatusDateTime: "2026-10-28T09:15:00.000"}), 1)
-    expect(c.label).toBe("ERNEUT SENDEN")
-    expect(c.confirmText).toBe("Erneut senden")
-    expect(c.message).toMatch(/^Die Abrechnungsdokumente dieses Laufs wurden bereits versendet \(2026-10-28, \d\d:15\)\. /)
-    expect(c.message).toMatch(/Erneut 1 Abrechnungsdokument per E-Mail an die Mitglieder versenden\?$/)
+  it("is disabled once billing recorded the send (billing refuses every further send), with the send time", () => {
+    const state = sendMailState(run({mailStatus: "SENT", mailStatusDateTime: "2026-10-28T13:05:00.000"}), 43)
+    expect(state.disabled).toBe(true)
+    expect(state.message).toBeUndefined()
+    // naive UTC from billing, shown in local time
+    const local = new Date(Date.UTC(2026, 9, 28, 13, 5))
+    const hh = String(local.getHours()).padStart(2, "0")
+    expect(state.label).toBe(`Bereits versendet am 28.10.2026 ${hh}:05`)
+    expect(sendMailState(run({mailStatus: "SENT"}), 43).label).toBe("Bereits versendet")
   })
 
-  it("a send in progress counts as sent; without loaded documents it says „alle“", () => {
-    const c = sendMailConfirmation(run({mailStatus: "IN PROGRESS"}), undefined)
-    expect(c.label).toBe("ERNEUT SENDEN")
-    expect(c.message).toBe("Der Versand für diesen Lauf wurde bereits gestartet. Erneut alle Abrechnungsdokumente "
-      + "per E-Mail an die Mitglieder versenden?")
+  it("is disabled while the send runs", () => {
+    expect(sendMailState(run({mailStatus: "IN PROGRESS"}), 43)).toEqual({disabled: true, label: "Wird versendet …"})
   })
 })
 
@@ -71,6 +72,13 @@ describe("BillingSendButton", () => {
     click()
     expect(alert.mock.lastCall![0].message).toBe("Jetzt 43 Abrechnungsdokumente per E-Mail an die Mitglieder versenden?")
     await dismiss("cancel")
+    expect(Api.eegService.billingRunSendmail).not.toHaveBeenCalled()
+  })
+
+  it("a sent run offers no send", () => {
+    renderWithProviders(<BillingSendButton tenant="TE100200" run={run({mailStatus: "SENT"})} documentCount={43}/>)
+    fireEvent.click(screen.getByText("Bereits versendet"))
+    expect(alert).not.toHaveBeenCalled()
     expect(Api.eegService.billingRunSendmail).not.toHaveBeenCalled()
   })
 
