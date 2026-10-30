@@ -46,6 +46,16 @@ export const parseSyncEnergyResult = async (res: Response): Promise<SyncEnergyRe
   return {requested: body.requested, skipped: body.skipped ?? []}
 }
 
+// billing refuses a send of a run whose mails were already sent or are being sent with 500 and its reason as plain
+// text ("Mailversand fuer … nicht moeglich. Status = SENT"): that text is the error. A JSON body (409 busy, other
+// errors) goes on to handleErrors.
+export const sendmailRefusal = async (res: Response): Promise<Response> => {
+  if (res.status !== 500) return res
+  const text = (await res.clone().text()).trim()
+  if (!text || text.startsWith("{")) return res
+  throw new Error(text)
+}
+
 // billing answers 409 when the member's joining fee was charged in a final run meanwhile
 export class JoiningFeeAlreadyBilledError extends Error {
   constructor() {
@@ -361,7 +371,7 @@ export class EegService extends EegBaseService {
       headers: {
         ...this.getSecureHeaders(token, tenant),
       },
-    }).then(this.handleErrors).then(res => true);
+    }).then(sendmailRefusal).then(this.handleErrors).then(res => true);
   }
 
   async fetchBillingConfigByTenantId(tenant: string, token?: string): Promise<BillingConfig>  {

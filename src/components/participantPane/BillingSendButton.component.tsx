@@ -1,5 +1,5 @@
 import React, {FC} from "react";
-import {IonButton, IonIcon} from "@ionic/react";
+import {IonButton, IonIcon, useIonToast} from "@ionic/react";
 import {mailOutline} from "ionicons/icons";
 import {BillingRun} from "../../models/meteringpoint.model";
 import {reformatDateTimeStamp} from "../../util/Helper.util";
@@ -8,6 +8,7 @@ import {BillingTotals} from "./BillingTotals.functions";
 import {count} from "../notification/EnergyRequestSummary.functions";
 import {useAppDispatch} from "../../store";
 import {billingRunSendmail, fetchBillingRunById} from "../../store/billingRun";
+import {withReason} from "../../service/error.text";
 
 // billing sends one mail per document: every document of the run is counted once in the totals
 export const documentCount = (totals: BillingTotals | undefined) =>
@@ -42,11 +43,18 @@ interface BillingSendButtonProps {
 const BillingSendButton: FC<BillingSendButtonProps> = ({tenant, run, documentCount}) => {
   const dispatcher = useAppDispatch()
   const confirm = useConfirm()
+  const [toaster] = useIonToast()
   const c = sendMailConfirmation(run, documentCount)
 
   const send = async () => {
     const billingRunId = run.id
-    await dispatcher(billingRunSendmail({tenant, billingRunId}))
+    const result = await dispatcher(billingRunSendmail({tenant, billingRunId}))
+    if (billingRunSendmail.rejected.match(result)) {
+      // billing refuses a busy run (409) or one whose mails were already sent: say so, with billing's reason
+      // (web 261030-mm1: the result was ignored)
+      toaster({message: withReason("Der Mailversand ist fehlgeschlagen.", result.error.message), duration: 8000,
+        position: "bottom", color: "danger"})
+    }
     dispatcher(fetchBillingRunById({tenant, billingRunId}))
   }
 

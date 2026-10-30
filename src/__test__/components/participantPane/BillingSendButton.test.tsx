@@ -13,6 +13,7 @@ vi.mock("@ionic/react", async (importOriginal) => ({
 
 import BillingSendButton, {documentCount, sendMailConfirmation} from "../../../components/participantPane/BillingSendButton.component";
 import {Api} from "../../../service";
+import {sendmailRefusal} from "../../../service/eeg.service";
 import {BillingRun} from "../../../models/meteringpoint.model";
 import {BillingTotals} from "../../../components/participantPane/BillingTotals.functions";
 
@@ -80,5 +81,33 @@ describe("BillingSendButton", () => {
     expect(Api.eegService.billingRunSendmail).toHaveBeenCalledWith("TE100200", "run-1", undefined)
     expect(Api.eegService.fetchBillingRunById).toHaveBeenCalledWith("TE100200", "run-1", undefined)
     expect(toaster).not.toHaveBeenCalled()
+  })
+
+  it("a refused send says so with billing's reason (web 261030-mm1)", async () => {
+    vi.mocked(Api.eegService.billingRunSendmail).mockRejectedValue(new Error(
+      "Dieser Abrechnungslauf wird gerade bearbeitet (Export, Mailversand oder Löschen) – bitte danach erneut versuchen."))
+    click()
+    await dismiss("confirm")
+    await flush()
+    expect(toaster.mock.lastCall![0].color).toBe("danger")
+    expect(toaster.mock.lastCall![0].message).toBe("Der Mailversand ist fehlgeschlagen. (Dieser Abrechnungslauf wird "
+      + "gerade bearbeitet (Export, Mailversand oder Löschen) – bitte danach erneut versuchen.)")
+    expect(Api.eegService.fetchBillingRunById).toHaveBeenCalled()
+  })
+})
+
+describe("sendmailRefusal", () => {
+  it("billing's plain-text refusal (500) is the error", async () => {
+    const text = "Mailversand fuer 2026-09 (run-1) nicht moeglich. Status = SENT"
+    await expect(sendmailRefusal(new Response(text, {status: 500}))).rejects.toThrow(text)
+  })
+
+  it("leaves JSON errors and other answers to handleErrors", async () => {
+    const json = new Response(JSON.stringify({httpStatus: 500}), {status: 500})
+    expect(await sendmailRefusal(json)).toBe(json)
+    const busy = new Response(JSON.stringify({error: "busy"}), {status: 409})
+    expect(await sendmailRefusal(busy)).toBe(busy)
+    const ok = new Response("protocol", {status: 200})
+    expect(await sendmailRefusal(ok)).toBe(ok)
   })
 })
