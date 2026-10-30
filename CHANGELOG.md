@@ -144,6 +144,9 @@ this changelog highlights the changes relevant for overview and operations.
   and GHSA-5pgg-2g8v-p4x9, fixed in 0.20.2). SheetJS no longer publishes to npm (latest there is 0.18.5), so the
   package now comes from `https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz`, pinned in `pnpm-lock.yaml` by URL and
   sha512 integrity. Dependabot does not track this source: updates are made by hand (see README → Dependencies).
+  The new workflow `sheetjs-check.yml` fails a pull request whose lockfile lost the hand-added integrity, and fails
+  its weekly run when SheetJS has a newer release. OSV-Scanner keeps reporting xlsx 0.20.3 with both GHSA IDs (the
+  advisories have no fixed version because the fix is not on npm); Trivy does not.
   Reading the billing export for the SEPA files gives the same values as before (new test with dates and amounts).
 
 ## [1.18.0] – 2026-10-28
