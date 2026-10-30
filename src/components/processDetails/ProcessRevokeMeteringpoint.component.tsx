@@ -18,7 +18,7 @@ import {JoinStrings} from "../../util/Helper.util";
 import moment from "moment";
 import {useProcessFeedback} from "./useProcessFeedback";
 import {useConfirm} from "../core/useConfirm";
-import {revokeSummary} from "./ProcessConfirm.functions";
+import {cleanRevokeReason, REVOKE_REASON_MAX, revokeReasonLength, revokeSummary} from "./ProcessConfirm.functions";
 
 interface ProcessValues {
   communityId: string | undefined
@@ -50,8 +50,8 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
     setValue, formState} = useForm<ProcessValues>({defaultValues: processValues})
   const [useableMeters, setUsableMeters] = useState<Metering[]>([])
   const [consentEndDate, setConsentEndDate] = useState<Date|null>(null);
-  const [reason, setReason] = useState<string|undefined>()
-  const [meteringPoints, participantId] = watch(['meteringPoints', 'participantId'])
+  const [meteringPoints, participantId, reasonInput] = watch(['meteringPoints', 'participantId', 'reason'])
+  const reasonLength = revokeReasonLength(reasonInput)
 
   const [toaster] = useIonToast();
   const confirm = useConfirm()
@@ -93,8 +93,10 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
         if (meter.filter(m => !(m.consentId && m.consentId.length > 0)).length === 0) {
           // revoking ends the data consent at the grid operator: ask first
           const participantId = data.participantId, endDate = consentEndDate
+          // the optional reason goes to the grid operator (CMRevoke ReasonKey 0 + Reason); empty is not sent
+          const reason = cleanRevokeReason(data.reason) || undefined
           // awaited: the submit stays disabled while the dialog is open and the request runs (no second revoke)
-          if (!await confirm("Datenfreigabe aufheben", revokeSummary(meter, endDate), "Aufheben")) return
+          if (!await confirm("Datenfreigabe aufheben", revokeSummary(meter, endDate, reason), "Aufheben")) return
           return Api.eegService.revokeMeteringPoint(
             eeg.id.toUpperCase(), participantId,
             meter.map(m => {return {meter: m.meteringPoint, direction: m.direction, consentId: m.consentId}}),
@@ -142,7 +144,15 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
             <SelectForm control={control} name={"meteringPoints"} options={useableMeters.map((p) => {
               return {key: p.meteringPoint, value: meteringDisplayName(p, t)}
             })} label={t("metering")} selectInterface={"popover"} multiple={true} rules={{required: true}}/>
-            <InputForm name="reason" label={t("process.revokeMeter.reason")} control={control}/>
+            {/* counted after cleaning, as the backend counts it; the native maxlength would count blanks and UTF-16 units */}
+            <InputForm name="reason" label={t("process.revokeMeter.reason")} control={control}
+                       rules={{validate: (v?: string) => revokeReasonLength(v) <= REVOKE_REASON_MAX}}/>
+            <div className="form-element" style={{fontSize: "0.8em", marginTop: "-6px"}}>
+              <span>{t("process.revokeMeter.reason_hint")}</span>{" "}
+              <span data-testid="reason-counter">{reasonLength}/{REVOKE_REASON_MAX}</span>
+              {reasonLength > REVOKE_REASON_MAX &&
+                <div className="error-line">{t("process.revokeMeter.reason_too_long", {max: REVOKE_REASON_MAX})}</div>}
+            </div>
             <div className="form-element">
               <DatePicker
                 selectsRange={false}
