@@ -27,7 +27,8 @@ this changelog highlights the changes relevant for overview and operations.
   status, and so do the business type switch and the joining fee actions of the member. Invalid input (e.g. a required
   field emptied) is not saved; the status then says „Nicht gespeichert – bitte die markierten Felder prüfen“. Stored
   incomplete data the user did not change does not count.
-  Invalid or failed changes count as unsaved: selecting another member or metering point, the billing view, another
+  Invalid or failed changes count as unsaved: selecting another member or metering point, another tab of the details
+  (Details, Dokumente, Rechnungen, Zählpunkt), the billing view, another
   community and leaving the page ask first. Only the answer to the latest save of a field counts, and input typed
   while a metering point save runs stays.
 
