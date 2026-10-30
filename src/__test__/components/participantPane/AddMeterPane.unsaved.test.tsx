@@ -1,4 +1,4 @@
-import {beforeEach, describe, expect, it, vi} from "vitest";
+import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import {act, fireEvent, screen} from "@testing-library/react";
 import React, {useState} from "react";
 import {MemoryRouter, useHistory} from "react-router";
@@ -6,6 +6,10 @@ import {useFormContext} from "react-hook-form";
 import {renderWithProviders} from "../../test-utils";
 import {Metering} from "../../../models/meteringpoint.model";
 import "../../../util/I18n";
+import {Api} from "../../../service";
+import {EegService} from "../../../service/eeg.service";
+import {AuthService} from "../../../service/auth.service";
+import {initialState as participantInitial} from "../../../store/participant/states/participant.state";
 
 const alert = vi.fn()
 vi.mock("@ionic/react", async (importOriginal) => ({
@@ -87,5 +91,33 @@ describe("adding a metering point: unsaved input asks before it is lost (platfor
     act(() => history().push("/page/rates"))
     expect(userConfirmation).toHaveBeenCalledWith(UNSAVED_CHANGES_MESSAGE, expect.any(Function))
     expect(history().location.pathname).toBe("/page/participants")
+  })
+})
+
+describe("adding a metering point registers it online (decision 2026-10-30)", () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it("„Registrieren“ sends /create with activationMode ONLINE and no activationCode", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ok: true, status: 200, json: async () => ({})} as unknown as Response)
+    vi.stubGlobal("fetch", fetchMock)
+    Api.eegService = new EegService({} as AuthService)
+    vi.spyOn(Api.eegService as any, "lookupToken").mockResolvedValue("token")
+    renderWithProviders(
+      <MemoryRouter>
+        <ParticipantContext.Provider value={{setShowAddMeterPane: vi.fn(), unsaved: {}, setUnsaved: vi.fn()} as any}>
+          <AddMeterPaneComponent/>
+        </ParticipantContext.Provider>
+      </MemoryRouter>,
+      {preloadedState: {participant: {...participantInitial, selectedParticipant: {id: "p1", meters: []}}}})
+
+    fireEvent.click(screen.getByText("eingeben"))
+    await act(async () => { fireEvent.submit(document.getElementById("submit-register-meter")!) })
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock.mock.calls[0][0]).toMatch(/\/meteringpoint\/p1\/create$/)
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+    expect(body.meteringPoint).toBe("AT0030000000000000000000000000001")
+    expect(body.activationMode).toBe("ONLINE")
+    expect(body).not.toHaveProperty("activationCode")
   })
 })
