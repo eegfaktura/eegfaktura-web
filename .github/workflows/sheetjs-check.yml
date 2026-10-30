@@ -1,0 +1,57 @@
+# SheetJS (xlsx) comes from the SheetJS CDN, not from npm, so Dependabot neither updates it nor checks
+# the hand-added lockfile integrity (README → Dependencies). Logic in .github/scripts/sheetjs-check.sh.
+#   pin:    every pull request and push — package.json and pnpm-lock.yaml still pin URL + sha512.
+#   latest: weekly and on demand — fails with a job summary when the CDN has a newer release.
+# Node 20.18.0 (.nvmrc), no other tools. Actions pinned by commit SHA (the same as pr-checks.yml).
+
+name: SheetJS check
+
+on:
+  pull_request:
+  push:
+    branches: [master, main]
+  schedule:
+    - cron: '41 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pin:
+    name: SheetJS pinned with integrity
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Check the pin
+        run: bash .github/scripts/sheetjs-check.sh pin
+
+  latest:
+    name: SheetJS up to date
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Compare with the CDN
+        run: bash .github/scripts/sheetjs-check.sh latest
