@@ -97,6 +97,11 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
       if (meter.length > 0) {  // empty: the selection does not belong to the chosen participant
         // goes to the grid operator: ask first; the submit button stays disabled while the dialog is open
         if (!await confirm(edaProcess.name, partFactSummary(meter, data.partFact), "Senden")) return
+        if (inWindow && !isInPartFactWindow()) {
+          // the window closed while the dialog was open (the grid operator would answer 82): warn, send nothing
+          setInWindow(false)
+          return
+        }
         return Api.eegService.changeMeterPartitionFactor(
           eeg.id.toUpperCase(),
           partFactChanges(meter, data.partFact))

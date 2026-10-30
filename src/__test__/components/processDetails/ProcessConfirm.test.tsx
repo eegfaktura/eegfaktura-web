@@ -33,7 +33,8 @@ vi.mock("react-datepicker", () => ({
   default: ({onChange, selectsRange}: any) => <button onClick={() => onChange(selectsRange
     ? [new Date(2026, 8, 1), new Date(2026, 8, 30)] : new Date(2026, 9, 31))}>Datum</button>,
 }))
-vi.mock("../../../util/PartFactWindow.util", () => ({isInPartFactWindow: () => true, PARTFACT_WINDOW_TEXT: "x"}))
+const inWindow = vi.hoisted(() => ({open: true}))
+vi.mock("../../../util/PartFactWindow.util", () => ({isInPartFactWindow: () => inWindow.open, PARTFACT_WINDOW_TEXT: "x"}))
 vi.mock("../../../store/hook/Eeg.provider", () => ({useTenant: () => ({tenant: "TE100200"})}))
 
 import "../../../util/I18n";
@@ -62,12 +63,17 @@ const participant = {id: "p1", participantNumber: "7", firstname: "Anna", lastna
 const type = (name: string, value: string) => fireEvent.change(screen.getByLabelText(name), {target: {value}})
 const flush = () => act(async () => { await new Promise(r => setTimeout(r, 0)) })
 const submit = async (text: string) => {
-  fireEvent.click(screen.getAllByText(text).find(e => e.tagName === "ION-BUTTON")!)
+  fireEvent.click(submitButton(text))
   await flush()
 }
 const dismiss = (role: string) => act(async () => alert.mock.lastCall![0].onDidDismiss({detail: {role}}))
 
+const submitButton = (text: string) => screen.getAllByText(text).find(e => e.tagName === "ION-BUTTON")!
+// ion-button: "true" before Ionic hydrates it, "" after
+const isDisabled = (e: Element) => e.hasAttribute("disabled") && e.getAttribute("disabled") !== "false"
+
 beforeEach(() => {
+  inWindow.open = true
   alert.mockReset()
   Api.eegService = {
     changeMeterPartitionFactor: vi.fn().mockResolvedValue(undefined),
@@ -101,6 +107,20 @@ describe("Teilnahmefaktor ändern", () => {
     await dismiss("confirm")
     expect(Api.eegService.changeMeterPartitionFactor).toHaveBeenCalledWith("TE100200", [{meter: m1.meteringPoint,
       direction: "CONSUMPTION", gridOperatorId: "AT003000", activation: activeSince, partFact: 40}])
+  })
+})
+
+describe("Teilnahmefaktor ändern: window closes while the dialog is open", () => {
+  it("confirmed after 17:00: sends nothing and shows the warning (the grid operator would answer 82)", async () => {
+    render(<ProcessChangeParticipantFactorComponent eeg={eeg} meters={[m1]} participants={[participant]}
+                                                    edaProcess={process("Teilnahmefaktor ändern")}/>)
+    type("meteringPoints", m1.meteringPoint)
+    type("partFact", "40")
+    await submit("Anfordern")
+    inWindow.open = false
+    await dismiss("confirm")
+    expect(Api.eegService.changeMeterPartitionFactor).not.toHaveBeenCalled()
+    expect(screen.getByText(/Es ist gerade außerhalb dieser Zeit/)).toBeTruthy()
   })
 })
 
@@ -168,6 +188,8 @@ describe("Zählpunktliste anfordern", () => {
     render(<ProcessPodListComponent eeg={eeg} edaProcess={process("Zählpunktliste anfordern")}/>)
     await submit("Zählpunktliste anfordern")
     expect(alert.mock.lastCall![0].message).toBe("Zählpunktliste beim Netzbetreiber AT003000 anfordern?")
+    // no second request from a double click: disabled while the dialog is open
+    expect(isDisabled(submitButton("Zählpunktliste anfordern"))).toBe(true)
     await dismiss("cancel")
     expect(Api.eegService.syncMeteringPointList).not.toHaveBeenCalled()
 
