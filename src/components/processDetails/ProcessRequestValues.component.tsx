@@ -21,8 +21,9 @@ import {useProcessFeedback} from "./useProcessFeedback";
 import {useTenant} from "../../store/hook/Eeg.provider";
 import {SyncEnergyMeter, SyncEnergyResult} from "../../service/eeg.service";
 import {buildBillingCheckRequest} from "../participantPane/BillingCheck.functions";
+import {useConfirm} from "../core/useConfirm";
+import {requestValuesSummary} from "./ProcessConfirm.functions";
 import {
-  entireConfirmation,
   metersToCheck,
   cappedNote,
   NOTHING_BEFORE_TODAY,
@@ -60,6 +61,7 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
   const {sent, failed, info} = useProcessFeedback()
   const tenant = useTenant()
   const [alert] = useIonAlert()
+  const confirm = useConfirm()
   const {handleSubmit, reset,
     control, watch,
     setValue, formState} = useForm<ProcessValues>({defaultValues: processValues})
@@ -155,7 +157,8 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
         if (smart) {
           return requestSmart(meter, startDate, endDate)
         }
-        if (selectEntire && await ask(entireConfirmation(meter.length), [{text: "Anfordern", role: "confirm"}]) !== "confirm") {
+        // goes to the grid operator: ask first, with the metering points and the period
+        if (!await confirm(edaProcess.name, requestValuesSummary(meter, startDate, endDate, selectEntire), "Anfordern")) {
           return
         }
         return send(meter.map(m => {return {meter: m.meteringPoint, direction: m.direction}}), [], startDate, endDate)

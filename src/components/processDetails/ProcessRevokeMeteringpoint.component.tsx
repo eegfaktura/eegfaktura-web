@@ -18,6 +18,7 @@ import {JoinStrings} from "../../util/Helper.util";
 import moment from "moment";
 import {useProcessFeedback} from "./useProcessFeedback";
 import {useConfirm} from "../core/useConfirm";
+import {revokeSummary} from "./ProcessConfirm.functions";
 
 interface ProcessValues {
   communityId: string | undefined
@@ -94,7 +95,7 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
           // revoking ends the data consent at the grid operator: ask first
           const participantId = data.participantId, endDate = consentEndDate
           confirm("Datenfreigabe aufheben",
-            `Soll die Datenfreigabe für ${meter.length === 1 ? "den Zählpunkt " + meter[0].meteringPoint : meter.length + " Zählpunkte"} beim Netzbetreiber aufgehoben werden?`,
+            revokeSummary(meter, endDate),
             "Aufheben", () => {
               setSending(true)
               Api.eegService.revokeMeteringPoint(

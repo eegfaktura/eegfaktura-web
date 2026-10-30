@@ -17,6 +17,8 @@ import {JoinStrings} from "../../util/Helper.util";
 import {TFunction} from "i18next";
 import {isInPartFactWindow, PARTFACT_WINDOW_TEXT} from "../../util/PartFactWindow.util";
 import {useProcessFeedback} from "./useProcessFeedback";
+import {useConfirm} from "../core/useConfirm";
+import {partFactSummary} from "./ProcessConfirm.functions";
 
 // 0 would have been sent as 100 % (`|| 100`); the factor is 1–100 like in the meter form
 const PARTFACT_RANGE = {value: 1, message: "Der Teilnahmefaktor muss zwischen 1 und 100 % liegen."}
@@ -47,6 +49,7 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
   const [participant, setParticipant] = useState<EegParticipant>()
   const {t} = useLocale("common")
   const {sent, failed} = useProcessFeedback()
+  const confirm = useConfirm()
   const [inWindow, setInWindow] = useState(isInPartFactWindow)
 
   useEffect(() => {
@@ -82,7 +85,7 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
     }
   }, [participantId]);
 
-  const onRequest = (data: ProcessValues) => {
+  const onRequest = async (data: ProcessValues) => {
     if (inWindow && !isInPartFactWindow()) {
       // the window closed since the last check: show the warning first, a second click sends anyway
       setInWindow(false)
@@ -92,6 +95,8 @@ const ProcessChangeParticipantFactorComponent: FC<ProcessChangeParticipantFactor
       const meter =
         selectedMeters(useableMeters, data.meteringPoints)
       if (meter.length > 0) {  // empty: the selection does not belong to the chosen participant
+        // goes to the grid operator: ask first; the submit button stays disabled while the dialog is open
+        if (!await confirm(edaProcess.name, partFactSummary(meter, data.partFact), "Senden")) return
         return Api.eegService.changeMeterPartitionFactor(
           eeg.id.toUpperCase(),
           partFactChanges(meter, data.partFact))
