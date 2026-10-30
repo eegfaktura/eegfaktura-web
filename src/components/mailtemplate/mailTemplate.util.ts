@@ -1,16 +1,17 @@
-import moment from "moment";
+import {formatNumber} from "../../util/Number.util";
+import {formatDateTime} from "../../util/DateFormat.util";
 
 export const formatBytes = (bytes: number) =>
   bytes >= 1024 * 1024
-    ? `${(bytes / (1024 * 1024)).toLocaleString("de-AT", {maximumFractionDigits: 1})} MB`
-    : `${Math.round(bytes / 1024).toLocaleString("de-AT")} KB`
+    ? `${formatNumber(bytes / (1024 * 1024), 0, 1)} MB`
+    : `${formatNumber(Math.round(bytes / 1024))} KB`
 
 // "… (am {date} von {user})" of a saved own version, for the list ("status_customized") and the status box ("status_own")
 export const savedText = (t: (key: string, options?: Record<string, unknown>) => string,
                           s: { updatedAt?: string | null, updatedBy?: string | null },
                           key: "status_customized" | "status_own") =>
   t(`mailtemplates.${key}${s.updatedBy ? "" : "_nouser"}`,
-    {date: s.updatedAt ? moment(s.updatedAt).format("DD.MM.YYYY HH:mm") : "", user: s.updatedBy})
+    {date: s.updatedAt ? formatDateTime(s.updatedAt) : "", user: s.updatedBy})
 
 export const MAX_SUBJECT_CHARS = 200
 

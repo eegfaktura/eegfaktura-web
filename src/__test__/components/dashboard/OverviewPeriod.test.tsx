@@ -48,7 +48,7 @@ describe("period of the upper dashboard cards", () => {
     expect(screen.getByText("Zeitraum: Jan-Mär 2026")).toBeTruthy()
     expect(screen.getByText("*) vorherige Periode: Okt-Dez 2025")).toBeTruthy()
     expect(fetchSummary).toHaveBeenCalledWith(expect.objectContaining({tenant: "RC100100"}), 2025, 4, "YQ")
-    expect(await screen.findByText("1234.500 kWh *)")).toBeTruthy()
+    expect(await screen.findByText("1.234,500 kWh *)")).toBeTruthy()
   })
 
   it("a late answer for an earlier selection does not overwrite the previous period's values", async () => {
@@ -59,20 +59,20 @@ describe("period of the upper dashboard cards", () => {
     const store = newStore({type: "YQ", year: 2026, segment: 4})
     render(tree(store, energyOverview))
     act(() => { store.dispatch(setSelectedPeriod({type: "YQ", year: 2026, segment: 3})) })
-    expect(await screen.findByText("222.000 kWh *)")).toBeTruthy()
+    expect(await screen.findByText("222,000 kWh *)")).toBeTruthy()
 
     await act(async () => { answerQ3({consumed: 0, distributed: 0, produced: 999}) })
     expect(screen.getByText("*) vorherige Periode: Apr-Jun 2026")).toBeTruthy()
-    expect(screen.queryByText("999.000 kWh *)")).toBeNull()
-    expect(screen.getByText("222.000 kWh *)")).toBeTruthy()
+    expect(screen.queryByText("999,000 kWh *)")).toBeNull()
+    expect(screen.getByText("222,000 kWh *)")).toBeTruthy()
   })
 
   it("'Verteilt' shows the distributed energy, not the total consumption", () => {
     render(tree(newStore({type: "YQ", year: 2026, segment: 4}),
       <EnergyOverviewComponent consumed={series("c", 8480.381)} produced={series("p", 2801.316)}
                                allocated={series("a", 1273.994)} rates={{}}/>))
-    expect(screen.getByText("1273.994 kWh")).toBeTruthy()
-    expect(screen.queryByText("8480.381 kWh")).toBeNull()
+    expect(screen.getByText("1.273,994 kWh")).toBeTruthy()
+    expect(screen.queryByText("8.480,381 kWh")).toBeNull()
   })
 
   it("without a selected period no period line is shown", () => {

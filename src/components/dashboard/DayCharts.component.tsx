@@ -5,12 +5,11 @@ import {Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContain
 import {ActiveTenant} from "../../models/eeg.model";
 import {useDayReport} from "./DayView.component";
 import {DayBounds, DayReportState, daySums, formatDay, hasEnergy, shiftDay, toHours} from "./DayView.functions";
-import {balanceOf, formatKwh as kwh} from "./Balance.functions";
+import {balanceOf} from "./Balance.functions";
+import {formatKwh} from "../../util/Number.util";
 import BalanceValue from "./BalanceValue.component";
 
 import "./eeg-card.scss"
-
-const formatKwh = (value: unknown) => Number(value).toFixed(3) + " kWh"
 
 // A card in day mode ("Tag" chosen in its period popover): its own day, arrows and gear.
 export interface DayChartProps {
@@ -45,8 +44,8 @@ const DayCard: FC<DayChartProps & { title: string, state: DayReportState, childr
           </div>
           {sums && (
             <div style={{fontSize: "12px"}}>
-              Produktion {kwh(sums.produced)} · Verbrauch {kwh(sums.consumed)} · Eigendeckung {kwh(sums.distributed)} ·
-              Überschuss {kwh(sums.unused)} ·{" "}
+              Produktion {formatKwh(sums.produced)} · Verbrauch {formatKwh(sums.consumed)} · Eigendeckung {formatKwh(sums.distributed)} ·
+              Überschuss {formatKwh(sums.unused)} ·{" "}
               <BalanceValue difference={balanceOf(sums)} days={1}/>
             </div>
           )}
@@ -97,7 +96,7 @@ export const DayLoadCurveChart: FC<DayChartProps> = (props) => {
             <CartesianGrid strokeDasharray="3 3"/>
             <XAxis dataKey="label" interval="preserveStart" minTickGap={20} fontSize={10}/>
             <YAxis fontSize={10} unit={" kWh"}/>
-            <Tooltip formatter={formatKwh}/>
+            <Tooltip formatter={(value) => formatKwh(Number(value))}/>
             <Legend align={'center'} verticalAlign={'bottom'} height={20} wrapperStyle={{fontSize: "10px"}}/>
             <Line name="Verbrauch" type="monotone" dataKey="consumed" stroke="#8884d8" dot={false} strokeWidth={2}/>
             <Line name="Eigendeckung" type="monotone" dataKey="distributed" stroke="#82ca9d" dot={false} strokeWidth={2}/>
@@ -120,7 +119,7 @@ export const DayHourChart: FC<DayChartProps> = (props) => {
           <BarChart data={data} margin={{top: 15, right: 15, bottom: 5, left: 0}}>
             <YAxis fontSize={10} unit={" kWh"}/>
             <XAxis dataKey="label" angle={315} tickMargin={5} fontSize={10}/>
-            <Tooltip formatter={formatKwh}/>
+            <Tooltip formatter={(value) => formatKwh(Number(value))}/>
             <Legend align={'center'} verticalAlign={'bottom'} height={20} wrapperStyle={{fontSize: "10px"}}/>
             <Bar name="EEG" stackId="a" dataKey="eeg" fill="#0AF2D3"/>
             <Bar name="EVU" stackId="a" dataKey="evu" fill="#F20A5E"/>

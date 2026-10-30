@@ -8,6 +8,22 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **One German notation for numbers and dates on screen** (platform#228, step 1). Numbers use a decimal comma and a
+  thousands dot everywhere: the dashboard showed „185.337 kWh“ for 185,337 kWh, which reads as 185 thousand; it now
+  shows „185,337 kWh“ (energy overview, load curve and day charts, meter chart tooltips). The tariff card shows
+  „12,5 Cent“, „1.234,50 €“, „2,5 %“ instead of mixed „12.5 €“/„12,5 Cent“; amounts that already used a comma now group
+  thousands with a dot instead of a space („1.234,56“, which the amount fields read back). All date fields
+  (invoice date of a billing run, SEPA dates, member and metering point dates, process dates) show „28.10.2026“
+  instead of „October 28, 2026“ (process dates before: „10/28/2026“), with German month and weekday names and Monday
+  as first day of the week. Typed input is read as „28.10.2026“ or „1.2.2026“ and anything else is rejected (before,
+  „05.13.2026“ could become 13 May) in the fields that pass typed text on: the billing run dates (invoice date,
+  SEPA collection and transfer date), „Mitglied seit“ in the registration and older member form, and „aktiv seit“ of
+  a metering point. The SEPA mandate date and „Mitglied seit“ in the member form take calendar clicks only, as before;
+  the process and period fields use the same rule for whatever their input passes on. Billing run status times show „28.10.2026 14:05“ instead of
+  „2026-10-28, 14:05“. Display only: values sent to the services, exports, SEPA files and documents do not change.
+  `date-fns` 2.30.0 (already shipped as part of react-datepicker) is now a direct dependency for the German calendar.
+
 ### Fixed
 - **Text fields: the caret no longer jumps to the end while typing.** Renaming a tariff moved the caret to the end of
   the field after the first typed character, so the rest landed at the end („Beitritt2 weiterer ZP026“). The input

@@ -1,0 +1,46 @@
+import {describe, expect, it, vi} from "vitest";
+import {fireEvent, render} from "@testing-library/react";
+import DatePicker from "react-datepicker";
+import {DATE_PICKER_PROPS} from "../../util/DateFormat.util";
+
+// platform#228 step 1: every picker gets DATE_PICKER_PROPS. Typed text is read as TT.MM.JJJJ only; without
+// strictParsing react-datepicker falls back to new Date(text), which reads "05.13.2026" as 13 May.
+
+const typeInto = (text: string) => {
+  const onChange = vi.fn()
+  const {container} = render(<DatePicker {...DATE_PICKER_PROPS} selected={null} onChange={onChange}/>)
+  fireEvent.change(container.querySelector("input")!, {target: {value: text}})
+  return onChange
+}
+
+describe("date picker input", () => {
+  it("reads 28.10.2026 as 28 October 2026", () => {
+    const onChange = typeInto("28.10.2026")
+    expect(onChange).toHaveBeenCalled()
+    const d = onChange.mock.calls[0][0] as Date
+    expect([d.getFullYear(), d.getMonth(), d.getDate()]).toEqual([2026, 9, 28])
+  })
+
+  it.each(["1.2.2026", "01.2.2026", "1.02.2026", "01.02.2026"])("reads %s as 1 February 2026", (text) => {
+    const onChange = typeInto(text)
+    const dates = onChange.mock.calls.map(c => c[0]).filter((d): d is Date => d instanceof Date)
+    expect(dates).toHaveLength(1)
+    expect([dates[0].getFullYear(), dates[0].getMonth(), dates[0].getDate()]).toEqual([2026, 1, 1])
+  })
+
+  it.each(["05.13.2026", "32.1.2026", "1.2.26", "2026-02-01"])("rejects %s", (text) => {
+    const dates = typeInto(text).mock.calls.map(c => c[0]).filter((d): d is Date => d instanceof Date)
+    expect(dates).toEqual([])
+  })
+
+  it("shows a chosen date with leading zeros", () => {
+    const {container} = render(<DatePicker {...DATE_PICKER_PROPS} selected={new Date(2026, 1, 1)} onChange={vi.fn()}/>)
+    expect(container.querySelector("input")!.value).toBe("01.02.2026")
+  })
+
+  it("rejects 05.13.2026 instead of reading it as 13 May", () => {
+    const onChange = typeInto("05.13.2026")
+    const dates = onChange.mock.calls.map(c => c[0]).filter((d): d is Date => d instanceof Date)
+    expect(dates).toEqual([])
+  })
+})

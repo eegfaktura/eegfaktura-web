@@ -2,6 +2,7 @@ import React, {FC, useEffect, useState} from "react";
 import {ReportNamedData, SelectedPeriod} from "../../models/energy.model";
 import {Bar, ComposedChart, LabelList, Legend, Line, ResponsiveContainer, Text, Tooltip, XAxis, YAxis} from "recharts";
 import {periodDisplayString} from "../../util/Helper.util";
+import {formatKwh} from "../../util/Number.util";
 import {IonIcon, IonSpinner, useIonPopover} from "@ionic/react";
 import {ActiveTenant} from "../../models/eeg.model";
 import {Api} from "../../service";
@@ -88,7 +89,7 @@ const LoadSharingComponent: FC<LoadSharingComponentProps> = ({tenant, report, ac
       case 'Bilanzdifferenz':
         return balanceTooltip(Number(arg), props?.payload?.days ?? 1)
       default:
-        return Number(arg).toFixed(3) + " kWh"
+        return formatKwh(Number(arg))
     }
   }
 
