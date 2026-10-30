@@ -15,15 +15,16 @@ this changelog highlights the changes relevant for overview and operations.
   period, the end of the consent or the grid operator. „Abbrechen“ sends nothing; „Senden“/„Anfordern“/„Aufheben“ sends
   the same request as before. The smart energy data request already asked and is unchanged; the approval of a new
   member keeps its own dialog.
-- **Billing mails: „Senden“ names the number of documents, „Erneut senden“ after a send** (platform#228 step 3). The
-  question before sending the billing mails of a run says how many documents go out by mail. Once billing recorded a
-  send for the run, the button reads „Erneut senden“ and the question names the earlier send. billing itself still
-  refuses a second send of a run.
+- **Billing mails: „Senden“ names the number of documents; after the send the button is disabled** (platform#228
+  step 3). The question before sending the billing mails of a run says how many documents go out by mail. billing
+  refuses every further send of a run once it recorded the send (since bc52c5b), so the button no longer offers it: it
+  is disabled and reads „Bereits versendet am <Datum Uhrzeit>“, and „Wird versendet …“ while billing sends. Invoice
+  mails could not go out twice before either; the button just led to a refusal.
 - All these confirmations use the shared confirmation dialog (`useConfirm`).
 
 ### Fixed
 - **A refused send of the billing mails is shown** (web 261030-mm1). When billing refuses the send (the run is busy,
-  409, or its mails were already sent) the pane now says „Der Mailversand ist fehlgeschlagen.“ with billing's reason;
+  409, or it was sent from elsewhere meanwhile) the pane now says „Der Mailversand ist fehlgeschlagen.“ with billing's reason;
   before, the result was ignored and nothing (or only a generic text) appeared.
 - **Text fields: the caret no longer jumps to the end while typing.** Renaming a tariff moved the caret to the end of
   the field after the first typed character, so the rest landed at the end („Beitritt2 weiterer ZP026“). The input
