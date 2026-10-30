@@ -161,6 +161,36 @@ describe("Datenfreigabe aufheben", () => {
     expect(Api.eegService.revokeMeteringPoint).toHaveBeenCalledWith("TE100200", "p1",
       [{meter: m1.meteringPoint, direction: "CONSUMPTION", consentId: m1.consentId}], new Date(2026, 9, 31).getTime(), undefined)
   })
+
+  const revokeWithReason = async (reason: string) => {
+    render(<ProcessRevokeMeteringpointComponent eeg={eeg} meters={[m1]} participants={[participant]}
+                                                edaProcess={process("Datenfreigabe aufheben")}/>)
+    type("participantId", "p1")
+    await flush()
+    type("meteringPoints", m1.meteringPoint)
+    type("reason", reason)
+    fireEvent.click(screen.getByText("Datum"))
+    await submit("Anfordern")
+  }
+
+  it("sends the typed reason (trimmed) and shows it in the summary", async () => {
+    await revokeWithReason("  Auszug des Mitglieds ")
+    expect(alert.mock.lastCall![0].message).toBe(`Soll die Datenfreigabe für den Zählpunkt ${m1.meteringPoint} beim `
+      + `Netzbetreiber aufgehoben werden? Ende der Datenfreigabe: 31.10.2026. Begründung: „Auszug des Mitglieds“.`)
+    await dismiss("confirm")
+    expect(Api.eegService.revokeMeteringPoint).toHaveBeenCalledWith("TE100200", "p1",
+      [{meter: m1.meteringPoint, direction: "CONSUMPTION", consentId: m1.consentId}], new Date(2026, 9, 31).getTime(),
+      "Auszug des Mitglieds")
+  })
+
+  it("omits a reason of blanks", async () => {
+    await revokeWithReason("   ")
+    expect(alert.mock.lastCall![0].message).not.toContain("Begründung")
+    await dismiss("confirm")
+    expect(Api.eegService.revokeMeteringPoint).toHaveBeenCalledWith("TE100200", "p1",
+      [{meter: m1.meteringPoint, direction: "CONSUMPTION", consentId: m1.consentId}], new Date(2026, 9, 31).getTime(),
+      undefined)
+  })
 })
 
 describe("Zählpunktliste anfordern", () => {

@@ -31,9 +31,13 @@ export const requestValuesSummary = (meters: Metering[], start: Date, end: Date,
     : `Energiedaten ${forMeters(meters.map(m => m.meteringPoint))} für ${period} beim Netzbetreiber anfordern?`
 }
 
-export const revokeSummary = (meters: Metering[], consentEnd: Date) =>
+// the CMRevoke schema allows 50 characters in Reason; the backend refuses a longer one
+export const REVOKE_REASON_MAX = 50
+
+export const revokeSummary = (meters: Metering[], consentEnd: Date, reason?: string) =>
   `Soll die Datenfreigabe ${forMeters(meters.map(m => m.meteringPoint))} beim Netzbetreiber aufgehoben werden? `
   + `Ende der Datenfreigabe: ${date(consentEnd)}.`
+  + (reason ? ` Begründung: „${reason}“.` : "")
 
 export const registerSummary = (meteringPoint: string, member: string, offline: boolean) =>
   `Zählpunkt ${meteringPoint} (${member}) ${offline ? "offline (mit Aktivierungs-Code)" : "online"} `

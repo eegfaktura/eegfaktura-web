@@ -18,7 +18,7 @@ import {JoinStrings} from "../../util/Helper.util";
 import moment from "moment";
 import {useProcessFeedback} from "./useProcessFeedback";
 import {useConfirm} from "../core/useConfirm";
-import {revokeSummary} from "./ProcessConfirm.functions";
+import {REVOKE_REASON_MAX, revokeSummary} from "./ProcessConfirm.functions";
 
 interface ProcessValues {
   communityId: string | undefined
@@ -50,7 +50,6 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
     setValue, formState} = useForm<ProcessValues>({defaultValues: processValues})
   const [useableMeters, setUsableMeters] = useState<Metering[]>([])
   const [consentEndDate, setConsentEndDate] = useState<Date|null>(null);
-  const [reason, setReason] = useState<string|undefined>()
   const [meteringPoints, participantId] = watch(['meteringPoints', 'participantId'])
 
   const [toaster] = useIonToast();
@@ -94,8 +93,10 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
         if (meter.filter(m => !(m.consentId && m.consentId.length > 0)).length === 0) {
           // revoking ends the data consent at the grid operator: ask first
           const participantId = data.participantId, endDate = consentEndDate
+          // the optional reason goes to the grid operator (CMRevoke ReasonKey 0 + Reason); empty is not sent
+          const reason = data.reason?.trim() || undefined
           confirm("Datenfreigabe aufheben",
-            revokeSummary(meter, endDate),
+            revokeSummary(meter, endDate, reason),
             "Aufheben", () => {
               setSending(true)
               Api.eegService.revokeMeteringPoint(
@@ -147,7 +148,8 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
             <SelectForm control={control} name={"meteringPoints"} options={useableMeters.map((p) => {
               return {key: p.meteringPoint, value: meteringDisplayName(p, t)}
             })} label={t("metering")} selectInterface={"popover"} multiple={true} rules={{required: true}}/>
-            <InputForm name="reason" label={t("process.revokeMeter.reason")} control={control}/>
+            <InputForm name="reason" label={t("process.revokeMeter.reason")} control={control}
+                       counter={true} maxlength={REVOKE_REASON_MAX}/>
             <div className="form-element">
               <DatePicker
                 selectsRange={false}

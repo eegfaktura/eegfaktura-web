@@ -32,5 +32,7 @@ describe("summaries before an EDA process (platform#228 step 3)", () => {
   it("names the end of the data consent", () => {
     expect(revokeSummary([meter(1), meter(2)], new Date(2026, 10, 30))).toBe("Soll die Datenfreigabe für 2 Zählpunkte "
       + "(AT001, AT002) beim Netzbetreiber aufgehoben werden? Ende der Datenfreigabe: 30.11.2026.")
+    expect(revokeSummary([meter(1)], new Date(2026, 10, 30), "Auszug")).toBe("Soll die Datenfreigabe für den Zählpunkt "
+      + "AT001 beim Netzbetreiber aufgehoben werden? Ende der Datenfreigabe: 30.11.2026. Begründung: „Auszug“.")
   })
 })

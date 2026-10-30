@@ -23,6 +23,11 @@ this changelog highlights the changes relevant for overview and operations.
 - All these confirmations use the shared confirmation dialog (`useConfirm`).
 
 ### Fixed
+- **„Datenfreigabe aufheben“: the optional „Begründung“ reaches the grid operator** (revoke reason, 2026-10-30). The
+  field was never read: the request always went out without a reason. It is now sent as `reason` (trimmed; blank is
+  not sent), limited to 50 characters with a counter (the length CMRevoke allows), and the confirmation names it. Needs
+  backend with the `reason` key (eegfaktura-backend fix/revoke-reason-2026-10-30) — an older backend ignores the field;
+  eda-xp then sends it to the grid operator as ReasonKey 0 + Reason.
 - **A refused send of the billing mails is shown** (web 261030-mm1). When billing refuses the send (the run is busy,
   409, or it was sent from elsewhere meanwhile) the pane now says „Der Mailversand ist fehlgeschlagen.“ with billing's reason;
   before, the result was ignored and nothing (or only a generic text) appeared.
