@@ -37,7 +37,7 @@ const setup = (addMeterDirty: boolean) => {
   const setShowAddMeterPane = vi.fn()
   const r = renderWithProviders(
     <ParticipantContext.Provider value={{
-      participants: members, allParticipants: members, showAddMeterPane: true, setShowAddMeterPane, addMeterDirty,
+      participants: members, allParticipants: members, showAddMeterPane: true, billingEnabled: true, setShowAddMeterPane, addMeterDirty,
       setAddMeterDirty: vi.fn(), setBillingEnabled: vi.fn(), showDetailsPage: vi.fn(), reloadEnergyReport: vi.fn(),
     } as any}>
       <MemberViewProvider><ParticipantPaneComponent/></MemberViewProvider>
@@ -66,5 +66,20 @@ describe("member list: another member replaces unsaved input of a new metering p
     fireEvent.click(screen.getByText(/Zweite/))
     expect(alert).not.toHaveBeenCalled()
     expect(selected()).toBe("002")
+  })
+
+  it("switching to the billing view asks first; declined, the view stays (and its own question is not shown)", () => {
+    const {container} = setup(true)
+    fireEvent.click(container.querySelector(".eeg-sliding-box input")!)
+    expect(alert.mock.lastCall![0].message).toBe(UNSAVED_DISCARD_MESSAGE)
+    act(() => alert.mock.lastCall![0].onDidDismiss({detail: {role: "cancel"}}))
+    expect(alert).toHaveBeenCalledTimes(1)
+  })
+
+  it("switching to the billing view goes on to its own question on confirm", () => {
+    const {container} = setup(true)
+    fireEvent.click(container.querySelector(".eeg-sliding-box input")!)
+    act(() => alert.mock.lastCall![0].onDidDismiss({detail: {role: "confirm"}}))
+    expect(alert.mock.lastCall![0].subHeader).toBe("Abrechnungsmodus")
   })
 })

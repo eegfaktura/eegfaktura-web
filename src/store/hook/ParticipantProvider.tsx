@@ -14,6 +14,7 @@ import {getPeriodDates} from "../../util/FilterHelper";
 import participants from "../../pages/Participants";
 import {ratesMapSelector} from "../rate";
 import {zvtTimeWindows, zvtWindowsKey} from "../../util/Helper.util";
+import {useConfirmDiscard} from "../../components/core/UnsavedChangesGuard.component";
 
 
 export interface ParicipantState {
@@ -291,3 +292,12 @@ export const useAllParticipants = () => {
 //   const {rates} = useContext(ParticipantContext);
 //   return rates;
 // }
+
+// Asks before an action replaces the "add metering point" pane while it holds unsaved input: another member, the
+// billing view, another community (platform#228 step 4).
+export const useLeaveAddMeter = () => {
+  const {showAddMeterPane, addMeterDirty} = useContext(ParticipantContext)
+  const confirmDiscard = useConfirmDiscard()
+  return (action: () => void, onCancel?: () => void) =>
+    confirmDiscard(showAddMeterPane && addMeterDirty, action, onCancel)
+}

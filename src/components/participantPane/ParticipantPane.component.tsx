@@ -25,7 +25,7 @@ import ParticipantPeriodHeaderComponent from "./ParticipantPeriodHeader.componen
 import MemberComponent from "./Member.component";
 import {ClearingPreviewRequest, Metering,} from "../../models/meteringpoint.model";
 import MeterCardComponent from "./MeterCard.component";
-import {ParticipantContext} from "../../store/hook/ParticipantProvider";
+import {ParticipantContext, useLeaveAddMeter} from "../../store/hook/ParticipantProvider";
 import {MemberViewContext} from "../../store/hook/MemberViewProvider";
 
 import "./ParticipantPane.component.scss";
@@ -111,7 +111,6 @@ import {types} from "sass";
 import {DownloadBillingDialog} from "./DownloadBilling.dialog";
 import {BillingCheckDialog, BillingCheckMode} from "./BillingCheck.dialog";
 import {ratesMapSelector} from "../../store/rate";
-import {useConfirmDiscard} from "../core/UnsavedChangesGuard.component";
 
 const ParticipantPaneComponent: FC = () => {
   const dispatcher = useAppDispatch();
@@ -148,12 +147,10 @@ const ParticipantPaneComponent: FC = () => {
     setBillingEnabled,
     showDetailsPage,
     setShowAddMeterPane,
-    showAddMeterPane,
-    addMeterDirty,
   } = useContext(ParticipantContext);
-  // another member or metering point replaces the "add metering point" pane: ask first while it holds unsaved input
-  const confirmDiscard = useConfirmDiscard()
-  const leaveAddMeter = (action: () => void) => confirmDiscard(showAddMeterPane && addMeterDirty, action)
+  // another member, metering point or the billing view replaces the "add metering point" pane: ask first while it
+  // holds unsaved input
+  const leaveAddMeter = useLeaveAddMeter()
   const {
     toggleMembersMeter,
     toggleMetering,
@@ -357,7 +354,8 @@ const ParticipantPaneComponent: FC = () => {
 
   const activateBilling = (c: boolean) => {
     if (c) {
-      presentAlert({
+      // the billing view replaces the "add metering point" pane; declined, the switch goes back
+      leaveAddMeter(() => presentAlert({
         subHeader: "Abrechnungsmodus",
         message:
           "Im Abrechnungsmodus siehst Du je Mitglied die Beträge des gewählten Zeitraums. Abgerechnet werden immer alle aktiven Mitglieder mit Tarif; wer keinen Tarif hat, zeigt „Daten prüfen“. Mit „Vorschau erstellen“ werden Rechnungs- und Gutschriftsentwürfe mit dem Zusatz „VORSCHAU“ erstellt. Dazu kannst Du eine Zusammenstellung als Excel-Datei und alle Belege gesammelt als ZIP-Datei herunterladen. Änderst Du danach Stammdaten, Energiedaten oder Tarife, erstellt „Vorschau Akt.“ die Entwürfe beliebig oft neu. Erst „Abrechnung durchführen“ erstellt die endgültigen Belege mit fortlaufenden Rechnungsnummern; das ist nicht umkehrbar.",
@@ -391,7 +389,7 @@ const ParticipantPaneComponent: FC = () => {
             toggleShowAmount(false);
           }
         },
-      });
+      }), () => toggleShowAmount(false));
     } else {
       toggleShowAmount(false);
     }

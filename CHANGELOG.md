@@ -13,7 +13,10 @@ this changelog highlights the changes relevant for overview and operations.
   Selecting another tariff, „+“ (new tariff) or „Zurück“ with unsaved changes in the tariff editor, and „Zurück“ or
   selecting another member or metering point while „Zählpunkt hinzufügen“ holds input, now ask „Die Eingaben sind noch
   nicht gespeichert. Verwerfen und fortfahren?“. Leaving the page through the menu, browser back, reload or closing the
-  tab asks as well (the existing `UnsavedChangesGuard`, as in the mail templates).
+  tab asks as well (the existing `UnsavedChangesGuard`, as in the mail templates). Switching to the billing view or to
+  another community while „Zählpunkt hinzufügen“ holds input asks too (declined, the switch and the community select
+  stay). In the registration, „Abbrechen“ and opening another metering point ask while the metering point form holds
+  input, and that input now also counts when leaving the page.
 - **Member details show whether every change is saved** (platform#228 step 4). The member details save each field on
   its own; a status above the form now says „Alle Änderungen gespeichert“, „Wird gespeichert …“ or „Nicht gespeichert –
   erneut versuchen“. A failed save keeps the typed value in the field, and „erneut versuchen“ sends every failed

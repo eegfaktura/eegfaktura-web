@@ -1,7 +1,6 @@
 import React, {FC, useEffect, useRef} from "react";
 import {Prompt} from "react-router";
-import {useIonViewWillEnter, useIonViewWillLeave} from "@ionic/react";
-import {useConfirm} from "./useConfirm";
+import {useIonAlert, useIonViewWillEnter, useIonViewWillLeave} from "@ionic/react";
 
 export const UNSAVED_CHANGES_MESSAGE = "Die Eingaben sind noch nicht gespeichert. Seite trotzdem verlassen?"
 
@@ -41,10 +40,20 @@ export const UNSAVED_DISCARD_HEADER = "Ungespeicherte Änderungen"
 export const UNSAVED_DISCARD_MESSAGE = "Die Eingaben sind noch nicht gespeichert. Verwerfen und fortfahren?"
 export const UNSAVED_DISCARD_BUTTON = "Verwerfen"
 
+// onCancel lets a control that already shows the new choice (a toggle, a select) go back to the old one.
 export const useConfirmDiscard = () => {
-  const confirm = useConfirm()
-  return (dirty: boolean, action: () => void) =>
-    dirty ? confirm(UNSAVED_DISCARD_HEADER, UNSAVED_DISCARD_MESSAGE, UNSAVED_DISCARD_BUTTON, action) : action()
+  const [alert] = useIonAlert()
+  return (dirty: boolean, action: () => void, onCancel?: () => void) => {
+    if (!dirty) {
+      action()
+      return
+    }
+    alert({
+      subHeader: UNSAVED_DISCARD_HEADER, message: UNSAVED_DISCARD_MESSAGE,
+      buttons: [{text: "Abbrechen", role: "cancel"}, {text: UNSAVED_DISCARD_BUTTON, role: "confirm"}],
+      onDidDismiss: (e: CustomEvent) => e.detail.role === "confirm" ? action() : onCancel?.(),
+    })
+  }
 }
 
 export default UnsavedChangesGuard

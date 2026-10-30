@@ -7,13 +7,16 @@ import {useFieldArray, useFormContext} from "react-hook-form";
 import RegisterMeterPaneComponent from "./RegisterMeterPane.component";
 import { Metering } from "../models/meteringpoint.model";
 import {useEegArea, useOnlineState} from "../store/hook/Eeg.provider";
+import {useConfirmDiscard} from "./core/UnsavedChangesGuard.component";
 
 interface ParticipantRegisterMeterPaneComponentProps {
   participant: EegParticipant;
   onAddMeter: (meter: Metering) => void
+  // reports unsaved input of the open metering point form, so the page asks before leaving (platform#228 step 4)
+  onDirtyChange?: (dirty: boolean) => void
 }
 
-const ParticipantRegisterMeterPaneComponent: FC<ParticipantRegisterMeterPaneComponentProps> = ({participant}) => {
+const ParticipantRegisterMeterPaneComponent: FC<ParticipantRegisterMeterPaneComponentProps> = ({participant, onDirtyChange}) => {
 
   const isOnline = useOnlineState()
 
@@ -29,6 +32,12 @@ const ParticipantRegisterMeterPaneComponent: FC<ParticipantRegisterMeterPaneComp
 
   const [addMeterPaneActive, setAddMeterPaneActive] = useState(false)
   const [meteringPoint, setMeteringPoint] = useState<Metering | undefined>()
+  const [meterDirty, setMeterDirty] = useState(false)
+  const confirmDiscard = useConfirmDiscard()
+  const onMeterDirtyChange = (dirty: boolean) => {
+    setMeterDirty(dirty)
+    onDirtyChange?.(dirty)
+  }
 
   const { control, watch} = useFormContext<EegParticipant>();
   const {fields, append, update, remove} = useFieldArray<EegParticipant>({control, name: 'meters'})
@@ -39,10 +48,11 @@ const ParticipantRegisterMeterPaneComponent: FC<ParticipantRegisterMeterPaneComp
 
  const meters = watch("meters")
 
-  const showMeter = (meter: Metering) => {
+  // another metering point or a new one replaces the open form: ask first while it holds unsaved input
+  const showMeter = (meter: Metering) => confirmDiscard(addMeterPaneActive && meterDirty, () => {
     setMeteringPoint(meter);
     setAddMeterPaneActive(true);
-  }
+  })
 
   const appendMeter = (meter: Metering) => {
     setAddMeterPaneActive(false)
@@ -102,7 +112,8 @@ const ParticipantRegisterMeterPaneComponent: FC<ParticipantRegisterMeterPaneComp
           </IonGrid>
         </div>
         <div style={{flexGrow: 1}}>
-          {addMeterPaneActive && meteringPoint && <RegisterMeterPaneComponent meteringPoint={meteringPoint} onAdd={appendMeter} onChancel={removeMeter} />}
+          {addMeterPaneActive && meteringPoint && <RegisterMeterPaneComponent meteringPoint={meteringPoint} onAdd={appendMeter} onChancel={removeMeter}
+                                                                                    onDirtyChange={onMeterDirtyChange}/>}
         </div>
       </div>
     </div>

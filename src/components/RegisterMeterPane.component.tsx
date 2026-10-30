@@ -1,4 +1,4 @@
-import React, {FC, useMemo} from "react";
+import React, {FC, useEffect, useMemo} from "react";
 import {Metering} from "../models/meteringpoint.model";
 import {IonButton, IonFooter, IonToolbar} from "@ionic/react";
 import {FormProvider, useForm, useFormContext} from "react-hook-form";
@@ -8,22 +8,32 @@ import {EegParticipant} from "../models/members.model";
 import MeterFormElement from "./core/MeterForm.element";
 import MeterAddressFormElement from "./core/forms/MeterAddressForm/MeterAddressForm.element";
 import {useOnlineState} from "../store/hook/Eeg.provider";
+import {useConfirmDiscard} from "./core/UnsavedChangesGuard.component";
 
 interface RegisterMeterPaneComponentProps {
   meteringPoint: Metering
   onAdd: (meter: Metering) => void
   onChancel: () => void
+  // reports unsaved input, so the register page asks before it is lost (platform#228 step 4)
+  onDirtyChange?: (dirty: boolean) => void
 }
 
 const RegisterMeterPaneComponent: FC<RegisterMeterPaneComponentProps> = ({
                                                                            meteringPoint,
                                                                            onAdd,
-                                                                           onChancel
+                                                                           onChancel,
+                                                                           onDirtyChange
                                                                          }) => {
 
   const rates = useAppSelector(ratesSelector);
   const formMethods = useForm({defaultValues: meteringPoint})
-  const {handleSubmit, setValue, control, watch, formState: {errors}, clearErrors} = formMethods;
+  const {handleSubmit, setValue, control, watch, formState: {errors, isDirty}, clearErrors} = formMethods;
+  const confirmDiscard = useConfirmDiscard()
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty)
+  }, [isDirty])
+  useEffect(() => () => onDirtyChange?.(false), [])
   const isOnline = useOnlineState()
 
   const {getValues} = useFormContext<EegParticipant>();
@@ -46,7 +56,7 @@ const RegisterMeterPaneComponent: FC<RegisterMeterPaneComponentProps> = ({
       <div style={{gridColumnStart: "1", gridColumnEnd: "3", display: "grid"}}>
         <IonFooter>
           <IonToolbar className={"ion-padding-horizontal"}>
-            <IonButton fill="clear" slot="start" onClick={() => onChancel()}>Abbrechen</IonButton>
+            <IonButton fill="clear" slot="start" onClick={() => confirmDiscard(isDirty, onChancel)}>Abbrechen</IonButton>
             <IonButton slot="end" onClick={handleSubmit(onAppend)}>Hinzufügen</IonButton>
           </IonToolbar>
         </IonFooter>
