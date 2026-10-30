@@ -536,7 +536,8 @@ export class EegService extends EegBaseService {
     }).then(this.handleErrors).then(() => undefined);
   }
 
-  // the GUI registers online only (decision 2026-10-30): the backend needs "ONLINE" explicitly, without it the request fails
+  // the GUI registers online only (decision 2026-10-30): for an online community the backend needs "ONLINE" explicitly
+  // (without a mode the request fails); for other communities it ignores the mode
   async registerMeteringPoint(tenant: string, participantId: string, meter: string, direction: string): Promise<EegEnergyReport> {
     const token = await this.lookupToken()
     const body = {meteringPoint: meter, direction: direction, activationMode: 'ONLINE'}
