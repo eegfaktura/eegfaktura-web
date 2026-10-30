@@ -43,9 +43,13 @@ this changelog highlights the changes relevant for overview and operations.
   checkbox „Offline-Registrierung“ with the field „Aktivierungs-Code“ in „Zählpunkt hinzufügen“ and in the metering
   point details, the online/offline switch with „Aktivierungs-Code“ per metering point in „Zulassen“, and the
   checkbox „Offline-Registrierung“ in the process „Zählpunkt aktivieren“. The requests always send
-  `activationMode: "ONLINE"` and no `activationCode`. The backend is unchanged: answers to offline registrations made
-  earlier are still processed, and those metering points keep their state. Admins of a community that is not online
-  still set „Noch nicht registriert / Bereits registriert“ as before.
+  `activationMode: "ONLINE"` and no activation code („Zulassen“ sends `activationCode` empty, as before, also for a
+  metering point that still holds a code from an earlier offline registration). The backend is unchanged: answers to
+  offline registrations made earlier are still processed, and those metering points keep their state. A metering point
+  whose earlier offline registration is still pending stays in the list of „Zählpunkt aktivieren“ (as every metering
+  point that is not active), so it can be registered online now; this is deliberate, an offline registration can no
+  longer be completed from the GUI. Admins of a community that is not online still set „Noch nicht registriert /
+  Bereits registriert“ as before.
 
 ### Fixed
 - **„Zulassen“: an unticked metering point stays unticked** (261030-mm3). The dialog now keeps the list of metering

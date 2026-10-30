@@ -19,9 +19,10 @@ import "./AllowParticipant.dialog.scss"
 import {Metering} from "../../models/meteringpoint.model";
 import MeteringPointConfirmElement from "../core/elements/MeteringPointConfirm.element";
 
-// the metering points offered for „zulassen“: all selected, registered online (no offline registration since 2026-10-30)
+// the metering points offered for „zulassen“: all selected, registered online (no offline registration since 2026-10-30);
+// a code stored with an earlier offline registration is not sent (empty, as before)
 export const metersToConfirm = (meters: Metering[]): Metering[] =>
-  meters.map(m => ({...m, activationMode: 'ONLINE', enabled: true}))
+  meters.map(m => ({...m, activationCode: '', activationMode: 'ONLINE', enabled: true}))
 
 interface AllowParticipantDialogProps {
   trigger: string;

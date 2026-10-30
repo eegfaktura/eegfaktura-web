@@ -55,10 +55,10 @@ describe("registration sends ONLINE without an activation code", () => {
     expect(sentBody()).toEqual({meteringPoint: "AT1", direction: "CONSUMPTION", activationMode: "ONLINE"})
   })
 
-  it("„zulassen“ sends every selected metering point with activationMode ONLINE and no activationCode", async () => {
+  it("„zulassen“ sends every selected metering point with activationMode ONLINE and an empty activationCode", async () => {
     const service = new ParticipantService({} as AuthService);
     vi.spyOn(service as any, "lookupToken").mockResolvedValue("token");
-    const meters = metersToConfirm([meter("AT1"), meter("AT2", {activationMode: "OFFLINE"})])
+    const meters = metersToConfirm([meter("AT1"), meter("AT2", {activationMode: "OFFLINE", activationCode: "ABC123"} as Partial<Metering>)])  // old data: code not in the model
     await service.confirmParticipant("RC1", "p1", meters)
 
     const body = sentBody() as Metering[]
@@ -66,7 +66,7 @@ describe("registration sends ONLINE without an activation code", () => {
     body.forEach(m => {
       expect(m.activationMode).toBe("ONLINE")
       expect(m.enabled).toBe(true)
-      expect(m).not.toHaveProperty("activationCode")
+      expect(m).toHaveProperty("activationCode", "")  // a code stored with an earlier offline registration is not sent
     })
   })
 })
