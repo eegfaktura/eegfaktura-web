@@ -9,8 +9,8 @@ import {EegContext, EegState} from "../../../store/hook/Eeg.provider";
 import {Eeg} from "../../../models/eeg.model";
 import "../../../util/I18n";
 
-// Energy direction and offline registration are input like any field: they make the form dirty, so leaving
-// „Zählpunkt hinzufügen“ asks (review PR #244).
+// Energy direction is input like any field: it makes the form dirty, so leaving „Zählpunkt hinzufügen“ asks
+// (review PR #244). The offline registration is gone (decision 2026-10-30): the form offers no way to change it.
 
 const ctx = {
   eeg: {area: "LOCAL", allocationMode: "DYNAMIC"} as unknown as Eeg,
@@ -25,14 +25,14 @@ const Form = () => {
     <EegContext.Provider value={ctx}>
       <FormProvider {...methods}>
         <MeterFormElement rates={[]}/>
-        <MeterAddressFormElement isOnline={true} isEditable={true} showActivationMode={true}/>
+        <MeterAddressFormElement isOnline={true} isEditable={true}/>
         <span data-testid="dirty">{String(methods.formState.isDirty)}</span>
       </FormProvider>
     </EegContext.Provider>
   )
 }
 
-describe("metering point form: direction and offline registration count as input (review PR #244)", () => {
+describe("metering point form: direction counts as input (review PR #244), no offline registration", () => {
   it("choosing „Erzeuger“ makes the form dirty", async () => {
     render(<Form/>)
     expect(screen.getByTestId("dirty").textContent).toBe("false")
@@ -40,10 +40,11 @@ describe("metering point form: direction and offline registration count as input
     expect(screen.getByTestId("dirty").textContent).toBe("true")
   })
 
-  it("„Offline-Registrierung“ makes the form dirty", async () => {
+  it("offers neither „Offline-Registrierung“ nor „Aktivierungs-Code“", () => {
     const {container} = render(<Form/>)
-    const box = container.querySelector('ion-checkbox[aria-label="Offline-Registrierung"]')!
-    await act(async () => { fireEvent(box, new CustomEvent("ionChange", {detail: {checked: true}})) })
-    expect(screen.getByTestId("dirty").textContent).toBe("true")
+    expect(screen.queryByText(/Offline-Registrierung/)).not.toBeInTheDocument()
+    expect(container.querySelector('ion-checkbox[aria-label="Offline-Registrierung"]')).toBeNull()
+    expect(screen.queryByText(/Aktivierungs-Code/)).not.toBeInTheDocument()
+    expect(container.querySelector('[name="activationCode"]')).toBeNull()
   })
 })

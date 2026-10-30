@@ -17,8 +17,8 @@ this changelog highlights the changes relevant for overview and operations.
   another community while „Zählpunkt hinzufügen“ holds input asks too (declined, the switch and the community select
   stay). The community switch also asks while the tariff editor holds unsaved changes. In the registration,
   „Abbrechen“ and opening another metering point ask while the metering point form holds input (the card of the open
-  metering point keeps it), and that input now also counts when leaving the page. The energy direction and „Offline-
-  Registrierung“ count as input.
+  metering point keeps it), and that input now also counts when leaving the page. The energy direction counts as
+  input.
 - **Member details show whether every change is saved** (platform#228 step 4). The member details save each field on
   its own; a status above the form now says „Alle Änderungen gespeichert“, „Wird gespeichert …“ or „Nicht gespeichert –
   erneut versuchen“. A failed save keeps the typed value in the field, and „erneut versuchen“ sends every failed
@@ -36,6 +36,16 @@ this changelog highlights the changes relevant for overview and operations.
   covers these letters, as member names already do) and in the XLSX „Details“ sheet; the SEPA file is built from the
   „Liste“ sheet, which has no tariff name; no mail text uses it. Other characters stay rejected, they may not print in
   the PDF.
+
+### Removed
+- **No offline registration (ECOF) of metering points from the GUI anymore** (decision 2026-10-30). This changes what
+  is sent to the grid operator: every registration from the GUI is now the online EDA registration. Removed are the
+  checkbox „Offline-Registrierung“ with the field „Aktivierungs-Code“ in „Zählpunkt hinzufügen“ and in the metering
+  point details, the online/offline switch with „Aktivierungs-Code“ per metering point in „Zulassen“, and the
+  checkbox „Offline-Registrierung“ in the process „Zählpunkt aktivieren“. The requests always send
+  `activationMode: "ONLINE"` and no `activationCode`. The backend is unchanged: answers to offline registrations made
+  earlier are still processed, and those metering points keep their state. Admins of a community that is not online
+  still set „Noch nicht registriert / Bereits registriert“ as before.
 
 ### Fixed
 - **Registration: another metering point no longer shows the input of the one before.** With the metering point form

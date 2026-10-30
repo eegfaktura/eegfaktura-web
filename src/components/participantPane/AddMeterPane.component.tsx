@@ -80,7 +80,7 @@ const AddMeterPaneComponent: FC = () => {
           <EegPaneTemplate>
             <FormProvider {...formMethods}>
               <MeterFormElement rates={rates} participant={participant}/>
-              <MeterAddressFormElement participant={participant} isEditable={true} isOnline={isOnline} showActivationMode={true}/>
+              <MeterAddressFormElement participant={participant} isEditable={true} isOnline={isOnline}/>
             </FormProvider>
           </EegPaneTemplate>
         </form>

@@ -95,7 +95,7 @@ const MeterFormComponent: FC<MeterFromComponentProps> = ({meteringPoint}) => {
       <EegPaneTemplate>
         <FormProvider {...formMethods} >
           <MeterFormElement rates={rates} meterReadOnly={true} onChange={onChange} onPartChange={onChangePartFact}/>
-          <MeterAddressFormElement onChange={onChange} isOnline={isOnline} showActivationMode={true}/>
+          <MeterAddressFormElement onChange={onChange} isOnline={isOnline}/>
         </FormProvider>
       </EegPaneTemplate>
     // </form>

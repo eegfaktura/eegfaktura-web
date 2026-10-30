@@ -17,7 +17,11 @@ import {trash} from "ionicons/icons";
 
 import "./AllowParticipant.dialog.scss"
 import {Metering} from "../../models/meteringpoint.model";
-import MeteringPointOfflineElement from "../core/elements/MeteringPointOffline.element";
+import MeteringPointConfirmElement from "../core/elements/MeteringPointConfirm.element";
+
+// the metering points offered for „zulassen“: all selected, registered online (no offline registration since 2026-10-30)
+export const metersToConfirm = (meters: Metering[]): Metering[] =>
+  meters.map(m => ({...m, activationMode: 'ONLINE', enabled: true}))
 
 interface AllowParticipantDialogProps {
   trigger: string;
@@ -78,7 +82,7 @@ const AllowParticipantDialog: FC<AllowParticipantDialogProps> = ({trigger, parti
         <div>
           <div style={{fontSize: "1.1em", paddingTop: "8px", paddingBottom: "4px", borderBottom: "1px solid var(--ion-color-primary-tint)", marginBottom: "4px"}}>Zählpunkte</div>
           {meters.map((m, idx) => (
-            <MeteringPointOfflineElement key={idx} m={m}/>
+            <MeteringPointConfirmElement key={idx} m={m}/>
             )
           )}
         </div>
