@@ -342,7 +342,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
                 <div style={{color: "black"}}>
                   <AllowParticipantDialog trigger="open-participant-allow-dialog"
                                           participant={selectedParticipant}
-                                          meters = {selectedParticipant.meters.map(m => {return {...m, activationCode: '', activationMode:'ONLINE', enabled: true}})}
+                                          meters = {selectedParticipant.meters}
                                           onDismiss={onWillDismiss}/>
                   <IonCard color="warning-light">
                     <IonItem lines="none" color="warning-light">

@@ -43,7 +43,6 @@ export interface Metering {
   processState: MeteringProcessStateType,
   participantState: ParticipantState,
   partFact: number,
-  activationCode?: string
   activationMode: 'ONLINE' | 'OFFLINE'
   enabled: boolean
 }

@@ -52,7 +52,7 @@ const findByName = (container: HTMLElement | null, value: string) => {
 const renderElement = (online: boolean, admin: boolean, owner: boolean, status: string = 'ACTIVE', isEditable?: boolean) => {
   return renderWithReactHookForm(
     <EegContext.Provider value={ctxValue(admin, owner, false)} >
-      <MeterAddressFormElement participant={defaultParticipant} isOnline={online} isEditable={isEditable} showActivationMode={false}/>
+      <MeterAddressFormElement participant={defaultParticipant} isOnline={online} isEditable={isEditable}/>
     </EegContext.Provider>, { defaultValues: {
         status: status,
         processState: status,
