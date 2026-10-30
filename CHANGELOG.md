@@ -9,6 +9,22 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Changed
+- **Processes to the grid operator ask first, with a summary** (platform#228 step 3). Changing the participation
+  factor, registering a metering point, requesting energy data without „Smart“, revoking the data consent and requesting
+  the metering point list now show what is sent before sending it: the metering point(s), the old and new factor, the
+  period, the end of the consent or the grid operator. „Abbrechen“ sends nothing; „Senden“/„Anfordern“/„Aufheben“ sends
+  the same request as before. The smart energy data request already asked and is unchanged; the approval of a new
+  member keeps its own dialog.
+- **Billing mails: „Senden“ names the number of documents; after the send the button is disabled** (platform#228
+  step 3). The question before sending the billing mails of a run says how many documents go out by mail. billing
+  refuses every further send of a run once it recorded the send (since bc52c5b), so the button no longer offers it: it
+  is disabled and reads „Bereits versendet (<Datum, Uhrzeit>)“, and „Wird versendet …“ while billing sends (with a hint
+  to contact support if it stays). The line „Versand gestartet (…)“ above it is gone, the button shows it. Invoice
+  mails could not go out twice before either; the button just led to a refusal.
+  A double click opens one dialog; the process forms stay disabled while their dialog is open and the request runs
+  (before, the metering point list and the revoke could be sent twice). The participation factor is checked against
+  the time window again after the confirmation.
+- All these confirmations use the shared confirmation dialog (`useConfirm`).
 - **One German notation for numbers and dates on screen** (platform#228, step 1). Numbers use a decimal comma and a
   thousands dot everywhere: the dashboard showed „185.337 kWh“ for 185,337 kWh, which reads as 185 thousand; it now
   shows „185,337 kWh“ (energy overview, load curve and day charts, meter chart tooltips). The tariff card shows
@@ -25,6 +41,9 @@ this changelog highlights the changes relevant for overview and operations.
   `date-fns` 2.30.0 (already shipped as part of react-datepicker) is now a direct dependency for the German calendar.
 
 ### Fixed
+- **A refused send of the billing mails is shown** (web 261030-mm1). When billing refuses the send (the run is busy,
+  409, or it was sent from elsewhere meanwhile) the pane now says „Der Mailversand ist fehlgeschlagen.“ with billing's reason;
+  before, the result was ignored and nothing (or only a generic text) appeared.
 - **Dashboard: the load curve card waits for the load curve, the first chart request waits for the community**
   (pre-existing errors found in platform#228 step 2). The load curve card was shown as soon as the day curve data was
   there. The chart data was requested before the community was loaded (to `/eeg/v2/undefined/…`) and not again once

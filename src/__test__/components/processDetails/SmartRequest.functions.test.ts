@@ -1,7 +1,6 @@
 import {describe, expect, it} from "vitest";
 import {
   alreadyRequestedInfo,
-  entireConfirmation,
   metersToCheck,
   smartConfirmation,
   SmartPlan,
@@ -263,10 +262,6 @@ describe("sendFeedback", () => {
 })
 
 describe("confirmation texts", () => {
-  it("names the number of metering points of the whole community", () => {
-    expect(entireConfirmation(2380)).toBe("Für die ganze Gemeinschaft werden 2.380 Zählpunkte für den ganzen Zeitraum angefordert. Jetzt anfordern?")
-  })
-
   it("names the already requested metering points and the time from which all are free", () => {
     const now = new Date(2026, 9, 24, 13, 40).getTime()
     expect(alreadyRequestedInfo([

@@ -9,6 +9,8 @@ import {store} from "../../store";
 import {BasicSelectComponent, SelectOptions} from "../form/BasicSelect.component";
 import {JoinStrings} from "../../util/Helper.util";
 import {useForm} from "react-hook-form";
+import {useConfirm} from "../core/useConfirm";
+import {podListSummary} from "./ProcessConfirm.functions";
 
 
 interface ProcessValues {
@@ -26,6 +28,7 @@ const ProcessPodListComponent: FC<ProcessPodListComponentProps> = ({eeg, edaProc
   const {t: errorT} = useLocale("error")
 
   const [toaster] = useIonToast();
+  const confirm = useConfirm()
 
   const infoToast = (message: string) => {
     toaster({
@@ -54,9 +57,12 @@ const ProcessPodListComponent: FC<ProcessPodListComponentProps> = ({eeg, edaProc
     setValue, formState
   } = useForm<ProcessValues>({defaultValues: processValues})
 
-  const request = (data: ProcessValues) => {
+  const request = async (data: ProcessValues) => {
     if (data.operatorId) {
-      Api.eegService.syncMeteringPointList(eeg.rcNumber, data.operatorId)
+      // goes to the grid operator: ask first
+      if (!await confirm(edaProcess.name, podListSummary(data.operatorId), "Anfordern")) return
+      // returned: the submit stays disabled until the request is answered
+      return Api.eegService.syncMeteringPointList(eeg.rcNumber, data.operatorId)
         .then(() => infoToast(errorT("process.podList_ok")))
         .catch((e) => {
           console.log(e)
@@ -85,7 +91,7 @@ const ProcessPodListComponent: FC<ProcessPodListComponentProps> = ({eeg, edaProc
                                     }} defaultValue={processValues.operatorId}/>
           </div>
       }
-      <IonButton onClick={handleSubmit(request)} disabled={!formState.isValid}>
+      <IonButton onClick={handleSubmit(request)} disabled={!formState.isValid || formState.isSubmitting}>
         {t("process.podList.submit")}
       </IonButton>
     </div>

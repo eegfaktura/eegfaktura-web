@@ -2,7 +2,6 @@ import React, {FC, useContext, useEffect, useMemo, useRef, useState} from "react
 
 import {EegParticipant} from "../../models/members.model";
 import {
-  IonAlert,
   IonButton,
   IonButtons,
   IonCol,
@@ -56,7 +55,6 @@ import {
   documentTextOutline,
   downloadOutline,
   flash,
-  mailOutline,
   person,
   reloadCircleOutline,
   search,
@@ -79,16 +77,15 @@ import {
   billingRunErrorSelector,
   billingRunIsFetchingSelector,
   billingRunSelector,
-  billingRunSendmail,
   billingRunStatusSelector,
   fetchBillingRun,
-  fetchBillingRunById,
 } from "../../store/billingRun";
 import DatePickerCoreElement from "../core/elements/DatePickerCore.element";
 
 import {filterActiveMeter, filterActiveParticipantAndMeter,} from "../../util/FilterHelper.unit";
 import moment from "moment";
 import {Api} from "../../service";
+import BillingSendButton, {documentCount} from "./BillingSendButton.component";
 import {billingRunBlocker, billingSwitchTooltip, billTotal, buildAllocationMap, downloadWithFeedback, filterSearchQuery} from "./ParticipantPane.functions";
 import {exportMasterdataWithJoiningFees, hasJoiningFee, JOINING_FEE_EXPORT_WITHOUT_BILLING} from "../../util/JoiningFee.util";
 import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
@@ -629,14 +626,6 @@ const ParticipantPaneComponent: FC = () => {
     if (name === "documentDateBilling") documentDateBilling.current = value;
   };
 
-  async function sendBilling(billingRunId: string) {
-    if (billingRunId) {
-      dispatcher(billingRunSendmail({tenant, billingRunId})).then(() => {
-        dispatcher(fetchBillingRunById({tenant, billingRunId}));
-      });
-    }
-  }
-
   const exportBusy = {show: (message: string) => loading({message}), hide: () => dismissLoading()}
 
   async function exportBillingExcel(billingRunId: string) {
@@ -1050,42 +1039,16 @@ const ParticipantPaneComponent: FC = () => {
                   )}
                   {!billingRunIsFetching && billingRunStatus === "DONE" && (
                     <>
+                      {/* the send state is shown on the send button („Bereits versendet (…)“) */}
                       <div>
-                        {billingRun.mailStatus === "SENT"
-                          ? "Versand gestartet (" +
-                          reformatDateTimeStamp(
-                            billingRun.mailStatusDateTime
-                          ) +
-                          ")"
-                          : "Abgerechnet (" +
+                        {"Abgerechnet (" +
                           reformatDateTimeStamp(
                             billingRun.runStatusDateTime
                           ) +
                           ")"}
                       </div>
                       <div>
-                        <IonButton id="confirm-send">
-                          <IonIcon slot="end" icon={mailOutline}></IonIcon>
-                          {"SENDEN"}
-                        </IonButton>
-                        <IonAlert
-                          header="SENDEN"
-                          subHeader="Mit Klick auf OK versenden Sie alle Abrechnungsdokumente per E-Mail."
-                          trigger="confirm-send"
-                          buttons={[
-                            {
-                              text: "Abbrechen",
-                              role: "cancel",
-                            },
-                            {
-                              text: "OK",
-                              role: "confirm",
-                              handler: () => {
-                                sendBilling(billingRun.id);
-                              },
-                            },
-                          ]}
-                        ></IonAlert>
+                        <BillingSendButton tenant={tenant} run={billingRun} documentCount={documentCount(totals)}/>
                         <IonButton
                           onClick={() => exportBillingArchive(billingRun.id)}
                         >
