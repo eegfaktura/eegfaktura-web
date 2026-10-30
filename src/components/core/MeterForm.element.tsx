@@ -66,7 +66,7 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
   const onChangeDirection = (s: number) => {
     // setSelectedDirection(s)
     const value = s === 0 ? "CONSUMPTION" : "GENERATION"
-    setValue(`direction`, value);
+    setValue(`direction`, value, {shouldDirty: true});  // counts as input (unsaved-changes question, platform#228)
     _onChange && _onChange("direction", value)
   }
 

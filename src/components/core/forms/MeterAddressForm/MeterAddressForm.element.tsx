@@ -46,7 +46,7 @@ const MeterAddressFormElement: FC<MeterAddressFormElementProps> = ({
 
   const onSetOffline = (o: boolean) => {
     // setOffline(o)
-    setValue("activationMode", o ? "OFFLINE" : "ONLINE")
+    setValue("activationMode", o ? "OFFLINE" : "ONLINE", {shouldDirty: true})  // counts as input (platform#228)
   }
 
   const takeOverAddress = (ok: boolean) => {
