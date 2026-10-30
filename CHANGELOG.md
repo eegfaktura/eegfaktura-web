@@ -67,6 +67,12 @@ this changelog highlights the changes relevant for overview and operations.
   stored 0 as an empty field, as if nothing were set; they now show „0“. Their value is now read like the other amount
   fields: „1.234,56“ is 1234.56 (before 1.234), „1234.56“ stays 1234.56. Stored values do not change.
 
+### Security
+- **`i18next-http-backend` removed** (Dependabot alerts GHSA-3cmx-xjww-583x, GHSA-9jhj-wvmw-cfx5, GHSA-xvq9-wjp8-hwqf,
+  GHSA-q89c-q3h5-w34g; supersedes Dependabot #248, which would have bumped it 2 → 4). The package was never imported:
+  the translations are bundled at build time by `vite-plugin-i18next-loader`. Its now-unused transitive dependencies
+  (`cross-fetch`, `node-fetch` 2 and their helpers) leave the lockfile too. No change in behaviour.
+
 ## [1.18.0] – 2026-10-28
 
 ### Added
