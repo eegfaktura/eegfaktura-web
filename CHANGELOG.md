@@ -18,8 +18,12 @@ this changelog highlights the changes relevant for overview and operations.
 - **Billing mails: „Senden“ names the number of documents; after the send the button is disabled** (platform#228
   step 3). The question before sending the billing mails of a run says how many documents go out by mail. billing
   refuses every further send of a run once it recorded the send (since bc52c5b), so the button no longer offers it: it
-  is disabled and reads „Bereits versendet am <Datum Uhrzeit>“, and „Wird versendet …“ while billing sends. Invoice
+  is disabled and reads „Bereits versendet (<Datum, Uhrzeit>)“, and „Wird versendet …“ while billing sends (with a hint
+  to contact support if it stays). The line „Versand gestartet (…)“ above it is gone, the button shows it. Invoice
   mails could not go out twice before either; the button just led to a refusal.
+  A double click opens one dialog; the process forms stay disabled while their dialog is open and the request runs
+  (before, the metering point list and the revoke could be sent twice). The participation factor is checked against
+  the time window again after the confirmation.
 - All these confirmations use the shared confirmation dialog (`useConfirm`).
 
 ### Fixed
