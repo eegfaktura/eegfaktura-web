@@ -35,6 +35,8 @@ this changelog highlights the changes relevant for overview and operations.
   operator and is stored in the history (user decision 2026-10-30) and asks not to enter personal data. The
   confirmation names the reason. Needs eegfaktura/eegfaktura-backend#127 (reads `reason`; an older backend ignores the
   field) and eegfaktura/eegfaktura-eda-xp#59 (ReasonKey 0 + Reason); deploy order eda-xp → backend → web.
+  When the backend refuses a revoke (codes 5011 reason too long, 5012 no consent end or a metering point of another
+  member, 5013 no active consent of the member), the error shows the German text instead of a raw key `E_<code>_…`.
 - **A refused send of the billing mails is shown** (web 261030-mm1). When billing refuses the send (the run is busy,
   409, or it was sent from elsewhere meanwhile) the pane now says „Der Mailversand ist fehlgeschlagen.“ with billing's reason;
   before, the result was ignored and nothing (or only a generic text) appeared.

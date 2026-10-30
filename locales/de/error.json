@@ -6,6 +6,9 @@
   "E_1000_no_entries": "Keine Energiedaten für diese Periode gefunden!",
   "E_1021_tariff_create": "Tarif konnte nicht generiert werden.",
   "E_4002_Tariff is currently used": "Der Tarif wird noch von Mitgliedern oder Zählpunkten verwendet und kann nicht gelöscht werden.",
+  "E_5011": "Die Begründung ist zu lang (höchstens 50 Zeichen).",
+  "E_5012": "{{message}}",
+  "E_5013": "Keiner der Zählpunkte hat eine aktive Datenfreigabe dieses Mitglieds.",
   "intern": {
     "empty_eeg": "Ihrem Konto ist keine Gemeinschaft zugeordnet. Bitte wenden Sie sich an den Support."
   },
