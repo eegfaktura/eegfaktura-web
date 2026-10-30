@@ -23,6 +23,7 @@ import {PhoneInputForm} from "../components/form/PhoneInputForm";
 import {useLocale} from "../store/hook/useLocale";
 import {isValidEmailList} from "../util/EmailAddress.util";
 import EegLoadStateComponent from "../components/EegLoadState.component";
+import MenuHeaderComponent from "../components/core/MenuHeader.component";
 
 
 const EMPTY_EEG_ENTITY = {
@@ -90,6 +91,7 @@ const EegPage: FC = () => {
 
   return (
     <IonPage>
+      <MenuHeaderComponent/>
       <IonContent fullscreen>
         <div style={{flexGrow: "1", background: "#EAE7D9"}}>
           <div style={{display: "flex", flexDirection: "row"}}>

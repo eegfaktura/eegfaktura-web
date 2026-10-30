@@ -19,6 +19,8 @@ import {EegContext} from "../store/hook/Eeg.provider";
 import {activeParticipantsSelector1, meterSelector, allParticipantsSelector} from "../store/participant";
 import {selectedPeriodSelector} from "../store/energy";
 import {useLocale} from "../store/hook/useLocale";
+import MenuHeaderComponent from "../components/core/MenuHeader.component";
+import EegLoadStateComponent from "../components/EegLoadState.component";
 
 const ProcessesPage: FC = () => {
 
@@ -79,10 +81,11 @@ const ProcessesPage: FC = () => {
   }
 
   if (!eeg) {
-    return <></>
+    return <EegLoadStateComponent/>
   } else {
     return (
       <IonPage>
+        <MenuHeaderComponent/>
         <IonContent fullscreen color="eeg">
           <div style={{display: "flex", flexDirection: "row", height: "100vh"}}>
             <div className={"ratePane"}>

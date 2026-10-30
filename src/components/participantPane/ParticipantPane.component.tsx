@@ -9,6 +9,7 @@ import {
   IonIcon,
   IonItem,
   IonLabel,
+  IonMenuButton,
   IonRow,
   IonSearchbar,
   IonSpinner,
@@ -758,6 +759,10 @@ const ParticipantPaneComponent: FC = () => {
             style={{"--min-height": "56px"}}
             ref={popoverRef}
           >
+            {/* opens the side menu below 992 px, hidden while the menu is shown beside the page (261024-ca9) */}
+            <IonButtons slot="start">
+              <IonMenuButton/>
+            </IonButtons>
             <IonButtons slot="end">
               <HeaderFavButtonComponent icon={search} onClick={() => setSearchActive(!searchActive)}/>
               {/*{eeg && !eeg.online && (*/}

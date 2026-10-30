@@ -1,5 +1,6 @@
 import React, {FC, useEffect, useRef, useState} from "react";
 import {IonBadge, IonCard, IonContent, IonItem, IonLabel, IonList, IonPage, IonText} from "@ionic/react";
+import MenuHeaderComponent from "../components/core/MenuHeader.component";
 import {useAccessGroups, useTenant} from "../store/hook/Eeg.provider";
 import {useAppSelector} from "../store";
 import {eegSelector} from "../store/eeg";
@@ -52,6 +53,7 @@ const MailTemplatesPage: FC = () => {
 
   return (
     <IonPage>
+      <MenuHeaderComponent/>
       <IonContent fullscreen>
         <div style={{flexGrow: "1", background: "#EAE7D9", minHeight: "100%"}}>
           {!admin && <div className="eeg-property-card"><p>{t("mailtemplates.admin_only")}</p></div>}

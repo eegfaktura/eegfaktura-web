@@ -19,6 +19,15 @@ this changelog highlights the changes relevant for overview and operations.
   200, so the call failed in the browser (cause unknown: network or token lookup). The tariff dialog, the member's
   joining fee status and the master data export all use this call. The dialog and the export hint no longer claim that
   billing is unreachable: the count, or the joining fee state, could not be determined *right now*.
+- **Menu reachable below 992 px** (261024-ca9). Below 992 px window width (tablet in portrait, half-width laptop
+  window) the side menu is hidden, and only the register page had a button to open it. Every page now has one: in the
+  existing toolbar on the member and tariff lists and on „Nachrichten“; the other pages (Dashboard, Meine EEG,
+  E-Mail-Texte, Prozesse, Profile, the not-found page and the EEG load/error page) get a small header with the menu
+  button that shows only below 992 px. From 992 px on nothing changes.
+- **Tariff amounts: 0 is shown, thousands separators are read** (261005-ca5). The amount fields of the tariff form
+  (price per kWh, metering point fee and its VAT, member fee, joining fee and its VAT, time-window prices) showed a
+  stored 0 as an empty field, as if nothing were set; they now show „0“. Their value is now read like the other amount
+  fields: „1.234,56“ is 1234.56 (before 1.234), „1234.56“ stays 1234.56. Stored values do not change.
 
 ## [1.18.0] – 2026-10-28
 

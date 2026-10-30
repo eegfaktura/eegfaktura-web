@@ -1,5 +1,6 @@
 import React, {FC, useCallback, useContext, useEffect, useMemo, useState} from "react";
 import {IonButton, IonCard, IonCol, IonContent, IonGrid, IonPage, IonRow, IonSpinner} from "@ionic/react";
+import MenuHeaderComponent from "../components/core/MenuHeader.component";
 import {
   energyReportErrorSelector,
   selectAllIntermediatesV2,
@@ -63,6 +64,7 @@ const DashboardPage: FC = () => {
 
   return (
     <IonPage>
+      <MenuHeaderComponent/>
       <IonContent fullscreen color="eeg">
         {reportError && (
           // a failed load is not "no energy"; the layout with its period selection stays (261024-ca26)
