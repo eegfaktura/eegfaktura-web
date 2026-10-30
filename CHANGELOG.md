@@ -140,6 +140,11 @@ this changelog highlights the changes relevant for overview and operations.
   GHSA-q89c-q3h5-w34g; supersedes Dependabot #248, which would have bumped it 2 → 4). The package was never imported:
   the translations are bundled at build time by `vite-plugin-i18next-loader`. Its now-unused transitive dependencies
   (`cross-fetch`, `node-fetch` 2 and their helpers) leave the lockfile too. No change in behaviour.
+- **SheetJS (`xlsx`) 0.18.5 → 0.20.3 from the SheetJS CDN** (Dependabot alerts GHSA-4r6h-8v6p-xvw6, fixed in 0.19.3,
+  and GHSA-5pgg-2g8v-p4x9, fixed in 0.20.2). SheetJS no longer publishes to npm (latest there is 0.18.5), so the
+  package now comes from `https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz`, pinned in `pnpm-lock.yaml` by URL and
+  sha512 integrity. Dependabot does not track this source: updates are made by hand (see README → Dependencies).
+  Reading the billing export for the SEPA files gives the same values as before (new test with dates and amounts).
 
 ## [1.18.0] – 2026-10-28
 

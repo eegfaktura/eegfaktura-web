@@ -73,6 +73,13 @@ loaded are not captured. Set the script execution attribute of the Dynatrace app
 - **Keycloak** — OIDC authentication
 - **eegfaktura-backend** (`/api`), **energystore** (`/energystore`),
   **billing** (`/cash`), **filestore** (`/filestore`)
+- **SheetJS (`xlsx`) from the vendor CDN, not npm** — SheetJS stopped publishing to npm after 0.18.5, which has known
+  vulnerabilities. `package.json` points to `https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz` (v0.20.3, tagged
+  2024-07-18, Apache-2.0); `pnpm-lock.yaml` pins it with a sha512 `integrity`, which pnpm checks on every install.
+  CI and local installs need to reach `cdn.sheetjs.com`. Dependabot does not update this dependency. To update:
+  check the new tag and its CHANGELOG on git.sheetjs.com, change the URL in `package.json`, run
+  `pnpm install`, then add the `integrity` to the tarball `resolution` in `pnpm-lock.yaml` by hand (pnpm 9 writes only
+  the URL): `sha512-` + base64 of the SHA-512 of the downloaded `.tgz`. Run the SEPA tests (`src/__test__/service/sepa.*`).
 
 ## License
 
