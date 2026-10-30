@@ -8,7 +8,23 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **Processes to the grid operator ask first, with a summary** (platform#228 step 3). Changing the participation
+  factor, registering a metering point, requesting energy data without „Smart“, revoking the data consent and requesting
+  the metering point list now show what is sent before sending it: the metering point(s), the old and new factor, the
+  period, the end of the consent or the grid operator. „Abbrechen“ sends nothing; „Senden“/„Anfordern“/„Aufheben“ sends
+  the same request as before. The smart energy data request already asked and is unchanged; the approval of a new
+  member keeps its own dialog.
+- **Billing mails: „Senden“ names the number of documents, „Erneut senden“ after a send** (platform#228 step 3). The
+  question before sending the billing mails of a run says how many documents go out by mail. Once billing recorded a
+  send for the run, the button reads „Erneut senden“ and the question names the earlier send. billing itself still
+  refuses a second send of a run.
+- All these confirmations use the shared confirmation dialog (`useConfirm`).
+
 ### Fixed
+- **A refused send of the billing mails is shown** (web 261030-mm1). When billing refuses the send (the run is busy,
+  409, or its mails were already sent) the pane now says „Der Mailversand ist fehlgeschlagen.“ with billing's reason;
+  before, the result was ignored and nothing (or only a generic text) appeared.
 - **Text fields: the caret no longer jumps to the end while typing.** Renaming a tariff moved the caret to the end of
   the field after the first typed character, so the rest landed at the end („Beitritt2 weiterer ZP026“). The input
   wrote the form's value back into the field on every render; it now does so only when the value differs from what the
