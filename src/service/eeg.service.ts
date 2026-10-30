@@ -47,12 +47,14 @@ export const parseSyncEnergyResult = async (res: Response): Promise<SyncEnergyRe
 }
 
 // billing refuses a send of a run whose mails were already sent or are being sent with 500 and its reason as plain
-// text ("Mailversand fuer … nicht moeglich. Status = SENT"): that text is the error. A JSON body (409 busy, other
-// errors) goes on to handleErrors.
+// text ("Mailversand fuer … nicht moeglich. Status = SENT"): that text is the error. Only short plain text is shown;
+// a JSON body (409 busy, other errors) goes on to handleErrors, an HTML page or a long text (e.g. from a proxy) gives
+// the generic message there.
+const REFUSAL_MAX_LENGTH = 300
 export const sendmailRefusal = async (res: Response): Promise<Response> => {
   if (res.status !== 500) return res
   const text = (await res.clone().text()).trim()
-  if (!text || text.startsWith("{")) return res
+  if (!text || text.startsWith("{") || text.startsWith("<") || text.length > REFUSAL_MAX_LENGTH) return res
   throw new Error(text)
 }
 

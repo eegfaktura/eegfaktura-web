@@ -16,6 +16,7 @@ import {Api} from "../../../service";
 import {sendmailRefusal} from "../../../service/eeg.service";
 import {BillingRun} from "../../../models/meteringpoint.model";
 import {BillingTotals} from "../../../components/participantPane/BillingTotals.functions";
+import {reformatDateTimeStamp} from "../../../util/Helper.util";
 
 const run = (extra: Partial<BillingRun> = {}) => ({id: "run-1", runStatus: "DONE", mailStatus: null,
   mailStatusDateTime: null, ...extra} as unknown as BillingRun)
@@ -38,18 +39,17 @@ describe("sendMailState (platform#228 step 3)", () => {
   })
 
   it("is disabled once billing recorded the send (billing refuses every further send), with the send time", () => {
-    const state = sendMailState(run({mailStatus: "SENT", mailStatusDateTime: "2026-10-28T13:05:00.000"}), 43)
+    const sentAt = "2026-10-28T13:05:00.000"
+    const state = sendMailState(run({mailStatus: "SENT", mailStatusDateTime: sentAt}), 43)
     expect(state.disabled).toBe(true)
     expect(state.message).toBeUndefined()
-    // naive UTC from billing, shown in local time
-    const local = new Date(Date.UTC(2026, 9, 28, 13, 5))
-    const hh = String(local.getHours()).padStart(2, "0")
-    expect(state.label).toBe(`Bereits versendet am 28.10.2026 ${hh}:05`)
+    expect(state.label).toBe(`Bereits versendet (${reformatDateTimeStamp(sentAt)})`)
     expect(sendMailState(run({mailStatus: "SENT"}), 43).label).toBe("Bereits versendet")
   })
 
   it("is disabled while the send runs", () => {
-    expect(sendMailState(run({mailStatus: "IN PROGRESS"}), 43)).toEqual({disabled: true, label: "Wird versendet …"})
+    expect(sendMailState(run({mailStatus: "IN PROGRESS"}), 43)).toEqual({disabled: true, label: "Wird versendet …",
+      hint: "Der Versand läuft. Bleibt dieser Stand bestehen, bitte den Support kontaktieren."})
   })
 })
 
@@ -91,6 +91,16 @@ describe("BillingSendButton", () => {
     expect(toaster).not.toHaveBeenCalled()
   })
 
+  it("a double click opens one dialog and sends once", async () => {
+    click()
+    fireEvent.click(screen.getByText("SENDEN"))
+    expect(alert).toHaveBeenCalledTimes(1)
+    await dismiss("confirm")
+    await flush()
+    expect(Api.eegService.billingRunSendmail).toHaveBeenCalledTimes(1)
+    expect(toaster).not.toHaveBeenCalled()
+  })
+
   it("a refused send says so with billing's reason (web 261030-mm1)", async () => {
     vi.mocked(Api.eegService.billingRunSendmail).mockRejectedValue(new Error(
       "Dieser Abrechnungslauf wird gerade bearbeitet (Export, Mailversand oder Löschen) – bitte danach erneut versuchen."))
@@ -108,6 +118,13 @@ describe("sendmailRefusal", () => {
   it("billing's plain-text refusal (500) is the error", async () => {
     const text = "Mailversand fuer 2026-09 (run-1) nicht moeglich. Status = SENT"
     await expect(sendmailRefusal(new Response(text, {status: 500}))).rejects.toThrow(text)
+  })
+
+  it("an HTML page or a long text gives the generic message (left to handleErrors)", async () => {
+    const html = new Response("<html><body>Bad Gateway</body></html>", {status: 500})
+    expect(await sendmailRefusal(html)).toBe(html)
+    const long = new Response("x".repeat(301), {status: 500})
+    expect(await sendmailRefusal(long)).toBe(long)
   })
 
   it("leaves JSON errors and other answers to handleErrors", async () => {
