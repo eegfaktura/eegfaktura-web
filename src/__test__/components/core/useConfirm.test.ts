@@ -28,4 +28,14 @@ describe("useConfirm", () => {
     dismiss("backdrop")
     expect(action).not.toHaveBeenCalled()
   })
+
+  it("resolves with the choice, so a form submit can wait for it", async () => {
+    const {result} = renderHook(() => useConfirm())
+    const confirmed = result.current("Senden", "…?", "Senden")
+    dismiss("confirm")
+    expect(await confirmed).toBe(true)
+    const cancelled = result.current("Senden", "…?", "Senden")
+    dismiss("backdrop")
+    expect(await cancelled).toBe(false)
+  })
 })
