@@ -25,6 +25,28 @@ this changelog highlights the changes relevant for overview and operations.
   `date-fns` 2.30.0 (already shipped as part of react-datepicker) is now a direct dependency for the German calendar.
 
 ### Fixed
+- **Dashboard: the load curve card waits for the load curve, the first chart request waits for the community**
+  (pre-existing errors found in platform#228 step 2). The load curve card was shown as soon as the day curve data was
+  there. The chart data was requested before the community was loaded (to `/eeg/v2/undefined/…`) and not again once
+  it was.
+- **Dashboard: a failed chart load shows an error instead of an endless spinner** (platform#228 step 2). When the
+  load and day curve data could not be loaded, or the answer held no data, both chart cards kept spinning. A failed
+  load now shows „Die Diagrammdaten konnten nicht geladen werden.“ with „Erneut versuchen“, which loads them again; an
+  answer without data shows „Für diesen Zeitraum liegen keine Diagrammdaten vor.“ A late answer for a period that is no
+  longer selected is ignored.
+- **Dashboard: inactive metering points are counted** (platform#228 step 2). „Übersicht EEG“ showed a fixed
+  „0 inaktive“ next to the metering points. It now counts the metering points that have left (left or revoked) and are
+  neither active nor being registered at any member, over all members and marked „(Stand heute)“ like the member
+  counts; a metering point that moved to another member is not counted. The „aktive“ count of the period is unchanged.
+- **Member list: closing the search clears it** (platform#228 step 2). After closing the search bar the list kept
+  filtering by the last search text, so members were missing without a visible reason. Reopening starts empty; text
+  typed just before closing is not applied afterwards.
+- **Member details: an empty company name shows „Firmenname fehlt!“** (pre-existing error found in platform#228 step 2).
+  It showed the raw text key „company-name_missing“.
+- **Member and metering point forms: invalid input shows a message** (platform#228 step 2). A participation or
+  allocation factor outside 0–100 was rejected with an empty message; it now reads „Teilnahmefaktor muss größer als 0
+  und höchstens 100 sein!“ or „Verteilungsfaktor muss größer als 0 und höchstens 100 sein!“. An empty street in the member details showed no red message, because the
+  message was read from the resident address while the rule sits on the billing address; it now shows „Straße fehlt!“.
 - **Text fields: the caret no longer jumps to the end while typing.** Renaming a tariff moved the caret to the end of
   the field after the first typed character, so the rest landed at the end („Beitritt2 weiterer ZP026“). The input
   wrote the form's value back into the field on every render; it now does so only when the value differs from what the
