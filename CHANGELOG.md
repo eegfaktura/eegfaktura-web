@@ -9,6 +9,10 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Fixed
+- **Member and metering point forms: invalid input shows a message** (platform#228 step 2). A participation or
+  allocation factor outside 0–100 was rejected with an empty message; it now reads „Teilnahmefaktor (Verteilungsfaktor)
+  muss größer als 0 und höchstens 100 sein!“. An empty street in the member details showed no red message, because the
+  message was read from the resident address while the rule sits on the billing address; it now shows „Straße fehlt!“.
 - **Text fields: the caret no longer jumps to the end while typing.** Renaming a tariff moved the caret to the end of
   the field after the first typed character, so the rest landed at the end („Beitritt2 weiterer ZP026“). The input
   wrote the form's value back into the field on every render; it now does so only when the value differs from what the

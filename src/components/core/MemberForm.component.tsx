@@ -148,7 +148,7 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
           {tenant && isAdmin() && <JoiningFeeMember tenant={tenant} participantId={participant.id}
                                                     tariff={rates.find(r => r.id === tariffId)}
                                                     feeInUse={rates.some(hasJoiningFee)}/>}
-          <InputForm name={"billingAddress.street"} label={t("street")} control={control} rules={{required: "Straße fehlt"}} type="text" error={errors.residentAddress?.street} onChangePartial={onUpdateBaseData}/>
+          <InputForm name={"billingAddress.street"} label={t("street")} control={control} rules={{required: t("warnings.street_missing")}} type="text" error={errors.billingAddress?.street} onChangePartial={onUpdateBaseData}/>
           <InputForm name={"billingAddress.streetNumber"} label="Hausnummer" control={control} type="text" onChangePartial={onUpdateBaseData}/>
           <InputForm name={"billingAddress.zip"} label={t("zip")} control={control} type="text" onChangePartial={onUpdateBaseData}/>
           <InputForm name={"billingAddress.city"} label={t("city")} control={control} type="text" onChangePartial={onUpdateBaseData}/>
