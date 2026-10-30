@@ -3,6 +3,7 @@ import {act, fireEvent, render} from "@testing-library/react";
 import React, {PropsWithChildren} from "react";
 import {FormProvider, useForm} from "react-hook-form";
 import {Provider} from "react-redux";
+import {MemoryRouter} from "react-router";
 import {configureStore} from "@reduxjs/toolkit";
 import {reducer} from "../../../store";
 import "../../../util/I18n";
@@ -69,10 +70,13 @@ describe("MemberForm: empty street shows a message", () => {
     optionals: {}, meters: [], status: "ACTIVE", role: "EEG_USER",
   } as unknown as EegParticipant
 
+  // the member form holds an UnsavedChangesGuard (Prompt), which needs a router
   const Wrapper = ({children}: PropsWithChildren) =>
-    <Provider store={configureStore({reducer})}>
-      <EegContext.Provider value={ctx("DYNAMIC")}>{children}</EegContext.Provider>
-    </Provider>
+    <MemoryRouter>
+      <Provider store={configureStore({reducer})}>
+        <EegContext.Provider value={ctx("DYNAMIC")}>{children}</EegContext.Provider>
+      </Provider>
+    </MemoryRouter>
 
   it("clearing the street shows „Straße fehlt!“", async () => {
     const {container} = render(<MemberFormComponent participant={participant} rates={[]} formId="f" onSubmit={() => {}}
