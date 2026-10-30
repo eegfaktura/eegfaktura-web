@@ -161,4 +161,37 @@ describe("JoiningFeeMember", () => {
     expect(answer).toBe(true)
     expect(Api.eegService.saveJoiningFeeRecord).toHaveBeenCalledTimes(2)
   })
+
+  it("„already billed“ is a final answer: its message shows and nothing is left to retry (re-review PR #244)", async () => {
+    vi.mocked(Api.eegService.fetchJoiningFeeState).mockResolvedValue([entry()])
+    vi.mocked(Api.eegService.saveJoiningFeeRecord).mockRejectedValueOnce(new JoiningFeeAlreadyBilledError())
+    const track = vi.fn()
+    render(<JoiningFeeMember tenant="TE100200" participantId="p1" tariff={tariff(50)} feeInUse={true} track={track}/>)
+    await flush()
+    fireEvent.click(button("Beitrittsgebühr nachverrechnen")!)
+    await confirmAlert()
+    let answer: boolean | undefined
+    await act(async () => { answer = await track.mock.lastCall![0]() })
+    expect(answer).toBe(true)
+    expect(toast.mock.lastCall![0].color).toBe("warning")
+  })
+
+  it("a retry while another action runs sends nothing (re-review PR #244)", async () => {
+    vi.mocked(Api.eegService.fetchJoiningFeeState).mockResolvedValue([entry()])
+    let finish: () => void = () => {}
+    vi.mocked(Api.eegService.saveJoiningFeeRecord).mockImplementationOnce(() => new Promise<void>(r => { finish = r }))
+    const track = vi.fn()
+    render(<JoiningFeeMember tenant="TE100200" participantId="p1" tariff={tariff(50)} feeInUse={true} track={track}/>)
+    await flush()
+    fireEvent.click(button("Beitrittsgebühr nachverrechnen")!)
+    await confirmAlert()
+    const attempt = track.mock.lastCall![0]
+    let first: Promise<boolean> | undefined
+    act(() => { first = attempt() })
+    let second: boolean | undefined
+    await act(async () => { second = await attempt() })
+    expect(second).toBe(false)
+    expect(Api.eegService.saveJoiningFeeRecord).toHaveBeenCalledTimes(1)
+    await act(async () => { finish(); await first })
+  })
 })
