@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect} from "react";
+import React, {useCallback, useEffect, useRef} from "react";
 import {InputChangeEventDetail, IonInput} from "@ionic/react";
 import {ControllerRenderProps} from "react-hook-form/dist/types/controller";
 import {IonInputCustomEvent} from "@ionic/core/dist/types/components";
@@ -59,8 +59,10 @@ interface InputProps<TValue, IsNumber extends boolean> {
 function Input<TValue, IsNumber extends boolean = false>(props: Omit<ControllerRenderProps, "onBlur" | "ref"> & InputProps<TValue, IsNumber>) {
 
   const {value, controlRef, onChange, onValueChanged, defaultValue, isNumber, mask, isEmail, ...rest} = props;
+  const ionInput = useRef<HTMLIonInputElement | null>(null)
   const inputRef = (controlRef: RefCallBack) => async (input: any) => {
     if (input) {
+      ionInput.current = input
       if (mask) {
         const m = await input.getInputElement();
         mask(m);
@@ -102,10 +104,19 @@ function Input<TValue, IsNumber extends boolean = false>(props: Omit<ControllerR
     return value ? value as string : ""
   }
 
+  // a text field shows what is typed; the form's value is written into it only when it differs (e.g. after a reset or
+  // when another tariff is selected). Writing it again on every render could move the caret to the end while typing.
+  // Number fields stay controlled as before: their text is normalised to the parsed number.
+  const shown = parseValue(defaultValue)
+  useEffect(() => {
+    const input = ionInput.current
+    if (!isNumber && input && String(input.value ?? "") !== shown) input.value = shown
+  }, [shown, isNumber])
+
   return (
     <IonInput fill="outline" labelPlacement="floating"
               type={isEmail ? "email" : "text"}
-              value={parseValue(defaultValue)}
+              {...(isNumber ? {value: shown} : {})}
               onIonInput={handleInput}
               onIonChange={handleChange}
               ref={inputRef(controlRef)}
