@@ -25,7 +25,7 @@ import ParticipantPeriodHeaderComponent from "./ParticipantPeriodHeader.componen
 import MemberComponent from "./Member.component";
 import {ClearingPreviewRequest, Metering,} from "../../models/meteringpoint.model";
 import MeterCardComponent from "./MeterCard.component";
-import {ParticipantContext, useLeaveAddMeter} from "../../store/hook/ParticipantProvider";
+import {ParticipantContext, useLeaveUnsaved} from "../../store/hook/ParticipantProvider";
 import {MemberViewContext} from "../../store/hook/MemberViewProvider";
 
 import "./ParticipantPane.component.scss";
@@ -148,9 +148,9 @@ const ParticipantPaneComponent: FC = () => {
     showDetailsPage,
     setShowAddMeterPane,
   } = useContext(ParticipantContext);
-  // another member, metering point or the billing view replaces the "add metering point" pane: ask first while it
-  // holds unsaved input
-  const leaveAddMeter = useLeaveAddMeter()
+  // another member, metering point or the billing view replaces the "add metering point" pane or the details: ask
+  // first while they hold unsaved input
+  const leaveUnsaved = useLeaveUnsaved(["addMeter", "details"])
   const {
     toggleMembersMeter,
     toggleMetering,
@@ -355,7 +355,7 @@ const ParticipantPaneComponent: FC = () => {
   const activateBilling = (c: boolean) => {
     if (c) {
       // the billing view replaces the "add metering point" pane; declined, the switch goes back
-      leaveAddMeter(() => presentAlert({
+      leaveUnsaved(() => presentAlert({
         subHeader: "Abrechnungsmodus",
         message:
           "Im Abrechnungsmodus siehst Du je Mitglied die Beträge des gewählten Zeitraums. Abgerechnet werden immer alle aktiven Mitglieder mit Tarif; wer keinen Tarif hat, zeigt „Daten prüfen“. Mit „Vorschau erstellen“ werden Rechnungs- und Gutschriftsentwürfe mit dem Zusatz „VORSCHAU“ erstellt. Dazu kannst Du eine Zusammenstellung als Excel-Datei und alle Belege gesammelt als ZIP-Datei herunterladen. Änderst Du danach Stammdaten, Energiedaten oder Tarife, erstellt „Vorschau Akt.“ die Entwürfe beliebig oft neu. Erst „Abrechnung durchführen“ erstellt die endgültigen Belege mit fortlaufenden Rechnungsnummern; das ist nicht umkehrbar.",
@@ -411,7 +411,7 @@ const ParticipantPaneComponent: FC = () => {
   };
 
   const onSelectParticipant =
-    (p: EegParticipant) => (e: React.MouseEvent<Element, MouseEvent>) => leaveAddMeter(() => {
+    (p: EegParticipant) => (e: React.MouseEvent<Element, MouseEvent>) => leaveUnsaved(() => {
       dispatcher(selectParticipant(p.id));
       if (p.meters.length > 0) {
         dispatcher(selectMetering(p.meters[0].meteringPoint));
@@ -422,7 +422,7 @@ const ParticipantPaneComponent: FC = () => {
   const onShowAddMeterPage = (p: EegParticipant) => (e: React.MouseEvent<HTMLIonButtonElement, MouseEvent>) => {
     e.preventDefault();
     e.stopPropagation();
-    leaveAddMeter(() => {
+    leaveUnsaved(() => {
       dispatcher(selectParticipant(p.id));
       if (p.meters.length > 0) {
         dispatcher(selectMetering(p.meters[0].meteringPoint));
@@ -437,7 +437,7 @@ const ParticipantPaneComponent: FC = () => {
     meter: Metering
   ) => {
     e.stopPropagation();
-    leaveAddMeter(() => {
+    leaveUnsaved(() => {
       dispatcher(selectParticipant(participantId));
       dispatcher(selectMetering(meter.meteringPoint));
       setShowAddMeterPane(false);

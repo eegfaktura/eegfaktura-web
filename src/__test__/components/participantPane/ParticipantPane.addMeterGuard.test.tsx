@@ -33,12 +33,12 @@ const member = (id: string, lastname: string) => ({
 } as unknown as EegParticipant)
 const members = [member("001", "Erste"), member("002", "Zweite")]
 
-const setup = (addMeterDirty: boolean) => {
+const setup = (addMeterDirty: boolean, detailsUnsaved = false) => {
   const setShowAddMeterPane = vi.fn()
   const r = renderWithProviders(
     <ParticipantContext.Provider value={{
-      participants: members, allParticipants: members, showAddMeterPane: true, billingEnabled: true, setShowAddMeterPane, addMeterDirty,
-      setAddMeterDirty: vi.fn(), setBillingEnabled: vi.fn(), showDetailsPage: vi.fn(), reloadEnergyReport: vi.fn(),
+      participants: members, allParticipants: members, showAddMeterPane: true, billingEnabled: true, setShowAddMeterPane,
+      unsaved: {addMeter: addMeterDirty, details: detailsUnsaved}, setUnsaved: vi.fn(), setBillingEnabled: vi.fn(), showDetailsPage: vi.fn(), reloadEnergyReport: vi.fn(),
     } as any}>
       <MemberViewProvider><ParticipantPaneComponent/></MemberViewProvider>
     </ParticipantContext.Provider>)
@@ -81,5 +81,12 @@ describe("member list: another member replaces unsaved input of a new metering p
     fireEvent.click(container.querySelector(".eeg-sliding-box input")!)
     act(() => alert.mock.lastCall![0].onDidDismiss({detail: {role: "confirm"}}))
     expect(alert.mock.lastCall![0].subHeader).toBe("Abrechnungsmodus")
+  })
+
+  it("another member asks too while the details hold failed or invalid changes (review PR #244)", () => {
+    const {selected} = setup(false, true)
+    fireEvent.click(screen.getByText(/Zweite/))
+    expect(alert.mock.lastCall![0].message).toBe(UNSAVED_DISCARD_MESSAGE)
+    expect(selected()).not.toBe("002")
   })
 })

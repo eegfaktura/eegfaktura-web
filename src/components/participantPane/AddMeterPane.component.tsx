@@ -3,7 +3,7 @@ import CorePageTemplate from "../core/CorePage.template";
 import {Metering, ParticipantState} from "../../models/meteringpoint.model";
 import EegWebContentPaneComponent from "../EegWebContentPane.component";
 import {IonButton, IonFooter, IonToolbar} from "@ionic/react";
-import {ParticipantContext} from "../../store/hook/ParticipantProvider";
+import {ParticipantContext, useReportUnsaved} from "../../store/hook/ParticipantProvider";
 import EegPaneTemplate from "../core/EegPane.template";
 import MeterFormElement from "../core/MeterForm.element";
 import {FormProvider, useForm} from "react-hook-form";
@@ -41,15 +41,11 @@ const AddMeterPaneComponent: FC = () => {
 
   const {
     setShowAddMeterPane,
-    setAddMeterDirty,
   } = useContext(ParticipantContext);
   const confirmDiscard = useConfirmDiscard()
 
   // the member list asks before another member replaces unsaved input (platform#228 step 4)
-  useEffect(() => {
-    setAddMeterDirty(isDirty)
-  }, [isDirty])
-  useEffect(() => () => setAddMeterDirty(false), [])
+  useReportUnsaved("addMeter", isDirty)
 
   useEffect(() => {
     reset(meter)

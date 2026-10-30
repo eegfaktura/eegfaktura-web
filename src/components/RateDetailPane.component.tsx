@@ -1,4 +1,4 @@
-import React, {FC, useEffect} from "react";
+import React, {FC} from "react";
 import {EegTariff} from "../models/eeg.model";
 import {
   IonButton,
@@ -23,7 +23,7 @@ import {useTenant} from "../store/hook/Eeg.provider";
 import {useConfirm} from "./core/useConfirm";
 import {tariffInUseMessage} from "./RateDetailPane.functions";
 import {useLocale} from "../store/hook/useLocale";
-import {useConfirmDiscard} from "./core/UnsavedChangesGuard.component";
+import {useConfirmDiscard, useReportDirty} from "./core/UnsavedChangesGuard.component";
 
 // the error key handleErrors builds from the backend's answer {code: 4002, error: "Tariff is currently used"}
 const TARIFF_IN_USE = "E_4002_Tariff is currently used"
@@ -52,10 +52,7 @@ const RateDetailPaneComponent: FC<RateDetailPaneComponentProps> = ({onSubmit, su
   const isDirty = formMethods.formState.isDirty
   const confirmDiscard = useConfirmDiscard()
 
-  useEffect(() => {
-    onDirtyChange?.(isDirty)
-  }, [isDirty])
-  useEffect(() => () => onDirtyChange?.(false), [])
+  useReportDirty(isDirty, onDirtyChange)
 
   const getMode = (): (undefined | 'NEW') => {
     return (selectedTariff && selectedTariff.id.length === 0) ? 'NEW' : undefined

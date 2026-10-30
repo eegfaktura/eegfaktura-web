@@ -17,14 +17,14 @@ import {UNSAVED_DISCARD_MESSAGE} from "../../../components/core/UnsavedChangesGu
 
 // Another community closes the "add metering point" pane: with unsaved input there the switch asks first
 // (platform#228 step 4).
-const setup = (addMeterDirty: boolean) => {
+const setup = (addMeterDirty: boolean, tariffDirty = false) => {
   const setTenant = vi.fn()
   // one list for every render: a new array on each render would re-sort the menu endlessly
   const tenants = [{tenant: "RC100100", name: "Eins"}, {tenant: "RC100200", name: "Zwei"}]
   const eeg = {tenant: "RC100100", setTenant, getTenants: () => tenants} as unknown as EegState
   const {container} = render(
     <EegContext.Provider value={eeg}>
-      <ParticipantContext.Provider value={{showAddMeterPane: true, addMeterDirty} as any}>
+      <ParticipantContext.Provider value={{unsaved: {addMeter: addMeterDirty, tariff: tariffDirty}} as any}>
         <UserDetailPopover authSvc={undefined}/>
       </ParticipantContext.Provider>
     </EegContext.Provider>)
@@ -60,5 +60,12 @@ describe("community switch with unsaved input in „Zählpunkt hinzufügen“ (p
     choose("RC100200")
     expect(alert).not.toHaveBeenCalled()
     expect(setTenant).toHaveBeenCalledWith("RC100200")
+  })
+
+  it("asks too while the tariff editor holds unsaved changes (review PR #244)", () => {
+    const {setTenant, choose} = setup(false, true)
+    choose("RC100200")
+    expect(alert.mock.lastCall![0].message).toBe(UNSAVED_DISCARD_MESSAGE)
+    expect(setTenant).not.toHaveBeenCalled()
   })
 })

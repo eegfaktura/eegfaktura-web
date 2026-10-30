@@ -36,9 +36,9 @@ const setup = () => {
   let history: ReturnType<typeof useHistory> | undefined
   const Capture = () => { history = useHistory(); return null }
   const Context = ({children}: { children: React.ReactNode }) => {
-    const [addMeterDirty, setAddMeterDirty] = useState(false)
-    const report = (d: boolean) => { dirtyReports.push(d); setAddMeterDirty(d) }
-    return <ParticipantContext.Provider value={{setShowAddMeterPane, addMeterDirty, setAddMeterDirty: report} as any}>
+    const [unsaved, setUnsavedState] = useState({})
+    const setUnsaved = (source: string, d: boolean) => { if (source === "addMeter") dirtyReports.push(d); setUnsavedState(u => ({...u, [source]: d})) }
+    return <ParticipantContext.Provider value={{setShowAddMeterPane, unsaved, setUnsaved} as any}>
       {children}
     </ParticipantContext.Provider>
   }

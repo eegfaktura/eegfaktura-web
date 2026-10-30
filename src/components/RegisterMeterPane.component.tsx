@@ -1,4 +1,4 @@
-import React, {FC, useEffect, useMemo} from "react";
+import React, {FC, useMemo} from "react";
 import {Metering} from "../models/meteringpoint.model";
 import {IonButton, IonFooter, IonToolbar} from "@ionic/react";
 import {FormProvider, useForm, useFormContext} from "react-hook-form";
@@ -8,7 +8,7 @@ import {EegParticipant} from "../models/members.model";
 import MeterFormElement from "./core/MeterForm.element";
 import MeterAddressFormElement from "./core/forms/MeterAddressForm/MeterAddressForm.element";
 import {useOnlineState} from "../store/hook/Eeg.provider";
-import {useConfirmDiscard} from "./core/UnsavedChangesGuard.component";
+import {useConfirmDiscard, useReportDirty} from "./core/UnsavedChangesGuard.component";
 
 interface RegisterMeterPaneComponentProps {
   meteringPoint: Metering
@@ -30,10 +30,7 @@ const RegisterMeterPaneComponent: FC<RegisterMeterPaneComponentProps> = ({
   const {handleSubmit, setValue, control, watch, formState: {errors, isDirty}, clearErrors} = formMethods;
   const confirmDiscard = useConfirmDiscard()
 
-  useEffect(() => {
-    onDirtyChange?.(isDirty)
-  }, [isDirty])
-  useEffect(() => () => onDirtyChange?.(false), [])
+  useReportDirty(isDirty, onDirtyChange)
   const isOnline = useOnlineState()
 
   const {getValues} = useFormContext<EegParticipant>();

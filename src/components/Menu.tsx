@@ -28,7 +28,7 @@ import {AuthService} from "../service/auth.service";
 import {User} from "oidc-client-ts";
 import {useAuth} from "react-oidc-context";
 import {useLocale} from "../store/hook/useLocale";
-import {useLeaveAddMeter} from "../store/hook/ParticipantProvider";
+import {useLeaveUnsaved} from "../store/hook/ParticipantProvider";
 
 // const UserDetailPopover = (logout: () => Promise<void>, user: User) =>
 export const UserDetailPopover:FC<{authSvc: AuthService | undefined}> = ({authSvc}) => {
@@ -38,8 +38,8 @@ export const UserDetailPopover:FC<{authSvc: AuthService | undefined}> = ({authSv
   const tenants = useTenantDescription()
   const tenant = useTenant()
   const switchTenant = useTenantSwitch()
-  // another community closes the "add metering point" pane: ask first while it holds unsaved input (platform#228 step 4)
-  const leaveAddMeter = useLeaveAddMeter()
+  // another community drops unsaved input ("add metering point", details, tariff editor): ask first (platform#228 step 4)
+  const leaveUnsaved = useLeaveUnsaved(["addMeter", "details", "tariff"])
 
   useEffect(() => {
     if (authSvc) {
@@ -57,7 +57,7 @@ export const UserDetailPopover:FC<{authSvc: AuthService | undefined}> = ({authSv
     const next = e.detail.value;
     const select = e.target
     // declined: the select shows the current community again
-    leaveAddMeter(() => switchTenant(next), () => { select.value = tenant.tenant })
+    leaveUnsaved(() => switchTenant(next), () => { select.value = tenant.tenant })
   }
 
   return (
