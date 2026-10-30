@@ -13,7 +13,7 @@ import "./eeg-card.scss"
 import {periodsSelector, selectedPeriodSelector} from "../../store/energy";
 import {useTenant} from "../../store/hook/Eeg.provider";
 import {Api} from "../../service";
-import {IonSpinner} from "@ionic/react";
+import {IonButton, IonSpinner} from "@ionic/react";
 import {dayBounds, formatDay} from "./DayView.functions";
 
 interface LoadSharingComponentProps {
@@ -30,9 +30,13 @@ const DashboardLayoutComponent: FC<LoadSharingComponentProps> = ({consumed, prod
   const tenant = useTenant()
 
   const [combinedReport, setCombinedReport] = useState<Record<string, ReportNamedData[] | undefined>>({intraday: undefined, loadcurve: undefined})
+  // a failed load showed the spinner forever (platform#228); it now shows an error with "Erneut versuchen"
+  const [reportFailed, setReportFailed] = useState(false)
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     if (tenant && activePeriod) {
+      setReportFailed(false)
       // dismissLoading(true)
       Api.energyService.fetchCombinedReportV2(tenant, ["intraday", "loadcurve"], activePeriod).then((d) => {
         // dismissLoading(false)
@@ -42,9 +46,10 @@ const DashboardLayoutComponent: FC<LoadSharingComponentProps> = ({consumed, prod
       }).catch(() => {
         // dismissLoading(false)
         setCombinedReport({intraday: undefined, loadcurve: undefined})
+        setReportFailed(true)
       })
     }
-  }, [activePeriod, participants]);
+  }, [activePeriod, participants, attempt]);
 
   const energyDate = useMemo(() => periods, [periods])
 
@@ -53,6 +58,14 @@ const DashboardLayoutComponent: FC<LoadSharingComponentProps> = ({consumed, prod
   const bounds = useMemo(() => dayBounds(periods, new Date()), [periods, todayKey])
 
   const showChart = (report: ReportNamedData[] | undefined, children: ReactNode) => {
+    if (reportFailed) {
+      return (
+        <div style={{height: "100%", display: "flex", flexFlow: "column", alignItems: "center", justifyContent: "center", gap: "10px"}}>
+          <div>Die Diagrammdaten konnten nicht geladen werden.</div>
+          <IonButton size="small" onClick={() => setAttempt(a => a + 1)}>Erneut versuchen</IonButton>
+        </div>
+      )
+    }
     if (report) {
       return children
     } else {

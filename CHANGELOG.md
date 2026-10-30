@@ -9,6 +9,9 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Fixed
+- **Dashboard: a failed chart load shows an error instead of an endless spinner** (platform#228 step 2). When the
+  load and day curve data could not be loaded, both chart cards kept spinning. They now show „Die Diagrammdaten
+  konnten nicht geladen werden.“ with „Erneut versuchen“, which loads them again.
 - **Dashboard: inactive metering points are counted** (platform#228 step 2). „Übersicht EEG“ showed a fixed
   „0 inaktive“ next to the metering points. It now counts the metering points whose current participation is inactive
   (left or revoked), over all members and marked „(Stand heute)“ like the member counts; a metering point that moved to
