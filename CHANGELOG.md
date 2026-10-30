@@ -9,6 +9,16 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Fixed
+- **Text fields: the caret no longer jumps to the end while typing.** Renaming a tariff moved the caret to the end of
+  the field after the first typed character, so the rest landed at the end („Beitritt2 weiterer ZP026“). The input
+  wrote the form's value back into the field on every render; it now does so only when the value differs from what the
+  field shows (after a reset or when another record is selected). All text fields of the app use this input; the
+  tariff dialog showed it at once because it validates on every keystroke.
+- **Joining fee: the count of members who get the fee is asked a second time when the first call fails.** In prod one
+  save showed „konnte nicht ermittelt werden (Abrechnung nicht erreichbar)“ while billing answered every request with
+  200, so the call failed in the browser (cause unknown: network or token lookup). The tariff dialog, the member's
+  joining fee status and the master data export all use this call. The dialog and the export hint no longer claim that
+  billing is unreachable: the count, or the joining fee state, could not be determined *right now*.
 - **Menu reachable below 992 px** (261024-ca9). Below 992 px window width (tablet in portrait, half-width laptop
   window) the side menu is hidden, and only the register page had a button to open it. Every page now has one: in the
   existing toolbar on the member and tariff lists and on „Nachrichten“; the other pages (Dashboard, Meine EEG,

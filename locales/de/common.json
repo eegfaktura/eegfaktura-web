@@ -76,7 +76,7 @@
     "warn_vat_unusual": "Dieser USt-Satz kommt in der EEG sonst nicht vor. Eine Rechnung kann höchstens zwei verschiedene Sätze über 0 % enthalten; mit einem dritten bricht die Abrechnung ab.",
     "warn_rollout_one": "{{count}} aktives Mitglied mit diesem Tarif wurde in eegfaktura noch nie mit Energie abgerechnet und bekommt die Beitrittsgebühr mit seiner nächsten Abrechnung.",
     "warn_rollout_other": "{{count}} aktive Mitglieder mit diesem Tarif wurden in eegfaktura noch nie mit Energie abgerechnet und bekommen die Beitrittsgebühr mit ihrer nächsten Abrechnung.",
-    "warn_rollout_unknown": "Wie viele aktive Mitglieder mit diesem Tarif in eegfaktura noch nie mit Energie abgerechnet wurden, konnte nicht ermittelt werden (Abrechnung nicht erreichbar). Diese Mitglieder bekommen die Beitrittsgebühr mit ihrer nächsten Abrechnung.",
+    "warn_rollout_unknown": "Wie viele aktive Mitglieder mit diesem Tarif in eegfaktura noch nie mit Energie abgerechnet wurden, konnte gerade nicht ermittelt werden (die Abfrage bei der Abrechnung ist fehlgeschlagen). Diese Mitglieder bekommen die Beitrittsgebühr mit ihrer nächsten Abrechnung.",
     "save": "Speichern",
     "cancel": "Abbrechen",
     "hint_billed": "Dieses Mitglied wurde schon abgerechnet – die Beitrittsgebühr wird ihm nicht mehr automatisch verrechnet. Mit „Beitrittsgebühr nachverrechnen“ lässt sie sich im nächsten Abrechnungslauf verrechnen.",
