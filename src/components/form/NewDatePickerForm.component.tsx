@@ -31,7 +31,7 @@ const CustomIonInput = forwardRef<HTMLIonInputElement, CustomIonInputProps>(
         readonly={readOnly}
         disabled={disabled}
         ref={ref} // Pass the ref to IonInput
-        placeholder="TT.MM.JJJJ"
+        placeholder="Datum wählen"
         fill="outline"
         labelPlacement={"floating"}
       />

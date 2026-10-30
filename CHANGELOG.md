@@ -16,9 +16,11 @@ this changelog highlights the changes relevant for overview and operations.
   thousands with a dot instead of a space („1.234,56“, which the amount fields read back). All date fields
   (invoice date of a billing run, SEPA dates, member and metering point dates, process dates) show „28.10.2026“
   instead of „October 28, 2026“ (process dates before: „10/28/2026“), with German month and weekday names and Monday
-  as first day of the week. Where a date field takes typed input (invoice date, member and metering point dates), it
-  reads only „28.10.2026“ and rejects anything else (before, „05.13.2026“ could become 13 May); the SEPA mandate date
-  and the range fields take calendar clicks only, as before. Billing run status times show „28.10.2026 14:05“ instead of
+  as first day of the week. Typed input is read as „28.10.2026“ or „1.2.2026“ and anything else is rejected (before,
+  „05.13.2026“ could become 13 May) in the fields that pass typed text on: the billing run dates (invoice date,
+  SEPA collection and transfer date), „Mitglied seit“ in the registration and older member form, and „aktiv seit“ of
+  a metering point. The SEPA mandate date and „Mitglied seit“ in the member form take calendar clicks only, as before;
+  the process and period fields use the same rule for whatever their input passes on. Billing run status times show „28.10.2026 14:05“ instead of
   „2026-10-28, 14:05“. Display only: values sent to the services, exports, SEPA files and documents do not change.
   `date-fns` 2.30.0 (already shipped as part of react-datepicker) is now a direct dependency for the German calendar.
 

@@ -13,11 +13,16 @@ export const formatDateTime = (d: DateInput): string => moment(d).format("DD.MM.
 
 // react-datepicker: Austrian German month and weekday names, week starts on Monday, and the field shows and reads
 // "28.10.2026" instead of "October 28, 2026". strictParsing: a typed "05.13.2026" is rejected instead of being read
-// by the Date fallback as 13 May. Spread DATE_PICKER_PROPS on every picker.
+// by the Date fallback as 13 May. Typed days and months may omit the leading zero ("1.2.2026", "01.2.2026"); the
+// field always shows the first format. Spread DATE_PICKER_PROPS on every picker.
 export const DATE_PICKER_LOCALE = "de-AT"
 export const DATE_PICKER_FORMAT = "dd.MM.yyyy"
 export const DATE_PICKER_EXAMPLE = "z.B. 02.04.2024"
-export const DATE_PICKER_PROPS = {dateFormat: DATE_PICKER_FORMAT, locale: DATE_PICKER_LOCALE, strictParsing: true}
+export const DATE_PICKER_PROPS = {
+  dateFormat: [DATE_PICKER_FORMAT, "d.M.yyyy", "d.MM.yyyy", "dd.M.yyyy"],
+  locale: DATE_PICKER_LOCALE,
+  strictParsing: true,
+}
 
 // Called once at app start (main.tsx) and in the test setup, before the first picker renders.
 export const registerDatePickerLocale = () => {
