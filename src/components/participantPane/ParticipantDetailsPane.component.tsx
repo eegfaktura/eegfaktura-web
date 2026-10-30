@@ -45,6 +45,7 @@ import {useLocale} from "../../store/hook/useLocale";
 import {useAccessGroups, useTenant} from "../../store/hook/Eeg.provider";
 import {useMoveMeteringPointHook} from "../../store/hook/MoveMeteringPoint.hook";
 import moment from "moment";
+import {formatDate} from "../../util/DateFormat.util";
 import {useDeleteParticipantMutation} from "../../store/participant/api";
 import {useConfirm} from "../core/useConfirm";
 import {processStateText} from "./meterStatusText";
@@ -214,11 +215,11 @@ const ParticipantDetailsPaneComponent: FC = () => {
       const diff = moment(meter.participantState.inactiveSince).diff(moment(), "days")
       if (diff >= 0) {
         return (
-          <span>Zählpunkt inaktiv am <strong>{moment(meter.participantState.inactiveSince).format("DD.MM.YYYY")}</strong></span>
+          <span>Zählpunkt inaktiv am <strong>{formatDate(meter.participantState.inactiveSince)}</strong></span>
         )
       }
       return (
-        <span>Zählpunkt inaktiv seit <strong>{moment(meter.participantState.inactiveSince).format("DD.MM.YYYY")}</strong></span>
+        <span>Zählpunkt inaktiv seit <strong>{formatDate(meter.participantState.inactiveSince)}</strong></span>
       )
     }
 

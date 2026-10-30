@@ -93,6 +93,7 @@ import {billingRunBlocker, billingSwitchTooltip, billTotal, buildAllocationMap, 
 import {exportMasterdataWithJoiningFees, hasJoiningFee, JOINING_FEE_EXPORT_WITHOUT_BILLING} from "../../util/JoiningFee.util";
 import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
 import {withOpenProblems} from "./ParticipantPane.functions";
+import {useMemberSearch} from "./useMemberSearch";
 import {billingTotals, BillingTotals, salesTaxation} from "./BillingTotals.functions";
 import BillingTotalsTable, {
   euro,
@@ -164,8 +165,7 @@ const ParticipantPaneComponent: FC = () => {
 
   const [presentAlert] = useIonAlert();
 
-  const [searchQuery, setSearchQuery] = useState<string | undefined>(undefined)
-  const [searchActive, setSearchActive] = useState(false);
+  const {searchQuery, searchActive, toggleSearch, onSearchInput} = useMemberSearch()
   const [selectedFilter, setSelectedFilter] = useState<string>('period');
   const [memberSort, setMemberSort] = useState<MemberSort>(readMemberSort);
   const [actionFirst, setActionFirst] = useState<boolean>(readActionFirst);
@@ -665,7 +665,7 @@ const ParticipantPaneComponent: FC = () => {
   const popoverRef = useRef<HTMLIonToolbarElement>(null);
 
   const handleSearchInput = (e: CustomEvent<SearchbarInputEventDetail>) => {
-    setSearchQuery(e.detail.value?.toLowerCase())
+    onSearchInput(e.detail.value)
   };
 
   // // const handleSearchClear = (e:  IonSearchbarCustomEvent<void>) => {
@@ -772,7 +772,7 @@ const ParticipantPaneComponent: FC = () => {
               <IonMenuButton/>
             </IonButtons>
             <IonButtons slot="end">
-              <HeaderFavButtonComponent icon={search} onClick={() => setSearchActive(!searchActive)}/>
+              <HeaderFavButtonComponent icon={search} onClick={toggleSearch}/>
               {/*{eeg && !eeg.online && (*/}
               <HeaderFavButtonComponent icon={cloudUploadOutline} onClick={(e: any) =>
                 uploadPopover({

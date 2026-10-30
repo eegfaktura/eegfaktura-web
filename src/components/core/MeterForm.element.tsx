@@ -102,20 +102,15 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
       t("producer_tariff")
   }
 
+  // a validator that returns false leaves react-hook-form with an empty message; return the text instead
   const validatePartFactor = (value: string) => {
     const n = Number(value)
-    if (isNaN(n)) {
-      return false
-    }
-    return n <= 100 && n > 0
+    return (!isNaN(n) && n <= 100 && n > 0) || t("warnings.partition-factor_invalid")
   }
 
   const validateAllocFactor = (value: string) => {
     const n = Number(value)
-    if (isNaN(n)) {
-      return false
-    }
-    return n <= 100.0 && n > 0
+    return (!isNaN(n) && n <= 100.0 && n > 0) || t("warnings.allocation-factor_invalid")
   }
 
   return (
@@ -169,11 +164,11 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
                    onChangePartial={_onChange}
         />
         <InputForm name={"partFact"} label={t("process.partFact.label")} control={control} isNumber={true}
-                   rules={{required:t("warnings.partition-factor_missing"), validate: validatePartFactor || "Ungültiger Wert"}}
+                   rules={{required:t("warnings.partition-factor_missing"), validate: validatePartFactor}}
                    type="number" inputmode="numeric" onChangePartial={onChangePartFact} protectedControl={!isChangeable()} error={errors?.partFact}/>
         {allocationMode === 'STATIC' &&
         <InputForm name={"allocationFactor"} label={t("process.allocationFactor.label")} control={control} isNumber={true}
-                   rules={{required:t("warnings.allocation-factor_missing"), validate: validateAllocFactor || "Ungültiger Wert"}}
+                   rules={{required:t("warnings.allocation-factor_missing"), validate: validateAllocFactor}}
                    type="number" inputmode="numeric" onChangePartial={_onChange} protectedControl={!isChangeable()} error={errors?.allocationFactor}/>
         }
         {area && area === 'BEG' && <>
