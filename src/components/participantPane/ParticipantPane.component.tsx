@@ -1039,14 +1039,9 @@ const ParticipantPaneComponent: FC = () => {
                   )}
                   {!billingRunIsFetching && billingRunStatus === "DONE" && (
                     <>
+                      {/* the send state is shown on the send button („Bereits versendet (…)“) */}
                       <div>
-                        {billingRun.mailStatus === "SENT"
-                          ? "Versand gestartet (" +
-                          reformatDateTimeStamp(
-                            billingRun.mailStatusDateTime
-                          ) +
-                          ")"
-                          : "Abgerechnet (" +
+                        {"Abgerechnet (" +
                           reformatDateTimeStamp(
                             billingRun.runStatusDateTime
                           ) +

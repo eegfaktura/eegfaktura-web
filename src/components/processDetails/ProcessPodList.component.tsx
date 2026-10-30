@@ -61,7 +61,8 @@ const ProcessPodListComponent: FC<ProcessPodListComponentProps> = ({eeg, edaProc
     if (data.operatorId) {
       // goes to the grid operator: ask first
       if (!await confirm(edaProcess.name, podListSummary(data.operatorId), "Anfordern")) return
-      Api.eegService.syncMeteringPointList(eeg.rcNumber, data.operatorId)
+      // returned: the submit stays disabled until the request is answered
+      return Api.eegService.syncMeteringPointList(eeg.rcNumber, data.operatorId)
         .then(() => infoToast(errorT("process.podList_ok")))
         .catch((e) => {
           console.log(e)
@@ -90,7 +91,7 @@ const ProcessPodListComponent: FC<ProcessPodListComponentProps> = ({eeg, edaProc
                                     }} defaultValue={processValues.operatorId}/>
           </div>
       }
-      <IonButton onClick={handleSubmit(request)} disabled={!formState.isValid}>
+      <IonButton onClick={handleSubmit(request)} disabled={!formState.isValid || formState.isSubmitting}>
         {t("process.podList.submit")}
       </IonButton>
     </div>

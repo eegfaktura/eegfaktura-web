@@ -54,7 +54,6 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
 
   const [toaster] = useIonToast();
   const confirm = useConfirm()
-  const [sending, setSending] = useState(false)  // the request runs after the dialog, outside isSubmitting
 
   const infoToast = (message: string) => {
     toaster({
@@ -85,7 +84,7 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
     }
   }, [participantId])
 
-  const onRequest = (data: ProcessValues) => {
+  const onRequest = async (data: ProcessValues) => {
     if (data.participantId && data.meteringPoints && consentEndDate) {
 
       const meter = selectedMeters(useableMeters, data.meteringPoints)
@@ -95,22 +94,18 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
           const participantId = data.participantId, endDate = consentEndDate
           // the optional reason goes to the grid operator (CMRevoke ReasonKey 0 + Reason); empty is not sent
           const reason = data.reason?.trim() || undefined
-          confirm("Datenfreigabe aufheben",
-            revokeSummary(meter, endDate, reason),
-            "Aufheben", () => {
-              setSending(true)
-              Api.eegService.revokeMeteringPoint(
-                eeg.id.toUpperCase(), participantId,
-                meter.map(m => {return {meter: m.meteringPoint, direction: m.direction, consentId: m.consentId}}),
-                endDate.getTime(), reason)
-                .then(() => {
-                  sent()
-                  reset()
-                  setConsentEndDate(null)
-                })
-                .catch(failed)  // keep the input on failure
-                .finally(() => setSending(false))
+          // awaited: the submit stays disabled while the dialog is open and the request runs (no second revoke)
+          if (!await confirm("Datenfreigabe aufheben", revokeSummary(meter, endDate, reason), "Aufheben")) return
+          return Api.eegService.revokeMeteringPoint(
+            eeg.id.toUpperCase(), participantId,
+            meter.map(m => {return {meter: m.meteringPoint, direction: m.direction, consentId: m.consentId}}),
+            endDate.getTime(), reason)
+            .then(() => {
+              sent()
+              reset()
+              setConsentEndDate(null)
             })
+            .catch(failed)  // keep the input on failure
         } else {
           errorToast(errorT("process.revoke_consentIdEmpty"))
         }
@@ -162,7 +157,7 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
               />
             </div>
             <IonItem lines="none" style={{zIndex: "0"}}>
-              <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={(!formState.isValid || !consentEndDate || sending)}>
+              <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={(!formState.isValid || !consentEndDate || formState.isSubmitting)}>
                 {t("process.submit")}
               </IonButton>
             </IonItem>
