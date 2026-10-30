@@ -1,5 +1,5 @@
 import {describe, expect, it} from "vitest";
-import {countMeters} from "../../util/MeterCount.util";
+import {countInactiveMeters, countMeters} from "../../util/MeterCount.util";
 import {EegParticipant} from "../../models/members.model";
 
 type M = {meteringPoint: string, direction: 'CONSUMPTION' | 'GENERATION', tariff_id?: string, activeSince?: string,
@@ -96,5 +96,31 @@ describe("countMeters (platform#211)", () => {
       participant({meteringPoint: "AT01", direction: 'CONSUMPTION', tariff_id: "new", activeSince: "2025-06-01"}),
     ], ["old", "new"])
     expect(r).toEqual({consumers: 1, producers: 0, tariffs: {old: 0, new: 1}})
+  })
+})
+
+// platform#228: the dashboard showed a fixed „0 inaktive“ for metering points
+describe("countInactiveMeters", () => {
+  it("counts metering points whose current participation is inactive", () => {
+    expect(countInactiveMeters([
+      participant({meteringPoint: "AT01", direction: 'CONSUMPTION', status: 'INACTIVE'},
+        {meteringPoint: "AT02", direction: 'GENERATION'}),
+      participant({meteringPoint: "AT03", direction: 'CONSUMPTION', status: 'INACTIVE'}),
+      participant({meteringPoint: "AT04", direction: 'CONSUMPTION', status: 'INIT'}),
+    ])).toBe(2)
+  })
+
+  it("does not count a metering point that left one member and is active with another one", () => {
+    expect(countInactiveMeters([
+      participant({meteringPoint: "AT01", direction: 'CONSUMPTION', activeSince: "2024-01-01", status: 'INACTIVE'}),
+      participant({meteringPoint: "AT01", direction: 'CONSUMPTION', activeSince: "2025-06-01"}),
+    ])).toBe(0)
+  })
+
+  it("counts a metering point that left twice once", () => {
+    expect(countInactiveMeters([
+      participant({meteringPoint: "AT01", direction: 'CONSUMPTION', activeSince: "2024-01-01", status: 'INACTIVE'}),
+      participant({meteringPoint: "AT01", direction: 'CONSUMPTION', activeSince: "2025-06-01", status: 'INACTIVE'}),
+    ])).toBe(1)
   })
 })

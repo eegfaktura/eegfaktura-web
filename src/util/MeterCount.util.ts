@@ -14,13 +14,18 @@ const activeSince = (m: Metering) => {
   return isNaN(t) ? -Infinity : t
 }
 
-export const countMeters = (participants: EegParticipant[], tariffIds: string[]): MeterCount => {
+const currentParticipations = (participants: EegParticipant[]): Map<string, Metering> => {
   const current = new Map<string, Metering>()
-  participants.forEach(p => p.meters.forEach(m => {
+  participants.forEach(p => (p.meters ?? []).forEach(m => {
     const c = current.get(m.meteringPoint)
     const d = c ? entryRank(m) - entryRank(c) : 1
     if (d > 0 || (d === 0 && activeSince(m) > activeSince(c!))) current.set(m.meteringPoint, m)
   }))
+  return current
+}
+
+export const countMeters = (participants: EegParticipant[], tariffIds: string[]): MeterCount => {
+  const current = currentParticipations(participants)
 
   const r: MeterCount = {consumers: 0, producers: 0, tariffs: Object.fromEntries(tariffIds.map(id => [id, 0]))}
   current.forEach(m => {
@@ -30,4 +35,13 @@ export const countMeters = (participants: EegParticipant[], tariffIds: string[])
     }
   })
   return r
+}
+
+// Inactive metering points for the dashboard (platform#228): over all members (state today, like the member counts),
+// each metering point once with its current participation as above, counted when that one is INACTIVE (left, revoked).
+// A metering point that left one member and is active with another one is not inactive.
+export const countInactiveMeters = (participants: EegParticipant[]): number => {
+  let n = 0
+  currentParticipations(participants).forEach(m => { if (m.status === 'INACTIVE') n += 1 })
+  return n
 }

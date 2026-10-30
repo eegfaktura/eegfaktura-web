@@ -9,6 +9,10 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Fixed
+- **Dashboard: inactive metering points are counted** (platform#228 step 2). „Übersicht EEG“ showed a fixed
+  „0 inaktive“ next to the metering points. It now counts the metering points whose current participation is inactive
+  (left or revoked), over all members and marked „(Stand heute)“ like the member counts; a metering point that moved to
+  another member and is active there is not counted. The „aktive“ count of the period is unchanged.
 - **Member list: closing the search clears it** (platform#228 step 2). After closing the search bar the list kept
   filtering by the last search text, so members were missing without a visible reason. Reopening starts empty.
 - **Member details: an empty company name shows „Firmenname fehlt!“** (pre-existing error found in platform#228 step 2).
