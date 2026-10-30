@@ -32,7 +32,7 @@ import {
 } from "../../store/participant";
 import {formatMeteringPointString} from "../../util/Helper.util";
 import {isValidEmailList} from "../../util/EmailAddress.util";
-import AllowParticipantDialog, {metersToConfirm} from "../dialogs/AllowParticipant.dialog";
+import AllowParticipantDialog from "../dialogs/AllowParticipant.dialog";
 import {OverlayEventDetail} from "@ionic/react/dist/types/components/react-component-lib/interfaces";
 import InvoiceDocumentComponent from "./InvoiceDocument.component";
 import ContractDocumentComponent from "./ContractDocument.component";
@@ -335,7 +335,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
                 <div style={{color: "black"}}>
                   <AllowParticipantDialog trigger="open-participant-allow-dialog"
                                           participant={selectedParticipant}
-                                          meters = {metersToConfirm(selectedParticipant.meters)}
+                                          meters = {selectedParticipant.meters}
                                           onDismiss={onWillDismiss}/>
                   <IonCard color="warning-light">
                     <IonItem lines="none" color="warning-light">

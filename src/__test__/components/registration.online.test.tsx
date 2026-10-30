@@ -11,6 +11,21 @@ import {metersToConfirm} from "../../components/dialogs/AllowParticipant.dialog"
 import MeteringPointConfirmElement from "../../components/core/elements/MeteringPointConfirm.element";
 import ProcessRegisterMeterComponent from "../../components/processDetails/ProcessRegisterMeter.component";
 import "../../util/I18n";
+import AllowParticipantDialog from "../../components/dialogs/AllowParticipant.dialog";
+
+// IonModal does not open in jsdom: a stand-in that opens on mount and dismisses through its ref, as the real one does
+vi.mock("@ionic/react", async (importOriginal) => {
+  const ionic = await importOriginal<typeof import("@ionic/react")>()
+  const R = await import("react")
+  const IonModal = R.forwardRef((props: any, ref) => {
+    R.useImperativeHandle(ref, () => ({
+      dismiss: async (data?: unknown, role?: string) => props.onWillDismiss?.(new CustomEvent("ionModalWillDismiss", {detail: {data, role}}))
+    }) as any)
+    R.useEffect(() => { props.onWillPresent?.(new CustomEvent("ionModalWillPresent")) }, [])
+    return R.createElement("div", null, props.children)
+  })
+  return {...ionic, IonModal}
+})
 
 // Decision 2026-10-30: the GUI registers metering points online only — no „Offline-Registrierung“, no
 // „Aktivierungs-Code“. The backend takes "ONLINE" explicitly (an empty mode fails at /register and would be
@@ -82,5 +97,27 @@ describe("no offline option in the GUI", () => {
     expect(screen.getByText("Zählpunkt aktivieren")).toBeInTheDocument()
     expect(screen.queryByText(/Offline-Registrierung/)).not.toBeInTheDocument()
     expect(screen.queryByText(/Aktivierungs-Code/)).not.toBeInTheDocument()
+  })
+})
+
+describe("„zulassen“ keeps the admin's selection (261030-mm3)", () => {
+  it("a metering point unticked stays unticked when the member pane re-renders and is not sent", async () => {
+    const participant = {id: "p1", firstname: "Max", lastname: "Muster"} as EegParticipant
+    const onDismiss = vi.fn()
+    const {container, rerender} = render(<AllowParticipantDialog trigger="t" participant={participant}
+                                                                 meters={[meter("AT1"), meter("AT2")]} onDismiss={onDismiss}/>)
+    const box = () => container.querySelectorAll("ion-checkbox")[1] as HTMLIonCheckboxElement
+    expect(box().checked).toBe(true)
+    box().checked = false
+    await act(async () => { fireEvent(box(), new CustomEvent("ionChange", {detail: {checked: false}})) })
+
+    // the pane hands over the member's meters again, as new objects (any store update or re-render)
+    rerender(<AllowParticipantDialog trigger="t" participant={participant}
+                                     meters={[meter("AT1"), meter("AT2")]} onDismiss={onDismiss}/>)
+    expect(box().checked).toBe(false)
+
+    await act(async () => { fireEvent.click(screen.getByText("Zulassen")) })
+    const sent = (onDismiss.mock.calls[0][1] as Metering[]).filter(m => m.enabled)  // the pane sends the enabled ones
+    expect(sent.map(m => m.meteringPoint)).toEqual(["AT1"])
   })
 })

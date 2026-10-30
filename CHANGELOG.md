@@ -48,6 +48,9 @@ this changelog highlights the changes relevant for overview and operations.
   still set „Noch nicht registriert / Bereits registriert“ as before.
 
 ### Fixed
+- **„Zulassen“: an unticked metering point stays unticked** (261030-mm3). The dialog now keeps the list of metering
+  points it opened with; before, a re-render of the member details while the dialog was open ticked an unticked
+  metering point again, and it was registered with the member.
 - **Registration: another metering point no longer shows the input of the one before.** With the metering point form
   open, selecting another metering point card (or „Zählpunkt hinzufügen“) kept the old values in the form, and
   „Hinzufügen“ then wrote them to the old metering point. The form now starts anew for every opened metering point.

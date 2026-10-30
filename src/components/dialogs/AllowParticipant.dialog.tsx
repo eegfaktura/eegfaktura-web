@@ -34,6 +34,8 @@ const AllowParticipantDialog: FC<AllowParticipantDialogProps> = ({trigger, parti
   const modal = useRef<HTMLIonModalElement>(null);
   const inputFile = useRef<HTMLInputElement | null>(null)
   const [files, setFiles] = useState<File[]>([])
+  // built once when the dialog opens: a re-render of the member pane must not tick an unticked meter again (261030-mm3)
+  const [confirmMeters, setConfirmMeters] = useState<Metering[]>([])
 
   // const formData = new FormData();
   function confirm() {
@@ -59,7 +61,8 @@ const AllowParticipantDialog: FC<AllowParticipantDialogProps> = ({trigger, parti
 
   return (
     <IonModal id="doc-upload-modal" className="ion-padding" ref={modal} trigger={trigger}
-              onWillDismiss={(ev) => onDismiss(participant, meters, ev)}>
+              onWillPresent={() => setConfirmMeters(metersToConfirm(meters))}
+              onWillDismiss={(ev) => onDismiss(participant, confirmMeters, ev)}>
       <div className="wrapper">
         <h6>{participant.firstname} {participant.lastname} zulassen</h6>
         <p>Bitte lade die Anmeldedokumente von {participant.firstname} {participant.lastname} hoch</p>
@@ -81,7 +84,7 @@ const AllowParticipantDialog: FC<AllowParticipantDialogProps> = ({trigger, parti
         </div>
         <div>
           <div style={{fontSize: "1.1em", paddingTop: "8px", paddingBottom: "4px", borderBottom: "1px solid var(--ion-color-primary-tint)", marginBottom: "4px"}}>Zählpunkte</div>
-          {meters.map((m, idx) => (
+          {confirmMeters.map((m, idx) => (
             <MeteringPointConfirmElement key={idx} m={m}/>
             )
           )}
