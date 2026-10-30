@@ -35,9 +35,8 @@ export const revokeSummary = (meters: Metering[], consentEnd: Date) =>
   `Soll die Datenfreigabe ${forMeters(meters.map(m => m.meteringPoint))} beim Netzbetreiber aufgehoben werden? `
   + `Ende der Datenfreigabe: ${date(consentEnd)}.`
 
-export const registerSummary = (meteringPoint: string, member: string, offline: boolean) =>
-  `Zählpunkt ${meteringPoint} (${member}) ${offline ? "offline (mit Aktivierungs-Code)" : "online"} `
-  + `beim Netzbetreiber anmelden?`
+export const registerSummary = (meteringPoint: string, member: string) =>
+  `Zählpunkt ${meteringPoint} (${member}) online beim Netzbetreiber anmelden?`
 
 export const podListSummary = (operatorId: string) =>
   `Zählpunktliste beim Netzbetreiber ${operatorId} anfordern?`

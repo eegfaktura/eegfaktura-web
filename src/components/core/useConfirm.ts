@@ -1,17 +1,19 @@
 import {useIonAlert} from "@ionic/react";
 
-// Asks before an action that cannot be undone; the action runs only on the confirm button.
+// Asks before an action that cannot be undone; the action runs only on the confirm button. onCancel runs otherwise,
+// e.g. to show a toggle or select the old choice again.
 // Resolves with true on confirm, false on cancel or backdrop: a caller can await it (e.g. inside a form submit, which
 // keeps the submit button disabled until the dialog is closed) instead of passing an action.
 export const useConfirm = () => {
   const [alert] = useIonAlert()
-  return (subHeader: string, message: string, confirmText: string, action?: () => void) =>
+  return (subHeader: string, message: string, confirmText: string, action?: () => void, onCancel?: () => void) =>
     new Promise<boolean>(resolve => alert({
       subHeader, message,
       buttons: [{text: "Abbrechen", role: "cancel"}, {text: confirmText, role: "confirm"}],
       onDidDismiss: (e: CustomEvent) => {
         const confirmed = e.detail.role === "confirm"
         if (confirmed && action) action()
+        else if (!confirmed) onCancel?.()
         resolve(confirmed)
       },
     }))

@@ -23,6 +23,7 @@ import {PhoneInputForm} from "../components/form/PhoneInputForm";
 import {useLocale} from "../store/hook/useLocale";
 import {isValidEmailList} from "../util/EmailAddress.util";
 import EegLoadStateComponent from "../components/EegLoadState.component";
+import {useLeaveUnsaved} from "../store/hook/ParticipantProvider";
 import MenuHeaderComponent from "../components/core/MenuHeader.component";
 
 
@@ -47,6 +48,8 @@ const EegPage: FC = () => {
 
   const {isAdmin} = useAccessGroups()
   const switchTenant = useTenantSwitch()
+  // another community drops unsaved input ("add metering point", details, tariff editor): ask first (platform#228 step 4)
+  const leaveUnsaved = useLeaveUnsaved(["addMeter", "details", "tariff"])
 
   const {handleSubmit, setValue, reset, control, formState: {errors, isDirty, dirtyFields}} =
     useForm({
@@ -71,8 +74,10 @@ const EegPage: FC = () => {
   }, [eeg]);
 
   const onSwitchTenant = (e: SelectCustomEvent<string>) => {
-    const tenant = e.detail.value;
-    switchTenant(tenant)
+    const next = e.detail.value;
+    const select = e.target
+    // declined: the select shows the current community again
+    leaveUnsaved(() => switchTenant(next), () => { select.value = tenant })
   }
 
   const onChangeField = (mapper: string) => (name: string, value: any) => {

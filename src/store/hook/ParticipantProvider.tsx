@@ -14,6 +14,7 @@ import {getPeriodDates} from "../../util/FilterHelper";
 import participants from "../../pages/Participants";
 import {ratesMapSelector} from "../rate";
 import {zvtTimeWindows, zvtWindowsKey} from "../../util/Helper.util";
+import {useConfirmDiscard, useReportDirty} from "../../components/core/UnsavedChangesGuard.component";
 
 
 export interface ParicipantState {
@@ -34,6 +35,10 @@ export interface ParicipantState {
   setBillingEnabled: (enabled: boolean) => void
   showAddMeterPane: boolean
   setShowAddMeterPane: (show: boolean) => void
+  // forms holding unsaved input (changed, failed to save or invalid), by source: switching the member, the billing view
+  // or the community asks first (platform#228 step 4)
+  unsaved: Partial<Record<UnsavedSource, boolean>>
+  setUnsaved: (source: UnsavedSource, dirty: boolean) => void
   // loads the energy report of the shown period again, e.g. after a failed load (261024-ca26)
   reloadEnergyReport: () => void
 }
@@ -54,6 +59,8 @@ const initialState: ParicipantState = {
   setBillingEnabled: (enabled: boolean) => {},
   showAddMeterPane: false,
   setShowAddMeterPane: (show: boolean) => {},
+  unsaved: {},
+  setUnsaved: (source: UnsavedSource, dirty: boolean) => {},
   reloadEnergyReport: () => {},
 }
 
@@ -78,6 +85,9 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
   const [detailOpen, setDetailOpen] = useState<boolean>(false);
   const [enableBilling, setEnableBilling] = useState<boolean>(false)
   const [showAddMeterPane, setShowAddMeterPane] = useState<boolean>(false)
+  const [unsaved, setUnsavedState] = useState<Partial<Record<UnsavedSource, boolean>>>({})
+  const setUnsaved = useCallback((source: UnsavedSource, dirty: boolean) =>
+    setUnsavedState(prev => !!prev[source] === dirty ? prev : {...prev, [source]: dirty}), [])
   // the members active in the selected period, derived from the store (empty after a community switch, 261024-ca13)
   const activeParticipants = useMemo(() => {
     if (!activePeriod || !allParticipants) return []
@@ -227,6 +237,8 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
     setBillingEnabled: setEnableBillingFn,
     showAddMeterPane: showAddMeterPane,
     setShowAddMeterPane: setShowAddMeterPane,
+    unsaved: unsaved,
+    setUnsaved: setUnsaved,
     reloadEnergyReport: () => fetchEnergyReport(activeParticipants),
   } as ParicipantState
 
@@ -283,3 +295,21 @@ export const useAllParticipants = () => {
 //   const {rates} = useContext(ParticipantContext);
 //   return rates;
 // }
+
+// "addMeter": the "add metering point" pane; "details": the member or metering point details (failed or invalid
+// changes); "tariff": the tariff editor
+export type UnsavedSource = "addMeter" | "details" | "tariff"
+
+// Asks before an action replaces forms of the given sources while one holds unsaved input (platform#228 step 4).
+export const useLeaveUnsaved = (sources: UnsavedSource[]) => {
+  const {unsaved} = useContext(ParticipantContext)
+  const confirmDiscard = useConfirmDiscard()
+  return (action: () => void, onCancel?: () => void) =>
+    confirmDiscard(sources.some(s => unsaved[s]), action, onCancel)
+}
+
+// A form reports its unsaved input under its source while it is shown.
+export const useReportUnsaved = (source: UnsavedSource, dirty: boolean) => {
+  const {setUnsaved} = useContext(ParticipantContext)
+  useReportDirty(dirty, d => setUnsaved(source, d))
+}

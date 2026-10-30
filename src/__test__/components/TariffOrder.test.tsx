@@ -5,12 +5,16 @@ import {EegTariff} from "../../models/eeg.model";
 import {compareTariffs, ratesSelector, selectedRateSelector} from "../../store/rate";
 import {fetchRatesModel, selectRate} from "../../store/rate";
 import "../../util/I18n";
+import {MemoryRouter} from "react-router";
 
 vi.mock("../../store/hook/Eeg.provider", () => ({useTenant: () => ({tenant: "RC100100"})}))
 // the detail pane is not part of this test
 vi.mock("../../components/RateDetailPane.component", () => ({default: () => <div/>}))
 
 import RatesPage from "../../pages/Rates.page";
+
+// the page holds an UnsavedChangesGuard (Prompt), which needs a router
+const Page = () => <MemoryRouter><RatesPage/></MemoryRouter>
 
 const tariff = (id: string, type: EegTariff["type"], name: string) => ({id, type, name, centPerKWh: 10} as EegTariff)
 const rates = [
@@ -39,7 +43,7 @@ describe("tariff order (pilot group 2026-10-28)", () => {
   })
 
   it("groups the tariff page under the headings of the tariff form", () => {
-    const {store} = renderWithProviders(<RatesPage/>)
+    const {store} = renderWithProviders(<Page/>)
     act(() => { store.dispatch(fetchRatesModel.fulfilled({rates}, "req", {tenant: "RC100100"} as any)) })
     const text = document.body.textContent ?? ""
     const at = (s: string) => text.indexOf(s)
@@ -53,7 +57,7 @@ describe("tariff order (pilot group 2026-10-28)", () => {
   })
 
   it("shows a tariff of an unknown kind at the end under „Sonstige Tarife“ instead of hiding it", () => {
-    const {store} = renderWithProviders(<RatesPage/>)
+    const {store} = renderWithProviders(<Page/>)
     act(() => { store.dispatch(fetchRatesModel.fulfilled({rates: [...rates, tariff("7", "AKONTO", "Alt")]}, "req", {tenant: "RC100100"} as any)) })
     const text = document.body.textContent ?? ""
     expect(text.indexOf("Sonstige Tarife")).toBeGreaterThan(text.indexOf("Verkauf"))
@@ -66,7 +70,7 @@ describe("tariff order (pilot group 2026-10-28)", () => {
   })
 
   it("collapses and expands a group with its heading", () => {
-    const {store} = renderWithProviders(<RatesPage/>)
+    const {store} = renderWithProviders(<Page/>)
     act(() => { store.dispatch(fetchRatesModel.fulfilled({rates}, "req", {tenant: "RC100100"} as any)) })
     const heading = screen.getByRole("button", {name: /Mitgliedstarife/})
     expect(heading.getAttribute("aria-expanded")).toBe("true")
@@ -80,7 +84,7 @@ describe("tariff order (pilot group 2026-10-28)", () => {
   })
 
   it("searches the tariff names and opens a collapsed group with hits", () => {
-    const {store, container} = renderWithProviders(<RatesPage/>)
+    const {store, container} = renderWithProviders(<Page/>)
     act(() => { store.dispatch(fetchRatesModel.fulfilled({rates}, "req", {tenant: "RC100100"} as any)) })
     fireEvent.click(screen.getByRole("button", {name: /Verbrauchertarife/}))
     expect(screen.queryByText("Sonnenstrom-Verkauf")).toBeNull()
@@ -104,7 +108,7 @@ describe("tariff order (pilot group 2026-10-28)", () => {
     { const bar = openSearch(container); act(() => { bar.dispatchEvent(new CustomEvent("ionInput", {detail: {value}})) }) }
 
   it("ignores a click on a heading while searching, so clearing the search restores the state before", () => {
-    const {store, container} = renderWithProviders(<RatesPage/>)
+    const {store, container} = renderWithProviders(<Page/>)
     act(() => { store.dispatch(fetchRatesModel.fulfilled({rates}, "req", {tenant: "RC100100"} as any)) })
     searchFor(container, "Beitritt")
     fireEvent.click(screen.getByRole("button", {name: /Mitgliedstarife/}))
@@ -113,7 +117,7 @@ describe("tariff order (pilot group 2026-10-28)", () => {
   })
 
   it("keeps the selected tariff visible in a collapsed group and outside the hits", () => {
-    const {store, container} = renderWithProviders(<RatesPage/>)
+    const {store, container} = renderWithProviders(<Page/>)
     act(() => { store.dispatch(fetchRatesModel.fulfilled({rates}, "req", {tenant: "RC100100"} as any)) })
     fireEvent.click(screen.getByRole("button", {name: /Mitgliedstarife/}))
     act(() => { store.dispatch(selectRate(rates[0])) })
@@ -125,21 +129,21 @@ describe("tariff order (pilot group 2026-10-28)", () => {
   })
 
   it("searches without regard to accents", () => {
-    const {store, container} = renderWithProviders(<RatesPage/>)
+    const {store, container} = renderWithProviders(<Page/>)
     act(() => { store.dispatch(fetchRatesModel.fulfilled({rates: [...rates, tariff("8", "EZP", "Überschuss")]}, "req", {tenant: "RC100100"} as any)) })
     searchFor(container, "uberschuss")
     expect(screen.getByText("Überschuss")).toBeTruthy()
   })
 
   it("starts a new tariff with the plus button next to the magnifier", () => {
-    const {store, container} = renderWithProviders(<RatesPage/>)
+    const {store, container} = renderWithProviders(<Page/>)
     act(() => { store.dispatch(fetchRatesModel.fulfilled({rates}, "req", {tenant: "RC100100"} as any)) })
     fireEvent.click(headerButtons(container)[1])
     expect(selectedRateSelector(store.getState())).toMatchObject({id: "", name: "", type: "EEG"})
   })
 
   it("clears the search when the magnifier closes the search bar", () => {
-    const {store, container} = renderWithProviders(<RatesPage/>)
+    const {store, container} = renderWithProviders(<Page/>)
     act(() => { store.dispatch(fetchRatesModel.fulfilled({rates}, "req", {tenant: "RC100100"} as any)) })
     const bar = openSearch(container)
     act(() => { bar.dispatchEvent(new CustomEvent("ionInput", {detail: {value: "Einkauf"}})) })
@@ -150,7 +154,7 @@ describe("tariff order (pilot group 2026-10-28)", () => {
   })
 
   it("ignores a late debounced input after the search bar was closed", () => {
-    const {store, container} = renderWithProviders(<RatesPage/>)
+    const {store, container} = renderWithProviders(<Page/>)
     act(() => { store.dispatch(fetchRatesModel.fulfilled({rates}, "req", {tenant: "RC100100"} as any)) })
     const bar = openSearch(container)
     fireEvent.click(headerButtons(container)[0])

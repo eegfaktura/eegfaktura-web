@@ -14,7 +14,6 @@ import {JoinStrings} from "../../util/Helper.util";
 import {meteringDisplayName} from "../../util/FilterHelper";
 import {TFunction} from "i18next";
 import {useLocale} from "../../store/hook/useLocale";
-import CheckboxComponent from "../form/Checkbox.component";
 import {useProcessFeedback} from "./useProcessFeedback";
 import {useConfirm} from "../core/useConfirm";
 import {registerSummary} from "./ProcessConfirm.functions";
@@ -23,8 +22,6 @@ interface ProcessValues {
   communityId: string | undefined
   participantId: string | undefined
   meteringPoint: string | undefined
-  activationMode: 'ONLINE' | 'OFFLINE'
-  activationCode: string | undefined
 }
 
 interface ProcessRegisterMeterComponentProps {
@@ -46,8 +43,6 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
     communityId: eeg.communityId,
     participantId: undefined,
     meteringPoint: undefined,
-    activationMode: 'ONLINE' as 'ONLINE' | 'OFFLINE',
-    activationCode: undefined,
   }
 
   const {t} = useLocale("common")
@@ -60,7 +55,6 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
   } = useForm<ProcessValues>({defaultValues: processValues})
   const [useableMeters, setUsableMeters] = useState<Metering[]>(meters)
   const [meteringPoint, participantId] = watch(['meteringPoint', 'participantId'])
-  const [offline, setOffline] = useState(false)
 
   useEffect(() => {
     if (meteringPoint) {
@@ -89,8 +83,8 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
       if (p && meter) {
         // goes to the grid operator: ask first; the submit button stays disabled while the dialog is open
         const member = JoinStrings(" ", "-", p.participantNumber, (p.lastname ? p.lastname : ""), p.firstname)
-        if (!await confirm(edaProcess.name, registerSummary(data.meteringPoint, member, offline), "Senden")) return
-        return Api.eegService.registerMeteringPoint(eeg.id.toUpperCase(), p.id, data.meteringPoint, meter.direction, offline ? 'OFFLINE' : 'ONLINE', data.activationCode)
+        if (!await confirm(edaProcess.name, registerSummary(data.meteringPoint, member), "Senden")) return
+        return Api.eegService.registerMeteringPoint(eeg.id.toUpperCase(), p.id, data.meteringPoint, meter.direction)
           .then(() => {
             sent()
             reset()
@@ -145,10 +139,6 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
                                     }
                                   })} label={t("metering")} rules={{required: true}}/>
 
-            <CheckboxComponent label={"Offline-Registrierung"} checked={offline} setChecked={setOffline}></CheckboxComponent>
-            { offline && 
-              <InputForm name="activationCode" control={control} label={"Aktivierungs-Code"} counter={true} maxlength={35}/>
-            }
             <IonItem lines="none" style={{zIndex: "0"}}>
               <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={!formState.isValid || formState.isSubmitting}>
                 {t("process.submit")}

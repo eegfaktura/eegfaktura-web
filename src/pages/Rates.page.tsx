@@ -1,4 +1,4 @@
-import React, {FC, useRef, useState} from "react";
+import React, {FC, useContext, useRef, useState} from "react";
 import {useAppDispatch, useAppSelector} from "../store";
 import {ratesSelector, saveNewRate, selectedRateSelector, selectRate, TARIFF_TYPE_ORDER, updateRate} from "../store/rate";
 import {useLocale} from "../store/hook/useLocale";
@@ -24,6 +24,8 @@ import {selectedTenant} from "../store/eeg";
 import {useRateType} from "../store/hook/Rate.provider";
 import { get } from "react-hook-form";
 import {useTenant} from "../store/hook/Eeg.provider";
+import UnsavedChangesGuard, {useConfirmDiscard} from "../components/core/UnsavedChangesGuard.component";
+import {ParticipantContext} from "../store/hook/ParticipantProvider";
 
 // group headings: the kinds of the tariff form
 const RATE_GROUP_TITLE_KEY: Record<EegTariff["type"] | "OTHER", string> = {
@@ -78,9 +80,23 @@ const RatesPage: FC = () => {
   //   }
   // }, [rates])
 
+  // unsaved input in the tariff editor: asks before another tariff replaces it, and before leaving the page
+  const [editorDirty, setEditorDirty] = useState(false)
+  // a community switch (menu) asks as well
+  const {setUnsaved} = useContext(ParticipantContext)
+  const onEditorDirtyChange = (dirty: boolean) => {
+    setEditorDirty(dirty)
+    setUnsaved("tariff", dirty)
+  }
+  const confirmDiscard = useConfirmDiscard()
+
   const onSelect = (rate: EegTariff) => {
-    setRateType(rate.type)
-    dispatcher(selectRate(rate))
+    // the same tariff again keeps the form as it is
+    if (rate.id !== "" && rate.id === selectedTariff?.id) return
+    confirmDiscard(editorDirty, () => {
+      setRateType(rate.type)
+      dispatcher(selectRate(rate))
+    })
   }
 
   const onNew = () => {
@@ -142,6 +158,7 @@ const RatesPage: FC = () => {
 
   return (
     <IonPage>
+      <UnsavedChangesGuard dirty={editorDirty}/>
       <IonContent fullscreen color="eeg">
         <div style={{display: "flex", flexDirection: "row", height: "100vh"}}>
           <div className={"ratePane"} style={{overflowY: "auto"}}>
@@ -195,7 +212,8 @@ const RatesPage: FC = () => {
             </div>
           </div>
           <div style={{flexGrow:"1", background: "#EAE7D9"}}>
-            {selectedTariff && <RateDetailPaneComponent submitId="change-rate-submit-id" onSubmit={onSubmitRateChange} />}
+            {selectedTariff && <RateDetailPaneComponent submitId="change-rate-submit-id" onSubmit={onSubmitRateChange}
+                                                             onDirtyChange={onEditorDirtyChange}/>}
           </div>
         </div>
       </IonContent>

@@ -23,6 +23,7 @@ import {useTenant} from "../store/hook/Eeg.provider";
 import {useConfirm} from "./core/useConfirm";
 import {tariffInUseMessage} from "./RateDetailPane.functions";
 import {useLocale} from "../store/hook/useLocale";
+import {useConfirmDiscard, useReportDirty} from "./core/UnsavedChangesGuard.component";
 
 // the error key handleErrors builds from the backend's answer {code: 4002, error: "Tariff is currently used"}
 const TARIFF_IN_USE = "E_4002_Tariff is currently used"
@@ -31,9 +32,11 @@ interface RateDetailPaneComponentProps {
   onSubmit: (data: EegTariff) => void;
   submitId: string;
   mode?: 'NEW';
+  // reports unsaved input, so the page can ask before another tariff replaces the form (platform#228 step 4)
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
-const RateDetailPaneComponent: FC<RateDetailPaneComponentProps> = ({onSubmit, submitId, mode}) => {
+const RateDetailPaneComponent: FC<RateDetailPaneComponentProps> = ({onSubmit, submitId, mode, onDirtyChange}) => {
   const dispatcher = useAppDispatch();
   const selectedTariff = useAppSelector(selectedRateSelector)
   const {tenant} = useTenant()
@@ -46,6 +49,10 @@ const RateDetailPaneComponent: FC<RateDetailPaneComponentProps> = ({onSubmit, su
   const rates = useAppSelector(ratesSelector)
 
   const formMethods = useForm<EegTariff>({defaultValues: selectedTariff, values: selectedTariff, mode: 'all'});
+  const isDirty = formMethods.formState.isDirty
+  const confirmDiscard = useConfirmDiscard()
+
+  useReportDirty(isDirty, onDirtyChange)
 
   const getMode = (): (undefined | 'NEW') => {
     return (selectedTariff && selectedTariff.id.length === 0) ? 'NEW' : undefined
@@ -159,7 +166,7 @@ const RateDetailPaneComponent: FC<RateDetailPaneComponentProps> = ({onSubmit, su
         <div>
           <IonFooter>
             <IonToolbar className={"ion-padding-horizontal"}>
-              <IonButton fill="clear" slot="start" onClick={() => dispatcher(selectRate(undefined))}>Zurück</IonButton>
+              <IonButton fill="clear" slot="start" onClick={() => confirmDiscard(isDirty, () => dispatcher(selectRate(undefined)))}>Zurück</IonButton>
               <IonButton form={submitId} type="submit" slot="end" disabled={canSubmitted()}>Änderungen speichern</IonButton>
             </IonToolbar>
           </IonFooter>

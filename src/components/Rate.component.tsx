@@ -369,9 +369,12 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
             <IonList color="eeglight">
               <InputFormComponent label={t("tariffLabel")} control={control} name="name"
                                   rules={{
+                                    // umlauts and ß are allowed (platform#228 step 4): billing prints the name on the
+                                    // invoice (PDF font Helvetica, WinAnsi covers them) and in the XLSX; the SEPA file
+                                    // does not carry it. Other characters stay out, they may not print in the PDF.
                                     pattern: {
-                                      value: /^[A-Za-z0-9\s-_]*$/,
-                                      message: "Bitte nur Buchstaben, Ziffern und '-_ ' eingeben"
+                                      value: /^[A-Za-z0-9ÄÖÜäöüß\s-_]*$/,
+                                      message: "Bitte nur Buchstaben (auch Umlaute und ß), Ziffern und '-_ ' eingeben"
                                     }
                                   }} type="text" error={errors.name}/>
               {renderUseVat()}

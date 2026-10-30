@@ -13,6 +13,9 @@ import MeterFormElement from "./MeterForm.element";
 import EegPaneTemplate from "./EegPane.template";
 import MeterAddressFormElement from "./forms/MeterAddressForm/MeterAddressForm.element";
 import {useOnlineState, useTenant} from "../../store/hook/Eeg.provider";
+import SaveStatus, {hasErrorOnChangedField, hasUnsaved, useSaveStatus} from "./SaveStatus.component";
+import UnsavedChangesGuard from "./UnsavedChangesGuard.component";
+import {useReportUnsaved} from "../../store/hook/ParticipantProvider";
 
 interface MeterFromComponentProps {
   meteringPoint: Metering
@@ -34,22 +37,49 @@ const MeterFormComponent: FC<MeterFromComponentProps> = ({meteringPoint}) => {
   // const {handleSubmit, control, watch, formState: {errors, isDirty, dirtyFields}, reset, clearErrors} = useForm<Metering>({mode: 'onBlur', defaultValues: {...meteringPoint}, values: metering});
 
   const formMethods = useForm<Metering>({defaultValues: metering, mode: "all"});
-  const {handleSubmit, formState: { dirtyFields}, reset, setValue} = formMethods
+  const {handleSubmit, formState: { dirtyFields, errors}, reset, setValue} = formMethods
 
   useEffect(() => {
     reset(metering, {keepDirtyValues: true})  // a store update must not overwrite unsaved input
   }, [metering])
 
+  // marks the saved values as saved; a field changed while the save ran keeps its input and stays unsaved
+  const markSaved = (meter: Metering) => {
+    const now = formMethods.getValues()
+    ;(Object.keys(meter) as (keyof Metering)[]).forEach(k => {
+      if (JSON.stringify(now[k]) === JSON.stringify(meter[k])) formMethods.resetField(k, {defaultValue: meter[k]})
+    })
+  }
+
+  // mark as saved only after the save worked; a failure keeps the input (error toast: store middleware)
+  const saveMeter = (participantId: string, meter: Metering) =>
+    dispatcher(updateMeteringPoint({tenant, participantId, meter}))
+      .unwrap()
+      .then(() => { markSaved(meter); return true })
+      .catch(() => false)
+
+  const savePartFact = (participantId: string, meter: string, name: string, value: any) =>
+    dispatcher(updateMeteringPointPartFact({tenant, participantId, meter, value: Number(value)}))
+      .unwrap()
+      .then(() => { formMethods.resetField(name as keyof Metering, {defaultValue: value}); return true })
+      .catch(() => false)
+
+  // the form saves on its own: the status shows whether all changes are saved and offers a retry (platform#228 step 4).
+  // "meter" stands for a save of the whole metering point, the participation factor saves on its own.
+  const saveStatus = useSaveStatus((name, value) => {
+    const participantId = participant?.id
+    if (!participantId || !metering) return Promise.resolve(false)
+    return name === "meter" ? saveMeter(participantId, value) : savePartFact(participantId, metering.meteringPoint, name, value)
+  })
+
+  // an invalid field the user changed is not saved: the status says so, and switching the member or leaving the page asks
+  const invalid = hasErrorOnChangedField(errors, dirtyFields)
+  const unsaved = hasUnsaved(saveStatus, invalid)
+  useReportUnsaved("details", unsaved)
+
   const onSubmit = (meter: Metering) => {
-    if (Object.keys(dirtyFields).length > 0) {
-      const participantId = participant?.id;
-      if (participantId) {
-        // mark as saved only after the save worked; a failure keeps the input (error toast: store middleware)
-        dispatcher(updateMeteringPoint({tenant, participantId, meter}))
-          .unwrap()
-          .then(() => reset(meter))
-          .catch(() => {})
-      }
+    if (Object.keys(dirtyFields).length > 0 && participant?.id) {
+      saveStatus.save("meter", meter)
     }
   }
 
@@ -73,14 +103,9 @@ const MeterFormComponent: FC<MeterFromComponentProps> = ({meteringPoint}) => {
     }
 
     // setValue(name as keyof Metering, value, {shouldDirty: true, shouldValidate: true})
-    const participantId = participant?.id;
-    if (participantId && metering) {
-      const meter = metering.meteringPoint
+    if (participant?.id && metering) {
       // reset({[name]: value}) replaced all form values with this one field, also after a failed save
-      await dispatcher(updateMeteringPointPartFact({tenant, participantId, meter, value: _factValue}))
-        .unwrap()
-        .then(() => formMethods.resetField(name as keyof Metering, {defaultValue: value}))
-        .catch(() => {})
+      await saveStatus.save(name, value)
     }
   }
 
@@ -95,9 +120,11 @@ const MeterFormComponent: FC<MeterFromComponentProps> = ({meteringPoint}) => {
   return (
     // <form onBlur={handleSubmit((data) => onSubmit(data))}>
       <EegPaneTemplate>
+        <SaveStatus status={saveStatus} invalid={invalid}/>
+        <UnsavedChangesGuard dirty={unsaved}/>
         <FormProvider {...formMethods} >
           <MeterFormElement rates={rates} meterReadOnly={true} onChange={onChange} onPartChange={onChangePartFact}/>
-          <MeterAddressFormElement onChange={onChange} isOnline={isOnline} showActivationMode={true}/>
+          <MeterAddressFormElement onChange={onChange} isOnline={isOnline}/>
         </FormProvider>
       </EegPaneTemplate>
     // </form>

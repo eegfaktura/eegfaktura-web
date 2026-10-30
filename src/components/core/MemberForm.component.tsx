@@ -23,6 +23,9 @@ import {isValidEmailList} from "../../util/EmailAddress.util";
 import {isDirectDebit} from "../../util/MandateReference.util";
 import JoiningFeeMember from "./JoiningFeeMember.component";
 import {hasJoiningFee} from "../../util/JoiningFee.util";
+import SaveStatus, {hasErrorOnChangedField, hasUnsaved, useSaveStatus} from "./SaveStatus.component";
+import UnsavedChangesGuard from "./UnsavedChangesGuard.component";
+import {useReportUnsaved} from "../../store/hook/ParticipantProvider";
 
 interface MemberFormComponentProps {
   participant: EegParticipant
@@ -47,7 +50,7 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
   const formMethods = useForm({
     defaultValues: participant, mode: "all"})
 
-  const { setValue, control, watch, reset, formState: {errors} } = formMethods;
+  const { setValue, control, watch, reset, formState: {errors, dirtyFields} } = formMethods;
 
   const isChangeable = () => {
     if (changeable === undefined) {
@@ -82,8 +85,22 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
   const sepaMode = watch ? watch("accountInfo.sepaDirectDebit") : "NONE"
   const tariffId = watch("tariffId")
 
-  const onUpdateBaseData = (name: string, value: any) => {
+  // every field saves on its own: the status shows whether all changes are saved and offers a retry (platform#228 step 4).
+  // The business type has its own call; "joiningFee" carries an action of the joining fee status line.
+  const saveStatus = useSaveStatus((name, value) => {
+    if (name === "businessRole") {
+      return persistBusinessType({tenant: tenant!, participantId: participant.id, value: {path: 'businessRole', value}}).unwrap()
+    }
+    if (name === "joiningFee") return value()
     return onSubmitPartial(participant.id, {[name]: value})
+  })
+  // an invalid field the user changed is not saved: the status says so, and switching the member or leaving the page asks
+  const invalid = hasErrorOnChangedField(errors, dirtyFields)
+  const unsaved = hasUnsaved(saveStatus, invalid)
+  useReportUnsaved("details", unsaved)
+
+  const onUpdateBaseData = (name: string, value: any) => {
+    return saveStatus.save(name, value)
   }
 
   if (!participant) {
@@ -113,8 +130,7 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
                         askFor(t("alerts.changeBusinessType", { context: ''+selectedBusinessType }),
                           () => {
                             onChangeBusinessType(selectedBusinessType === 0 ? 1 : 0)
-                            persistBusinessType({tenant: tenant!, participantId: participant.id, value: {path: 'businessRole',
-                                value: selectedBusinessType === 0 ? "EEG_BUSINESS" : "EEG_PRIVATE"}})
+                            saveStatus.save("businessRole", selectedBusinessType === 0 ? "EEG_BUSINESS" : "EEG_PRIVATE")
                           });
                       }}>
                           <IonIcon slot="icon-only" icon={swapHorizontalSharp} size="small"></IonIcon>
@@ -123,6 +139,8 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
               </IonCol>}
         </IonRow>
       </IonGrid>
+      <SaveStatus status={saveStatus} invalid={invalid}/>
+      <UnsavedChangesGuard dirty={unsaved}/>
       {/*<form onBlur={handleSubmit(onSubmit)}>*/}
         <IonList>
           <IonListHeader>Kontakt</IonListHeader>
@@ -147,7 +165,8 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
           <SelectForm name={"tariffId"} label={t("participant_tariff")} control={control} options={getRatesOption()} onChangePartial={onUpdateBaseData}/>
           {tenant && isAdmin() && <JoiningFeeMember tenant={tenant} participantId={participant.id}
                                                     tariff={rates.find(r => r.id === tariffId)}
-                                                    feeInUse={rates.some(hasJoiningFee)}/>}
+                                                    feeInUse={rates.some(hasJoiningFee)}
+                                                    track={call => saveStatus.save("joiningFee", call)}/>}
           <InputForm name={"billingAddress.street"} label={t("street")} control={control} rules={{required: t("warnings.street_missing")}} type="text" error={errors.billingAddress?.street} onChangePartial={onUpdateBaseData}/>
           <InputForm name={"billingAddress.streetNumber"} label="Hausnummer" control={control} type="text" onChangePartial={onUpdateBaseData}/>
           <InputForm name={"billingAddress.zip"} label={t("zip")} control={control} type="text" onChangePartial={onUpdateBaseData}/>

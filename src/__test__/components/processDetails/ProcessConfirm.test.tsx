@@ -125,7 +125,7 @@ describe("Teilnahmefaktor ändern: window closes while the dialog is open", () =
 })
 
 describe("Zählpunkt anmelden", () => {
-  it("asks with meter, member and mode; cancel sends nothing, confirm sends the request unchanged", async () => {
+  it("asks with meter and member (online only); cancel sends nothing, confirm sends the request unchanged", async () => {
     render(<ProcessRegisterMeterComponent eeg={eeg} meters={[m1, m2]} participants={[participant]}
                                           edaProcess={process("Zählpunkt anmelden")}/>)
     type("meteringPoint", m2.meteringPoint)
@@ -137,7 +137,7 @@ describe("Zählpunkt anmelden", () => {
     await submit("Anfordern")
     await dismiss("confirm")
     expect(Api.eegService.registerMeteringPoint).toHaveBeenCalledWith("TE100200", "p1", m2.meteringPoint,
-      "CONSUMPTION", "ONLINE", undefined)
+      "CONSUMPTION")
   })
 })
 

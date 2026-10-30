@@ -49,6 +49,7 @@ import {formatDate} from "../../util/DateFormat.util";
 import {useDeleteParticipantMutation} from "../../store/participant/api";
 import {useConfirm} from "../core/useConfirm";
 import {processStateText} from "./meterStatusText";
+import {useLeaveUnsaved} from "../../store/hook/ParticipantProvider";
 
 type DynamicComponentKey = "memberForm" | "meterForm" | "documentForm" | "invoiceForm" | "participantDocumentForm"
 
@@ -99,7 +100,13 @@ const ParticipantDetailsPaneComponent: FC = () => {
   const activePeriod = useAppSelector(selectedPeriodSelector);
   const report = useAppSelector(meteringInterReportSelectorV2(selectedParticipant?.id, selectedMeter?.meteringPoint))
 
-  const [activeMenu, setActiveMenu] = useState<DynamicComponentKey>("meterForm")
+  const [activeMenu, setActiveMenuState] = useState<DynamicComponentKey>("meterForm")
+  // another tab replaces the member or metering point form: ask first while it holds failed or invalid changes
+  // (platform#228 step 4)
+  const leaveUnsaved = useLeaveUnsaved(["details"])
+  const setActiveMenu = (key: DynamicComponentKey) => {
+    if (key !== activeMenu) leaveUnsaved(() => setActiveMenuState(key))
+  }
 
   const {isAdmin} = useAccessGroups()
   // const [moveMeterModal] = useIonModal(MoveParticipantModel, {meter: selectedMeter, participants: participantsSelector1(store.getState())});
@@ -336,7 +343,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
                 <div style={{color: "black"}}>
                   <AllowParticipantDialog trigger="open-participant-allow-dialog"
                                           participant={selectedParticipant}
-                                          meters = {selectedParticipant.meters.map(m => {return {...m, activationCode: '', activationMode:'ONLINE', enabled: true}})}
+                                          meters = {selectedParticipant.meters}
                                           onDismiss={onWillDismiss}/>
                   <IonCard color="warning-light">
                     <IonItem lines="none" color="warning-light">

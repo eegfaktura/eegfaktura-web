@@ -1,4 +1,4 @@
-import React, {FC, useEffect, useState} from "react";
+import React, {FC, useEffect, useRef, useState} from "react";
 import {IonButton, useIonAlert, useIonToast} from "@ionic/react";
 import {EegTariff, JoiningFeeRecord, JoiningFeeState} from "../../models/eeg.model";
 import {Api} from "../../service";
@@ -20,6 +20,8 @@ interface JoiningFeeMemberProps {
   tariff?: EegTariff
   // some tariff of the community has a joining fee; otherwise nothing is shown and billing is not asked
   feeInUse: boolean
+  // runs an action through the member form's save status (platform#228 step 4): the call answers false when it failed
+  track?: (call: () => Promise<boolean>) => void
 }
 
 // today in local time: billing checks the payment date against Europe/Vienna, toISOString() would give the UTC date
@@ -34,7 +36,7 @@ const today = () => {
  * / remove a payment made outside eegfaktura. billing's joiningFeeState is loaded once per member and again after an
  * action; without an answer from billing nothing is shown.
  */
-const JoiningFeeMember: FC<JoiningFeeMemberProps> = ({tenant, participantId, tariff, feeInUse}) => {
+const JoiningFeeMember: FC<JoiningFeeMemberProps> = ({tenant, participantId, tariff, feeInUse, track}) => {
   const {t} = useLocale("common")
   const [alert] = useIonAlert()
   const [toast] = useIonToast()
@@ -43,6 +45,8 @@ const JoiningFeeMember: FC<JoiningFeeMemberProps> = ({tenant, participantId, tar
   const [loaded, setLoaded] = useState<{ key: string, ok: boolean, state?: JoiningFeeState }>()
   // one change at a time: a double click would send the record twice
   const [busy, setBusy] = useState(false)
+  // the same guard for a retry from the save status, which calls the attempt later
+  const running = useRef(false)
 
   useEffect(() => {
     if (!feeInUse || loaded?.key === key) return
@@ -61,21 +65,30 @@ const JoiningFeeMember: FC<JoiningFeeMemberProps> = ({tenant, participantId, tar
   const actions = joiningFeeActions(state, tariff)
 
   // billing's reason is not in its error body (Spring sends only the status phrase), so a German text per case
+  // A retry from the save status runs the attempt again, through the same guard. "already billed" is billing's final
+  // answer, not a failure: its message shows and nothing is left to retry.
   const run = (call: () => Promise<void>) => {
-    if (busy) return
-    setBusy(true)
-    call()
-      .catch(e => {
-        const conflict = e instanceof JoiningFeeAlreadyBilledError
-        toast({
-          message: conflict ? e.message : t("joiningFee.change_failed"),
-          duration: 5000, position: "bottom", color: conflict ? "warning" : "danger",
+    const attempt = (): Promise<boolean> => {
+      if (running.current) return Promise.resolve(false)
+      running.current = true
+      setBusy(true)
+      return call()
+        .then(() => true, e => {
+          const conflict = e instanceof JoiningFeeAlreadyBilledError
+          toast({
+            message: conflict ? e.message : t("joiningFee.change_failed"),
+            duration: 5000, position: "bottom", color: conflict ? "warning" : "danger",
+          })
+          return conflict
         })
-      })
-      .finally(() => {
-        setBusy(false)
-        setVersion(v => v + 1)
-      })
+        .finally(() => {
+          running.current = false
+          setBusy(false)
+          setVersion(v => v + 1)
+        })
+    }
+    if (running.current) return
+    track ? track(attempt) : attempt()
   }
 
   const save = (record: JoiningFeeRecord) => run(() => Api.eegService.saveJoiningFeeRecord(tenant, participantId, record))
