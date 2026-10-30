@@ -117,6 +117,25 @@ describe("countInactiveMeters", () => {
     ])).toBe(0)
   })
 
+  it("does not count a metering point that left one member and is being registered at another one", () => {
+    const registering = (processState: string) => ({
+      meters: [{meteringPoint: "AT01", direction: 'CONSUMPTION', status: 'INIT', processState}],
+    }) as unknown as EegParticipant
+    for (const state of ['NEW', 'INIT', 'PENDING', 'APPROVED']) {
+      expect(countInactiveMeters([
+        participant({meteringPoint: "AT01", direction: 'CONSUMPTION', activeSince: "2024-01-01", status: 'INACTIVE'}),
+        registering(state),
+      ])).toBe(0)
+    }
+  })
+
+  it("counts a metering point that left and whose new registration was rejected", () => {
+    expect(countInactiveMeters([
+      participant({meteringPoint: "AT01", direction: 'CONSUMPTION', activeSince: "2024-01-01", status: 'INACTIVE'}),
+      {meters: [{meteringPoint: "AT01", direction: 'CONSUMPTION', status: 'INIT', processState: 'REJECTED'}]} as unknown as EegParticipant,
+    ])).toBe(1)
+  })
+
   it("counts a metering point that left twice once", () => {
     expect(countInactiveMeters([
       participant({meteringPoint: "AT01", direction: 'CONSUMPTION', activeSince: "2024-01-01", status: 'INACTIVE'}),

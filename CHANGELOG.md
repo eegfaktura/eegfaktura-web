@@ -19,9 +19,9 @@ this changelog highlights the changes relevant for overview and operations.
   answer without data shows „Für diesen Zeitraum liegen keine Diagrammdaten vor.“ A late answer for a period that is no
   longer selected is ignored.
 - **Dashboard: inactive metering points are counted** (platform#228 step 2). „Übersicht EEG“ showed a fixed
-  „0 inaktive“ next to the metering points. It now counts the metering points whose current participation is inactive
-  (left or revoked), over all members and marked „(Stand heute)“ like the member counts; a metering point that moved to
-  another member and is active there is not counted. The „aktive“ count of the period is unchanged.
+  „0 inaktive“ next to the metering points. It now counts the metering points that have left (left or revoked) and are
+  neither active nor being registered at any member, over all members and marked „(Stand heute)“ like the member
+  counts; a metering point that moved to another member is not counted. The „aktive“ count of the period is unchanged.
 - **Member list: closing the search clears it** (platform#228 step 2). After closing the search bar the list kept
   filtering by the last search text, so members were missing without a visible reason. Reopening starts empty; text
   typed just before closing is not applied afterwards.

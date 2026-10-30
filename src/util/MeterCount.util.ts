@@ -14,18 +14,13 @@ const activeSince = (m: Metering) => {
   return isNaN(t) ? -Infinity : t
 }
 
-const currentParticipations = (participants: EegParticipant[]): Map<string, Metering> => {
+export const countMeters = (participants: EegParticipant[], tariffIds: string[]): MeterCount => {
   const current = new Map<string, Metering>()
-  participants.forEach(p => (p.meters ?? []).forEach(m => {
+  participants.forEach(p => p.meters.forEach(m => {
     const c = current.get(m.meteringPoint)
     const d = c ? entryRank(m) - entryRank(c) : 1
     if (d > 0 || (d === 0 && activeSince(m) > activeSince(c!))) current.set(m.meteringPoint, m)
   }))
-  return current
-}
-
-export const countMeters = (participants: EegParticipant[], tariffIds: string[]): MeterCount => {
-  const current = currentParticipations(participants)
 
   const r: MeterCount = {consumers: 0, producers: 0, tariffs: Object.fromEntries(tariffIds.map(id => [id, 0]))}
   current.forEach(m => {
@@ -37,11 +32,21 @@ export const countMeters = (participants: EegParticipant[], tariffIds: string[])
   return r
 }
 
+// a registration is running (the rule of memberActivity in MemberActivity.util)
+const REGISTERING: string[] = ['NEW', 'INIT', 'PENDING', 'APPROVED']
+const inUse = (m: Metering) => m.status === 'ACTIVE' || (m.status !== 'INACTIVE' && REGISTERING.includes(m.processState))
+
 // Inactive metering points for the dashboard (platform#228): over all members (state today, like the member counts),
-// each metering point once with its current participation as above, counted when that one is INACTIVE (left, revoked).
-// A metering point that left one member and is active with another one is not inactive.
+// each metering point number once: it has left (a participation with status INACTIVE: left, revoked) and is neither
+// active nor being registered at any member. A metering point that moved to another member is not inactive.
 export const countInactiveMeters = (participants: EegParticipant[]): number => {
+  const left = new Set<string>()
+  const used = new Set<string>()
+  participants.forEach(p => (p.meters ?? []).forEach(m => {
+    if (inUse(m)) used.add(m.meteringPoint)
+    else if (m.status === 'INACTIVE') left.add(m.meteringPoint)
+  }))
   let n = 0
-  currentParticipations(participants).forEach(m => { if (m.status === 'INACTIVE') n += 1 })
+  left.forEach(mp => { if (!used.has(mp)) n += 1 })
   return n
 }
