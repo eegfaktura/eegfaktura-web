@@ -31,3 +31,22 @@ export const countMeters = (participants: EegParticipant[], tariffIds: string[])
   })
   return r
 }
+
+// a registration is running (the rule of memberActivity in MemberActivity.util)
+const REGISTERING: string[] = ['NEW', 'INIT', 'PENDING', 'APPROVED']
+const inUse = (m: Metering) => m.status === 'ACTIVE' || (m.status !== 'INACTIVE' && REGISTERING.includes(m.processState))
+
+// Inactive metering points for the dashboard (platform#228): over all members (state today, like the member counts),
+// each metering point number once: it has left (a participation with status INACTIVE: left, revoked) and is neither
+// active nor being registered at any member. A metering point that moved to another member is not inactive.
+export const countInactiveMeters = (participants: EegParticipant[]): number => {
+  const left = new Set<string>()
+  const used = new Set<string>()
+  participants.forEach(p => (p.meters ?? []).forEach(m => {
+    if (inUse(m)) used.add(m.meteringPoint)
+    else if (m.status === 'INACTIVE') left.add(m.meteringPoint)
+  }))
+  let n = 0
+  left.forEach(mp => { if (!used.has(mp)) n += 1 })
+  return n
+}

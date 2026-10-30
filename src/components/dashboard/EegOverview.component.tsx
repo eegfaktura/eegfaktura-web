@@ -6,7 +6,7 @@ import {allParticipantsSelector} from "../../store/participant";
 import {selectedPeriodSelector} from "../../store/energy";
 import {periodDisplayString} from "../../util/Helper.util";
 import {countMemberActivity, countMemberFees} from "../../util/MemberActivity.util";
-import {countMeters} from "../../util/MeterCount.util";
+import {countInactiveMeters, countMeters} from "../../util/MeterCount.util";
 
 interface EegOverviewComponentProps {
   participants: EegParticipant[]
@@ -28,6 +28,8 @@ const EegOverviewComponent: FC<EegOverviewComponentProps> = ({participants, rate
   const members = useMemo(() => countMemberActivity(allParticipants), [allParticipants])
   // platform#223: membership fees of the active members, same basis as the member count above
   const memberFees = useMemo(() => countMemberFees(allParticipants), [allParticipants])
+  // platform#228: was a fixed „0 inaktive“; counted over all members like the member counts (state today)
+  const inactiveMeters = useMemo(() => countInactiveMeters(allParticipants), [allParticipants])
 
   // platform#211: each metering point once, with the tariff of its current participation
   const [consumerCount, producerCount, tariffUsage] = useMemo(() => {
@@ -148,7 +150,7 @@ const EegOverviewComponent: FC<EegOverviewComponentProps> = ({participants, rate
                     {consumerCount + producerCount} aktive
                   </div>
                   <div style={{display: "flex", flex: "1", padding: "0px 16px", gap: "10px", alignItems: "center"}}>
-                    0 inaktive
+                    {inactiveMeters} inaktive <span style={{fontSize: "12px"}}>(Stand heute)</span>
                   </div>
                 </div>
                 <div style={{

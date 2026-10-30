@@ -5,6 +5,7 @@ import {PieSeriesType} from "../../pages/Dashboard.page";
 import {EegTariff} from "../../models/eeg.model";
 import {selectedPeriodSelector} from "../../store/energy";
 import {getPreviousPeriod, periodDisplayString} from "../../util/Helper.util";
+import {formatKwh} from "../../util/Number.util";
 import {IonContent, IonIcon, IonPopover} from "@ionic/react";
 import {helpCircleOutline} from "ionicons/icons";
 import {Api} from "../../service";
@@ -70,7 +71,7 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
   }
 
   const renderKWH = (kwh:number): string => {
-    return `${kwh.toFixed(3)} kWh`
+    return formatKwh(kwh)
   }
 
   const getWidth = (basis: number, value: number): number => {
