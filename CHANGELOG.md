@@ -9,6 +9,8 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Fixed
+- **Member list: closing the search clears it** (platform#228 step 2). After closing the search bar the list kept
+  filtering by the last search text, so members were missing without a visible reason. Reopening starts empty.
 - **Member details: an empty company name shows „Firmenname fehlt!“** (pre-existing error found in platform#228 step 2).
   It showed the raw text key „company-name_missing“.
 - **Member and metering point forms: invalid input shows a message** (platform#228 step 2). A participation or
