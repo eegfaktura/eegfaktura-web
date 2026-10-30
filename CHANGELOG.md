@@ -14,6 +14,11 @@ this changelog highlights the changes relevant for overview and operations.
   wrote the form's value back into the field on every render; it now does so only when the value differs from what the
   field shows (after a reset or when another record is selected). All text fields of the app use this input; the
   tariff dialog showed it at once because it validates on every keystroke.
+- **Joining fee: the count of members who get the fee is asked a second time when the first call fails.** In prod one
+  save showed „konnte nicht ermittelt werden (Abrechnung nicht erreichbar)“ while billing answered every request with
+  200, so the call failed in the browser (cause unknown: network or token lookup). The tariff dialog, the member's
+  joining fee status and the master data export all use this call. The dialog and the export hint no longer claim that
+  billing is unreachable: the count, or the joining fee state, could not be determined *right now*.
 
 ## [1.18.0] – 2026-10-28
 
