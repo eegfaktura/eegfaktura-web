@@ -40,7 +40,9 @@ const DashboardLayoutComponent: FC<LoadSharingComponentProps> = ({consumed, prod
 
   useEffect(() => {
     let ignore = false   // a late answer for an earlier period or participant list sets nothing
-    if (tenant && activePeriod) {
+    // wait for the community: useTenant() is a new object on every render and has no ecId before the EEG is loaded,
+    // so the first request went to /eeg/v2/undefined/…
+    if (tenant.ecId && activePeriod) {
       setReportFailed(false)
       setReportLoaded(false)
       // dismissLoading(true)
@@ -59,7 +61,7 @@ const DashboardLayoutComponent: FC<LoadSharingComponentProps> = ({consumed, prod
       })
     }
     return () => { ignore = true }
-  }, [activePeriod, participants, attempt]);
+  }, [tenant.ecId, activePeriod, participants, attempt]);
 
   const energyDate = useMemo(() => periods, [periods])
 
@@ -94,7 +96,7 @@ const DashboardLayoutComponent: FC<LoadSharingComponentProps> = ({consumed, prod
             <EegOverviewComponent participants={participants} rateMap={rates} />
           </div>
           <div className="eeg-card-border" style={{margin: "10px"}}>
-            {showChart(combinedReport.intraday, <LoadSharingComponent activePeriod={activePeriod} report={combinedReport.loadcurve} tenant={tenant} energyDate={energyDate}
+            {showChart(combinedReport.loadcurve, <LoadSharingComponent activePeriod={activePeriod} report={combinedReport.loadcurve} tenant={tenant} energyDate={energyDate}
                                                                      dayRange={bounds}/>)}
           </div>
         </div>

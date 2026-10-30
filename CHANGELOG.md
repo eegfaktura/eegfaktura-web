@@ -9,6 +9,10 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Fixed
+- **Dashboard: the load curve card waits for the load curve, the first chart request waits for the community**
+  (pre-existing errors found in platform#228 step 2). The load curve card was shown as soon as the day curve data was
+  there. The chart data was requested before the community was loaded (to `/eeg/v2/undefined/…`) and not again once
+  it was.
 - **Dashboard: a failed chart load shows an error instead of an endless spinner** (platform#228 step 2). When the
   load and day curve data could not be loaded, or the answer held no data, both chart cards kept spinning. A failed
   load now shows „Die Diagrammdaten konnten nicht geladen werden.“ with „Erneut versuchen“, which loads them again; an

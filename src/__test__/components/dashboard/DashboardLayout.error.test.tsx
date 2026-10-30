@@ -71,6 +71,28 @@ describe("Dashboard charts: load error", () => {
     expect(document.querySelector("ion-spinner")).toBeNull()
   })
 
+  it("each card waits for its own report: a missing load curve shows „no data“ only there", async () => {
+    fetchCombined.mockResolvedValue([{reportName: "intraday", reportData: []}])
+    await show()
+    expect(screen.getAllByText(NO_DATA)).toHaveLength(1)
+    expect(screen.queryByText("Lastkurve")).toBeNull()
+    expect(screen.getByText("Tageskurve")).toBeTruthy()
+  })
+
+  it("waits for the community before asking for the charts", async () => {
+    fetchCombined.mockResolvedValue(both)
+    const noEeg = {...eegContext, eeg: undefined} as unknown as EegState
+    const r = renderWithProviders(<EegContext.Provider value={noEeg}>
+      <DashboardLayoutComponent participants={[]} consumed={series} produced={series} allocated={series} activePeriod={OCT}/>
+    </EegContext.Provider>)
+    await flush()
+    expect(fetchCombined).not.toHaveBeenCalled()
+    r.rerender(layout(OCT))
+    await flush()
+    expect(fetchCombined).toHaveBeenCalledTimes(1)
+    expect(fetchCombined.mock.calls[0][0].ecId).toBe("AT00999900000RC100100000000000001")
+  })
+
   it("a late failure for an earlier period changes nothing", async () => {
     let failOct!: (e: Error) => void
     fetchCombined.mockReturnValueOnce(new Promise((_, reject) => { failOct = reject }))
