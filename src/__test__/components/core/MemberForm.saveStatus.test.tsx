@@ -1,10 +1,23 @@
-import {describe, expect, it, vi} from "vitest";
+import {beforeEach, describe, expect, it, vi} from "vitest";
 import {act, fireEvent, screen} from "@testing-library/react";
 import React from "react";
+import {MemoryRouter} from "react-router";
+
+const alert = vi.fn()
+vi.mock("@ionic/react", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@ionic/react")>()),
+  useIonAlert: () => [alert],
+}))
+const persistBusinessType = vi.fn()
+vi.mock("../../../store/participant/api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../../store/participant/api")>()),
+  usePersistBusinessTypeMutation: () => [persistBusinessType],
+}))
 import {renderWithProviders} from "../../test-utils";
 import {EegParticipant} from "../../../models/members.model";
 import {EegContext, EegState} from "../../../store/hook/Eeg.provider";
 import MemberFormComponent from "../../../components/core/MemberForm.component";
+import {ParticipantContext} from "../../../store/hook/ParticipantProvider";
 import "../../../util/I18n";
 
 // The member details save every field on its own (on change). The form shows whether all changes are saved; a failed
@@ -17,14 +30,20 @@ const participant = {
   meters: [],
 } as unknown as EegParticipant
 
-const ctx = {tenant: "RC100100", isAdmin: () => false, isOwner: () => false, isUser: () => true} as unknown as EegState
+const ctx = (admin = false) =>
+  ({tenant: "RC100100", isAdmin: () => admin, isOwner: () => false, isUser: () => true} as unknown as EegState)
 
-const setup = (onSubmitPartial: (id: string, value: Record<string, any>) => Promise<unknown>) => {
+const setup = (onSubmitPartial: (id: string, value: Record<string, any>) => Promise<unknown>, admin = false) => {
+  const setUnsaved = vi.fn()
   const r = renderWithProviders(
-    <EegContext.Provider value={ctx}>
-      <MemberFormComponent participant={participant} rates={[]} formId="" onSubmit={vi.fn()}
-                           onSubmitPartial={onSubmitPartial} changeable={false}/>
-    </EegContext.Provider>)
+    <MemoryRouter>
+      <EegContext.Provider value={ctx(admin)}>
+        <ParticipantContext.Provider value={{setUnsaved} as any}>
+          <MemberFormComponent participant={participant} rates={[]} formId="" onSubmit={vi.fn()}
+                               onSubmitPartial={onSubmitPartial} changeable={false}/>
+        </ParticipantContext.Provider>
+      </EegContext.Provider>
+    </MemoryRouter>)
   const field = r.container.querySelector('ion-input[name="lastname"]') as any
   // typing, then leaving the field: Ionic fires ionInput while typing and ionChange when the value is committed
   const type = async (value: string) => {
@@ -32,10 +51,12 @@ const setup = (onSubmitPartial: (id: string, value: Record<string, any>) => Prom
     await act(async () => { fireEvent(field, new CustomEvent("ionInput", {detail: {value}})) })
     await act(async () => { fireEvent(field, new CustomEvent("ionChange", {detail: {value}})) })
   }
-  return {...r, field, type}
+  return {...r, field, type, setUnsaved}
 }
 
 describe("member details: save status for the auto-saving form (platform#228 step 4)", () => {
+  beforeEach(() => { alert.mockReset(); persistBusinessType.mockReset() })
+
   it("shows „Alle Änderungen gespeichert“ before and after a save", async () => {
     const save = vi.fn().mockResolvedValue(true)
     const {type} = setup(save)
@@ -70,5 +91,35 @@ describe("member details: save status for the auto-saving form (platform#228 ste
     const {type} = setup(vi.fn().mockRejectedValue(new Error("500")))
     await type("Neu")
     expect(screen.getByRole("status").textContent).toBe("Nicht gespeichert – erneut versuchen")
+  })
+
+  it("an invalid field is not saved: the status says so and the member list asks before switching (review PR #244)", async () => {
+    const save = vi.fn().mockResolvedValue(true)
+    const {type, setUnsaved} = setup(save)
+    await type("")
+    expect(save).not.toHaveBeenCalled()
+    expect(screen.getByRole("status").textContent).toBe("Nicht gespeichert – bitte die markierten Felder prüfen")
+    expect(setUnsaved).toHaveBeenLastCalledWith("details", true)
+  })
+
+  it("a failed save counts as unsaved for the member list (review PR #244)", async () => {
+    const {type, setUnsaved} = setup(vi.fn().mockResolvedValue(false))
+    await type("Neu")
+    expect(setUnsaved).toHaveBeenLastCalledWith("details", true)
+  })
+
+  it("a failed business type change shows „Nicht gespeichert“ and is retried (review PR #244)", async () => {
+    persistBusinessType.mockReturnValueOnce({unwrap: () => Promise.reject(new Error("500"))})
+      .mockReturnValueOnce({unwrap: () => Promise.resolve({})})
+    const {container} = setup(vi.fn().mockResolvedValue(true), true)
+    fireEvent.click(container.querySelector("ion-button[size=small]")!)
+    const ok = alert.mock.lastCall![1].find((b: any) => b.text === "Ok")
+    await act(async () => ok.handler())
+    expect(persistBusinessType).toHaveBeenCalledWith({tenant: "RC100100", participantId: "p1",
+      value: {path: "businessRole", value: "EEG_BUSINESS"}})
+    expect(screen.getByRole("status").textContent).toBe("Nicht gespeichert – erneut versuchen")
+    await act(async () => fireEvent.click(screen.getByText("erneut versuchen")))
+    expect(persistBusinessType).toHaveBeenCalledTimes(2)
+    expect(screen.getByRole("status").textContent).toBe("Alle Änderungen gespeichert")
   })
 })

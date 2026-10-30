@@ -1,4 +1,4 @@
-import React, {FC, useState} from "react";
+import React, {FC, useRef, useState} from "react";
 import {useLocale} from "../../store/hook/useLocale";
 
 // A field of an auto-saving form saves on its own: the answer of save is false or a rejection when it failed.
@@ -14,11 +14,17 @@ export interface SaveStatusState {
 
 // Tracks the saves of an auto-saving form for the save status (platform#228 step 4). The form keeps the user's input
 // on a failure; retry sends every failed change again. save returns the answer of the wrapped save unchanged.
+// Only the answer to the latest save of a field counts: a late failure of an older save does not mark a newer, saved
+// value as failed, and a late success does not clear the failure of a newer one.
 export const useSaveStatus = (fieldSave: FieldSave): SaveStatusState => {
   const [running, setRunning] = useState(0)
   const [failed, setFailed] = useState<Record<string, any>>({})
+  const sequence = useRef(0)
+  const latest = useRef<Record<string, number>>({})
 
   const save = async (name: string, value: any) => {
+    const seq = ++sequence.current
+    latest.current[name] = seq
     setRunning(n => n + 1)
     let result: unknown
     let ok: boolean
@@ -29,12 +35,14 @@ export const useSaveStatus = (fieldSave: FieldSave): SaveStatusState => {
       result = false
       ok = false
     }
-    setFailed(prev => {
-      const next = {...prev}
-      if (ok) delete next[name]
-      else next[name] = value
-      return next
-    })
+    if (latest.current[name] === seq) {
+      setFailed(prev => {
+        const next = {...prev}
+        if (ok) delete next[name]
+        else next[name] = value
+        return next
+      })
+    }
     setRunning(n => n - 1)
     return result
   }
@@ -44,7 +52,11 @@ export const useSaveStatus = (fieldSave: FieldSave): SaveStatusState => {
   return {saving: running > 0, failed, save, retry}
 }
 
-const SaveStatus: FC<{ status: SaveStatusState }> = ({status}) => {
+// unsaved: changes failed to save, or fields are invalid (an invalid value is not sent at all)
+export const hasUnsaved = (status: SaveStatusState, invalid: boolean) => invalid || Object.keys(status.failed).length > 0
+
+// invalid: the form has invalid fields; their input is not saved
+const SaveStatus: FC<{ status: SaveStatusState, invalid?: boolean }> = ({status, invalid}) => {
   const {t} = useLocale("common")
   const style = {padding: "4px 16px", fontSize: "12px"}
   if (status.saving) {
@@ -60,6 +72,9 @@ const SaveStatus: FC<{ status: SaveStatusState }> = ({status}) => {
         </button>
       </div>
     )
+  }
+  if (invalid) {
+    return <div role="status" style={{...style, color: "var(--ion-color-danger)"}}>{t("saveStatus.invalid")}</div>
   }
   return <div role="status" style={{...style, color: "var(--ion-color-medium)"}}>{t("saveStatus.saved")}</div>
 }

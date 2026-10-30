@@ -15,14 +15,20 @@ this changelog highlights the changes relevant for overview and operations.
   nicht gespeichert. Verwerfen und fortfahren?“. Leaving the page through the menu, browser back, reload or closing the
   tab asks as well (the existing `UnsavedChangesGuard`, as in the mail templates). Switching to the billing view or to
   another community while „Zählpunkt hinzufügen“ holds input asks too (declined, the switch and the community select
-  stay). In the registration, „Abbrechen“ and opening another metering point ask while the metering point form holds
-  input, and that input now also counts when leaving the page.
+  stay). The community switch also asks while the tariff editor holds unsaved changes. In the registration,
+  „Abbrechen“ and opening another metering point ask while the metering point form holds input (the card of the open
+  metering point keeps it), and that input now also counts when leaving the page. The energy direction and „Offline-
+  Registrierung“ count as input.
 - **Member details show whether every change is saved** (platform#228 step 4). The member details save each field on
   its own; a status above the form now says „Alle Änderungen gespeichert“, „Wird gespeichert …“ or „Nicht gespeichert –
   erneut versuchen“. A failed save keeps the typed value in the field, and „erneut versuchen“ sends every failed
   change again.
   The metering point details (they save on their own as well, the participation factor separately) show the same
-  status.
+  status, and so do the business type switch and the joining fee actions of the member. Invalid fields (e.g. an empty
+  required field) are not saved; the status then says „Nicht gespeichert – bitte die markierten Felder prüfen“.
+  Invalid or failed changes count as unsaved: selecting another member or metering point, the billing view, another
+  community and leaving the page ask first. Only the answer to the latest save of a field counts, and input typed
+  while a metering point save runs stays.
 
 ### Changed
 - **Tariff names may contain umlauts and ß** (platform#228 step 4). The tariff editor rejected „ä ö ü Ä Ö Ü ß“. Checked

@@ -20,6 +20,8 @@ interface JoiningFeeMemberProps {
   tariff?: EegTariff
   // some tariff of the community has a joining fee; otherwise nothing is shown and billing is not asked
   feeInUse: boolean
+  // runs an action through the member form's save status (platform#228 step 4): the call answers false when it failed
+  track?: (call: () => Promise<boolean>) => void
 }
 
 // today in local time: billing checks the payment date against Europe/Vienna, toISOString() would give the UTC date
@@ -34,7 +36,7 @@ const today = () => {
  * / remove a payment made outside eegfaktura. billing's joiningFeeState is loaded once per member and again after an
  * action; without an answer from billing nothing is shown.
  */
-const JoiningFeeMember: FC<JoiningFeeMemberProps> = ({tenant, participantId, tariff, feeInUse}) => {
+const JoiningFeeMember: FC<JoiningFeeMemberProps> = ({tenant, participantId, tariff, feeInUse, track}) => {
   const {t} = useLocale("common")
   const [alert] = useIonAlert()
   const [toast] = useIonToast()
@@ -61,21 +63,24 @@ const JoiningFeeMember: FC<JoiningFeeMemberProps> = ({tenant, participantId, tar
   const actions = joiningFeeActions(state, tariff)
 
   // billing's reason is not in its error body (Spring sends only the status phrase), so a German text per case
+  // a retry from the save status runs the attempt again
   const run = (call: () => Promise<void>) => {
     if (busy) return
     setBusy(true)
-    call()
-      .catch(e => {
+    const attempt = () => call()
+      .then(() => true, e => {
         const conflict = e instanceof JoiningFeeAlreadyBilledError
         toast({
           message: conflict ? e.message : t("joiningFee.change_failed"),
           duration: 5000, position: "bottom", color: conflict ? "warning" : "danger",
         })
+        return false
       })
       .finally(() => {
         setBusy(false)
         setVersion(v => v + 1)
       })
+    track ? track(attempt) : attempt()
   }
 
   const save = (record: JoiningFeeRecord) => run(() => Api.eegService.saveJoiningFeeRecord(tenant, participantId, record))

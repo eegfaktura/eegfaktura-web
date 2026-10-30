@@ -142,4 +142,23 @@ describe("JoiningFeeMember", () => {
     expect(screen.getByText("Beitrittsgebühr: kein Tarif mit Beitrittsgebühr")).toBeInTheDocument()
     expect(Api.eegService.fetchJoiningFeeState).toHaveBeenCalledTimes(1)
   })
+
+  it("runs an action through the member form's save status: a failure answers false and still shows its message (platform#228 step 4)", async () => {
+    vi.mocked(Api.eegService.fetchJoiningFeeState).mockResolvedValue([entry()])
+    vi.mocked(Api.eegService.saveJoiningFeeRecord).mockRejectedValueOnce(new Error("500"))
+    const track = vi.fn()
+    render(<JoiningFeeMember tenant="TE100200" participantId="p1" tariff={tariff(50)} feeInUse={true} track={track}/>)
+    await flush()
+    fireEvent.click(button("Beitrittsgebühr nachverrechnen")!)
+    await confirmAlert()
+    expect(track).toHaveBeenCalledTimes(1)
+    let answer: boolean | undefined
+    await act(async () => { answer = await track.mock.lastCall![0]() })
+    expect(answer).toBe(false)
+    expect(toast.mock.lastCall![0].message).toBe("Die Beitrittsgebühr konnte nicht geändert werden. Bitte die Eingabe prüfen oder später erneut versuchen.")
+    // the retry runs the same action again
+    await act(async () => { answer = await track.mock.lastCall![0]() })
+    expect(answer).toBe(true)
+    expect(Api.eegService.saveJoiningFeeRecord).toHaveBeenCalledTimes(2)
+  })
 })

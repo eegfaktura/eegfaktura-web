@@ -3,7 +3,8 @@
     "saved": "Alle Änderungen gespeichert",
     "saving": "Wird gespeichert …",
     "failed": "Nicht gespeichert",
-    "retry": "erneut versuchen"
+    "retry": "erneut versuchen",
+    "invalid": "Nicht gespeichert – bitte die markierten Felder prüfen"
   },
   "rateGroupMember": "Mitgliedstarife",
   "rateGroupProducer": "Erzeugertarife",

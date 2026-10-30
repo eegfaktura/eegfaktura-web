@@ -1,6 +1,7 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {act, fireEvent, screen} from "@testing-library/react";
 import React from "react";
+import {MemoryRouter} from "react-router";
 import {useFormContext} from "react-hook-form";
 import {renderWithProviders} from "../../test-utils";
 import {Metering} from "../../../models/meteringpoint.model";
@@ -13,8 +14,10 @@ vi.mock("../../../store/hook/Eeg.provider", () => ({useTenant: () => ({tenant: "
 // the meter fields are not part of this test: they hand a change to the form as the real fields do
 vi.mock("../../../components/core/MeterForm.element", () => ({
   default: ({onChange, onPartChange}: any) => {
-    const {setValue} = useFormContext<Metering>()
+    const {setValue, register} = useFormContext<Metering>()
     return <>
+      <button onClick={() => onChange([{name: "street", value: "Neugasse"}])}>Straße ändern</button>
+      <input data-testid="zip" {...register("zip")}/>
       <button onClick={() => onChange([{name: "equipmentName", value: "Wärmepumpe"}])}>Anlage ändern</button>
       <button onClick={(e) => {
         setValue("partFact", "50" as any, {shouldDirty: true})
@@ -31,11 +34,11 @@ import MeterFormComponent from "../../../components/core/MeterForm.component";
 // retry after a failed save (platform#228 step 4).
 
 const meter = {meteringPoint: "AT0030000000000000000000000000001", direction: "CONSUMPTION", status: "ACTIVE",
-  processState: "ACTIVE", partFact: 100, equipmentName: ""} as unknown as Metering
+  processState: "ACTIVE", partFact: 100, equipmentName: "", street: "Altgasse", zip: "1010"} as unknown as Metering
 const participant = {id: "p1", firstname: "Anna", lastname: "Muster", meters: [meter]} as unknown as EegParticipant
 
 const setup = () => {
-  const r = renderWithProviders(<MeterFormComponent meteringPoint={meter}/>)
+  const r = renderWithProviders(<MemoryRouter><MeterFormComponent meteringPoint={meter}/></MemoryRouter>)
   act(() => {
     r.store.dispatch(fetchParticipantModel.fulfilled({participants: [participant]}, "req", {tenant: "RC100100"}))
     r.store.dispatch(selectParticipant("p1"))
@@ -82,5 +85,15 @@ describe("metering point details: save status (platform#228 step 4)", () => {
     expect(Api.eegService.updateMeteringPointPartFact).toHaveBeenCalledTimes(2)
     expect(Api.eegService.updateMeteringPointPartFact).toHaveBeenLastCalledWith("RC100100", "p1", meter.meteringPoint, 50)
     expect(status()).toBe("Alle Änderungen gespeichert")
+  })
+
+  it("input typed while a save runs stays after the save (review PR #244)", async () => {
+    let finish: (m: Metering) => void = () => {}
+    vi.mocked(Api.eegService.updateMeteringPoint).mockImplementationOnce(() => new Promise<Metering>(res => { finish = res }))
+    setup()
+    await act(async () => fireEvent.click(screen.getByText("Straße ändern")))
+    await act(async () => fireEvent.change(screen.getByTestId("zip"), {target: {value: "9999"}}))
+    await act(async () => finish({...meter, street: "Neugasse"} as Metering))
+    expect((screen.getByTestId("zip") as HTMLInputElement).value).toBe("9999")
   })
 })
