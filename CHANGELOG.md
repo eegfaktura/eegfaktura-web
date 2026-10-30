@@ -9,6 +9,8 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Fixed
+- **Member details: an empty company name shows „Firmenname fehlt!“** (pre-existing error found in platform#228 step 2).
+  It showed the raw text key „company-name_missing“.
 - **Member and metering point forms: invalid input shows a message** (platform#228 step 2). A participation or
   allocation factor outside 0–100 was rejected with an empty message; it now reads „Teilnahmefaktor (Verteilungsfaktor)
   muss größer als 0 und höchstens 100 sein!“. An empty street in the member details showed no red message, because the

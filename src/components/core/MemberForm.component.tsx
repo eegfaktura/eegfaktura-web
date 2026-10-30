@@ -141,7 +141,7 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
             ) :
             (
               <InputForm name={"firstname"} label={t("company-name")}  control={control}
-                         rules={{required: t("company-name_missing")}} type="text" error={errors.firstname} onChangePartial={onUpdateBaseData}/>
+                         rules={{required: t("warnings.company-name_missing")}} type="text" error={errors.firstname} onChangePartial={onUpdateBaseData}/>
             )
           }
           <SelectForm name={"tariffId"} label={t("participant_tariff")} control={control} options={getRatesOption()} onChangePartial={onUpdateBaseData}/>

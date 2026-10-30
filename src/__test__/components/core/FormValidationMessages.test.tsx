@@ -84,4 +84,17 @@ describe("MemberForm: empty street shows a message", () => {
     })
     expect(errorLines(container)).toEqual(["Straße fehlt!"])
   })
+
+  // pre-existing: the key lacked "warnings.", so the raw key „company-name_missing“ was shown
+  it("clearing the company name shows „Firmenname fehlt!“", async () => {
+    const company = {...participant, businessRole: "EEG_BUSINESS", lastname: undefined} as unknown as EegParticipant
+    const {container} = render(<MemberFormComponent participant={company} rates={[]} formId="f" onSubmit={() => {}}
+                                                    onSubmitPartial={() => {}}/>, {wrapper: Wrapper})
+    const name = container.querySelector('ion-input[name="firstname"]') as any
+    await act(async () => {
+      name.value = ""
+      fireEvent(name, new CustomEvent("ionInput", {detail: {value: ""}}))
+    })
+    expect(errorLines(container)).toEqual(["Firmenname fehlt!"])
+  })
 })
