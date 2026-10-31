@@ -14,9 +14,9 @@ export class ErrorResponse {
 export const withReason = (text: string, reason: string | undefined) =>
   reason && reason !== "Rejected" ? `${text} (${reason})` : text
 
-// backend answers 409 with code 1109 when a metering point of the member took part or is being registered
+// backend answers 409 with code 1109 when a metering point of the member is or was registered at the grid operator
 export const deleteParticipantErrTxt = (error: any): string => error?.data?.error?.code === 1109
-  ? "Das Mitglied hat Zählpunkte, die schon aktiv waren oder gerade beim Netzbetreiber angemeldet werden, und kann nicht gelöscht werden."
+  ? "Das Mitglied hat Zählpunkte, die beim Netzbetreiber angemeldet sind oder waren, und kann nicht gelöscht werden."
   : "Das Mitglied konnte nicht gelöscht werden."
 
 export const determineErrTxt = (error: any): string => {

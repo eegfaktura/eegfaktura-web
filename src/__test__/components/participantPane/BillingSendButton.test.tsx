@@ -48,9 +48,9 @@ describe("sendMailState (platform#228 step 3)", () => {
   })
 
   it("offers a run again when no mail went out", () => {
-    expect(sendMailState(run({mailStatus: "FAILED"}), 43)).toEqual({disabled: false, label: "Erneut senden",
-      hint: "Beim letzten Versand ging keine E-Mail hinaus.",
-      message: "Jetzt 43 Abrechnungsdokumente erneut per E-Mail an die Mitglieder versenden?"})
+    const hint = "Der Mailserver hat beim letzten Versand keine E-Mail bestätigt. Einzelne können trotzdem angekommen sein."
+    expect(sendMailState(run({mailStatus: "FAILED"}), 43)).toEqual({disabled: false, label: "Erneut senden", hint,
+      message: `${hint} Jetzt 43 Abrechnungsdokumente erneut per E-Mail an die Mitglieder versenden?`})
   })
 
   it("is disabled while the send runs", () => {
@@ -95,6 +95,15 @@ describe("BillingSendButton", () => {
     expect(Api.eegService.billingRunSendmail).toHaveBeenCalledWith("TE100200", "run-1", undefined)
     expect(Api.eegService.fetchBillingRunById).toHaveBeenCalledWith("TE100200", "run-1", undefined)
     expect(toaster).not.toHaveBeenCalled()
+  })
+
+  it("a send that ends FAILED says so, billing answers 200 for it", async () => {
+    Api.eegService.fetchBillingRunById = vi.fn().mockResolvedValue(run({mailStatus: "FAILED"}))
+    click()
+    await dismiss("confirm")
+    await flush()
+    expect(toaster.mock.lastCall![0].color).toBe("danger")
+    expect(toaster.mock.lastCall![0].message).toContain("keine E-Mail bestätigt")
   })
 
   it("a double click opens one dialog and sends once", async () => {
