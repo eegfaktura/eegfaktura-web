@@ -76,8 +76,9 @@ this changelog highlights the changes relevant for overview and operations.
   point details, the online/offline switch with „Aktivierungs-Code“ per metering point in „Zulassen“, and the
   checkbox „Offline-Registrierung“ in the process „Zählpunkt aktivieren“. The requests always send
   `activationMode: "ONLINE"` and no activation code („Zulassen“ sends `activationCode` empty, as before, also for a
-  metering point that still holds a code from an earlier offline registration). The backend is unchanged: answers to
-  offline registrations made earlier are still processed, and those metering points keep their state. A metering point
+  metering point that still holds a code from an earlier offline registration). Backend 1.14.0 no longer sends offline
+  registrations and refuses `OFFLINE` for online communities (**roll out this release first**). It still processes answers
+  to offline registrations made earlier, and those metering points keep their state. A metering point
   whose earlier offline registration is still pending stays in the list of „Zählpunkt aktivieren“ (as every metering
   point that is not active), so it can be registered online now; this is deliberate, an offline registration can no
   longer be completed from the GUI. Admins of a community that is not online still set „Noch nicht registriert /
@@ -153,6 +154,7 @@ this changelog highlights the changes relevant for overview and operations.
   its weekly run when SheetJS has a newer release. OSV-Scanner keeps reporting xlsx 0.20.3 with both GHSA IDs (the
   advisories have no fixed version because the fix is not on npm); Trivy does not.
   Reading the billing export for the SEPA files gives the same values as before (new test with dates and amounts).
+- `vite` 6.4.4 → 6.4.5 (build tool, Dependabot).
 
 ## [1.18.0] – 2026-10-28
 
