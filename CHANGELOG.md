@@ -8,6 +8,15 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **A billing run whose mails all failed can be sent again.** The send button showed „Wird versendet …“ for good; it now
+  shows „Erneut senden“ with the hint that the mail server confirmed no mail and that single mails can have arrived anyway. A
+  send that ends this way says so in a toast. **Rollout:** billing with the matching change first, an older
+  billing refuses the send with an error message.
+- **A refused member delete says why** (backend 261005-ca10). Backend refuses the delete of a member with a metering
+  point that took part (409, code 1109); the toast now names the reason. Without that backend the delete goes through as
+  before.
+
 ## [1.19.0] – 2026-10-31
 
 ### Added

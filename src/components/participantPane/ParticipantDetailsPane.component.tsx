@@ -47,6 +47,7 @@ import {useMoveMeteringPointHook} from "../../store/hook/MoveMeteringPoint.hook"
 import moment from "moment";
 import {formatDate} from "../../util/DateFormat.util";
 import {useDeleteParticipantMutation} from "../../store/participant/api";
+import {deleteParticipantErrTxt} from "../../service/error.text";
 import {useConfirm} from "../core/useConfirm";
 import {processStateText} from "./meterStatusText";
 import {useLeaveUnsaved} from "../../store/hook/ParticipantProvider";
@@ -250,7 +251,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
       `Soll ${sp.firstname} ${sp.lastname} mit allen Zählpunkten gelöscht werden? Das lässt sich nicht rückgängig machen.`,
       "Löschen", () => deleteParticipant({tenant: tenant.tenant, participantId: sp.id})
         .unwrap()
-        .catch(() => failedToast("Das Mitglied konnte nicht gelöscht werden.")))
+        .catch((e) => failedToast(deleteParticipantErrTxt(e))))
 
   const archive = (sp: EegParticipant) => {
     participantAlert({
