@@ -73,6 +73,29 @@ loaded are not captured. Set the script execution attribute of the Dynatrace app
 - **Keycloak** — OIDC authentication
 - **eegfaktura-backend** (`/api`), **energystore** (`/energystore`),
   **billing** (`/cash`), **filestore** (`/filestore`)
+- **SheetJS (`xlsx`) from the vendor CDN, not npm** — SheetJS stopped publishing to npm after 0.18.5, which has known
+  vulnerabilities. `package.json` points to `https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz` (v0.20.3, tagged
+  2024-07-18, Apache-2.0); `pnpm-lock.yaml` pins it with a sha512 `integrity`, which pnpm checks on every install.
+  CI and local installs need to reach `cdn.sheetjs.com`.
+  - **Integrity:** pnpm 9 writes only the tarball URL for such a dependency; the `integrity` in the xlsx `resolution` of
+    `pnpm-lock.yaml` was added by hand. A lockfile-only update (`pnpm add … --lockfile-only`, a Dependabot-style
+    lockfile refresh) can drop it silently. The workflow `sheetjs-check.yml` (job „SheetJS pinned with integrity“,
+    every pull request and push) fails when `package.json` or the lockfile no longer pin the expected URL and sha512.
+  - **Updates:** Dependabot neither updates this dependency nor reports advisories for it. The same workflow compares
+    with `https://cdn.sheetjs.com/xlsx-latest/package/package.json` every Monday (and on demand) and fails with a job
+    summary when SheetJS has released something newer.
+  - **Scanners:** GitHub's advisories GHSA-4r6h-8v6p-xvw6 (`< 0.19.3`) and GHSA-5pgg-2g8v-p4x9 (`< 0.20.2`) carry no
+    fixed version on purpose, because the fixed releases are not on npm (github/advisory-database
+    [#6144](https://github.com/github/advisory-database/pull/6144), [#8689](https://github.com/github/advisory-database/pull/8689),
+    [#8690](https://github.com/github/advisory-database/pull/8690)). OSV copies these records, so OSV-Scanner keeps
+    reporting xlsx 0.20.3 with both IDs. Trivy reads the version ranges and reports nothing. The security-scan gate is
+    off today (`SCAN_FAIL_ON: none`); once it is on, it needs a central exception in the synced `security-scan.yml`
+    (workspace), for web and admin.
+  - **To update:** check the new tag and its CHANGELOG on git.sheetjs.com, change the URL in `package.json`, run
+    `pnpm install`, then add the `integrity` to the tarball `resolution` in `pnpm-lock.yaml` by hand:
+    `sha512-` + base64 of the SHA-512 of the downloaded `.tgz` (`openssl dgst -sha512 -binary x.tgz | base64 -w0`).
+    Change `URL` and `INTEGRITY` in `.github/scripts/sheetjs-check.sh` to match. Run the SEPA tests
+    (`src/__test__/service/sepa.*`).
 
 ## License
 
