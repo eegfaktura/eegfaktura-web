@@ -15,23 +15,28 @@ export const documentCount = (totals: BillingTotals | undefined) =>
   totals ? totals.invoices.count + totals.creditNotes.count + totals.infos.count : undefined
 
 // platform#228 step 3: the billing mails of a run can be sent once. billing records the send in mailStatus
-// ("IN PROGRESS", then "SENT") and refuses every further send of the run (since bc52c5b), so the button is disabled
-// then and says why. Before the send it asks and names the number of mails (one per document; the count comes from the
+// ("IN PROGRESS", then "SENT") and refuses a further send of the run (since bc52c5b), so the button is disabled
+// then and says why. Only "FAILED" (no mail went out) can be sent again. Before the send it asks and names the number of mails (one per document; the count comes from the
 // documents loaded for the totals, undefined while they load).
+const mailCount = (documentCount: number | undefined) => documentCount === undefined
+  ? "alle Abrechnungsdokumente"
+  : documentCount === 1 ? "1 Abrechnungsdokument" : `${count(documentCount)} Abrechnungsdokumente`
+
 export const sendMailState = (run: BillingRun, documentCount: number | undefined) => {
   if (run.mailStatus === "SENT") {
     return {disabled: true, label: run.mailStatusDateTime
         ? `Bereits versendet (${reformatDateTimeStamp(run.mailStatusDateTime)})` : "Bereits versendet"}
+  }
+  if (run.mailStatus === "FAILED") {
+    return {disabled: false, label: "Erneut senden", hint: "Beim letzten Versand ging keine E-Mail hinaus.",
+      message: `Jetzt ${mailCount(documentCount)} erneut per E-Mail an die Mitglieder versenden?`}
   }
   if (run.mailStatus) {
     // billing sets it before the first mail and "SENT" after the last; it stays when billing stops in between
     return {disabled: true, label: "Wird versendet …",
       hint: "Der Versand läuft. Bleibt dieser Stand bestehen, bitte den Support kontaktieren."}
   }
-  const mails = documentCount === undefined
-    ? "alle Abrechnungsdokumente"
-    : documentCount === 1 ? "1 Abrechnungsdokument" : `${count(documentCount)} Abrechnungsdokumente`
-  return {disabled: false, label: "SENDEN", message: `Jetzt ${mails} per E-Mail an die Mitglieder versenden?`}
+  return {disabled: false, label: "SENDEN", message: `Jetzt ${mailCount(documentCount)} per E-Mail an die Mitglieder versenden?`}
 }
 
 interface BillingSendButtonProps {

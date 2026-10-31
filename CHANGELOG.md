@@ -8,6 +8,11 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **A billing run whose mails all failed can be sent again.** The send button showed „Wird versendet …“ for good; it now
+  shows „Erneut senden“ with the hint that no mail went out. **Rollout:** billing with the matching change first, an older
+  billing refuses the send with an error message.
+
 ## [1.19.0] – 2026-10-31
 
 ### Added

@@ -47,6 +47,12 @@ describe("sendMailState (platform#228 step 3)", () => {
     expect(sendMailState(run({mailStatus: "SENT"}), 43).label).toBe("Bereits versendet")
   })
 
+  it("offers a run again when no mail went out", () => {
+    expect(sendMailState(run({mailStatus: "FAILED"}), 43)).toEqual({disabled: false, label: "Erneut senden",
+      hint: "Beim letzten Versand ging keine E-Mail hinaus.",
+      message: "Jetzt 43 Abrechnungsdokumente erneut per E-Mail an die Mitglieder versenden?"})
+  })
+
   it("is disabled while the send runs", () => {
     expect(sendMailState(run({mailStatus: "IN PROGRESS"}), 43)).toEqual({disabled: true, label: "Wird versendet …",
       hint: "Der Versand läuft. Bleibt dieser Stand bestehen, bitte den Support kontaktieren."})
