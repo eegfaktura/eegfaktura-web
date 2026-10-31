@@ -86,7 +86,7 @@ this changelog highlights the changes relevant for overview and operations.
 ### Fixed
 - **A mail the mail server did not confirm in time is no longer shown as failed** (261030-mm7, with backend#132).
   A notification entry with code `W_MAIL_UNCONFIRMED` now reads „Mailversand nicht bestätigt: <Zählpunkt> —
-  Zeitüberschreitung – die Mail wurde vermutlich trotzdem verschickt. Vor einem erneuten Versand bitte beim Mitglied
+  Zeitüberschreitung – die Mail wurde vermutlich trotzdem verschickt. Vor einem erneuten Versand bitte beim Empfänger
   nachfragen.“ instead of „Mailversand fehlgeschlagen: …“. Other mail errors and the template notices are shown as
   before.
 - **„Zulassen“: an unticked metering point stays unticked** (261030-mm3). The dialog now keeps the list of metering

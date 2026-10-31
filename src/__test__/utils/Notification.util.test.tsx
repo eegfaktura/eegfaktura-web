@@ -32,8 +32,8 @@ describe("buildNotificationText — Mail", () => {
 
   it("shows an unconfirmed send as not confirmed, not as failed", () => {
     const t = text(mail("WARNING", "W_MAIL_UNCONFIRMED",
-      "Zeitüberschreitung – die Mail wurde vermutlich trotzdem verschickt. Vor einem erneuten Versand bitte beim Mitglied nachfragen.", "AT001"))
-    expect(t).toBe("Mailversand nicht bestätigt: AT001 — Zeitüberschreitung – die Mail wurde vermutlich trotzdem verschickt. Vor einem erneuten Versand bitte beim Mitglied nachfragen.")
+      "Zeitüberschreitung – die Mail wurde vermutlich trotzdem verschickt. Vor einem erneuten Versand bitte beim Empfänger nachfragen.", "AT001"))
+    expect(t).toBe("Mailversand nicht bestätigt: AT001 — Zeitüberschreitung – die Mail wurde vermutlich trotzdem verschickt. Vor einem erneuten Versand bitte beim Empfänger nachfragen.")
     expect(t).not.toContain("fehlgeschlagen")
   })
 
