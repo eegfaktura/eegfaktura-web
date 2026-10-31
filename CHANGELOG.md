@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.19.0] – 2026-10-31
+
 ### Added
 - **Unsaved input in the tariff editor and in „add metering point“ asks before it is lost** (platform#228 step 4).
   Selecting another tariff, „+“ (new tariff) or „Zurück“ with unsaved changes in the tariff editor, and „Zurück“ or
