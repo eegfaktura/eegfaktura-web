@@ -60,15 +60,22 @@ export function buildNotificationText(type: string, process: string, notificatio
         case 'Mail': {
           // Notices about the community's customised mails (E_MAIL_TEMPLATE: default sent instead,
           // I_MAIL_TEMPLATE_DEFAULT: new default available) carry a complete text; the mail was sent.
-          // Other entries are failed mails (z. B. ungültige Empfänger-Adresse). A notification may hold both.
+          // W_MAIL_UNCONFIRMED: the mail server did not answer in time, the mail was most likely sent.
+          // Other entries are failed mails (z. B. ungültige Empfänger-Adresse). A notification may hold several kinds.
           const all = n.message.logMessages ?? []
           const isTemplateNotice = (m: { message_code: string }) => (m.message_code ?? "").includes("_MAIL_TEMPLATE")
+          const isUnconfirmed = (m: { message_code: string }) => m.message_code === "W_MAIL_UNCONFIRMED"
           const notices = all.filter(isTemplateNotice)
-          const failures = all.filter(m => !isTemplateNotice(m))
+          const unconfirmed = all.filter(isUnconfirmed)
+          const failures = all.filter(m => !isTemplateNotice(m) && !isUnconfirmed(m))
           return <>
             {notices.length > 0 &&
               <p><strong><u>E-Mail-Texte:</u></strong> {notices.map(m => m.message).join(" ")}</p>}
-            {(failures.length > 0 || notices.length === 0) &&
+            {unconfirmed.length > 0 &&
+              <p><strong><u>Mailversand nicht bestätigt:</u></strong> {
+                unconfirmed.map(m => `${m.metering_point} — ${m.message}`).join("; ")
+              }</p>}
+            {(failures.length > 0 || (notices.length === 0 && unconfirmed.length === 0)) &&
               <p><strong><u>Mailversand fehlgeschlagen:</u></strong> {
                 failures.map(m => `${m.metering_point} — ${m.message}`).join("; ")
               }</p>}
