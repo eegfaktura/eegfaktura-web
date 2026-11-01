@@ -8,6 +8,11 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **The house number of a metering point takes the same characters as the one of a member.** „8a+b“, „8.1“ or „8,10“
+  were rejected only in the metering point form, and „Adresse vom Besitzer übernehmen“ failed for such a member. The
+  character check is gone, the field stays required. The address is not part of any message to the grid operator.
+
 ## [1.19.0] – 2026-10-31
 
 ### Added
