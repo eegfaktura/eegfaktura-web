@@ -22,7 +22,7 @@ interface DatePickerFormProps {
 const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, label, placeholder, error, disabled, onChangeDate}) => {
 
   const {field} = useController({name, control, rules})
-  const stored = typeof field.value === 'string' ? new Date(field.value) : field.value instanceof Date ? field.value : undefined
+  const stored = typeof field.value === 'string' ? (field.value ? new Date(field.value) : undefined) : field.value instanceof Date ? field.value : undefined
 
   const {picker, onTyping, pickerProps} = useDateOnLeave(stored, (date) => {
     field.onChange(date)

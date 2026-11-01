@@ -39,7 +39,8 @@ export const parseDateRange = (text: string): [Date, Date] | null => {
   const parts = text.split(" - ")
   if (parts.length !== 2) return null
   const [start, end] = parts.map(part => moment(part.trim(), TYPED_FORMATS, true))
-  return start.isValid() && end.isValid() && !end.isBefore(start) ? [start.toDate(), end.toDate()] : null
+  const usable = (date: moment.Moment) => date.isValid() && date.year() >= 1000   // as the picker: „0026“ is a typing error
+  return usable(start) && usable(end) && !end.isBefore(start) ? [start.toDate(), end.toDate()] : null
 }
 
 // Called once at app start (main.tsx) and in the test setup, before the first picker renders.

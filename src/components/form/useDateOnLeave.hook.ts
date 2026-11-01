@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from "react";
+import {KeyboardEvent, useRef, useState} from "react";
 import DatePicker from "react-datepicker";
 import {isSameDay} from "../../util/DateFormat.util";
 
@@ -11,16 +11,19 @@ export const useDateOnLeave = (stored: Date | null | undefined, save: (date: Dat
   const picker = useRef<DatePicker>(null)
   const [pending, setPending] = useState<Date | null>(null)
   // the last saved date: stored follows late (answer of the server) or never (callers holding it in a ref)
-  const saved = useRef(stored)
+  const [saved, setSaved] = useState(stored)
 
+  // a new stored date from outside counts at once
   const storedTime = stored?.getTime()
-  useEffect(() => {
-    saved.current = stored
-  }, [storedTime]);
+  const [seenTime, setSeenTime] = useState(storedTime)
+  if (!Object.is(storedTime, seenTime)) {   // an invalid date is NaN
+    setSeenTime(storedTime)
+    setSaved(stored)
+  }
 
   const commit = () => {
-    if (pending && !isSameDay(pending, saved.current)) {
-      saved.current = pending
+    if (pending && !isSameDay(pending, saved)) {
+      setSaved(pending)
       save(pending)
     }
     setPending(null)
@@ -30,11 +33,19 @@ export const useDateOnLeave = (stored: Date | null | undefined, save: (date: Dat
     picker,
     onTyping: () => setPending(null),
     pickerProps: {
-      selected: pending ?? saved.current ?? undefined,
+      selected: pending ?? saved ?? undefined,
       onChange: (date: Date | null) => { date && setPending(date) },
-      onKeyDown: (event: {key: string}) => { event.key === "Escape" && setPending(null) },
+      onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => {
+        if (event.key === "Escape") {
+          setPending(null)
+          // closes the calendar only, not the dialog around it (Ionic listens on the document)
+          picker.current?.isCalendarOpen() && event.stopPropagation()
+        }
+      },
       onCalendarClose: commit,
-      onBlur: () => {
+      onBlur: (event: {target: EventTarget | null}) => {
+        // switching to another window blurs the field as well, without leaving it
+        if (document.activeElement === event.target) return
         commit()
         // the picker forgets typed text only on closing, also when it is closed already
         picker.current?.setOpen(false, true)

@@ -1,4 +1,4 @@
-import React, {FC, useEffect, useState} from "react";
+import React, {FC, useEffect, useRef, useState} from "react";
 import {IonButton, IonContent, IonItem, useIonToast} from "@ionic/react";
 import InputForm from "../form/InputForm.component";
 import SelectForm from "../form/SelectForm.component";
@@ -52,6 +52,7 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
     setValue, formState} = useForm<ProcessValues>({defaultValues: processValues})
   const [useableMeters, setUsableMeters] = useState<Metering[]>([])
   const [consentEndDate, setConsentEndDate] = useState<Date|null>(null);
+  const picker = useRef<DatePicker<never, false>>(null)
   const [reason, setReason] = useState<string|undefined>()
   const [meteringPoints, participantId] = watch(['meteringPoints', 'participantId'])
 
@@ -140,6 +141,8 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
                 }}
                 customInput={<DateTextInput label={t("button_labels.calendar")}/>}
                 placeholderText="Datum wählen"
+                ref={picker}
+                onBlur={() => picker.current?.setOpen(false, true)} // drops typed text that is no valid date
                 {...DATE_PICKER_PROPS}
                 minDate={moment(Date.now()).add(1, 'day').startOf('day').toDate()}
               />

@@ -29,7 +29,7 @@ describe("parseDateRange", () => {
     expect(range.map(ymd)).toEqual([start, end])
   })
 
-  it.each(["", "01.08.2026", "01.08.2026 - ", "01.08.2026 - 01.10.202", "01.13.2026 - 01.10.2026", "01.10.2026 - 01.08.2026",
+  it.each(["", "01.08.2026", "01.08.2026 - ", "01.08.2026 - 01.10.202", "01.08.0026 - 01.10.2026", "01.13.2026 - 01.10.2026", "01.10.2026 - 01.08.2026",
     "2026-08-01 - 2026-10-01"])("rejects „%s“", (text) => {
     expect(parseDateRange(text)).toBeNull()
   })
@@ -151,6 +151,62 @@ describe("a date is saved once on leaving, and only when the day changed", () =>
 
     expect(onChange).not.toHaveBeenCalled()
     expect(input.value).toBe("15.08.2026")
+  })
+
+  it("a stored date changed from outside shows at once", async () => {
+    const onChange = vi.fn()
+    const {container, rerender} = render(<DatePickerCoreElement name="d" label="Datum" placeholder="x" initialValue={new Date(2026, 10, 6)} onChange={onChange}/>)
+    const input = container.querySelector("ion-input") as any
+    expect(input.value).toBe("06.11.2026")
+
+    rerender(<DatePickerCoreElement name="d" label="Datum" placeholder="x" initialValue={new Date(2026, 10, 25)} onChange={onChange}/>)
+
+    expect(input.value).toBe("25.11.2026")
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it("a saved date stays in the field until the answer of the server, without a required message", async () => {
+    const Form = () => {
+      const {control} = useForm({mode: "all", defaultValues: {date: ""}})
+      return <DatePickerInput control={control} name="date" label="Datum" rules={{required: "Datum fehlt"}} onChangePartial={vi.fn()}/>
+    }
+    const {container} = render(<Form/>)
+    const input = container.querySelector("ion-input") as any
+
+    await typeInto(input, "16.08.2026")
+    await leave(input)
+
+    expect(input.value).toBe("16.08.2026")
+    expect(container.textContent).not.toContain("Datum fehlt")
+  })
+
+  it("switching to another window saves nothing", async () => {
+    const onChange = vi.fn()
+    const {container} = render(<DatePickerCoreElement name="d" label="Datum" placeholder="x" initialValue={new Date(2026, 7, 15)} onChange={onChange}/>)
+    const input = container.querySelector("ion-input") as any
+    await typeInto(input, "1.08.2026")
+    const native = document.createElement("input")
+    input.appendChild(native)
+    native.focus()
+
+    await act(async () => { fireEvent.focusOut(native) })
+
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it("Escape closes an open calendar, not the dialog around it", async () => {
+    const dialog = vi.fn()
+    document.addEventListener("keydown", dialog)
+    const {container} = render(<DatePickerCoreElement name="d" label="Datum" placeholder="x" initialValue={new Date(2026, 7, 15)} onChange={vi.fn()}/>)
+    const input = container.querySelector("ion-input") as any
+
+    fireEvent.click(input)
+    await act(async () => { fireEvent.keyDown(input, {key: "Escape"}) })
+    expect(dialog).not.toHaveBeenCalled()
+
+    await act(async () => { fireEvent.keyDown(input, {key: "Escape"}) })
+    expect(dialog).toHaveBeenCalledTimes(1)
+    document.removeEventListener("keydown", dialog)
   })
 
   it("Escape discards a typed date", async () => {

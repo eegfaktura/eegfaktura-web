@@ -51,7 +51,7 @@ const DatePickerInput = <TFieldValues extends FieldValues>({
 
   const {field, fieldState: {error}} = useController({name, control, rules})
   const value: unknown = field.value
-  const stored = typeof value === 'string' ? moment(value).toDate() : value instanceof Date ? value : undefined
+  const stored = typeof value === 'string' ? (value ? moment(value).toDate() : undefined) : value instanceof Date ? value : undefined
 
   const {picker, onTyping, pickerProps} = useDateOnLeave(stored, (date) => {
     const localDate = new LocalDate(moment(date).format("YYYY-MM-DD"))
@@ -69,9 +69,10 @@ const DatePickerInput = <TFieldValues extends FieldValues>({
       <DatePicker
         // id={String(name)} // id expects a string
         {...pickerProps}
-        onBlur={() => {
-          pickerProps.onBlur()
-          field.onBlur()
+        onBlur={(event) => {
+          pickerProps.onBlur(event)
+          // with onChangePartial the form gets the date only with the answer of the server: nothing to check before
+          if (!onChangePartial || !pickerProps.selected) field.onBlur()
         }}
         {...DATE_PICKER_PROPS}
         customInput={<DateTextInput label={label} onTyping={onTyping}/>}
