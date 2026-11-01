@@ -181,7 +181,8 @@ const ParticipantPaneComponent: FC = () => {
 
   const openBillingDownloadDialog = (billingRunId: string)=> {
     setDownloadBillingId(billingRunId)
-    billingDownload()
+    // the calendars open in a portal outside the modal, the focus trap would take the focus from their year and month
+    billingDownload({cssClass: "ion-disable-focus-trap"})
   }
 
   // Checks before a billing run (platform#148): shown before preview and billing.
@@ -780,7 +781,8 @@ const ParticipantPaneComponent: FC = () => {
                   size: "auto",
                   side: "bottom",
                   alignment: "start",
-                  cssClass: "upload-popover",
+                  // the calendar opens in a portal outside the popover, the focus trap would take the focus from its year and month
+                  cssClass: "upload-popover ion-disable-focus-trap",
                   // onDidDismiss: (e: CustomEvent) => onExport(e.detail.data),
                 })}/>
               <HeaderFavButtonComponent icon={add} routerLink="/page/addParticipant" routerDirection="root"/>

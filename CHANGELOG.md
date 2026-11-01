@@ -12,6 +12,17 @@ this changelog highlights the changes relevant for overview and operations.
 - **The house number of a metering point takes the same characters as the one of a member.** „8a+b“, „8.1“ or „8,10“
   were rejected only in the metering point form, and „Adresse vom Besitzer übernehmen“ failed for such a member. The
   character check is gone, the field stays required. The address is not part of any message to the grid operator.
+- **All calendars look and work the same, and a date can be typed** (reported from the pilot). Every date picker has
+  one header with arrows, year and month and the colours of the app; before, half of them had a header without year
+  and month, and all showed the blue of the library. The calendar always shows six week rows, so the arrows stay in
+  place from month to month. A date can be typed or overwritten in every field; so far the text jumped back. In the
+  range pickers („Zählpunktdaten nachfordern“, download of the energy data) a complete „01.08.2026 - 01.10.2026“ is
+  taken over. The year and month of a calendar in the download dialog and in the billing download can be selected;
+  Ionic took the focus away from them. A field now also opens its calendar when reached with the Tab key. A date is
+  saved once, when the calendar closes or the field is left, and only when the day has changed; Escape discards a
+  typed date, and text that is no date falls back to the stored date. A typed range that is not valid empties the
+  range, so that no other period is requested or exported than the field shows. The arrows and the year and month of
+  a calendar only change the month shown, also in the registration and at „aktiv seit“.
 
 ## [1.19.0] – 2026-10-31
 

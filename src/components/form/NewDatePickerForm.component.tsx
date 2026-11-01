@@ -1,112 +1,22 @@
-import {Control, Controller, FieldValues, Path, RegisterOptions} from "react-hook-form";
-import DatePicker, {ReactDatePickerCustomHeaderProps} from "react-datepicker";
+import {Control, FieldValues, Path, RegisterOptions, useController} from "react-hook-form";
+import DatePicker from "react-datepicker";
 
 import 'react-datepicker/dist/react-datepicker.css';
-import React, {forwardRef} from "react";
-import {IonInput, IonItem, IonLabel} from "@ionic/react";
-import moment, {Moment} from "moment";
+import React from "react";
+import moment from "moment";
 import {LocalDate} from "local-date";
-import {DATE_PICKER_PROPS, MONTH_NAMES} from "../../util/DateFormat.util";
-
-// --- Custom IonInput Component for DatePicker ---
-interface CustomIonInputProps {
-  value?: string;
-  onClick?: () => void;
-  label?: string;
-  id?: string;
-  // react-datepicker also passes 'readOnly' and 'disabled'
-  readOnly?: boolean;
-  disabled?: boolean;
-}
-
-// We use forwardRef because react-datepicker needs a ref to the input element
-const CustomIonInput = forwardRef<HTMLIonInputElement, CustomIonInputProps>(
-  ({ value, onClick, label, id, readOnly, disabled }, ref) => (
-    <>
-      {/*{label && <IonLabel position="stacked">{label}</IonLabel>}*/}
-      <IonInput
-        value={value}
-        label={label}
-        onClick={onClick}
-        readonly={readOnly}
-        disabled={disabled}
-        ref={ref} // Pass the ref to IonInput
-        placeholder="Datum wählen"
-        fill="outline"
-        labelPlacement={"floating"}
-      />
-    </>
-  )
-);
-
-const customHeader = ({
-                        date,
-                        changeYear,
-                        changeMonth,
-                        decreaseMonth,
-                        increaseMonth,
-                        prevMonthButtonDisabled,
-                        nextMonthButtonDisabled,
-                      }: ReactDatePickerCustomHeaderProps) => {
-  const getYear = (date: Date) => date.getFullYear()
-  const getMonth = (date: Date) => date.getMonth()
-  const range = (start: number, end: number) => Array.from(
-    Array(Math.abs(end - start) + 1),
-    (_, i) => start + i
-  );
-
-  const years = range(2020, getYear(new Date()) + 1);
-  const months = MONTH_NAMES;
-
-  return (
-  <div
-    style={{
-      margin: 10,
-      display: "flex",
-      justifyContent: "space-between",
-    }}
-  >
-    <button style={{color: "inherit", background: "transparent"}} onClick={decreaseMonth} disabled={prevMonthButtonDisabled}>
-      {"<"}
-    </button>
-    <select name="header_year" style={{background: "transparent", margin:"1px", padding: "3px 2px"}}
-            value={getYear(date)}
-            onChange={({ target: { value } }) => changeYear(Number(value))}
-    >
-      {years.map((option) => (
-        <option key={option} value={option}>
-          {option}
-        </option>
-      ))}
-    </select>
-
-    <select name="header_month" style={{background: "transparent", margin:"1px", padding: "3px 2px"}}
-            value={months[getMonth(date)]}
-            onChange={({ target: { value } }) =>
-              changeMonth(months.indexOf(value))
-            }
-    >
-      {months.map((option) => (
-        <option key={option} value={option}>
-          {option}
-        </option>
-      ))}
-    </select>
-
-    <button style={{color: "inherit", background: "transparent"}} onClick={increaseMonth} disabled={nextMonthButtonDisabled}>
-      {">"}
-    </button>
-  </div>
-)}
+import {DATE_PICKER_PROPS} from "../../util/DateFormat.util";
+import DateTextInput from "./DateTextInput.component";
+import {useDateOnLeave} from "./useDateOnLeave.hook";
 
 // Kalenderdatum als "YYYY-MM-DD" im lokalen Kalender - so, wie der Benutzer es im
 // DatePicker ausgewaehlt hat, ohne Uhrzeit und ohne Zeitzonen-Umrechnung.
 export const toFormDateValue = (date: Date): string => moment(date).format("YYYY-MM-DD")
 
 // Neues Mitglied (kein Teilspeichern): Wert setzen und das Feld gleich pruefen. Das Formular
-// validiert im Modus "onBlur", aber CustomIonInput reicht onBlur von react-datepicker nicht weiter -
-// react-hook-form sieht fuer dieses Feld also nie ein Verlassen. Ohne erneute Pruefung bliebe ein
-// vorher gesetzter Fehler ("Mandatsdatum fehlt") trotz gewaehltem Datum stehen.
+// validiert im Modus "onBlur", bei offenem Kalender meldet react-datepicker aber kein Verlassen.
+// Ohne erneute Pruefung bliebe ein vorher gesetzter Fehler ("Mandatsdatum fehlt") trotz gewaehltem
+// Datum stehen.
 export const commitFormDate = (field: { onChange: (value: string) => void, onBlur: () => void }, date: Date) => {
   field.onChange(toFormDateValue(date))
   field.onBlur()
@@ -139,64 +49,39 @@ const DatePickerInput = <TFieldValues extends FieldValues>({
                                                              ...rest
                                                            }: DatePickerInputProps<TFieldValues>) => {
 
-  const onDateChange = (field: { onChange: (value: string) => void, onBlur: () => void }) => (date: Date | null) => {
-    if (date) {
-      const localDate = new LocalDate(moment(date).format("YYYY-MM-DD"))
-      // Ins Formular als String "YYYY-MM-DD", nicht als LocalDate: react-hook-form klont
-      // die Werte in handleSubmit und macht dabei aus jedem Date (auch LocalDate) ein
-      // gewoehnliches Date. Das serialisiert als UTC - lokale Mitternacht wird so zum
-      // Vortag ("2026-06-03T22:00:00.000Z"), und das Backend speichert diesen Tag.
-      // Ein String uebersteht das Klonen unveraendert.
-      onChangePartial ? onChangePartial(localDate) : commitFormDate(field, date)
-    }
-  }
+  const {field, fieldState: {error}} = useController({name, control, rules})
+  const value: unknown = field.value
+  const stored = typeof value === 'string' ? (value ? moment(value).toDate() : undefined) : value instanceof Date ? value : undefined
 
-  const showDate = (value: any): Moment | null => {
-    return typeof value === 'string' ? moment(value) : value instanceof Date ? moment(value) : null
-  }
+  const {picker, onTyping, pickerProps} = useDateOnLeave(stored, (date) => {
+    const localDate = new LocalDate(moment(date).format("YYYY-MM-DD"))
+    // Ins Formular als String "YYYY-MM-DD", nicht als LocalDate: react-hook-form klont
+    // die Werte in handleSubmit und macht dabei aus jedem Date (auch LocalDate) ein
+    // gewoehnliches Date. Das serialisiert als UTC - lokale Mitternacht wird so zum
+    // Vortag ("2026-06-03T22:00:00.000Z"), und das Backend speichert diesen Tag.
+    // Ein String uebersteht das Klonen unveraendert.
+    onChangePartial ? onChangePartial(localDate) : commitFormDate(field, date)
+  })
 
   return (
     <div className="form-element">
       {/*{label && <label htmlFor={String(name)}>{label}</label>} /!* htmlFor expects a string *!/*/}
-      <Controller
-        name={name}
-        control={control}
-        rules={rules}
-        render={({ field, fieldState: { error } }) => {
-          // Ensure field.value is always treated as Date | null
-          const selectedDate = field.value as Date | null;
-
-          // Format the date for display in the IonInput
-          const displayValue = (selectedDate instanceof Date)
-            ? 'Hallo' /*selectedDate.toLocaleDateString('de-DE', {
-              month: '2-digit',
-              day: '2-digit',
-              year: 'numeric'
-            })*/
-            : ''; // If null, display an empty string
-
-          return (
-          <>
-            <DatePicker
-              // id={String(name)} // id expects a string
-              renderCustomHeader={customHeader}
-              selected={showDate(field.value)?.toDate()} // Cast to Date | null
-              onChange={onDateChange(field)}
-              onBlur={field.onBlur}
-              {...DATE_PICKER_PROPS}
-              customInput={
-                <CustomIonInput
-                  label={label}
-                  // value={displayValue} // Format value for display
-                />
-              }
-              portalId="root-portal"
-              {...rest} // Pass any other DatePicker props
-            />
-            {error && <p style={{ color: 'red', fontSize: '0.8em', marginTop: '5px' }}>{error.message}</p>}
-          </>
-        )}}
+      <DatePicker
+        // id={String(name)} // id expects a string
+        {...pickerProps}
+        onBlur={(event) => {
+          pickerProps.onBlur(event)
+          // with onChangePartial the form gets the date only with the answer of the server: nothing to check before
+          if (!onChangePartial || !pickerProps.selected) field.onBlur()
+        }}
+        {...DATE_PICKER_PROPS}
+        customInput={<DateTextInput label={label} onTyping={onTyping}/>}
+        placeholderText="Datum wählen"
+        ref={picker}
+        portalId="root-portal"
+        {...rest} // Pass any other DatePicker props
       />
+      {error && <p style={{ color: 'red', fontSize: '0.8em', marginTop: '5px' }}>{error.message}</p>}
     </div>
   );
 };
