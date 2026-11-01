@@ -1,4 +1,4 @@
-import React, {FC, useEffect, useState} from "react";
+import React, {FC, useEffect, useRef, useState} from "react";
 import {IonButton, IonContent, IonItem, useIonAlert} from "@ionic/react";
 import InputForm from "../form/InputForm.component";
 import SelectForm from "../form/SelectForm.component";
@@ -70,6 +70,7 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
   const [useableMeters, setUsableMeters] = useState<Metering[]>([])
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
   const [startDate, endDate] = dateRange;
+  const picker = useRef<DatePicker<never, true>>(null)
   const [selectEntire, setSelectEntire] = useState(false)
   const [smart, setSmart] = useState(true)
   const [checking, setChecking] = useState(false)
@@ -209,6 +210,8 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
                 }}
                 customInput={<DateTextInput label={t("button_labels.calendar")} onRange={setDateRange}/>}
                 placeholderText="Datum wählen"
+                ref={picker}
+                onBlur={() => picker.current?.setOpen(false, true)} // drops typed text that is no range
                 {...DATE_PICKER_PROPS}
               />
             </div>

@@ -1,10 +1,11 @@
-import React, {FC, useEffect, useState} from "react";
+import React, {FC} from "react";
 import DatePicker from "react-datepicker";
-import {Control, Controller, FieldError, UseFormClearErrors, useWatch} from "react-hook-form";
+import {Control, FieldError, useController, UseFormClearErrors} from "react-hook-form";
 
 import "./DatePickerForm.element.scss"
-import {DATE_PICKER_EXAMPLE, DATE_PICKER_PROPS, isSameDay} from "../../util/DateFormat.util";
+import {DATE_PICKER_EXAMPLE, DATE_PICKER_PROPS} from "../../util/DateFormat.util";
 import DateTextInput from "./DateTextInput.component";
+import {useDateOnLeave} from "./useDateOnLeave.hook";
 
 interface DatePickerFormProps {
   control: Control<any, any>,
@@ -20,52 +21,30 @@ interface DatePickerFormProps {
 
 const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, label, placeholder, error, disabled, onChangeDate}) => {
 
-  const value = useWatch({control, name: name, defaultValue: undefined})
-  const [showDate, setShowDate] = useState<Date | undefined>()
+  const {field} = useController({name, control, rules})
+  const stored = typeof field.value === 'string' ? new Date(field.value) : field.value instanceof Date ? field.value : undefined
 
-  useEffect(() => {
-    // const dateValue = typeof value === 'string' ? new Date(value) : value instanceof Date ? value : new Date(Date.now())
-    const dateValue = typeof value === 'string' ? new Date(value) : value instanceof Date ? value : undefined
-    setShowDate(dateValue)
-  }, [value]);
-
-  // Saved once on leaving: on closing the calendar, or on leaving the field when it is already closed. Reaching the
-  // field with Tab opens and closes the calendar, so this also runs without an edit.
-  const handleUpdate = (onChange: (...event: any[]) => void, stored: any) => () => {
-    if (!showDate || isSameDay(showDate, stored)) return
-    onChange(showDate)
-    onChangeDate && onChangeDate(name, showDate)
-  }
+  const {picker, onTyping, pickerProps} = useDateOnLeave(stored, (date) => {
+    field.onChange(date)
+    onChangeDate && onChangeDate(name, date)
+  })
 
   return (
     <div className="form-element">
-      <Controller
+      <DatePicker
+        // selectsRange={false}
         name={name}
-        control={control}
-        rules={rules}
-        render={({field, fieldState, formState}) => {
-          const {onChange, onBlur, value, name, ref} = field;
-          // const dateValue = typeof value === 'string' ? new Date(value) : value instanceof Date ? value : new Date(Date.now())
-          return (
-            <DatePicker
-              // selectsRange={false}
-              selected={showDate}
-              adjustDateOnChange={true}
-              name={name}
-              onChange={(update) => {
-                update && setShowDate(update)
-              }}
-              customInput={<DateTextInput label={label}/>}
-              placeholderText={placeholder + " " + DATE_PICKER_EXAMPLE}
-              disabled={disabled}
-              onCalendarClose={handleUpdate(onChange, value)}
-              onBlur={handleUpdate(onChange, value)}
-              {...DATE_PICKER_PROPS}
-              ref={ref}
-              portalId="root-portal"
-            />
-          )
-        }}/>
+        customInput={<DateTextInput label={label} onTyping={onTyping}/>}
+        placeholderText={placeholder + " " + DATE_PICKER_EXAMPLE}
+        disabled={disabled}
+        {...pickerProps}
+        {...DATE_PICKER_PROPS}
+        ref={(instance) => {
+          (picker as React.MutableRefObject<DatePicker | null>).current = instance
+          field.ref(instance)
+        }}
+        portalId="root-portal"
+      />
       {error && <div className={"error-line"}>{error.message}</div>}
     </div>
   )

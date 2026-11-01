@@ -46,8 +46,6 @@ export const DownloadBillingDialog:FC<{billingRunId: string, tenant: string, eeg
     }
   }
   const onTransferDate = (value: Date | null) => {
-    // the picker reports its date on every close: only a different day counts as a manual change
-    if (value && transferDate && moment(value).isSame(transferDate, 'day')) return
     setFiles(null)
     setTransferTouched(true)
     setTransferDate(value)

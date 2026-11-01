@@ -1,4 +1,4 @@
-import React, {FC, useState} from "react";
+import React, {FC, useRef, useState} from "react";
 import {
   IonButton, IonCol,
   IonContent,
@@ -23,6 +23,7 @@ const DatepickerPopover: FC<{
 
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
   const [startDate, endDate] = dateRange;
+  const picker = useRef<DatePicker<never, true>>(null)
   const [selectedExportType, setSelectedExportType] = useState(0)
 
   const onOk = () => {
@@ -58,6 +59,8 @@ const DatepickerPopover: FC<{
                   // isClearable={true}
                   customInput={<DateTextInput label="Zeitraum" style={{"--padding-start": "16px"}} onRange={setDateRange}/>}
                   placeholderText="Zeitraum wählen"
+                  ref={picker}
+                  onBlur={() => picker.current?.setOpen(false, true)} // drops typed text that is no range
                   {...DATE_PICKER_PROPS}
                   portalId="root-portal"
                 />

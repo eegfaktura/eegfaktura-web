@@ -16,7 +16,10 @@ this changelog highlights the changes relevant for overview and operations.
   range pickers („Zählpunktdaten nachfordern“, download of the energy data) a complete „01.08.2026 - 01.10.2026“ is
   taken over. The year and month of a calendar in the download dialog and in the billing download can be selected;
   Ionic took the focus away from them. A field now also opens its calendar when reached with the Tab key. A date is
-  saved once, when the calendar closes or the field is left, and only when the day has changed.
+  saved once, when the calendar closes or the field is left, and only when the day has changed; Escape discards a
+  typed date, and text that is no date falls back to the stored date. A typed range that is not valid empties the
+  range, so that no other period is requested or exported than the field shows. The arrows and the year and month of
+  a calendar only change the month shown, also in the registration and at „aktiv seit“.
 
 ## [1.19.0] – 2026-10-31
 

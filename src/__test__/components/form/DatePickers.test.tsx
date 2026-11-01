@@ -86,6 +86,10 @@ describe("typing into the field", () => {
 
     expect(shown.map(ymd)).toEqual([[2026, 8, 1], [2026, 10, 1]])
     expect(input.value).toBe("01.08.2026 - 01.10.2026")
+
+    // the old range must not stay in use while the field shows something else
+    await typeInto(input, "01.09.2026 - 31.09.2026")
+    expect(shown).toEqual([null, null])
   })
 })
 
@@ -136,6 +140,45 @@ describe("a date is saved once on leaving, and only when the day changed", () =>
     expect(onChange.mock.calls.map(c => ymd(c[1]))).toEqual([[2026, 8, 2], [2026, 8, 1]])
   })
 
+  it.each([["core", "01.13.2026"], ["core", ""], ["core", "32.08.2026"]])("%s picker: text „%s“ is not saved and falls back", async (_, text) => {
+    const onChange = vi.fn()
+    const {container} = render(<DatePickerCoreElement name="d" label="Datum" placeholder="x" initialValue={new Date(2026, 7, 15)} onChange={onChange}/>)
+    const input = container.querySelector("ion-input") as any
+
+    await typeInto(input, "15.1.2026")
+    await typeInto(input, text)
+    await leave(input)
+
+    expect(onChange).not.toHaveBeenCalled()
+    expect(input.value).toBe("15.08.2026")
+  })
+
+  it("Escape discards a typed date", async () => {
+    const onChangeDate = vi.fn()
+    const {container} = render(<FormPicker stored={new Date(2026, 7, 1)} onChangeDate={onChangeDate}/>)
+    const input = container.querySelector("ion-input") as any
+    fireEvent.click(input)
+    await typeInto(input, "02.08.2026")
+    await act(async () => { fireEvent.keyDown(input, {key: "Escape"}) })
+    await leave(input)
+
+    expect(onChangeDate).not.toHaveBeenCalled()
+    expect(input.value).toBe("01.08.2026")
+  })
+
+  it("form picker: choosing a year only shows it, it selects nothing", async () => {
+    const onChangeDate = vi.fn()
+    const {container} = render(<FormPicker stored={undefined} onChangeDate={onChangeDate}/>)
+    const input = container.querySelector("ion-input") as any
+    fireEvent.click(input)
+    await act(async () => { fireEvent.change(document.querySelector("select[name=header_year]")!, {target: {value: "2024"}}) })
+    await leave(input)
+    await act(async () => { fireEvent.keyDown(input, {key: "Tab"}) })
+
+    expect(onChangeDate).not.toHaveBeenCalled()
+    expect(input.value ?? "").toBe("")
+  })
+
   it("member picker: the steps of a correction are not saved, only the result", async () => {
     const onChangePartial = vi.fn()
     const {container} = render(<NewPicker onChangePartial={onChangePartial}/>)
@@ -166,5 +209,11 @@ describe("the field", () => {
     expect(input.getAttribute("id")).toBeNull()
     expect(input.getAttribute("title")).toBeNull()
     expect(input.getAttribute("tabindex")).toBeNull()
+  })
+
+  it("carries the marker that keeps the calendar open on a click into the field", () => {
+    const {container} = render(<DatePicker {...DATE_PICKER_PROPS} selected={null} onChange={vi.fn()} customInput={<DateTextInput label="Datum"/>}/>)
+    fireEvent.click(container.querySelector("ion-input")!)
+    expect(container.querySelector("ion-input")!.classList.contains("react-datepicker-ignore-onclickoutside")).toBe(true)
   })
 })
