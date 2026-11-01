@@ -1,103 +1,12 @@
 import {Control, Controller, FieldValues, Path, RegisterOptions} from "react-hook-form";
-import DatePicker, {ReactDatePickerCustomHeaderProps} from "react-datepicker";
+import DatePicker from "react-datepicker";
 
 import 'react-datepicker/dist/react-datepicker.css';
-import React, {forwardRef} from "react";
-import {IonInput, IonItem, IonLabel} from "@ionic/react";
+import React from "react";
 import moment, {Moment} from "moment";
 import {LocalDate} from "local-date";
-import {DATE_PICKER_PROPS, MONTH_NAMES} from "../../util/DateFormat.util";
-
-// --- Custom IonInput Component for DatePicker ---
-interface CustomIonInputProps {
-  value?: string;
-  onClick?: () => void;
-  label?: string;
-  id?: string;
-  // react-datepicker also passes 'readOnly' and 'disabled'
-  readOnly?: boolean;
-  disabled?: boolean;
-}
-
-// We use forwardRef because react-datepicker needs a ref to the input element
-const CustomIonInput = forwardRef<HTMLIonInputElement, CustomIonInputProps>(
-  ({ value, onClick, label, id, readOnly, disabled }, ref) => (
-    <>
-      {/*{label && <IonLabel position="stacked">{label}</IonLabel>}*/}
-      <IonInput
-        value={value}
-        label={label}
-        onClick={onClick}
-        readonly={readOnly}
-        disabled={disabled}
-        ref={ref} // Pass the ref to IonInput
-        placeholder="Datum wählen"
-        fill="outline"
-        labelPlacement={"floating"}
-      />
-    </>
-  )
-);
-
-const customHeader = ({
-                        date,
-                        changeYear,
-                        changeMonth,
-                        decreaseMonth,
-                        increaseMonth,
-                        prevMonthButtonDisabled,
-                        nextMonthButtonDisabled,
-                      }: ReactDatePickerCustomHeaderProps) => {
-  const getYear = (date: Date) => date.getFullYear()
-  const getMonth = (date: Date) => date.getMonth()
-  const range = (start: number, end: number) => Array.from(
-    Array(Math.abs(end - start) + 1),
-    (_, i) => start + i
-  );
-
-  const years = range(2020, getYear(new Date()) + 1);
-  const months = MONTH_NAMES;
-
-  return (
-  <div
-    style={{
-      margin: 10,
-      display: "flex",
-      justifyContent: "space-between",
-    }}
-  >
-    <button style={{color: "inherit", background: "transparent"}} onClick={decreaseMonth} disabled={prevMonthButtonDisabled}>
-      {"<"}
-    </button>
-    <select name="header_year" style={{background: "transparent", margin:"1px", padding: "3px 2px"}}
-            value={getYear(date)}
-            onChange={({ target: { value } }) => changeYear(Number(value))}
-    >
-      {years.map((option) => (
-        <option key={option} value={option}>
-          {option}
-        </option>
-      ))}
-    </select>
-
-    <select name="header_month" style={{background: "transparent", margin:"1px", padding: "3px 2px"}}
-            value={months[getMonth(date)]}
-            onChange={({ target: { value } }) =>
-              changeMonth(months.indexOf(value))
-            }
-    >
-      {months.map((option) => (
-        <option key={option} value={option}>
-          {option}
-        </option>
-      ))}
-    </select>
-
-    <button style={{color: "inherit", background: "transparent"}} onClick={increaseMonth} disabled={nextMonthButtonDisabled}>
-      {">"}
-    </button>
-  </div>
-)}
+import {DATE_PICKER_PROPS} from "../../util/DateFormat.util";
+import DateTextInput from "./DateTextInput.component";
 
 // Kalenderdatum als "YYYY-MM-DD" im lokalen Kalender - so, wie der Benutzer es im
 // DatePicker ausgewaehlt hat, ohne Uhrzeit und ohne Zeitzonen-Umrechnung.
@@ -179,17 +88,12 @@ const DatePickerInput = <TFieldValues extends FieldValues>({
           <>
             <DatePicker
               // id={String(name)} // id expects a string
-              renderCustomHeader={customHeader}
               selected={showDate(field.value)?.toDate()} // Cast to Date | null
               onChange={onDateChange(field)}
               onBlur={field.onBlur}
               {...DATE_PICKER_PROPS}
-              customInput={
-                <CustomIonInput
-                  label={label}
-                  // value={displayValue} // Format value for display
-                />
-              }
+              customInput={<DateTextInput label={label}/>}
+              placeholderText="Datum wählen"
               portalId="root-portal"
               {...rest} // Pass any other DatePicker props
             />

@@ -1,8 +1,8 @@
-import React, {FC, forwardRef, useState} from "react";
+import React, {FC, useState} from "react";
 import {
   IonButton, IonCol,
   IonContent,
-  IonGrid, IonInput, IonItem,
+  IonGrid, IonItem,
   IonLabel,
   IonRow,
 } from "@ionic/react";
@@ -12,6 +12,7 @@ import {DATE_PICKER_PROPS} from "../../util/DateFormat.util";
 import "./upload.popover.scss"
 import "react-datepicker/dist/react-datepicker.css";
 import ToggleButtonComponent from "../ToggleButton.component";
+import DateTextInput from "../form/DateTextInput.component";
 import {people} from "ionicons/icons";
 import {eegBusiness} from "../../eegIcons";
 
@@ -55,7 +56,8 @@ const DatepickerPopover: FC<{
                     setDateRange(update);
                   }}
                   // isClearable={true}
-                  customInput={<DateInputComponent/>}
+                  customInput={<DateTextInput label="Zeitraum" style={{"--padding-start": "16px"}} onRange={setDateRange}/>}
+                  placeholderText="Zeitraum wählen"
                   {...DATE_PICKER_PROPS}
                   portalId="root-portal"
                 />
@@ -69,20 +71,6 @@ const DatepickerPopover: FC<{
       <></>
     )
   }
-
-  const DateInputComponent = forwardRef<HTMLIonInputElement, {}>(function CustomInput(p, ref) {
-    return (
-      <IonInput style={{"--padding-start": "16px"}}
-                {...p}
-                label={"Zeitraum"}
-                placeholder="Zeitraum wählen"
-                fill="outline"
-                labelPlacement={"floating"}
-                ref={ref}
-      >
-      </IonInput>
-    );
-  });
 
   return (
     <IonContent className="ion-padding" color="eeglight">

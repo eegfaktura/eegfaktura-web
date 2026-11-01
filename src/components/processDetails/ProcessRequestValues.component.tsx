@@ -1,8 +1,9 @@
-import React, {FC, forwardRef, useEffect, useState} from "react";
-import {IonButton, IonContent, IonInput, IonItem, useIonAlert} from "@ionic/react";
+import React, {FC, useEffect, useState} from "react";
+import {IonButton, IonContent, IonItem, useIonAlert} from "@ionic/react";
 import InputForm from "../form/InputForm.component";
 import SelectForm from "../form/SelectForm.component";
 import DatePicker from "react-datepicker";
+import DateTextInput from "../form/DateTextInput.component";
 import {DATE_PICKER_PROPS} from "../../util/DateFormat.util";
 import {useForm} from "react-hook-form";
 import {Metering} from "../../models/meteringpoint.model";
@@ -167,20 +168,6 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
     }
   }
 
-  const Component = forwardRef<HTMLIonInputElement, {}>(function CustomInput(p, ref) {
-    return (
-      <IonInput
-        {...p}
-        label={t("button_labels.calendar")}
-        placeholder="Datum wählen"
-        fill="outline"
-        labelPlacement={"floating"}
-        ref={ref}
-      >
-      </IonInput>
-    );
-  });
-
   const selectAllMeteringPoints = (s: boolean) => {
     if (s) {
       setValue("meteringPoints", meters.map(m => {
@@ -220,7 +207,8 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
                 onChange={(update) => {
                   setDateRange(update);
                 }}
-                customInput={<Component/>}
+                customInput={<DateTextInput label={t("button_labels.calendar")} onRange={setDateRange}/>}
+                placeholderText="Datum wählen"
                 {...DATE_PICKER_PROPS}
               />
             </div>

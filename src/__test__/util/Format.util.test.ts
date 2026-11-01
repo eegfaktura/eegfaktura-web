@@ -1,6 +1,7 @@
 import {describe, expect, it} from "vitest";
 import {formatCent, formatDecimal2, formatKwh, formatNumber, formatTariffEuro, parseDecimal} from "../../util/Number.util";
-import {DATE_PICKER_FORMAT, formatDate, formatDateTime, MONTH_NAMES} from "../../util/DateFormat.util";
+import {DATE_PICKER_FORMAT, formatDate, formatDateTime} from "../../util/DateFormat.util";
+import {MONTH_NAMES} from "../../components/form/DatePickerHeader.component";
 
 // platform#228 step 1: one German notation for numbers and dates on screen.
 

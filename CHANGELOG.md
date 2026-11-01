@@ -8,6 +8,15 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **All calendars look and work the same, and a date can be typed** (reported from the pilot). Every date picker has
+  one header with arrows, year and month and the colours of the app; before, half of them had a header without year
+  and month, and all showed the blue of the library. The calendar always shows six week rows, so the arrows stay in
+  place from month to month. A date can be typed or overwritten in every field; so far the text jumped back. In the
+  range pickers („Zählpunktdaten nachfordern“, download of the energy data) a complete „01.08.2026 - 01.10.2026“ is
+  taken over. The year and month of a calendar in the download dialog and in the billing download can be selected;
+  Ionic took the focus away from them. A field now also opens its calendar when reached with the Tab key.
+
 ## [1.19.0] – 2026-10-31
 
 ### Added

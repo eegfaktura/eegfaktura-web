@@ -1,13 +1,10 @@
-import React, {FC, FormEvent, forwardRef, HTMLProps, useEffect, useState} from "react";
+import React, {FC, useEffect, useState} from "react";
 import DatePicker from "react-datepicker";
 import {Control, Controller, FieldError, UseFormClearErrors, useWatch} from "react-hook-form";
-import {IonInput} from "@ionic/react";
 
 import "./DatePickerForm.element.scss"
-import {IonInputCustomEvent} from "@ionic/core/dist/types/components";
-import {InputInputEventDetail} from "@ionic/core/dist/types/components/input/input-interface";
-import moment from "moment";
 import {DATE_PICKER_EXAMPLE, DATE_PICKER_PROPS} from "../../util/DateFormat.util";
+import DateTextInput from "./DateTextInput.component";
 
 interface DatePickerFormProps {
   control: Control<any, any>,
@@ -37,35 +34,6 @@ const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, l
     onChangeDate && onChangeDate(name, showDate)
   }
 
-  // const Component = forwardRef<HTMLIonInputElement, { /*onIonChange: (event: IonInputCustomEvent<InputChangeEventDetail>) => void, onIonInput: (event: IonInputCustomEvent<InputInputEventDetail>) => void*/}>(function CustomInput(p, ref) {
-  const Component = forwardRef<HTMLIonInputElement, HTMLProps<HTMLIonInputElement>>(function CustomInput(p, ref) {
-    const handleInput1 = (event: IonInputCustomEvent<InputInputEventDetail>) => {
-      const date = event.detail.value
-      const valid = !!date && date.match(/^\w*\s\d{1,2},\s\d{4}$/)
-      if (valid && valid.length > 0) {
-        const dateObj = moment(date, "MMMM D, YYYY")
-        setShowDate(dateObj.toDate())
-      }
-    }
-
-    return (
-        <IonInput
-          value={p.value ? p.value.toString() : undefined}
-          onClick={p.onClick}
-          onIonChange={(e) => {
-            p.onChange && p.onChange(e as unknown as FormEvent<HTMLIonInputElement>)
-          }}
-          style={{flexDirection: "row-reverse"}}
-          label={label}
-          placeholder={placeholder + " " + DATE_PICKER_EXAMPLE}
-          fill="outline"
-          labelPlacement={"floating"}
-          ref={ref}
-          disabled={disabled}
-        />
-    );
-  });
-
   return (
     <div className="form-element">
       <Controller
@@ -84,7 +52,9 @@ const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, l
               onChange={(update) => {
                 update && setShowDate(update)
               }}
-              customInput={<Component />}
+              customInput={<DateTextInput label={label}/>}
+              placeholderText={placeholder + " " + DATE_PICKER_EXAMPLE}
+              disabled={disabled}
               onCalendarClose={handleUpdate(onChange)}
               {...DATE_PICKER_PROPS}
               ref={ref}

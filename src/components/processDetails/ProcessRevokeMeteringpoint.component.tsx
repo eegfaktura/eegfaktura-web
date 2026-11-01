@@ -1,8 +1,9 @@
-import React, {FC, forwardRef, useEffect, useState} from "react";
-import {IonButton, IonContent, IonInput, IonItem, useIonToast} from "@ionic/react";
+import React, {FC, useEffect, useState} from "react";
+import {IonButton, IonContent, IonItem, useIonToast} from "@ionic/react";
 import InputForm from "../form/InputForm.component";
 import SelectForm from "../form/SelectForm.component";
 import DatePicker from "react-datepicker";
+import DateTextInput from "../form/DateTextInput.component";
 import {DATE_PICKER_PROPS} from "../../util/DateFormat.util";
 import {useForm} from "react-hook-form";
 import {Metering} from "../../models/meteringpoint.model";
@@ -113,20 +114,6 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
     }
   }
 
-  const Component = forwardRef<HTMLIonInputElement, {}>(function CustomInput(p, ref) {
-    return (
-      <IonInput
-        {...p}
-        label={t("button_labels.calendar")}
-        placeholder="Datum wählen"
-        fill="outline"
-        labelPlacement={"floating"}
-        ref={ref}
-      >
-      </IonInput>
-    );
-  });
-
   return (
     <>
       <ProcessHeaderComponent name={edaProcess.name} />
@@ -151,7 +138,8 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
                 onChange={(update) => {
                   setConsentEndDate(update);
                 }}
-                customInput={<Component/>}
+                customInput={<DateTextInput label={t("button_labels.calendar")}/>}
+                placeholderText="Datum wählen"
                 {...DATE_PICKER_PROPS}
                 minDate={moment(Date.now()).add(1, 'day').toDate()}
               />
