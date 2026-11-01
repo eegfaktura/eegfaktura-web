@@ -3,7 +3,7 @@ import DatePicker from "react-datepicker";
 import {Control, Controller, FieldError, UseFormClearErrors, useWatch} from "react-hook-form";
 
 import "./DatePickerForm.element.scss"
-import {DATE_PICKER_EXAMPLE, DATE_PICKER_PROPS} from "../../util/DateFormat.util";
+import {DATE_PICKER_EXAMPLE, DATE_PICKER_PROPS, isSameDay} from "../../util/DateFormat.util";
 import DateTextInput from "./DateTextInput.component";
 
 interface DatePickerFormProps {
@@ -29,7 +29,10 @@ const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, l
     setShowDate(dateValue)
   }, [value]);
 
-  const handleUpdate = (onChange: (...event: any[]) => void) => () => {
+  // Saved once on leaving: on closing the calendar, or on leaving the field when it is already closed. Reaching the
+  // field with Tab opens and closes the calendar, so this also runs without an edit.
+  const handleUpdate = (onChange: (...event: any[]) => void, stored: any) => () => {
+    if (!showDate || isSameDay(showDate, stored)) return
     onChange(showDate)
     onChangeDate && onChangeDate(name, showDate)
   }
@@ -55,7 +58,8 @@ const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, l
               customInput={<DateTextInput label={label}/>}
               placeholderText={placeholder + " " + DATE_PICKER_EXAMPLE}
               disabled={disabled}
-              onCalendarClose={handleUpdate(onChange)}
+              onCalendarClose={handleUpdate(onChange, value)}
+              onBlur={handleUpdate(onChange, value)}
               {...DATE_PICKER_PROPS}
               ref={ref}
               portalId="root-portal"

@@ -2,10 +2,10 @@ import {Control, Controller, FieldValues, Path, RegisterOptions} from "react-hoo
 import DatePicker from "react-datepicker";
 
 import 'react-datepicker/dist/react-datepicker.css';
-import React from "react";
+import React, {useState} from "react";
 import moment, {Moment} from "moment";
 import {LocalDate} from "local-date";
-import {DATE_PICKER_PROPS} from "../../util/DateFormat.util";
+import {DATE_PICKER_PROPS, isSameDay} from "../../util/DateFormat.util";
 import DateTextInput from "./DateTextInput.component";
 
 // Kalenderdatum als "YYYY-MM-DD" im lokalen Kalender - so, wie der Benutzer es im
@@ -13,9 +13,9 @@ import DateTextInput from "./DateTextInput.component";
 export const toFormDateValue = (date: Date): string => moment(date).format("YYYY-MM-DD")
 
 // Neues Mitglied (kein Teilspeichern): Wert setzen und das Feld gleich pruefen. Das Formular
-// validiert im Modus "onBlur", aber CustomIonInput reicht onBlur von react-datepicker nicht weiter -
-// react-hook-form sieht fuer dieses Feld also nie ein Verlassen. Ohne erneute Pruefung bliebe ein
-// vorher gesetzter Fehler ("Mandatsdatum fehlt") trotz gewaehltem Datum stehen.
+// validiert im Modus "onBlur", bei offenem Kalender meldet react-datepicker aber kein Verlassen.
+// Ohne erneute Pruefung bliebe ein vorher gesetzter Fehler ("Mandatsdatum fehlt") trotz gewaehltem
+// Datum stehen.
 export const commitFormDate = (field: { onChange: (value: string) => void, onBlur: () => void }, date: Date) => {
   field.onChange(toFormDateValue(date))
   field.onBlur()
@@ -48,8 +48,14 @@ const DatePickerInput = <TFieldValues extends FieldValues>({
                                                              ...rest
                                                            }: DatePickerInputProps<TFieldValues>) => {
 
-  const onDateChange = (field: { onChange: (value: string) => void, onBlur: () => void }) => (date: Date | null) => {
-    if (date) {
+  // Beim Tippen ist jeder Zwischenstand einer Korrektur ein gueltiges Datum ("15.08." -> "1.08." -> "16.08."),
+  // darum gilt der Wert erst beim Schliessen des Kalenders oder beim Verlassen des Felds.
+  const [pending, setPending] = useState<Date | null>(null)
+
+  const commitDate = (field: { value: any, onChange: (value: string) => void, onBlur: () => void }) => () => {
+    const date = pending
+    setPending(null)
+    if (date && !isSameDay(date, field.value)) {
       const localDate = new LocalDate(moment(date).format("YYYY-MM-DD"))
       // Ins Formular als String "YYYY-MM-DD", nicht als LocalDate: react-hook-form klont
       // die Werte in handleSubmit und macht dabei aus jedem Date (auch LocalDate) ein
@@ -72,25 +78,17 @@ const DatePickerInput = <TFieldValues extends FieldValues>({
         control={control}
         rules={rules}
         render={({ field, fieldState: { error } }) => {
-          // Ensure field.value is always treated as Date | null
-          const selectedDate = field.value as Date | null;
-
-          // Format the date for display in the IonInput
-          const displayValue = (selectedDate instanceof Date)
-            ? 'Hallo' /*selectedDate.toLocaleDateString('de-DE', {
-              month: '2-digit',
-              day: '2-digit',
-              year: 'numeric'
-            })*/
-            : ''; // If null, display an empty string
-
           return (
           <>
             <DatePicker
               // id={String(name)} // id expects a string
-              selected={showDate(field.value)?.toDate()} // Cast to Date | null
-              onChange={onDateChange(field)}
-              onBlur={field.onBlur}
+              selected={pending ?? showDate(field.value)?.toDate()} // Cast to Date | null
+              onChange={(date: Date | null) => date && setPending(date)}
+              onCalendarClose={commitDate(field)}
+              onBlur={() => {
+                commitDate(field)()
+                field.onBlur()
+              }}
               {...DATE_PICKER_PROPS}
               customInput={<DateTextInput label={label}/>}
               placeholderText="Datum wählen"

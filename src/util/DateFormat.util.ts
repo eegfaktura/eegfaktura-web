@@ -28,7 +28,11 @@ export const DATE_PICKER_PROPS = {
   renderCustomHeader: renderDatePickerHeader,
 }
 
-const TYPED_FORMATS = ["DD.MM.YYYY", "D.M.YYYY", "D.MM.YYYY", "DD.M.YYYY"]
+// the formats of the picker, in the notation of moment
+const TYPED_FORMATS = DATE_PICKER_PROPS.dateFormat.map(format => format.replace(/d/g, "D").replace(/y/g, "Y"))
+
+// A picker hands back a Date, the form may hold a string: only a different day counts as a change.
+export const isSameDay = (a?: DateInput | null, b?: DateInput | null) => !!a && !!b && moment(a).isSame(b, "day")
 
 // A typed range „01.08.2026 - 01.10.2026“; null while it is incomplete or invalid, or when it ends before it starts.
 export const parseDateRange = (text: string): [Date, Date] | null => {

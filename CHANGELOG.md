@@ -15,7 +15,8 @@ this changelog highlights the changes relevant for overview and operations.
   place from month to month. A date can be typed or overwritten in every field; so far the text jumped back. In the
   range pickers („Zählpunktdaten nachfordern“, download of the energy data) a complete „01.08.2026 - 01.10.2026“ is
   taken over. The year and month of a calendar in the download dialog and in the billing download can be selected;
-  Ionic took the focus away from them. A field now also opens its calendar when reached with the Tab key.
+  Ionic took the focus away from them. A field now also opens its calendar when reached with the Tab key. A date is
+  saved once, when the calendar closes or the field is left, and only when the day has changed.
 
 ## [1.19.0] – 2026-10-31
 

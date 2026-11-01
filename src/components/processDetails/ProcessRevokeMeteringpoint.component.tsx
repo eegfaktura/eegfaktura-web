@@ -141,7 +141,7 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
                 customInput={<DateTextInput label={t("button_labels.calendar")}/>}
                 placeholderText="Datum wählen"
                 {...DATE_PICKER_PROPS}
-                minDate={moment(Date.now()).add(1, 'day').toDate()}
+                minDate={moment(Date.now()).add(1, 'day').startOf('day').toDate()}
               />
             </div>
             <IonItem lines="none" style={{zIndex: "0"}}>
