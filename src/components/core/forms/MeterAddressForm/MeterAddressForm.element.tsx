@@ -75,13 +75,7 @@ const MeterAddressFormElement: FC<MeterAddressFormElementProps> = ({
       <InputForm name={"street"} label={t("address.street")} control={control} rules={{required: t("warnings.street_missing")}} type="text"
                  error={errors?.street} disabled={disableAddressFields} onChangePartial={_onChange}/>
       <InputForm name={"streetNumber"} label={t("address.street_number")} control={control}
-                 rules={{
-                   required: t("warnings.street-number_missing"),
-                   pattern: {
-                     value: /^[0-9A-Za-z\/\-\\\s]*$/,
-                     message: "Ungültige Zeichen. Erlaubt sind 0-9, A-Z, a-z, \,/,-, ]"
-                   }
-                 }}
+                 rules={{required: t("warnings.street-number_missing")}}
                  type="text" error={errors?.streetNumber} disabled={disableAddressFields} onChangePartial={_onChange}/>
       <InputForm name={"zip"} label={t("address.zip")} control={control} rules={{required: t("warnings.zip_missing")}}
                  type="text" error={errors?.zip} disabled={disableAddressFields} onChangePartial={_onChange}/>

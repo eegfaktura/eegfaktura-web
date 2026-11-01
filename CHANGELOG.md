@@ -9,6 +9,9 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Fixed
+- **The house number of a metering point takes the same characters as the one of a member.** „8a+b“, „8.1“ or „8,10“
+  were rejected only in the metering point form, and „Adresse vom Besitzer übernehmen“ failed for such a member. The
+  character check is gone, the field stays required. The address is not part of any message to the grid operator.
 - **All calendars look and work the same, and a date can be typed** (reported from the pilot). Every date picker has
   one header with arrows, year and month and the colours of the app; before, half of them had a header without year
   and month, and all showed the blue of the library. The calendar always shows six week rows, so the arrows stay in
