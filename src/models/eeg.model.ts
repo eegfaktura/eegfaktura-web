@@ -141,6 +141,7 @@ export const ezpType: EegRateItem[] = [
 ]
 
 export interface EegTariff {
+  version?: number;
   id: string;
   name: string;
   type: "EEG" | "EZP" | "VZP" | "AKONTO";
