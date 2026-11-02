@@ -25,7 +25,7 @@ describe("saving a tariff", () => {
     const onDirty = vi.fn()
     // as the backend: a new version, and JSON has no undefined fields
     ;(Api as any).eegService = {
-      addRate: vi.fn(async (_: string, r: EegTariff) => JSON.parse(JSON.stringify({...r, version: r.version + 1}))),
+      addRate: vi.fn(async (_: string, r: EegTariff) => JSON.parse(JSON.stringify({...r, version: (r.version ?? 0) + 1}))),
     }
     const {container} = renderWithProviders(<MemoryRouter><Pane onDirty={onDirty}/></MemoryRouter>,
       {preloadedState: {rate: {ids: [tariff.id], entities: {[tariff.id]: tariff}, selectedRate: tariff}}} as any)
