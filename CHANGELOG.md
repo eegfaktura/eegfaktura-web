@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.19.2] – 2026-11-02
+
 ### Fixed
 - **A saved tariff no longer stays „unsaved“.** The save worked, but the form counted the empty fields of the answer as
   changes: „Änderungen speichern“ stayed active, and another tariff or „Zurück“ asked before discarding. A failed save now
