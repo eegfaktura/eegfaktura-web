@@ -36,7 +36,14 @@ interface RateDetailPaneComponentProps {
   onDirtyChange?: (dirty: boolean) => void;
 }
 
-const RateDetailPaneComponent: FC<RateDetailPaneComponentProps> = ({onSubmit, submitId, mode, onDirtyChange}) => {
+// A new form per tariff and version instead of the form's reset: a saved tariff comes back without its empty fields
+// (omitempty), the reset then counts each of them as a change and the form stays dirty after every save.
+const RateDetailPaneComponent: FC<RateDetailPaneComponentProps> = (props) => {
+  const selectedTariff = useAppSelector(selectedRateSelector)
+  return <RateDetailPaneForm key={`${selectedTariff?.id}:${selectedTariff?.version}`} {...props}/>
+}
+
+const RateDetailPaneForm: FC<RateDetailPaneComponentProps> = ({onSubmit, submitId, mode, onDirtyChange}) => {
   const dispatcher = useAppDispatch();
   const selectedTariff = useAppSelector(selectedRateSelector)
   const {tenant} = useTenant()

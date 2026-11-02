@@ -104,19 +104,25 @@ const RatesPage: FC = () => {
     onSelect(newRate)
   }
 
+  const saveFailed = (e: {message?: string}) => showToast({
+    message: "Tarif konnte nicht gespeichert werden: " + (e?.message ?? "unbekannter Fehler"),
+    duration: 4500,
+    color: "danger",
+  })
+
   const onSubmitRateChange = (rate: EegTariff) => {
     if (rate.id.length === 0) {
       if(checkValidName(rate)){
-        dispatcher(saveNewRate({ rate, tenant }));
+        dispatcher(saveNewRate({ rate, tenant })).unwrap().catch(saveFailed);
       }
     } else {
       const doubleID = getDuplicateRate(rate);
 
       if(doubleID === rate.id){
-        dispatcher(updateRate({ rate, tenant }));
+        dispatcher(updateRate({ rate, tenant })).unwrap().catch(saveFailed);
       }
       else if (checkValidName(rate)) {
-        dispatcher(updateRate({ rate, tenant }));
+        dispatcher(updateRate({ rate, tenant })).unwrap().catch(saveFailed);
       }
     }
   }
