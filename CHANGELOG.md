@@ -8,6 +8,10 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Security
+- **brotli-libs 1.2.1-r0 in the image** (CVE-2026-111497, from the weekly base image scan): `caddy:2.11.7` ships 1.2.0
+  and there is no newer Caddy image yet, so the Dockerfile updates the package.
+
 ## [1.19.2] – 2026-11-02
 
 ### Fixed
