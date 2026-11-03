@@ -1,6 +1,5 @@
 import {AuthService} from "./auth.service";
 import {determineErrTxt, ErrorResponse, IErrorResponse} from "./error.text";
-import {Mutex} from "async-mutex";
 
 export const API_API_SERVER = import.meta.env.VITE_API_SERVER_URL;
 export const FILESTORE_API_SERVER = import.meta.env.VITE_FILESTORE_SERVER_URL;
@@ -62,44 +61,27 @@ export const mayRedirectToLogin = (now: number = Date.now()): boolean => {
     return false  // no storage: show the error, do not risk a loop
   }
 }
-const mutex = new Mutex();
+// The session check of a 401 (also used by the RTK Query participant API). The backend also answers 401 for a
+// missing access group: only an expired or missing session goes to the login, a valid token gets "no permission"
+// (no redirect loop).
+export const handleUnauthorized = async (authService: AuthService): Promise<never> => {
+  const user = await authService.getUser().catch(() => null)
+  if (user && !user.expired) {
+    throw new Error(NO_PERMISSION)
+  }
+  if (mayRedirectToLogin()) {
+    authService.login().catch(() => {})
+  }
+  throw new Error(SESSION_EXPIRED)
+}
 
 class EegBaseService {
 
   public constructor(private authService: AuthService) {
   }
 
-  protected async getUser() {
-    return await this.authService.getToken().catch(e => {
-      return this.authService.refresh().then(_ => this.authService.getToken())
-    })
-  }
-
-  // lock = this.createLoc<string>()
   protected async lookupToken() {
-    // return Lock(async () => {
-    //   try {
-    //     const token = await this.getUser()
-    //     if (token) {
-    //       return token
-    //     }
-    //   } catch {
-    //     console.log("Not Authenticated")
-    //   }
-    //   throw new Error()
-    // })
-
-    return mutex.runExclusive(async () => {
-      try {
-        const token = await this.getUser()
-        if (token) {
-          return token
-        }
-      } catch {
-        console.log("Not Authenticated")
-      }
-      return Promise.reject("new Error()")
-    })
+    return this.authService.lookupToken()
   }
   protected getSecureHeaders(token: string, tenant: string) {
     return {'Authorization': `Bearer ${token}`, "tenant": tenant}
@@ -117,18 +99,9 @@ class EegBaseService {
 
     if (!response.ok) {
       switch (response.status) {
-        case 401: {
-          // used to pass as success. The backend also answers 401 for a missing access group: only an expired or
-          // missing session goes to the login, a valid token gets "no permission" (no redirect loop)
-          const user = await this.authService.getUser().catch(() => null)
-          if (user && !user.expired) {
-            throw new Error(NO_PERMISSION)
-          }
-          if (mayRedirectToLogin()) {
-            this.authService.login().catch(() => {})
-          }
-          throw new Error(SESSION_EXPIRED)
-        }
+        case 401:
+          // used to pass as success
+          return handleUnauthorized(this.authService)
         default:
           // read the body once: a second read after a failed json() throws and hides the real error
           const errorText = await response.text()

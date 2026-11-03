@@ -26,7 +26,6 @@ export const userApi = createApi({
     getUser: builder.query<{ data: {tenant: string, name: string}[] }, void>({
       query: () => "/get-user",
       providesTags: ["user"],
-      extraOptions: { maxRetries: 2 },
     }),
     // logout: builder.query<{ msg: string }, null>({
     //   query: () => "/logout",

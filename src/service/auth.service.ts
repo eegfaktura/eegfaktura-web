@@ -88,19 +88,19 @@ export class AuthService extends UserManager {
     return token
   }
 
-  public async lookupToken(){
+  // the one token lookup of the app (class services and the RTK Query participant API), one at a time: a failed
+  // getToken waits for the refresh and tries again (WEB-CQ-24)
+  public async lookupToken(): Promise<string> {
     return this.mutex.runExclusive(async () => {
       try {
-        const token = await this.getToken().catch(e => {
-          this.refresh()
-        })
+        const token = await this.getToken().catch(() => this.refresh().then(() => this.getToken()))
         if (token) {
           return token
         }
       } catch {
         console.log("Not Authenticated")
       }
-      throw new Error()
+      throw new Error("Not Authenticated")
     })
   }
 
