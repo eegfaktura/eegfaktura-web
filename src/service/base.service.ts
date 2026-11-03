@@ -5,46 +5,6 @@ export const API_API_SERVER = import.meta.env.VITE_API_SERVER_URL;
 export const FILESTORE_API_SERVER = import.meta.env.VITE_FILESTORE_SERVER_URL;
 export const ENERGY_API_SERVER = import.meta.env.VITE_ENERGY_SERVER_URL;
 
-export interface ErrorMessage {
-  code: number
-  message: string
-}
-
-export class HttpError extends Error {
-  public constructor(public reasonObject: ErrorMessage, public statusText: string) {
-    super(statusText);
-  }
-}
-
-function createLoc<T>() {
-  const queue: any[] = [];
-  let active = false;
-  return (fn: any) => {
-    let deferredResolve: (value: (T | PromiseLike<T>)) => void;
-    let deferredReject: (value: (T | PromiseLike<T>)) => void;
-    const deferred = new Promise<T>((resolve, reject) => {
-      deferredResolve = resolve;
-      deferredReject = reject;
-    });
-    const exec = async () => {
-      await fn().then(deferredResolve, deferredReject);
-      if (queue.length > 0) {
-        queue.shift()();
-      } else {
-        active = false;
-      }
-    };
-    if (active) {
-      queue.push(exec);
-    } else {
-      active = true;
-      exec();
-    }
-    return deferred;
-  };
-};
-const Lock = createLoc<string>()
-
 export const SESSION_EXPIRED = "Deine Sitzung ist abgelaufen. Bitte melde Dich neu an."
 export const NO_PERMISSION = "Dafür fehlt Dir die Berechtigung."
 // Several calls can fail with 401 at once, and a 401 that is not about the session (a misconfigured service)
