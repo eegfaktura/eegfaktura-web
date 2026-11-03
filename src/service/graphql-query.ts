@@ -1,26 +1,4 @@
 
-const EegQuery = `{
-  eeg()
-}`;
-
-export const eegGraphqlQuery = {
-    operationName: null,
-    query: `query EegInfo ${EegQuery}`,
-    variables: {},
-};
-
-const EnergyQuery = (tenant: string, year: number, month: number) => `{
-  eeg(name:"${tenant}", year:${year}, month: ${month})
-}`; // graphQl Query
-
-export const energyGraphqlQuery = (tenant: string, year: number, month: number) => {
-  return {
-    operationName: null,
-    query: `query EnergyInfo ${EnergyQuery(tenant.toLowerCase(), year, month)}`,
-    variables: {},
-  }
-};
-
 const ReportDateQuery = (tenant: string, ecId: string) => `{
   lastEnergyDate(tenant:"${tenant}", ecId: "${ecId}")
 }`; // graphQl Query

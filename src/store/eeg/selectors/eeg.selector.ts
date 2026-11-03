@@ -30,14 +30,6 @@ export const eegSelector = createSelector(
 )
 
 
-export const selectEegById = (id: string) =>
-  createSelector(
-    featureStateSelector,
-    (eegState: EegState): Eeg | undefined => {
-      return selectById(eegState, id) || undefined;
-    }
-  );
-
 export const selectedTenant = createSelector(
   featureStateSelector,
   state => state.selectedTenant || ""

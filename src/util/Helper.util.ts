@@ -1,18 +1,8 @@
-import {EegParticipant} from "../models/members.model";
 import {ReportType, SelectedPeriod, TariffTimeWindow} from "../models/energy.model";
 import {CpPeriodType} from "../models/reports.model";
 import {EegTariff, MONTHNAME} from "../models/eeg.model";
 import {formatDateTime} from "./DateFormat.util";
 
-
-export const formatedName = (participant: EegParticipant) => {
-  let title = ""
-  if (participant.titleBefore && participant.titleBefore.length > 0) {
-    title = participant.titleBefore + " ";
-  }
-
-  return title + `${participant.firstname} ${participant.lastname}`
-}
 
 const splitDatePattern = /\.|\s|:/
 export const splitDate = (date: string) => date.split(splitDatePattern).map(s=>Number(s))
@@ -57,19 +47,6 @@ export const determinePeriodEnd = (period: SelectedPeriod) => {
     case "YQ": return [period.segment * 3, period.year]
     default: return [period.segment, period.year]
   }
-}
-
-export const calcSegment = (period: SelectedPeriod, cpPeriod?: CpPeriodType) => {
-  const [month, year] = determinePeriodEnd(period)
-  if (cpPeriod) {
-    const [beginYear, beginMonth, endYear, endMonth] = splitCpPeriod(cpPeriod)
-    if (endYear > period.year) {
-      return [year, month]
-    } else {
-      return [year, Math.min(endMonth, month)]
-    }
-  }
-  return [year, month]
 }
 
 export const periodDisplayString = (period: SelectedPeriod) => {
@@ -257,21 +234,6 @@ export const calcCurrentPeriod = (period: SelectedPeriod) => {
       currentPeroid.segment = (currentDate.getMonth() + 1 < 7 ? 1 : 2)
   }
     return currentPeroid;
-}
-
-export function findPartial<O extends object, OT extends keyof object>(obj: O, key: string): Partial<O> {
-  let result = {}
-  Object.keys(obj).forEach(k => {
-    if (typeof obj[k as OT] === 'object') {
-      const sub = findPartial(obj[k as OT], key)
-      if (Object.keys(sub).length !== 0) {
-        result = {[k]: sub}
-      }
-    } else if (k === key) {
-      result = {[k]: obj[k as OT]}
-    }
-  })
-  return result
 }
 
 // Kuerzt lange Timestampangaben. Z.B.: 2023-07-31T19:55:04.234769 oder 2023-07-31T19:55:04 -> 31.07.2023 21:55 (Ortszeit)

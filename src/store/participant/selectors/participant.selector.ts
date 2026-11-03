@@ -72,19 +72,6 @@ export const selectedParticipantSelector = createSelector(
   state => state.selectedParticipant
 )
 
-export const selectedMeterById = (meter: string) => createSelector(
-  meterSelector,
-  meters => meters.find((m) => m.meteringPoint === meter)
-)
-
-export const selectParticipantNames = createSelector(
-  selectAll,
-  activeParticipantsSelector1,
-  (participants) => participants.map((p) => {
-    return {id: p.id, name: `${p.firstname} ${p.lastname}`}
-  })
-)
-
 export const selectedMeterIdSelector = createSelector(
   featureStateSelector,
   state => state.selectedMeter
