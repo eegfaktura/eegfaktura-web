@@ -101,7 +101,6 @@ import BillingTotalsTable, {
 } from "./BillingTotalsTable.component";
 import FilterSegmentComponent from "./FilterSegment.component";
 import {MemberSort, readActionFirst, readMemberSort, writeActionFirst, writeMemberSort} from "./participantSort";
-import {VariableSizeList} from "react-window";
 
 import HeaderFavButtonComponent from "../core/HeaderFavButton.component";
 import {Virtuoso} from "react-virtuoso";
@@ -647,11 +646,6 @@ const ParticipantPaneComponent: FC = () => {
       exportBusy, errorToast, "ZIP-Datei");
   }
 
-  // const viewPortRef = useRef<HTMLDivElement | null>(null);
-  const viewPortRef = useRef(null);
-  // const listRef = useRef<ViewportListRef | null>(null);
-  const listRef = useRef<VariableSizeList>(null);
-  const rowHeights = useRef<Record<number, number>>({});
   const popoverRef = useRef<HTMLIonToolbarElement>(null);
 
   const handleSearchInput = (e: CustomEvent<SearchbarInputEventDetail>) => {
@@ -673,22 +667,6 @@ const ParticipantPaneComponent: FC = () => {
   // }
 
   const viewPortItems = filterSearchQuery(viewEntities, searchQuery)
-
-  const setRowHeight = (index: number, size: number) => {
-    // listRef.current?.resetAfterIndex(0);
-    console.log("setRowHeight", index, size)
-    rowHeights.current = {...rowHeights.current, [index]: size};
-  }
-
-  const getRowHeight = (index: number) => {
-    if (rowHeights.current) {
-      console.log("getRowHeight", index, rowHeights.current[index] + 8 || 82)
-      return rowHeights.current[index] + 8 || 82;
-    }
-    console.log("getRowHeight", index, "Default 200")
-    return 200
-  }
-
 
   const RowElement: FC<{ participant: EegParticipant }> = ({participant}) => {
     const command = participant
@@ -804,41 +782,8 @@ const ParticipantPaneComponent: FC = () => {
             activePeriod={activePeriod}
             onUpdatePeriod={onUpdatePeriodSelection}
           />
-          {/*<div className={"scroll-container"} ref={viewPortRef}>*/}
-          {/*<AutoSizer className={"scroll-container"} disableWidth={false}>*/}
-          {/*  {({ height, width }) => (*/}
-          {/*    <VariableSizeList*/}
-          {/*      className="List"*/}
-          {/*      height={height - 74}*/}
-          {/*      itemCount={viewPortItems.length}*/}
-          {/*      itemSize={getRowHeight}*/}
-          {/*      ref={listRef}*/}
-          {/*      width={width}*/}
-          {/*    >*/}
-          {/*      {ListRow}*/}
-          {/*    </VariableSizeList>*/}
-          {/*  )}*/}
-          {/*</AutoSizer>*/}
-          {/*  <AutoSizer disableWidth={true}>*/}
-          {/*    {({ height }) => {*/}
-          {/*      console.log("Autosizer: ", height)*/}
-          {/*      return(*/}
-          {/*  <ViewportList*/}
-
-          {/*    viewportRef={viewPortRef}*/}
-          {/*    items={viewPortItems}*/}
-          {/*    itemSize={Math.max(1, height / viewPortItems.length)}>*/}
-          {/*    {(item) => (*/}
-          {/*      <RowElement key={item.id} participant={item}/>*/}
-          {/*    )}*/}
-          {/*  </ViewportList>*/}
-          {/*      )}}*/}
-          {/*      </AutoSizer>*/}
-          {/*</div>*/}
           {viewPortItems.length > 0 &&
           <Virtuoso style={{overflowX: "hidden"}}
-            // ref={listRef}
-            // viewportRef={viewPortRef}
                     context={{isScrolling}}
                     isScrolling={setIsScrolling}
                     totalCount={viewPortItems.length}
