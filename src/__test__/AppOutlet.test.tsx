@@ -26,7 +26,8 @@ const start = (path: string) => {
   window.history.pushState({}, "", path)
   render(<IonApp><IonReactRouter><Nav/><PageRoutes/></IonReactRouter></IonApp>)
 }
-const go = async (path: string) => { await act(async () => { history.push(path) }); await act(async () => { await new Promise(r => setTimeout(r, 50)) }) }
+// the callers wait for the expected page (findByText) instead of a fixed time
+const go = async (path: string) => { await act(async () => { history.push(path) }) }
 
 // jsdom runs no page transition (no ion-page-hidden): the number of visible pages is checked in the browser
 // (PR description); these tests guard the route matching inside IonRouterOutlet.
