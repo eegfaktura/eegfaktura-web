@@ -1,4 +1,4 @@
-import React, {FC, KeyboardEvent, useEffect, useRef, useState} from "react";
+import {FC, useEffect, useRef, useState} from "react";
 import {InputChangeEventDetail, IonInput} from "@ionic/react";
 import {Control, Controller, FieldError, FieldValues, Path, UseFormClearErrors} from "react-hook-form";
 import {IonInputCustomEvent} from "@ionic/core/dist/types/components";
@@ -6,9 +6,6 @@ import {InputInputEventDetail} from "@ionic/core/dist/types/components/input/inp
 
 import "./form-element.css";
 import {parseDecimal} from "../../util/Number.util";
-
-function noop() {
-}
 
 // The number an input sends to the form: an emptied field is 0 (it used to keep the old value, 261027-mm1).
 // German notation with thousands separators ("1.234,56") is read via parseDecimal (261005-ca5).
@@ -30,12 +27,7 @@ interface NumberInput {
   label: string
   name: string
   onChange: (...event: any[]) => void
-  decimalScale: number
   placeholder?: string
-  onKeyDown?: (e: KeyboardEvent<HTMLIonInputElement>) => void
-  onKeyUp?: (e: KeyboardEvent<HTMLIonInputElement>) => void
-  maxlength?: number
-  maxValue?: number
   helperText?: string
 }
 
@@ -45,15 +37,10 @@ const NumberInput: FC<NumberInput> = ({
                                         name,
                                         onChange,
                                         placeholder,
-                                        maxValue,
-                                        decimalScale,
-                                        onKeyDown = noop,
-                                        onKeyUp = noop,
                                         helperText,
                                       }) => {
 
   const [value, setValue] = useState<string>("");
-  const [cursor, setCursor] = useState<number | null>(null);
   const inputRef = useRef<HTMLIonInputElement>()
 
 
@@ -63,11 +50,6 @@ const NumberInput: FC<NumberInput> = ({
       ? formatValue(initialValue.toString()) : "")
   }, [initialValue]);
 
-  // useEffect(() => {
-  //   const input = inputRef.current;
-  //   if (input) input.getInputElement().then(e => e.setSelectionRange(cursor, cursor))
-  // }, [inputRef, cursor]);
-
 
   // 0 is shown as "0", not as an empty field that looks "not set" (261005-ca5)
   const formatValue = (value: string): string => value.replace(".", ",")
@@ -75,64 +57,8 @@ const NumberInput: FC<NumberInput> = ({
   // const isNumeric = (value: any): boolean => !new RegExp(/[^\d,]/g).test(value.trim())
   const isNumeric = (value: any): boolean => new RegExp(/^[-]{0,1}\d*,{0,1}\d{0,2}$/).test(value.trim())
 
-  const allowNegative = false
-  const prefix = ''
-  const fixedDecimalScale = false
-  const decimalSeparator = ','
-
-  const _onKeyDown = (e: KeyboardEvent<HTMLIonInputElement>) => {
-    const el = e.target as HTMLInputElement;
-    const {key} = e;
-    const {selectionStart, selectionEnd, value = ''} = el;
-
-    let expectedCaretPosition: number | null = null;
-
-    //Handle backspace and delete against non numerical/decimal characters or arrow keys
-    if (key === 'ArrowLeft' || key === 'Backspace') {
-      expectedCaretPosition = Math.max((selectionStart as number) - 1, 0);
-    } else if (key === 'ArrowRight') {
-      expectedCaretPosition = Math.min((selectionStart as number) + 1, value.length);
-    } else if (key === 'Delete') {
-      expectedCaretPosition = selectionStart;
-    }
-
-    setCursor(expectedCaretPosition)
-  };
-
-  const _onKeyUp = (e: KeyboardEvent<HTMLIonInputElement>) => {
-    const el = e.target as HTMLInputElement;
-    const {selectionStart, selectionEnd, value = ''} = el;
-
-    // if multiple characters are selected and user hits backspace, no need to handle anything manually
-    if (selectionStart !== selectionEnd) {
-      onKeyUp(e);
-      return;
-    }
-
-    let currentSelection = cursor
-    if (!currentSelection) currentSelection = selectionStart
-    el.setSelectionRange(currentSelection, currentSelection)
-  }
-
   const onChangeValue = (e: IonInputCustomEvent<InputChangeEventDetail>) => {
     onChange(numberInputValue(e.target.value))
-  }
-
-  const splitDecimal = (numStr: string, allowNegative: boolean = true) => {
-    const hasNegation = numStr[0] === '-';
-    const addNegation = hasNegation && allowNegative;
-    numStr = numStr.replace('-', '');
-
-    const parts = numStr.split('.');
-    const beforeDecimal = parts[0];
-    const afterDecimal = parts[1] || '';
-
-    return {
-      beforeDecimal,
-      afterDecimal,
-      hasNegation,
-      addNegation,
-    };
   }
 
   const handleValueChange = (values: IonInputCustomEvent<InputInputEventDetail>) => {
@@ -143,8 +69,7 @@ const NumberInput: FC<NumberInput> = ({
         // values.detail.value = formatValue(target)
         // values.target.getInputElement().then(e => {
         inputRef.current?.getInputElement().then(e => {
-          let currentSelection = cursor
-          currentSelection = Math.min((e.selectionStart as number), target.length);
+          const currentSelection = Math.min((e.selectionStart as number), target.length);
           values.detail.value = formatValue(target)
           // setCursor(currentSelection)
           e.setSelectionRange(currentSelection, currentSelection)
@@ -185,8 +110,6 @@ const NumberInput: FC<NumberInput> = ({
               onIonChange={onChangeValue}
               onIonInput={(e) => handleValueChange(e as IonInputCustomEvent<HTMLInputElement>)}
               helperText={helperText}
-      // onKeyDown={_onKeyDown}
-      // onKeyUp={_onKeyUp}
     >
     </IonInput>
   )
@@ -204,7 +127,7 @@ const NumberInputForm = <T extends FieldValues>(props: NumberInputFormProps<T>) 
           const {onChange, value, name, ref} = field;
           return (
             <NumberInput onChange={onChange} name={name} label={label} placeholder={placeholder} initialValue={value ?? undefined}
-                         decimalScale={2} helperText={fieldState.error?.message}/>)
+                         helperText={fieldState.error?.message}/>)
         }}
       />
       {error && <div className={"error-line"}>{error.message}</div>}
