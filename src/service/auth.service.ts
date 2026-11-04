@@ -1,7 +1,6 @@
 import {User, UserManager, UserManagerSettings, UserProfile, WebStorageStateStore, Log} from "oidc-client-ts";
 import {Mutex} from "async-mutex";
 
-// import {keycloakConfig} from "../keycloak";
 
 // const keycloakConfig = {
 //   url: "https://login.ourproject.at/auth/realms/VFEEG/",
