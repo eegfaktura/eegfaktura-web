@@ -1,3 +1,4 @@
+// @vitest-environment node
 import {describe, expect, it} from "vitest";
 import {tariffInUseMessage} from "../../components/RateDetailPane.functions";
 import {EegParticipant} from "../../models/members.model";

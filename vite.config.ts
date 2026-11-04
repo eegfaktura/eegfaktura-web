@@ -12,7 +12,7 @@ export default defineConfig({
   plugins: [
     react(),
     legacy(),
-    i18nextLoader({ paths: ['./locales'], namespaceResolution: "basename", logLevel: 'info'}),
+    i18nextLoader({ paths: ['./locales'], namespaceResolution: "basename", logLevel: 'warn'}),
   ],
   server: {
     proxy: {

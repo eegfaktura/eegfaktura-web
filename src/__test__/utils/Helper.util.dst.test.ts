@@ -1,3 +1,4 @@
+// @vitest-environment node
 // A DST timezone (the suite runs in Europe/Vienna, vite.config.ts test.env) exercises the
 // day-of-year round-trip across the CET->CEST change. The day-view arrows stepped by 2 days (and got stuck the
 // other direction) in summer because dateToDayOfYear divided wall-clock ms by

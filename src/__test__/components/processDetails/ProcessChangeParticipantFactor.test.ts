@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from "vitest";
 import {partFactChanges} from "../../../components/processDetails/ProcessChangeParticipantFactor.component";
 import {Metering} from "../../../models/meteringpoint.model";

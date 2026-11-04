@@ -1,3 +1,4 @@
+// @vitest-environment node
 import {describe, expect, it} from "vitest"
 
 // WEB-CQ-25: the tests with local dates and DST days rely on the one time zone of the suite (vite.config.ts test.env)
