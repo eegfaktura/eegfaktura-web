@@ -28,6 +28,8 @@ const start = (path: string) => {
 }
 // the callers wait for the expected page (findByText) instead of a fixed time
 const go = async (path: string) => { await act(async () => { history.push(path) }) }
+// an absence cannot be waited for: let the outlet finish its transition, as long as the old fixed wait, then check
+const settle = () => act(async () => { await new Promise(r => setTimeout(r, 50)) })
 
 // jsdom runs no page transition (no ion-page-hidden): the number of visible pages is checked in the browser
 // (PR description); these tests guard the route matching inside IonRouterOutlet.
@@ -49,6 +51,7 @@ describe("IonRouterOutlet routes (261024-ca12)", () => {
       ["/page/mailtemplates", "E-Mail-Texte-Seite"]]) {
       await go(path)
       expect(await screen.findByText(name)).toBeTruthy()
+      await settle()
       expect(screen.queryByText("Diese Seite gibt es nicht.")).toBeNull()
     }
   })
