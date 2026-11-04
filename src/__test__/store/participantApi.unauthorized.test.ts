@@ -1,4 +1,4 @@
-import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
+import {afterAll, afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import {configureStore} from "@reduxjs/toolkit";
 import {reducer} from "../../store/store";
 import {participantApi} from "../../store/participant/api";
@@ -11,6 +11,7 @@ vi.hoisted(() => { vi.stubEnv("VITE_API_SERVER_URL", "http://api.test") })
 describe("participantApi 401 (WEB-CQ-24)", () => {
   const original = Api.authService
   beforeEach(() => sessionStorage.clear())
+  afterAll(() => vi.unstubAllEnvs())
   afterEach(() => {
     vi.unstubAllGlobals()
     ;(Api as any).authService = original
