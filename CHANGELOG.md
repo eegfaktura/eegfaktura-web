@@ -15,7 +15,9 @@ this changelog highlights the changes relevant for overview and operations.
 ### Fixed
 - **Deleting a member and changing the business type recover from an expiring session like every other call**
   (WEB-CQ-24). Their token lookup started the session refresh without waiting for it and failed; it now waits and
-  tries again. A 401 on these two calls now leads to the login (or to "no permission"), as everywhere else.
+  uses the refreshed token. A 401 on these two calls now leads to the login when the session expired; otherwise they
+  show their existing error text, as before. When no session can be found at all, the calls now fail with
+  „Not Authenticated“: error messages that add the reason end in „(Not Authenticated)“ instead of „(new Error())“.
 
 ### Removed
 - **Code-quality cleanup** (code-quality review 2026-11-03): about 2,000 lines of code no module used — the old
