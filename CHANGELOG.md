@@ -12,6 +12,20 @@ this changelog highlights the changes relevant for overview and operations.
 - **brotli-libs 1.2.1-r0 in the image** (CVE-2026-111497, from the weekly base image scan): `caddy:2.11.7` ships 1.2.0
   and there is no newer Caddy image yet, so the Dockerfile updates the package.
 
+### Fixed
+- **Deleting a member and changing the business type recover from an expiring session like every other call**
+  (WEB-CQ-24). Their token lookup started the session refresh without waiting for it and failed; it now waits and
+  tries again. A 401 on these two calls now leads to the login (or to "no permission"), as everywhere else.
+
+### Removed
+- **Code-quality cleanup** (code-quality review 2026-11-03): about 2,000 lines of code no module used — the old
+  registration forms (they live in eegfaktura-admin), second copies of member/meter forms and the number input, the
+  Login and test pages, the commented-out keycloak-js service, unused selectors and helpers, the old virtual-list
+  code of the member list, the Create-React-App/webpack/nginx leftovers and the Makefile; the packages
+  `@loadable/component`, `react-viewport-list`, `react-virtualized-auto-sizer`, `react-window` and
+  `redux-mock-store`. Tests run in one time zone (Europe/Vienna) and wait for conditions instead of fixed sleeps;
+  pure function tests run without a DOM.
+
 ## [1.19.2] – 2026-11-02
 
 ### Fixed
