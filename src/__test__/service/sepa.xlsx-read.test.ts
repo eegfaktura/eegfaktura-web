@@ -1,8 +1,8 @@
+// @vitest-environment node
 // Reads a workbook laid out like the billing SEPA export (BillingDocumentXlsxService: dates as serial numbers with
 // the format "dd.mm.yy", amounts as plain numbers rounded to 2 decimals) and checks what ends up in the SEPA XML.
 // Guards the SheetJS upgrade 0.18.5 -> 0.20.3 (0.20 reads dates as UTC): the expected values were produced with
-// 0.18.5 and must stay the same.
-process.env.TZ = 'Europe/Vienna'
+// 0.18.5 and must stay the same (the suite runs in Europe/Vienna, vite.config.ts test.env).
 
 import { describe, it, expect, vi } from "vitest";
 import * as XLSX from "xlsx";

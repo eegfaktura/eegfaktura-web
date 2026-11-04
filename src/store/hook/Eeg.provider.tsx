@@ -191,12 +191,6 @@ export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
     }
   }, [activeTenant])
 
-  const _setTenant = (tenant: string) => {
-    setActiveTenant(tenant)
-    localStorage.setItem("tenant", tenant.toUpperCase())
-    dispatch(selectTenant(tenant))
-  }
-
   const value = {
     eeg: eeg,
     tenant: activeTenant,

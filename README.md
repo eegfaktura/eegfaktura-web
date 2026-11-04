@@ -43,8 +43,11 @@ pnpm run build        # tsc && vite build  →  dist/
 Dev server:
 
 ```bash
-pnpm run dev          # Vite dev server; setupProxy.js proxies the backends
+pnpm run dev          # Vite dev server
 ```
+
+The dev server proxies `/api`, `/energystore` and `/cash` to local backends (`server.proxy` in `vite.config.ts`);
+`/filestore` is not proxied.
 
 Docker: the built image serves `dist/` via Caddy on port **8080**.
 

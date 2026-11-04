@@ -1,4 +1,3 @@
-import {HttpError} from "./base.service";
 import i18n from "../util/I18n";
 
 export interface IErrorResponse {

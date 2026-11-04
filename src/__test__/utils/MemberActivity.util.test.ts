@@ -1,3 +1,4 @@
+// @vitest-environment node
 import {describe, expect, it} from "vitest";
 import {countMemberActivity, countMemberFees, memberActivity} from "../../util/MemberActivity.util";
 import {EegParticipant} from "../../models/members.model";

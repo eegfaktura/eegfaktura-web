@@ -2,7 +2,7 @@ import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import {MailTemplateError, MailTemplateService} from "../../service/mailtemplate.service";
 import {AuthService} from "../../service/auth.service";
 
-const authService = {getToken: async () => "token"} as unknown as AuthService;
+const authService = {lookupToken: async () => "token"} as unknown as AuthService;
 const fetchMock = vi.fn();
 
 const reply = (body: any, status = 200) =>

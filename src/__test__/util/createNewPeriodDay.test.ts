@@ -1,3 +1,4 @@
+// @vitest-environment node
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import {createNewPeriod, dayOfYearToDate, toLocalISODate} from "../../util/Helper.util";
 import {SelectedPeriod} from "../../models/energy.model";

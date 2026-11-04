@@ -12,7 +12,6 @@ import {
   ParticipantBillType
 } from "../models/meteringpoint.model";
 import {EegEnergyReport, SelectedPeriod} from "../models/energy.model";
-import {eegGraphqlQuery} from "./graphql-query";
 import {API_API_SERVER} from "./base.service";
 import {AuthService} from "./auth.service";
 import EegBaseService from "./base.service";

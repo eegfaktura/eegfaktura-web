@@ -1,7 +1,6 @@
 import {User, UserManager, WebStorageStateStore} from "oidc-client-ts";
 
 import { AuthProviderProps } from "react-oidc-context";
-// import {keycloakConfig} from "../../../keycloak";
 // import {authService} from "../../../services/auth.service";
 
 const isBrowser = typeof window !== "undefined";
