@@ -1,8 +1,7 @@
-// Force a DST timezone so the day-of-year round-trip is exercised across the
-// CET->CEST change. The day-view arrows stepped by 2 days (and got stuck the
+// A DST timezone (the suite runs in Europe/Vienna, vite.config.ts test.env) exercises the
+// day-of-year round-trip across the CET->CEST change. The day-view arrows stepped by 2 days (and got stuck the
 // other direction) in summer because dateToDayOfYear divided wall-clock ms by
 // 24h, losing a day once a 23h DST day sat between Jan 1 and the date.
-process.env.TZ = 'Europe/Vienna'
 
 import { describe, it, expect } from "vitest"
 import { dateToDayOfYear, dayOfYearToDate } from "../../util/Helper.util"

@@ -1,6 +1,6 @@
 // The dialog gives the chosen date as local time, possibly local midnight; a picked date
 // keeps the time of day. Between 00:00 and 02:00 in Vienna that is still the previous day in UTC (finding 261005-ca1).
-process.env.TZ = 'Europe/Vienna'
+// (the suite runs in Europe/Vienna, vite.config.ts test.env)
 
 import { describe, it, expect, vi } from "vitest";
 import * as XLSX from "xlsx";

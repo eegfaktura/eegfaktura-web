@@ -37,6 +37,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    // one time zone for every test file: local dates and DST days do not depend on the machine (CI: UTC)
+    env: {TZ: 'Europe/Vienna'},
     setupFiles: './src/setupTests.ts',
   }
 })
