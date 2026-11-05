@@ -11,6 +11,7 @@ import {JoinStrings} from "../../util/Helper.util";
 import {useForm} from "react-hook-form";
 import {useConfirm} from "../core/useConfirm";
 import {podListSummary} from "./ProcessConfirm.functions";
+import {hasMultipleGridOperators} from "../../util/Area.util";
 
 
 interface ProcessValues {
@@ -82,7 +83,8 @@ const ProcessPodListComponent: FC<ProcessPodListComponentProps> = ({eeg, edaProc
     <div>
       <ProcessHeaderComponent name={edaProcess.name}/>
       <p>{t("process.podList.info")}</p>
-      {eeg.area === 'BEG' &&
+      {/* several grid operators possible (BEG, P2P, EVA): the list is requested per grid operator (platform#229) */}
+      {hasMultipleGridOperators(eeg.area) &&
           <div style={{paddingBottom: "15px"}}>
               <BasicSelectComponent control={control} name={"operatorId"}
                                     options={getNetOperatorIds()} label={t("grid-operator.id")} multiple={false}

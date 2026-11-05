@@ -10,7 +10,8 @@ import {
   ClearingStartResponse,
   InvoiceDocumentResponse, MeterDirectionType,
   Metering,
-  ParticipantBillType
+  ParticipantBillType,
+  withoutListCodes
 } from "../models/meteringpoint.model";
 import {EegEnergyReport, SelectedPeriod} from "../models/energy.model";
 import {API_API_SERVER} from "./base.service";
@@ -174,7 +175,7 @@ export class EegService extends EegBaseService {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      body: JSON.stringify(meter)
+      body: JSON.stringify(withoutListCodes(meter))
     }).then(this.handleErrors).then(res => res.json());
   }
 
@@ -203,7 +204,7 @@ export class EegService extends EegBaseService {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      body: JSON.stringify(meter)
+      body: JSON.stringify(withoutListCodes(meter))
     }).then(this.handleErrors).then(res => res.json());
   }
 

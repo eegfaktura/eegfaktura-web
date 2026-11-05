@@ -34,6 +34,13 @@ this changelog highlights the changes relevant for overview and operations.
   and no joining fees. Energy data,
   dashboard, metering points and processes stay as they are; the other types are unchanged. billing rejects runs for
   these communities itself. Deploy order: eda-xp → backend → billing, admin-backend → admin, web.
+- **P2P and EVA run like a BEG; zone level and metering point codes** (platform#229, addendum 05.11.2026). One helper
+  „several grid operators possible“ (BEG, P2P, EVA) replaces the BEG checks: P2P/EVA metering points show their grid
+  operator, and „Zählpunktliste anfordern“ asks for the grid operator. The EEG page shows the community's zone level
+  („Nahebereich“, GET /eeg `ecZoneLevel`: 1 Hauptleitung … 7 Keine Verbindung: mehrere Netzgebiete, none = „unbekannt“),
+  the metering point details show `techCode` and `fuelCode` as code; all three read only. The saves of metering points
+  and members do not send `techCode`/`fuelCode`; the EEG save sends single fields only. Needs the backend with these
+  fields (empty until then).
 
 ### Changed
 - **The general EEG save no longer sends the settlement interval** (platform#230); the backend ignores it there too.

@@ -13,7 +13,7 @@ import {useAccessGroups, useEegAllocation, useEegArea} from "../../store/hook/Ee
 import {useLocale} from "../../store/hook/useLocale";
 import {swapHorizontalSharp} from "ionicons/icons";
 import NumberInputForm from "../form/NumberInput.component";
-import {hasBilling} from "../../util/Area.util";
+import {hasBilling, hasMultipleGridOperators} from "../../util/Area.util";
 
 interface MeterFormElementProps {
   rates: EegTariff[]
@@ -173,7 +173,7 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
                    rules={{required:t("warnings.allocation-factor_missing"), validate: validateAllocFactor}}
                    type="number" inputmode="numeric" onChangePartial={_onChange} protectedControl={!isChangeable()} error={errors?.allocationFactor}/>
         }
-        {area && area === 'BEG' && <>
+        {hasMultipleGridOperators(area) && <>
             {/* Der Netzbetreiber wird im backend aus der Zählpunktnummer ermittelt (platform#107) */}
             <InputForm name={"gridOperatorId"} label={t("grid-operator.id")} control={control} type="text" protectedControl={true}/>
             <InputForm name={"gridOperatorName"} label={t("grid-operator.name")} control={control} type="text" protectedControl={true}/>
@@ -189,6 +189,11 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
         <InputForm name={"equipmentNumber"} label={t("equipmentNumber_label")} control={control} rules={{required: false}}
                    type="text" onChangePartial={_onChange}/>
         <InputForm name={"equipmentName"} label={t("equipmentName_label")} control={control} rules={{required: false}} type="text" onChangePartial={_onChange}/>
+        {/* codes of an existing metering point from the grid operator's metering point list, read only (platform#229) */}
+        {meterReadOnly && <>
+          <InputForm name={"techCode"} label={t("techCode_label")} control={control} type="text" protectedControl={true}/>
+          <InputForm name={"fuelCode"} label={t("fuelCode_label")} control={control} type="text" protectedControl={true}/>
+        </>}
       </IonList>
     </>
   )

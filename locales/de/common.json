@@ -45,6 +45,8 @@
   "transformer_label": "Transformator",
   "equipmentNumber_label": "Anlagen-Nr.",
   "equipmentName_label": "Anlagenname",
+  "techCode_label": "TechCode",
+  "fuelCode_label": "FuelCode",
   "vatSupplementaryText": "Zusatztext für Umsatzsteuer",
   "discount": "Rabatt in %",
   "discount_card": "Rabatt",
@@ -169,7 +171,8 @@
     "vat-number": "Umsatzsteuer ID",
     "tax-number": "Steuernummer",
     "allocation-mode": "Verteilung",
-    "area": "Region"
+    "area": "Region",
+    "zone-level": "Nahebereich"
   },
   "warnings": {
     "email_missing": "E-Mail-Adresse fehlt!",

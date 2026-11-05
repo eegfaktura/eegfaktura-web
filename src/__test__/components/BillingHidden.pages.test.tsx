@@ -60,6 +60,19 @@ describe("no billing for P2P and EVA (platform#229): pages", () => {
     expect(region.value).toBe(area === "P2P" ? "P2P" : "EEG lokal")
   })
 
+  // addendum 05.11.2026: the zone level from the metering point list, read only
+  it.each([[3, "3 Lokalbereich"], [null, "unbekannt"]])("EEG page with zone level %s shows „%s“", (level, text) => {
+    const eeg = {...eegOf("LOCAL"), ecZoneLevel: level} as Eeg
+    const r = renderWithProviders(<MemoryRouter><EegContext.Provider value={ctx("LOCAL")}><EegPage/></EegContext.Provider></MemoryRouter>)
+    act(() => {
+      r.store.dispatch(selectTenant(TENANT))
+      r.store.dispatch(fetchEegModel.fulfilled({eeg}, "req", {tenant: TENANT}))
+    })
+    const zone = r.container.querySelector('ion-input[label="Nahebereich"]') as any
+    expect(zone.value).toBe(text)
+    expect(zone.readonly).toBe(true)
+  })
+
   it.each([["EVA", false], ["LOCAL", true]])("member list of %s: billing switch and footer shown = %s", (area, shown) => {
     const r = renderWithProviders(
       <EegContext.Provider value={ctx(area)}>

@@ -17,7 +17,7 @@ import SelectForm from "../components/form/SelectForm.component";
 import "./Eeg.page.scss"
 import {useTenants} from "../store/hook/AuthProvider";
 import {getCurrentPeriod, useAccessGroups, useHasBilling, useTenant, useTenantSwitch} from "../store/hook/Eeg.provider";
-import {areaLabel} from "../util/Area.util";
+import {areaLabel, zoneLevelLabel} from "../util/Area.util";
 import EegBillingConfigCardComponent from "../components/EegBillingConfigCard.component";
 import {AccountInfo, Address, Contact, Eeg, Optionals, SettlementIntervalResult} from "../models/eeg.model";
 import {IbanInputForm} from "../components/form/IbanInputForm";
@@ -204,6 +204,11 @@ const EegPage: FC = () => {
                   <div className="form-element">
                     <IonInput fill="outline" labelPlacement="floating" label={t("common-info.area")}
                               value={areaLabel(eeg.area)} readonly={true}/>
+                  </div>
+                  {/* from the grid operator's metering point list, read only (platform#229) */}
+                  <div className="form-element">
+                    <IonInput fill="outline" labelPlacement="floating" label={t("common-info.zone-level")}
+                              value={zoneLevelLabel(eeg.ecZoneLevel)} readonly={true}/>
                   </div>
                 </IonCard>
               </div>

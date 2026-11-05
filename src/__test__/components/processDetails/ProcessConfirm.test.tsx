@@ -199,4 +199,11 @@ describe("Zählpunktliste anfordern", () => {
     await dismiss("confirm")
     expect(Api.eegService.syncMeteringPointList).toHaveBeenCalledWith("RC100200", "AT003000")
   })
+
+  // platform#229 addendum: P2P and EVA run like a BEG, with metering points at several grid operators
+  it.each([["BEG", true], ["P2P", true], ["EVA", true], ["LOCAL", false]])("%s: grid operator chosen per request = %s",
+    (area, shown) => {
+      render(<ProcessPodListComponent eeg={{...eeg, area} as Eeg} edaProcess={process("Zählpunktliste anfordern")}/>)
+      expect(!!screen.queryByLabelText("operatorId")).toBe(shown)
+    })
 })
