@@ -8,6 +8,19 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **Admins can change the settlement interval on the EEG page** (platform#230). Choosing another „Abrechnungszeitraum“
+  opens a dialog: web reads the billing state from billing (`GET /api/billingRuns/tenant/{tenantId}/settlementState`)
+  and has the backend check the change (`POST /eeg/settlementinterval`, `dryRun`). The dialog shows the old and new
+  interval, from when the new one applies or why the change is not possible yet and from when it is, the last final
+  period, two hints (existing documents stay; membership fee, metering point fee and free energy apply per billing, so
+  the yearly amount changes with the same tariff) and a link to the user guide. „Wechseln“ reads the billing state again and saves the change with it
+  (the dialog cannot be closed meanwhile), then the current period of the new interval is selected; „Abbrechen“ keeps the stored interval. Needs billing and backend
+  with these endpoints (deploy them first).
+
+### Changed
+- **The general EEG save no longer sends the settlement interval** (platform#230); the backend ignores it there too.
+
 ### Security
 - **brotli-libs 1.2.1-r0 in the image** (CVE-2026-111497, from the weekly base image scan): `caddy:2.11.7` ships 1.2.0
   and there is no newer Caddy image yet, so the Dockerfile updates the package.

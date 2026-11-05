@@ -1,5 +1,6 @@
 import {
-  BillingConfig, EdaHistories, Eeg, EegNotification, EegTariff, JoiningFeeRecord, JoiningFeeState
+  BillingConfig, EdaHistories, Eeg, EegNotification, EegTariff, JoiningFeeRecord, JoiningFeeState,
+  SettlementIntervalResult, SettlementState
 } from "../models/eeg.model";
 import {EegParticipant} from "../models/members.model";
 import {
@@ -85,16 +86,39 @@ export class EegService extends EegBaseService {
   }
 
 
+  // the interval changes only through changeSettlementInterval (platform#230); the backend drops it here as well
   async updateEeg(tenant: string, eeg: Record<string, any>): Promise<Eeg> {
     const token = await this.lookupToken()
+    const {settlementInterval, ...changes} = eeg
     return await fetch(`${API_API_SERVER}/eeg`, {
       method: 'POST',
       headers: {
         ...this.getSecureHeaders(token, tenant),
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(eeg)
+      body: JSON.stringify(changes)
     }).then(this.handleErrors).then(res => res.json());
+  }
+
+  // platform#230: dryRun checks the change and says from when it applies or why not; without dryRun the backend saves
+  // it (409 with the reason when the rule refuses). The backend's reason (error.message) is the text shown.
+  async changeSettlementInterval(tenant: string, settlementInterval: Eeg["settlementInterval"], dryRun: boolean,
+                                 billingState: SettlementState): Promise<SettlementIntervalResult> {
+    const token = await this.lookupToken()
+    const response = await fetch(`${API_API_SERVER}/eeg/settlementinterval`, {
+      method: 'POST',
+      headers: {
+        ...this.getSecureHeaders(token, tenant),
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({settlementInterval, dryRun, billingState})
+    })
+    if (!response.ok && response.status !== 401) {
+      const body = await response.clone().json().catch(() => undefined)
+      if (typeof body?.error?.message === "string" && body.error.message) throw new Error(body.error.message)
+    }
+    return this.handleErrors(response).then(res => res.json())
   }
 
   async fetchRates(tenant: string, token?: string): Promise<EegTariff[]> {
@@ -280,6 +304,24 @@ export class EegService extends EegBaseService {
         'Accept': 'application/json',
       },
     }).then(this.handleErrors).then(res => res.json())
+  }
+
+  // platform#230: the billing state the backend checks an interval change against
+  async fetchSettlementState(tenant: string): Promise<SettlementState> {
+    const token = await this.lookupToken()
+    return await fetch(`${BILLING_API_SERVER}/api/billingRuns/tenant/${tenant.toUpperCase()}/settlementState`, {
+      method: 'GET',
+      headers: {
+        ...this.getSecureHeaders(token, tenant),
+        'Accept': 'application/json',
+      },
+    }).then(this.handleErrors).then(res => res.json()).then((state: SettlementState) => {
+      // never pass an incomplete state on: the backend would check against less than billing knows
+      if (!Array.isArray(state?.finalPeriods) || !Array.isArray(state?.runningPeriods)) {
+        throw new Error("unvollständige Antwort von billing")
+      }
+      return state
+    })
   }
 
   // extension 2026-10-27: request the fee for the next final run or record a payment made outside eegfaktura (PUT),
