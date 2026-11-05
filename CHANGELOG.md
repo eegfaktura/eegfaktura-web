@@ -21,8 +21,9 @@ this changelog highlights the changes relevant for overview and operations.
   page shows the community type in the field „Region“ with the short forms of admin (EEG lokal, EEG regional, GEA,
   BEG, P2P, EVA). eegfaktura provides no billing for P2P and EVA: web hides the menu item „Tarife“ (for admins and
   members), the billing mode, totals and invoice details in the member area, „Meine Rechnungen“, the tariff selects of
-  members and metering points, the joining fee, the member's direct debit fields (stored values stay), the billing
-  settings and the settlement interval on the EEG page,
+  members and metering points, the joining fee, the direct debit fields in the member forms (details and new member;
+  stored values stay, the IBAN is not required then), the billing settings and the settlement interval on the EEG
+  page,
   the billing mail in „E-Mail-Texte“ (the backend mails stay), and on the dashboard the tariff block and the box
   „Energiemengen“ (bought/sold count only metering points with a tariff, and its hint on metering points without
   one). A direct URL to the tariffs shows a notice instead of the tariff editor.
