@@ -45,13 +45,11 @@ export interface Metering {
   partFact: number,
   activationMode: 'ONLINE' | 'OFFLINE'
   enabled: boolean
-  // from the grid operator's metering point list (platform#229): shown as code, never sent back; null = unknown
+  // from the grid operator's metering point list (platform#229), read only, null = unknown. The saves send them along:
+  // the backend ignores them and returns the sent metering point, which the display shows
   techCode?: string | null
   fuelCode?: string | null
 }
-
-// a metering point as the saves send it: without the codes only the metering point list sets (platform#229)
-export const withoutListCodes = <T extends Partial<Metering>>({techCode, fuelCode, ...meter}: T) => meter
 
 /*
 export interface ActivationProps {

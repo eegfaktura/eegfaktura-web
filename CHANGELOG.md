@@ -38,9 +38,10 @@ this changelog highlights the changes relevant for overview and operations.
   „several grid operators possible“ (BEG, P2P, EVA) replaces the BEG checks: P2P/EVA metering points show their grid
   operator, and „Zählpunktliste anfordern“ asks for the grid operator. The EEG page shows the community's zone level
   („Nahebereich“, GET /eeg `ecZoneLevel`: 1 Hauptleitung … 7 Keine Verbindung: mehrere Netzgebiete, none = „unbekannt“),
-  the metering point details show `techCode` and `fuelCode` as code; all three read only. The saves of metering points
-  and members do not send `techCode`/`fuelCode`; the EEG save sends single fields only. Needs the backend with these
-  fields (empty until then).
+  the metering point details show `techCode` and `fuelCode` as code; all three read only (zone level names in the
+  locales, de and en). The metering point saves send the codes along unchanged: the backend ignores them on insert and
+  update and returns the sent metering point, so the codes stay shown after a save. The EEG save sends single fields
+  only, never `ecZoneLevel`. Needs the backend with these fields (empty until then).
 
 ### Changed
 - **The general EEG save no longer sends the settlement interval** (platform#230); the backend ignores it there too.

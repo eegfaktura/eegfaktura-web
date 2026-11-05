@@ -172,7 +172,15 @@
     "tax-number": "Steuernummer",
     "allocation-mode": "Verteilung",
     "area": "Region",
-    "zone-level": "Nahebereich"
+    "zone-level": "Nahebereich",
+    "zone-level_1": "Hauptleitung",
+    "zone-level_2": "Standortbereich",
+    "zone-level_3": "Lokalbereich",
+    "zone-level_4": "Regionalbereich: ein Netzgebiet",
+    "zone-level_5": "Regionalbereich: mehrere Netzgebiete",
+    "zone-level_6": "Keine Verbindung: ein Netzgebiet",
+    "zone-level_7": "Keine Verbindung: mehrere Netzgebiete",
+    "zone-level_unknown": "unbekannt"
   },
   "warnings": {
     "email_missing": "E-Mail-Adresse fehlt!",

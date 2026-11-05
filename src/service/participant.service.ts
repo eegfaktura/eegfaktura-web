@@ -2,7 +2,7 @@ import BaseService, {API_API_SERVER} from "./base.service";
 import {EegParticipant} from "../models/members.model";
 import {AuthService} from "./auth.service";
 import {SelectedPeriod} from "../models/energy.model";
-import {Metering, withoutListCodes} from "../models/meteringpoint.model";
+import {Metering} from "../models/meteringpoint.model";
 import {normalizeEmailList} from "../util/EmailAddress.util";
 
 // Canonical e-mail format on every write: trim each ';'-part, no
@@ -82,7 +82,7 @@ export class ParticipantService extends BaseService {
         ...this.getSecureHeaders(token, tenant),
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(withNormalizedEmail({...participant, meters: participant.meters?.map(withoutListCodes)}))
+      body: JSON.stringify(withNormalizedEmail(participant))
     }).then(this.handleErrors).then(res => res.json());
   }
 
@@ -95,7 +95,7 @@ export class ParticipantService extends BaseService {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(meters.map(withoutListCodes))
+      body: JSON.stringify(meters)
     }).then(this.handleErrors).then(res => res.json());
 
   }

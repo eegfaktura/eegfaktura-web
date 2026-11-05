@@ -27,10 +27,8 @@ export const hasBilling = (area?: string) => area !== "P2P" && area !== "EVA"
 // list is requested per grid operator.
 export const hasMultipleGridOperators = (area?: string) => area === "BEG" || area === "P2P" || area === "EVA"
 
-// The community's zone level (ECZoneLevel 1–7 of the metering point list, platform#229 addendum 05.11.2026)
-const ZONE_LEVELS = ["Hauptleitung", "Standortbereich", "Lokalbereich", "Regionalbereich: ein Netzgebiet",
-  "Regionalbereich: mehrere Netzgebiete", "Keine Verbindung: ein Netzgebiet", "Keine Verbindung: mehrere Netzgebiete"]
-
-// "3 Lokalbereich"; no or an unknown value: "unbekannt"
-export const zoneLevelLabel = (level?: number | null) =>
-  level && Number.isInteger(level) && level >= 1 && level <= ZONE_LEVELS.length ? `${level} ${ZONE_LEVELS[level - 1]}` : "unbekannt"
+// The community's zone level (ECZoneLevel 1–7 of the metering point list, platform#229 addendum 05.11.2026), named in
+// the locales (common-info.zone-level_1 … _7): "3 Lokalbereich"; no or an unknown value: zone-level_unknown
+export const zoneLevelLabel = (t: (key: string) => string, level?: number | null) =>
+  level && Number.isInteger(level) && level >= 1 && level <= 7
+    ? `${level} ${t(`common-info.zone-level_${level}`)}` : t("common-info.zone-level_unknown")

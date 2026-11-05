@@ -1,5 +1,6 @@
 import {describe, expect, it} from "vitest";
 import {areaLabel, hasBilling, hasMultipleGridOperators, zoneLevelLabel} from "../../util/Area.util";
+import i18next from "../../util/I18n";
 
 describe("community type (platform#229)", () => {
   it("shows the short forms of admin", () => {
@@ -29,10 +30,13 @@ describe("community type (platform#229)", () => {
     expect(["LOCAL", "REGIONAL", "GEA", undefined].some(a => hasMultipleGridOperators(a))).toBe(false)
   })
 
-  it("names the zone levels 1–7, anything else is unknown", () => {
-    expect([1, 2, 3, 4, 5, 6, 7].map(zoneLevelLabel)).toEqual(["1 Hauptleitung", "2 Standortbereich", "3 Lokalbereich",
+  it("names the zone levels 1–7 from the locales, anything else is unknown", () => {
+    const t = i18next.getFixedT("de", "common")
+    const label = (level?: number | null) => zoneLevelLabel(t, level)
+    expect([1, 2, 3, 4, 5, 6, 7].map(label)).toEqual(["1 Hauptleitung", "2 Standortbereich", "3 Lokalbereich",
       "4 Regionalbereich: ein Netzgebiet", "5 Regionalbereich: mehrere Netzgebiete", "6 Keine Verbindung: ein Netzgebiet",
       "7 Keine Verbindung: mehrere Netzgebiete"])
-    expect([null, undefined, 0, 8, 2.5].map(zoneLevelLabel)).toEqual(Array(5).fill("unbekannt"))
+    expect([null, undefined, 0, 8, 2.5].map(label)).toEqual(Array(5).fill("unbekannt"))
+    expect(zoneLevelLabel(i18next.getFixedT("en", "common"), 3)).toBe("3 Local area")
   })
 })

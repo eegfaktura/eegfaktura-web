@@ -208,7 +208,7 @@ const EegPage: FC = () => {
                   {/* from the grid operator's metering point list, read only (platform#229) */}
                   <div className="form-element">
                     <IonInput fill="outline" labelPlacement="floating" label={t("common-info.zone-level")}
-                              value={zoneLevelLabel(eeg.ecZoneLevel)} readonly={true}/>
+                              value={zoneLevelLabel(t, eeg.ecZoneLevel)} readonly={true}/>
                   </div>
                 </IonCard>
               </div>
