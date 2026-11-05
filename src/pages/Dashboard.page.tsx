@@ -59,7 +59,7 @@ const DashboardPage: FC = () => {
   };
   if (!initialPeriod) {
     // the same IonPage as below (platform#237, see EegLoadState)
-    return <IonPage><div style={{height: "100%", display: "flex"}}><IonSpinner
+    return <IonPage><MenuHeaderComponent/><div style={{height: "100%", display: "flex"}}><IonSpinner
       style={{margin: "auto", height: "48px", width: "48px"}}></IonSpinner></div></IonPage>
   }
 

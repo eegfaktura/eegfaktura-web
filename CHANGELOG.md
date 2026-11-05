@@ -32,6 +32,8 @@ this changelog highlights the changes relevant for overview and operations.
   the page shown, so e.g. `/page/participants` showed the EEG settings, and every later menu entry showed something
   else until the browser was reloaded. The same happened after a failed EEG load and „Erneut versuchen“. These pages
   now keep their page and only swap its content; the first-load spinner of the dashboard is wrapped the same way.
+- **The dashboard has the menu button below 992 px also while its first period loads.** The spinner showed no header,
+  so on narrow screens the menu could not be opened until the dashboard had loaded.
 - **Deleting a member and changing the business type recover from an expiring session like every other call**
   (WEB-CQ-24). Their token lookup started the session refresh without waiting for it and failed; it now waits and
   uses the refreshed token. A 401 on these two calls now leads to the login when the session expired; otherwise they
