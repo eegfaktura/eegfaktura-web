@@ -1,5 +1,5 @@
 import React, {FC, ReactNode} from "react";
-import {IonButton, IonContent, IonPage, IonSpinner} from "@ionic/react";
+import {IonButton, IonContent, IonSpinner} from "@ionic/react";
 import {useAppSelector} from "../store";
 import {eegLoadErrorSelector} from "../store/eeg";
 import {useTenants} from "../store/hook/AuthProvider";
@@ -7,12 +7,13 @@ import {useRefresh} from "../store/hook/Eeg.provider";
 import {useLocale} from "../store/hook/useLocale";
 import MenuHeaderComponent from "./core/MenuHeader.component";
 
-// an IonPage: it is the whole page content, and the outlet shows only IonPages over the previous page
+// The whole content of a page, without an IonPage of its own: the page renders it inside its IonPage. A page that
+// swapped its IonPage for another one while hidden in the outlet took over the view of the shown URL (platform#237).
 const Page: FC<{children: ReactNode}> = ({children}) => (
-  <IonPage>
+  <>
     <MenuHeaderComponent/>
     <IonContent fullscreen color="eeg">{children}</IonContent>
-  </IonPage>
+  </>
 )
 
 // What a page shows while its EEG is not there (261024-ca11): a spinner while it loads, the error with

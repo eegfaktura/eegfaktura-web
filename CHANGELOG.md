@@ -26,6 +26,12 @@ this changelog highlights the changes relevant for overview and operations.
   and there is no newer Caddy image yet, so the Dockerfile updates the package.
 
 ### Fixed
+- **After switching the community, the menu shows the page of the URL again** (platform#237, reported 05.11.2026,
+  since web 1.10.0). The app keeps a page left through the menu, hidden. While the new community loaded, the EEG
+  page, the members and the processes swapped their page for a loading page; a hidden page that came back took over
+  the page shown, so e.g. `/page/participants` showed the EEG settings, and every later menu entry showed something
+  else until the browser was reloaded. The same happened after a failed EEG load and „Erneut versuchen“, and could
+  happen with the dashboard spinner. These pages now keep their page and only swap its content.
 - **Deleting a member and changing the business type recover from an expiring session like every other call**
   (WEB-CQ-24). Their token lookup started the session refresh without waiting for it and failed; it now waits and
   uses the refreshed token. A 401 on these two calls now leads to the login when the session expired; otherwise they

@@ -117,7 +117,8 @@ const EegPage: FC = () => {
   }
 
   if (!eeg) {
-    return <EegLoadStateComponent/>
+    // the same IonPage as below: a new IonPage element in a hidden page takes over the view of the shown URL (platform#237)
+    return <IonPage><EegLoadStateComponent/></IonPage>
   }
 
   return (
