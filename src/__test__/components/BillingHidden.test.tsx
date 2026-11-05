@@ -24,6 +24,18 @@ import MemberFormComponent from "../../components/core/MemberForm.component";
 import MeterFormElement from "../../components/core/MeterForm.element";
 import ParticipantDetailsPaneComponent from "../../components/participantPane/ParticipantDetailsPane.component";
 import RatesPage from "../../pages/Rates.page";
+import ParticipantRegisterCommonPaneComponent from "../../components/ParticipantRegisterCommonPane.component";
+import {FormProvider, useForm} from "react-hook-form";
+
+// the new-member form with a stored direct debit and no IBAN; „prüfen“ validates like the submit does
+const RegisterForm: React.FC = () => {
+  const methods = useForm<EegParticipant>({defaultValues: {status: "NEW",
+    accountInfo: {iban: "", owner: "", sepaDirectDebit: "CORE"}} as unknown as EegParticipant})
+  return <FormProvider {...methods}>
+    <ParticipantRegisterCommonPaneComponent participant={{status: "NEW"} as EegParticipant} submitId="" onAdd={vi.fn()}/>
+    <button onClick={() => methods.trigger()}>prüfen</button>
+  </FormProvider>
+}
 
 // Peer-to-peer and self-supply have no billing in eegfaktura (platform#229): web hides tariffs, billing, invoices and
 // the joining fee, for admins and members. The other types keep them.
@@ -73,7 +85,16 @@ describe("no billing for P2P and EVA (platform#229)", () => {
       </ParticipantContext.Provider>, true))
     expect(!!container.querySelector('ion-select[label="Mitglieds-Tarif"]')).toBe(shown)
     expect(!!screen.queryByText("Beitrittsgebühr")).toBe(shown)
-    expect(!!container.querySelector('ion-select[label="Einzugsart"]')).toBe(shown)  })
+    expect(!!container.querySelector('ion-select[label="Einzugsart"]')).toBe(shown)
+  })
+
+  it.each([["EVA", false], ["LOCAL", true]])("new member of %s: direct debit shown and IBAN required = %s", async (area, shown) => {
+    const {container} = renderWithProviders(withEeg(area, <RegisterForm/>))
+    expect(!!container.querySelector('ion-select[label="Einzugsart"]')).toBe(shown)
+    await act(async () => { screen.getByText("prüfen").click() })
+    const iban = container.querySelector('ion-input[label="IBAN"]') as any
+    expect(iban.helperText === "IBAN fehlt").toBe(shown)
+  })
 
   it.each([["EVA", false], ["GEA", true]])("metering point of %s: tariff shown = %s", (area, shown) => {
     const {container} = renderWithReactHookForm(
