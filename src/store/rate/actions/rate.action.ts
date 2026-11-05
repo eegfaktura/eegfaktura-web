@@ -45,3 +45,5 @@ export const archiveRate = createAsyncThunk(
 )
 
 export const selectRate = createAction<EegTariff | undefined>(`${featureKey}/select/rate`);
+// no tariffs until the community's tariffs are loaded (platform#229: they load after its EEG now)
+export const clearRates = createAction(`${featureKey}/clear`);

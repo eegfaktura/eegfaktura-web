@@ -65,7 +65,7 @@ describe("no billing for P2P and EVA (platform#229)", () => {
     expect(container.querySelector(".ratePane")).toBeNull()
   })
 
-  it.each([["P2P", false], ["LOCAL", true]])("member details of %s: tariff and joining fee shown = %s", (area, shown) => {
+  it.each([["P2P", false], ["LOCAL", true]])("member details of %s: tariff, joining fee and direct debit shown = %s", (area, shown) => {
     const {container} = renderWithProviders(withEeg(area,
       <ParticipantContext.Provider value={{setUnsaved: vi.fn()} as any}>
         <MemberFormComponent participant={participant} rates={[]} formId="" onSubmit={vi.fn()}
@@ -73,7 +73,7 @@ describe("no billing for P2P and EVA (platform#229)", () => {
       </ParticipantContext.Provider>, true))
     expect(!!container.querySelector('ion-select[label="Mitglieds-Tarif"]')).toBe(shown)
     expect(!!screen.queryByText("Beitrittsgebühr")).toBe(shown)
-  })
+    expect(!!container.querySelector('ion-select[label="Einzugsart"]')).toBe(shown)  })
 
   it.each([["EVA", false], ["GEA", true]])("metering point of %s: tariff shown = %s", (area, shown) => {
     const {container} = renderWithReactHookForm(

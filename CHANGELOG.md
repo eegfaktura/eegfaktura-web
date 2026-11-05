@@ -21,13 +21,16 @@ this changelog highlights the changes relevant for overview and operations.
   page shows the community type in the field „Region“ with the short forms of admin (EEG lokal, EEG regional, GEA,
   BEG, P2P, EVA). eegfaktura provides no billing for P2P and EVA: web hides the menu item „Tarife“ (for admins and
   members), the billing mode, totals and invoice details in the member area, „Meine Rechnungen“, the tariff selects of
-  members and metering points, the joining fee, the billing settings and the settlement interval on the EEG page,
+  members and metering points, the joining fee, the member's direct debit fields (stored values stay), the billing
+  settings and the settlement interval on the EEG page,
   the billing mail in „E-Mail-Texte“ (the backend mails stay), and on the dashboard the tariff block and the box
   „Energiemengen“ (bought/sold count only metering points with a tariff, and its hint on metering points without
   one). A direct URL to the tariffs shows a notice instead of the tariff editor.
   web does not request billing data for them either: the tariffs are loaded only after the community's own load
-  returned a type with billing (so they now load after the EEG, not beside it), „E-Mail-Texte“ waits for the type and
-  then asks billing only with billing, and the member area looks up no billing runs and no joining fees. Energy data,
+  returned a type with billing (so they now load after the EEG, not beside it, for every community; after a failed EEG
+  load they load as before, and another community's tariffs are cleared first), „E-Mail-Texte“ shows the load state
+  until the community is there and then asks billing only with billing, and the member area looks up no billing runs
+  and no joining fees. Energy data,
   dashboard, metering points and processes stay as they are; the other types are unchanged. billing rejects runs for
   these communities itself. Deploy order: eda-xp → backend → billing, admin-backend → admin, web.
 

@@ -187,10 +187,11 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
         <IonList>
           <IonListHeader>Bankdaten</IonListHeader>
           <IbanInputForm name={"accountInfo.iban"} control={control} onChangePartial={onUpdateBaseData} error={errors.accountInfo?.iban}
-                         required={isDirectDebit(sepaMode)}/>
+                         required={billing && isDirectDebit(sepaMode)}/>
           <InputForm name={"accountInfo.owner"} label={t("account.owner")} control={control} type="text" onChangePartial={onUpdateBaseData}/>
 
-          <DebitExtensionComponent onUpdateBaseData={onUpdateBaseData}/>
+          {/* direct debit belongs to billing: none for P2P, EVA; the stored values stay (platform#229) */}
+          {billing && <DebitExtensionComponent onUpdateBaseData={onUpdateBaseData}/>}
 
           {/*<SelectForm name={"accountInfo.sepaDirectDebit"} label={t("account.sepaDirectDebit")} control={control} options={getDebitOptions()} onChangePartial={onUpdateBaseData}/>*/}
           {/*{sepaMode !== 'NONE' &&*/}
