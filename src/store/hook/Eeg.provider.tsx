@@ -8,7 +8,7 @@ import {IonSpinner, useIonToast} from "@ionic/react";
 import {ActiveTenant, Eeg} from "../../models/eeg.model";
 import {selectedPeriodSelector, setSelectedPeriod} from "../energy";
 import {Api} from "../../service";
-import {periodOf} from "../../util/SettlementInterval.util";
+import {firstOpenPeriod} from "../../util/SettlementInterval.util";
 import {useSelector} from "react-redux";
 import {useAuth} from "react-oidc-context";
 import {useGetUserQuery, useLazyGetUserQuery, userApi} from "../user/userApi";
@@ -41,10 +41,7 @@ export const EegContext = createContext(initialState)
 
 // the period preselected for the community's settlement interval: today's (after an interval change the EEG page
 // selects the first open period instead, eegfaktura-dev#54 #7)
-export const getCurrentPeriod = async (eeg: Eeg | undefined) => {
-  const currentDate = new Date(Date.now())
-  return periodOf(eeg?.settlementInterval, currentDate.getFullYear(), currentDate.getMonth() + 1)
-}
+export const getCurrentPeriod = async (eeg: Eeg | undefined) => firstOpenPeriod(eeg?.settlementInterval, null)
 
 export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
 

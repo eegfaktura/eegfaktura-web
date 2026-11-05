@@ -1,5 +1,6 @@
 import {Eeg, MONTHNAME, SettlementIntervalResult} from "../models/eeg.model";
-import {createPeriodIdentifier, SelectedPeriod} from "../models/energy.model";
+import {createPeriodIdentifier, ReportType, SelectedPeriod} from "../models/energy.model";
+import {getPeriodSegment} from "./Helper.util";
 
 // the settlement intervals as the EEG page offers them (platform#230)
 export const SETTLEMENT_INTERVALS: { key: Eeg["settlementInterval"], value: string }[] = [
@@ -31,13 +32,11 @@ export const periodLabel = (identifier: string): string => {
 }
 
 // the period of the interval that contains the month (1–12) of the year; an unknown interval counts as annual
-export const periodOf = (interval: string | undefined, year: number, month: number): SelectedPeriod => {
-  switch (interval) {
-    case "MONTHLY": return {type: "YM", year, segment: month}
-    case "QUARTER": return {type: "YQ", year, segment: Math.ceil(month / 3)}
-    case "BIANNUAL": return {type: "YH", year, segment: month < 7 ? 1 : 2}
-    default: return {type: "Y", year, segment: 0}
-  }
+const INTERVAL_TYPE: Record<string, ReportType> = {MONTHLY: "YM", QUARTER: "YQ", BIANNUAL: "YH"}
+
+const periodOf =(interval: string | undefined, year: number, month: number): SelectedPeriod => {
+  const type = INTERVAL_TYPE[interval ?? ""] ?? "Y"
+  return {type, year, segment: getPeriodSegment(type, month)}
 }
 
 // eegfaktura-dev#54 #7: after a change the first open period is the one of the new interval that starts at
@@ -50,9 +49,11 @@ export const firstOpenPeriod = (interval: string | undefined, effectiveFrom: str
     : periodOf(interval, today.getFullYear(), today.getMonth() + 1)
 }
 
-// the period to select after a saved change and the toast that names it
+// the period to select after a saved change and the toast that names it; without effectiveFrom (no final billing
+// yet) earlier periods may still be open, so the toast does not call today's period the next one
 export const afterIntervalChange = (result: SettlementIntervalResult, today?: Date) => {
   const period = firstOpenPeriod(result.eeg?.settlementInterval, result.effectiveFrom, today)
+  if (!result.effectiveFrom) return {period, message: `Abrechnungszeitraum geändert. ${result.message}`}
   const next = periodLabel(createPeriodIdentifier(period.type, period.year, period.segment))
   return {period, message: `Abrechnungszeitraum geändert. ${result.message} Als Nächstes abzurechnen: ${next}.`}
 }

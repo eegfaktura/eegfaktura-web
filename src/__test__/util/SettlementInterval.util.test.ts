@@ -52,7 +52,13 @@ describe("first open period after an interval change (eegfaktura-dev#54 #7)", ()
     expect(after.period).toEqual({type: "YQ", year: 2026, segment: 2})
     expect(after.message).toBe("Abrechnungszeitraum geändert. Das neue Intervall gilt ab 1. April 2026. "
       + "Als Nächstes abzurechnen: 2. Quartal 2026.")
-    expect(afterIntervalChange(changed("ANNUAL", null, "Das neue Intervall gilt sofort."), today).message)
-      .toBe("Abrechnungszeitraum geändert. Das neue Intervall gilt sofort. Als Nächstes abzurechnen: 2026.")
+  })
+
+  it("does not call today's period the next one when there is no final billing yet", () => {
+    const after = afterIntervalChange(changed("QUARTER", null,
+      "Das neue Intervall gilt sofort, es gibt noch keine endgültige Abrechnung."), today)
+    expect(after.period).toEqual({type: "YQ", year: 2026, segment: 4})
+    expect(after.message).toBe("Abrechnungszeitraum geändert. Das neue Intervall gilt sofort, es gibt noch keine "
+      + "endgültige Abrechnung.")
   })
 })
