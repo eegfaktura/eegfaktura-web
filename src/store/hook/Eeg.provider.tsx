@@ -179,8 +179,11 @@ export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
       const seq = ++loadSeq.current;
       (await Promise.all([
         getUser(),
-        dispatch(fetchEegModel({tenant: activeTenant})),
-        dispatch(fetchRatesModel({tenant: activeTenant})),
+        // tariffs only for a community with billing, decided by the type this request loaded (platform#229); a failed
+        // EEG load shows the load error, so no tariffs are needed then
+        dispatch(fetchEegModel({tenant: activeTenant})).then(r =>
+          fetchEegModel.fulfilled.match(r) && hasBilling(r.payload.eeg?.area)
+            ? dispatch(fetchRatesModel({tenant: activeTenant})) : undefined),
         dispatch(fetchParticipantModel({tenant: activeTenant})),
       ]).then(() => {
         const eeg = eegSelector(store.getState())

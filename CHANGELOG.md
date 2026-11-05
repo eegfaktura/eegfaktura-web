@@ -22,10 +22,13 @@ this changelog highlights the changes relevant for overview and operations.
   BEG, P2P, EVA). eegfaktura provides no billing for P2P and EVA: web hides the menu item „Tarife“ (for admins and
   members), the billing mode, totals and invoice details in the member area, „Meine Rechnungen“, the tariff selects of
   members and metering points, the joining fee, the billing settings and the settlement interval on the EEG page,
-  and the billing mail in „E-Mail-Texte“ (the backend mails stay). The member export does not ask billing for joining
-  fees. A direct URL to the tariffs shows a notice instead of the tariff editor. Energy data, dashboard, metering
-  points and processes stay as they are; the other types are unchanged. billing rejects runs for these communities
-  itself. Deploy order: eda-xp → backend → billing, admin-backend → admin, web.
+  the billing mail in „E-Mail-Texte“ (the backend mails stay), and on the dashboard the tariff block and the hint
+  on metering points without a tariff. A direct URL to the tariffs shows a notice instead of the tariff editor.
+  web does not request billing data for them either: the tariffs are loaded only after the community's own load
+  returned a type with billing (so they now load after the EEG, not beside it), „E-Mail-Texte“ waits for the type and
+  then asks billing only with billing, and the member area looks up no billing runs and no joining fees. Energy data,
+  dashboard, metering points and processes stay as they are; the other types are unchanged. billing rejects runs for
+  these communities itself. Deploy order: eda-xp → backend → billing, admin-backend → admin, web.
 
 ### Changed
 - **The general EEG save no longer sends the settlement interval** (platform#230); the backend ignores it there too.

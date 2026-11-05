@@ -1,7 +1,8 @@
 import React, {FC, useEffect, useRef, useState} from "react";
 import {IonBadge, IonCard, IonContent, IonItem, IonLabel, IonList, IonPage, IonText} from "@ionic/react";
 import MenuHeaderComponent from "../components/core/MenuHeader.component";
-import {useAccessGroups, useHasBilling, useTenant} from "../store/hook/Eeg.provider";
+import {useAccessGroups, useEegArea, useTenant} from "../store/hook/Eeg.provider";
+import {hasBilling} from "../util/Area.util";
 import {useAppSelector} from "../store";
 import {eegSelector} from "../store/eeg";
 import {useLocale} from "../store/hook/useLocale";
@@ -20,10 +21,9 @@ const MailTemplatesPage: FC = () => {
   const admin = isAdmin()
   const {tenant} = useTenant()
   const eeg = useAppSelector(eegSelector)
-  // without billing (P2P, EVA; platform#229) only the mails of the backend, decided on render: the community may load
-  // after the list
-  const billing = useHasBilling()
-  const shown = (source: MailTemplateSource) => billing || source !== "billing"
+  // without billing (P2P, EVA; platform#229) only the mails of the backend: the list waits for the community's type
+  const area = useEegArea()
+  const billing = hasBilling(area)
 
   const [items, setItems] = useState<MailTemplateListItem[]>()
   const [failed, setFailed] = useState<MailTemplateSource[]>([])
@@ -35,16 +35,16 @@ const MailTemplatesPage: FC = () => {
   const currentTenant = useRef(tenant)
   currentTenant.current = tenant
   const loadList = () => {
-    if (!tenant || !admin || tenant !== currentTenant.current) return
+    if (!tenant || !admin || !area || tenant !== currentTenant.current) return
     const current = ++request.current
-    Api.mailTemplateService.fetchList(tenant).then(r => {
+    Api.mailTemplateService.fetchList(tenant, billing).then(r => {
       if (current !== request.current) return
       setItems(r.items)
       setFailed(r.failed)
     }).catch(() => {
       if (current !== request.current) return
       setItems([])
-      setFailed(["backend", "billing"])
+      setFailed(billing ? ["backend", "billing"] : ["backend"])
     })
   }
 
@@ -53,7 +53,7 @@ const MailTemplatesPage: FC = () => {
     setItems(undefined)
     setFailed([])
     loadList()
-  }, [tenant, admin])
+  }, [tenant, admin, area])
 
   return (
     <IonPage>
@@ -71,11 +71,11 @@ const MailTemplatesPage: FC = () => {
               <div className="header">{t("mailtemplates.header")}</div>
               <IonCard color="eeglight">
                 {!items && <p style={{padding: "0 16px"}}>{t("mailtemplates.loading")}</p>}
-                {failed.filter(shown).map(s => (
+                {failed.map(s => (
                   <IonText key={s} color="danger"><p style={{padding: "0 16px"}}>{t(`mailtemplates.load_failed_${s}`)}</p></IonText>
                 ))}
                 {items && <IonList>
-                  {items.filter(item => shown(item.source)).map(item => (
+                  {items.map(item => (
                     <IonItem key={`${item.source}-${item.key}`} button detail onClick={() => setSelected(item)}>
                       <IonLabel className="ion-text-wrap">
                         <h2>{item.name}</h2>

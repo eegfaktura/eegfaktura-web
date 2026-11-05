@@ -1,0 +1,80 @@
+import {afterEach, describe, expect, it, vi} from "vitest";
+import {act, cleanup, screen} from "@testing-library/react";
+import React from "react";
+import {MemoryRouter} from "react-router";
+import "../../util/I18n";
+import {renderWithProviders} from "../test-utils";
+import {EegContext, EegState} from "../../store/hook/Eeg.provider";
+import {Eeg} from "../../models/eeg.model";
+import {EegParticipant} from "../../models/members.model";
+import {fetchEegModel, selectTenant} from "../../store/eeg";
+import {fetchParticipantModel} from "../../store/participant";
+import {ParticipantContext} from "../../store/hook/ParticipantProvider";
+import {MemberViewContext} from "../../store/hook/MemberViewProvider";
+
+vi.mock("react-oidc-context", () => ({useAuth: () => ({})}))
+// one list for every render: the EEG page sorts it in an effect on it
+const tenants = vi.hoisted(() => ["PP100100"])
+vi.mock("../../store/hook/AuthProvider", () => ({useTenants: () => tenants}))
+vi.mock("../../components/EegBillingConfigCard.component", () => ({default: () => <div>Abrechnungs-Einstellungen</div>}))
+// jsdom has no layout: the virtual list renders every row
+vi.mock("react-virtuoso", () => ({
+  Virtuoso: ({totalCount, itemContent, context}: any) =>
+    <div>{Array.from({length: totalCount}, (_, i) => <div key={i}>{itemContent(i, undefined, context)}</div>)}</div>,
+}))
+
+import EegPage from "../../pages/Eeg.page";
+import ParticipantPaneComponent from "../../components/participantPane/ParticipantPane.component";
+import EegOverviewComponent from "../../components/dashboard/EegOverview.component";
+
+// platform#229: no billing for P2P and EVA on the EEG page, in the member list and on the dashboard
+const TENANT = "PP100100"
+const eegOf = (area: string) => ({id: TENANT, name: "Test", rcNumber: TENANT, area, allocationMode: "DYNAMIC",
+  settlementInterval: "MONTHLY", online: true, address: {}, contact: {}, accountInfo: {}, optionals: {}} as unknown as Eeg)
+const ctx = (area: string) => ({tenant: TENANT, eeg: eegOf(area), getTenants: () => [],
+  isAdmin: () => true, isOwner: () => false, isUser: () => false, setTenant: () => {}, refresh: () => {}} as unknown as EegState)
+
+const member = {id: "001", firstname: "Anna", lastname: "Muster", businessRole: "EEG_PRIVATE", status: "ACTIVE",
+  participantNumber: "001", meters: [{meteringPoint: "AT0030000000000000000000000000001", direction: "CONSUMPTION",
+    status: "ACTIVE", processState: "ACTIVE"}]} as unknown as EegParticipant
+
+describe("no billing for P2P and EVA (platform#229): pages", () => {
+  afterEach(() => cleanup())
+
+  it.each([["P2P", false], ["LOCAL", true]])("EEG page of %s: interval and billing settings shown = %s", (area, shown) => {
+    const r = renderWithProviders(<MemoryRouter><EegContext.Provider value={ctx(area)}><EegPage/></EegContext.Provider></MemoryRouter>)
+    act(() => {
+      r.store.dispatch(selectTenant(TENANT))
+      r.store.dispatch(fetchEegModel.fulfilled({eeg: eegOf(area)}, "req", {tenant: TENANT}))
+    })
+    expect(!!r.container.querySelector('ion-select[label="Abrechnungszeitraum"]')).toBe(shown)
+    expect(!!screen.queryByText("Abrechnungs-Einstellungen")).toBe(shown)
+    const region = r.container.querySelector('ion-input[label="Region"]') as any
+    expect(region.value).toBe(area === "P2P" ? "P2P" : "EEG lokal")
+  })
+
+  it.each([["EVA", false], ["LOCAL", true]])("member list of %s: billing switch and footer shown = %s", (area, shown) => {
+    const r = renderWithProviders(
+      <EegContext.Provider value={ctx(area)}>
+        <ParticipantContext.Provider value={{participants: [member], allParticipants: [member], billingEnabled: true,
+          unsaved: {}, setUnsaved: vi.fn(), setBillingEnabled: vi.fn(), setShowAddMeterPane: vi.fn(),
+          showDetailsPage: vi.fn(), reloadEnergyReport: vi.fn()} as any}>
+          <MemberViewContext.Provider value={{showAmount: true, toggleShowAmount: vi.fn(), toggleMembersMeter: vi.fn(),
+            toggleMetering: vi.fn(), hideMeter: false, hideMember: false, hideConsumers: false, hideProducers: false} as any}>
+            <ParticipantPaneComponent/>
+          </MemberViewContext.Provider>
+        </ParticipantContext.Provider>
+      </EegContext.Provider>)
+    act(() => { r.store.dispatch(fetchParticipantModel.fulfilled({participants: [member]}, "req", {tenant: TENANT})) })
+    expect(screen.getAllByText(/Muster/).length).toBeGreaterThan(0)
+    expect(!!r.container.querySelector(".eeg-sliding-box")).toBe(shown)
+    expect(!!screen.queryByText(/Saldo Zahlungen/)).toBe(shown)
+  })
+
+  it.each([["P2P", false], ["GEA", true]])("dashboard of %s: tariff block shown = %s", (area, shown) => {
+    renderWithProviders(<EegContext.Provider value={ctx(area)}>
+      <EegOverviewComponent participants={[]} rateMap={{}}/></EegContext.Provider>)
+    expect(screen.getByText("Übersicht EEG")).toBeTruthy()
+    expect(!!screen.queryByText("Tarife")).toBe(shown)
+  })
+})

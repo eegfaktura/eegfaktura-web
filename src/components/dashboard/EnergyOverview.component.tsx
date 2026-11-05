@@ -9,7 +9,7 @@ import {formatKwh} from "../../util/Number.util";
 import {IonContent, IonIcon, IonPopover} from "@ionic/react";
 import {helpCircleOutline} from "ionicons/icons";
 import {Api} from "../../service";
-import {useTenant} from "../../store/hook/Eeg.provider";
+import {useHasBilling, useTenant} from "../../store/hook/Eeg.provider";
 import {TradedSummary, tradedSummary} from "./EnergyOverview.functions";
 
 interface OverviewComponentProps {
@@ -25,6 +25,7 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
   const activePeriod = useAppSelector(selectedPeriodSelector)
   // const tenant = useAppSelector(activeTenant)
   const tenant = useTenant()
+  const billing = useHasBilling()
 
   // const [producedEnergy, setProducedEnergy] = useState<number>(0)
   // const [consumedEnergy, setConsumedEnergy] = useState<number>(0)
@@ -187,8 +188,9 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
                   </div>
                 </div>
               </div>
-              {/* only once the tariffs are loaded: before, every metering point would read "ohne Tarif" */}
-              {traded.withoutTariff > 0 && Object.keys(rates).length > 0 && (
+              {/* only once the tariffs are loaded: before, every metering point would read "ohne Tarif"; none without
+                  billing (P2P, EVA; platform#229) */}
+              {billing && traded.withoutTariff > 0 && Object.keys(rates).length > 0 && (
                 <div style={{padding: "5px 16px", fontSize: "11px"}}>
                   {traded.withoutTariff === 1
                     ? `1 Zählpunkt ohne gültigen Tarif ist hier nicht enthalten (${renderKWH(traded.withoutTariffKwh)}).`

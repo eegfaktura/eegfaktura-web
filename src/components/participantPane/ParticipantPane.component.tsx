@@ -396,7 +396,8 @@ const ParticipantPaneComponent: FC = () => {
 
   const onUpdatePeriodSelection = (selectedPeriod: SelectedPeriod) => {
     dispatcher(setSelectedPeriod(selectedPeriod));
-    dispatcher(
+    // no billing run to look up without billing (platform#229)
+    if (billing) dispatcher(
       fetchBillingRun({
         tenant: tenant,
         clearingPeriodType: selectedPeriod.type,

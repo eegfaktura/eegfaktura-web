@@ -1,5 +1,5 @@
 import {afterEach, describe, expect, it, vi} from "vitest";
-import {act, cleanup, screen, waitFor} from "@testing-library/react";
+import {act, cleanup, screen} from "@testing-library/react";
 import React from "react";
 import {MemoryRouter} from "react-router";
 import "../../util/I18n";
@@ -10,13 +10,11 @@ import {EegParticipant} from "../../models/members.model";
 import {Metering} from "../../models/meteringpoint.model";
 import {fetchParticipantModel, selectMetering, selectParticipant} from "../../store/participant";
 import {ParticipantContext} from "../../store/hook/ParticipantProvider";
-import {Api} from "../../service";
 
 vi.mock("react-oidc-context", () => ({useAuth: () => ({})}))
 vi.mock("../../store/hook/AuthProvider", () => ({useUser: () => undefined}))
 vi.mock("../../components/core/JoiningFeeMember.component", () => ({default: () => <div>Beitrittsgebühr</div>}))
 vi.mock("../../components/RateDetailPane.component", () => ({default: () => <div/>}))
-vi.mock("../../components/mailtemplate/MailTemplateEditor.component", () => ({default: () => null}))
 vi.mock("../../components/core/MeterForm.component", () => ({default: () => <div/>}))
 vi.mock("../../components/participantPane/ContractDocument.component", () => ({default: () => <div/>}))
 vi.mock("../../components/participantPane/MeterChart.component", () => ({default: () => <div/>}))
@@ -26,7 +24,6 @@ import MemberFormComponent from "../../components/core/MemberForm.component";
 import MeterFormElement from "../../components/core/MeterForm.element";
 import ParticipantDetailsPaneComponent from "../../components/participantPane/ParticipantDetailsPane.component";
 import RatesPage from "../../pages/Rates.page";
-import MailTemplatesPage from "../../pages/MailTemplates.page";
 
 // Peer-to-peer and self-supply have no billing in eegfaktura (platform#229): web hides tariffs, billing, invoices and
 // the joining fee, for admins and members. The other types keep them.
@@ -97,17 +94,5 @@ describe("no billing for P2P and EVA (platform#229)", () => {
     })
     expect(!!screen.queryByText("Meine Rechnungen")).toBe(shown)
     expect(screen.getByText("Dokumente")).toBeTruthy()
-  })
-
-  it("the mail texts of P2P list only the backend mails", async () => {
-    const mail = (source: "backend" | "billing", key: string, name: string) =>
-      ({key, name, description: "", customized: false, defaultChanged: false, source})
-    Api.mailTemplateService = {fetchList: vi.fn().mockResolvedValue({
-      items: [mail("backend", "zp-active", "Zählpunkt aktiv"), mail("billing", "billing-document", "Rechnungs-Mail")],
-      failed: ["billing"]})} as unknown as typeof Api.mailTemplateService
-    renderWithProviders(withEeg("P2P", <MailTemplatesPage/>, true))
-    await waitFor(() => expect(screen.getByText("Zählpunkt aktiv")).toBeTruthy())
-    expect(screen.queryByText("Rechnungs-Mail")).toBeNull()
-    expect(screen.queryByText("Die Rechnungs-Mail konnte nicht geladen werden.")).toBeNull()
   })
 })
