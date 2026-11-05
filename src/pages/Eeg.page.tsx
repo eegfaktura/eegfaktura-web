@@ -3,6 +3,7 @@ import {
   IonButton,
   IonCard,
   IonContent,
+  IonInput,
   IonModal,
   IonPage, IonSelect, IonSelectOption,
   SelectCustomEvent, useIonToast
@@ -15,7 +16,8 @@ import SelectForm from "../components/form/SelectForm.component";
 
 import "./Eeg.page.scss"
 import {useTenants} from "../store/hook/AuthProvider";
-import {getCurrentPeriod, useAccessGroups, useTenant, useTenantSwitch} from "../store/hook/Eeg.provider";
+import {getCurrentPeriod, useAccessGroups, useHasBilling, useTenant, useTenantSwitch} from "../store/hook/Eeg.provider";
+import {areaLabel} from "../util/Area.util";
 import EegBillingConfigCardComponent from "../components/EegBillingConfigCard.component";
 import {AccountInfo, Address, Contact, Eeg, Optionals, SettlementIntervalResult} from "../models/eeg.model";
 import {IbanInputForm} from "../components/form/IbanInputForm";
@@ -50,6 +52,7 @@ const EegPage: FC = () => {
   const dispatcher = useAppDispatch();
 
   const {isAdmin} = useAccessGroups()
+  const billing = useHasBilling()
   const switchTenant = useTenantSwitch()
   // another community drops unsaved input ("add metering point", details, tariff editor): ask first (platform#228 step 4)
   const leaveUnsaved = useLeaveUnsaved(["addMeter", "details", "tariff"])
@@ -146,6 +149,8 @@ const EegPage: FC = () => {
                     {/*</IonItem>*/}
                   </div>
                   {/*<form>*/}
+                  {/* the settlement interval is a billing setting: none without billing (platform#229) */}
+                  {billing && <>
                   <SelectForm label={"Abrechnungszeitraum"} placeholder={"Abrechnungszeitraum"} control={control}
                               name={"settlementInterval"} options={SETTLEMENT_INTERVALS}
                               onChangePartial={onChangeInterval} disabled={!isAdmin()}></SelectForm>
@@ -155,6 +160,7 @@ const EegPage: FC = () => {
                                                       next={pendingInterval} onDone={onIntervalDone}
                                                       onSaving={setSavingInterval}/>}
                   </IonModal>
+                  </>}
                   {/*</form>*/}
                 </IonCard>
               </div>
@@ -194,6 +200,11 @@ const EegPage: FC = () => {
                                       onChangePartial={onChangeField("taxNumber")}/>
                   <InputFormComponent name={"allocationMode"} label={t("common-info.allocation-mode")} control={control} rules={{}}
                                       type="text" readonly={true}/>
+                  {/* the type of the community with the short form of admin (platform#229, E7) */}
+                  <div className="form-element">
+                    <IonInput fill="outline" labelPlacement="floating" label={t("common-info.area")}
+                              value={areaLabel(eeg.area)} readonly={true}/>
+                  </div>
                 </IonCard>
               </div>
               <div className={"eeg-property-card"}>
@@ -297,7 +308,7 @@ const EegPage: FC = () => {
                 </IonCard>
               </div>
 
-              <EegBillingConfigCardComponent/>
+              {billing && <EegBillingConfigCardComponent/>}
 
             </div>
           </div>

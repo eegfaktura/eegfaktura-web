@@ -14,7 +14,7 @@ export interface Eeg {
   contactPerson: string;
   settlementInterval: 'MONTHLY' | "ANNUAL" | "BIANNUAL" | "QUARTER";
   allocationMode: "DYNAMIC" | "STATIC"
-  area: "LOCAL" | "REGIONAL" | "BEG" | "GEA"
+  area: "LOCAL" | "REGIONAL" | "BEG" | "GEA" | "P2P" | "EVA"
   communityId: string;
   address: Address;
   contact: Contact;

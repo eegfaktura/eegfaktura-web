@@ -12,7 +12,7 @@ import DatePickerCoreElement from "./elements/DatePickerCore.element";
 import {IbanInputForm} from "../form/IbanInputForm";
 import {PhoneInputForm} from "../form/PhoneInputForm";
 import {useLocale} from "../../store/hook/useLocale";
-import {useAccessGroups, useTenant} from "../../store/hook/Eeg.provider";
+import {useAccessGroups, useHasBilling, useTenant} from "../../store/hook/Eeg.provider";
 import {usePersistBusinessTypeMutation} from "../../store/participant/api";
 import DatePickerFormElement from "../form/DatePickerForm.element";
 import {DebitExtensionComponent} from "./DebitExtensionComponent";
@@ -46,6 +46,7 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
 
   const [persistBusinessType] = usePersistBusinessTypeMutation()
   const {tenant} = useTenant()
+  const billing = useHasBilling()
 
   const formMethods = useForm({
     defaultValues: participant, mode: "all"})
@@ -162,8 +163,9 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
                          rules={{required: t("warnings.company-name_missing")}} type="text" error={errors.firstname} onChangePartial={onUpdateBaseData}/>
             )
           }
-          <SelectForm name={"tariffId"} label={t("participant_tariff")} control={control} options={getRatesOption()} onChangePartial={onUpdateBaseData}/>
-          {tenant && isAdmin() && <JoiningFeeMember tenant={tenant} participantId={participant.id}
+          {/* member tariff and joining fee belong to billing: none for P2P, EVA (platform#229) */}
+          {billing && <SelectForm name={"tariffId"} label={t("participant_tariff")} control={control} options={getRatesOption()} onChangePartial={onUpdateBaseData}/>}
+          {billing && tenant && isAdmin() && <JoiningFeeMember tenant={tenant} participantId={participant.id}
                                                     tariff={rates.find(r => r.id === tariffId)}
                                                     feeInUse={rates.some(hasJoiningFee)}
                                                     track={call => saveStatus.save("joiningFee", call)}/>}

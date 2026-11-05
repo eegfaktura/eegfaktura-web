@@ -12,6 +12,7 @@
   "rateGroupOther": "Sonstige Tarife",
   "rateSearchPlaceholder": "Tarif suchen",
   "rateSearchEmpty": "Kein Tarif gefunden.",
+  "no_billing": "Für Peer-to-Peer und Eigenversorgung ist in eegfaktura keine Abrechnung vorgesehen.",
   "firstname": "Vorname",
   "lastname": "Nachname",
   "company-name": "Firmenname",
@@ -167,7 +168,8 @@
     "business-nr": "Firmennummer",
     "vat-number": "Umsatzsteuer ID",
     "tax-number": "Steuernummer",
-    "allocation-mode": "Verteilung"
+    "allocation-mode": "Verteilung",
+    "area": "Region"
   },
   "warnings": {
     "email_missing": "E-Mail-Adresse fehlt!",

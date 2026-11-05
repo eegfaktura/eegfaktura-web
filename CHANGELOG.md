@@ -17,6 +17,15 @@ this changelog highlights the changes relevant for overview and operations.
   the yearly amount changes with the same tariff) and a link to the user guide. „Wechseln“ reads the billing state again and saves the change with it
   (the dialog cannot be closed meanwhile), then the current period of the new interval is selected; „Abbrechen“ keeps the stored interval. Needs billing and backend
   with these endpoints (deploy them first).
+- **Peer-to-peer (`P2P`) and self-supply (`EVA`) communities** (vfeeg-development/eegfaktura-platform#229). The EEG
+  page shows the community type in the field „Region“ with the short forms of admin (EEG lokal, EEG regional, GEA,
+  BEG, P2P, EVA). eegfaktura provides no billing for P2P and EVA: web hides the menu item „Tarife“ (for admins and
+  members), the billing mode, totals and invoice details in the member area, „Meine Rechnungen“, the tariff selects of
+  members and metering points, the joining fee, the billing settings and the settlement interval on the EEG page,
+  and the billing mail in „E-Mail-Texte“ (the backend mails stay). The member export does not ask billing for joining
+  fees. A direct URL to the tariffs shows a notice instead of the tariff editor. Energy data, dashboard, metering
+  points and processes stay as they are; the other types are unchanged. billing rejects runs for these communities
+  itself. Deploy order: eda-xp → backend → billing, admin-backend → admin, web.
 
 ### Changed
 - **The general EEG save no longer sends the settlement interval** (platform#230); the backend ignores it there too.

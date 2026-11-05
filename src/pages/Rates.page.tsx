@@ -4,6 +4,7 @@ import {ratesSelector, saveNewRate, selectedRateSelector, selectRate, TARIFF_TYP
 import {useLocale} from "../store/hook/useLocale";
 import RateCardComponent from "../components/RateCard.component";
 import {
+  IonButton,
   IonButtons,
   IonContent,
   IonIcon,
@@ -23,7 +24,8 @@ import RateDetailPaneComponent from "../components/RateDetailPane.component";
 import {selectedTenant} from "../store/eeg";
 import {useRateType} from "../store/hook/Rate.provider";
 import { get } from "react-hook-form";
-import {useTenant} from "../store/hook/Eeg.provider";
+import {useHasBilling, useTenant} from "../store/hook/Eeg.provider";
+import MenuHeaderComponent from "../components/core/MenuHeader.component";
 import UnsavedChangesGuard, {useConfirmDiscard} from "../components/core/UnsavedChangesGuard.component";
 import {ParticipantContext} from "../store/hook/ParticipantProvider";
 
@@ -64,6 +66,7 @@ const RatesPage: FC = () => {
     return next
   })
   const {tenant} = useTenant()
+  const billing = useHasBilling()
 
   const [showToast] = useIonToast();
 
@@ -160,6 +163,21 @@ const RatesPage: FC = () => {
       return false;
     }
     return true;
+  }
+
+  // a direct URL of a community without billing (P2P, EVA; platform#229): no tariff actions
+  if (!billing) {
+    return (
+      <IonPage>
+        <MenuHeaderComponent/>
+        <IonContent fullscreen color="eeg">
+          <div className="full-screen-center" style={{flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "16px"}}>
+            <div>{t("no_billing")}</div>
+            <IonButton routerLink="/page/participants">Zur Startseite</IonButton>
+          </div>
+        </IonContent>
+      </IonPage>
+    )
   }
 
   return (

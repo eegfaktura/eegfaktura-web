@@ -12,6 +12,7 @@ import {Api} from "../../service";
 import {useSelector} from "react-redux";
 import {useAuth} from "react-oidc-context";
 import {useGetUserQuery, useLazyGetUserQuery, userApi} from "../user/userApi";
+import {hasBilling} from "../../util/Area.util";
 
 
 export interface EegState {
@@ -229,6 +230,12 @@ export const useOnlineState = () => {
 export const useEegArea = () => {
   const {eeg} = useContext(EegContext)
   return eeg?.area
+}
+
+// a boolean, so it can be a hook dependency (platform#229)
+export const useHasBilling = () => {
+  const {eeg} = useContext(EegContext)
+  return hasBilling(eeg?.area)
 }
 
 export const useEegAllocation = () => {

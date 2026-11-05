@@ -72,7 +72,7 @@ import {reformatDateTimeStamp,} from "../../util/Helper.util";
 import DatepickerPopover from "../dialogs/datepicker.popover";
 import {ExcelReportRequest, ParticipantCp} from "../../models/reports.model";
 import UploadPopup from "../dialogs/upload.popup";
-import {EegContext, useRefresh, useTenant} from "../../store/hook/Eeg.provider";
+import {EegContext, useHasBilling, useRefresh, useTenant} from "../../store/hook/Eeg.provider";
 import {
   billingRunErrorSelector,
   billingRunIsFetchingSelector,
@@ -260,12 +260,14 @@ const ParticipantPaneComponent: FC = () => {
   const energyReport = useAppSelector(meteringEnergyGroup1);
   const reportLoading = useAppSelector(energyReportLoadingSelector);
   const reportError = useAppSelector(energyReportErrorSelector);
+  // no billing mode for a community without billing (P2P, EVA; platform#229)
+  const billing = useHasBilling();
   useEffect(() => {
-    if (reportLoading) return;
-    const nextBillingEnabled = !!activePeriod && !billingRunBlocker(false, reportError, buildAllocationMap(participants).length);
+    if (billing && reportLoading) return;
+    const nextBillingEnabled = billing && !!activePeriod && !billingRunBlocker(false, reportError, buildAllocationMap(participants).length);
     setBillingEnabled(nextBillingEnabled);
     if (!nextBillingEnabled) toggleShowAmount(false);
-  }, [activePeriod, participants, energyReport, reportLoading, reportError]);
+  }, [billing, activePeriod, participants, energyReport, reportLoading, reportError]);
 
   // the tooltip is derived on render, so it follows a loading report and a period change at once
   const billingSwitchTitle = useMemo(() => billingSwitchTooltip({
@@ -513,8 +515,8 @@ const ParticipantPaneComponent: FC = () => {
         } as ExcelReportRequest
         return Api.energyService.createReport({tenant, ecId, rcNr}, exportdata);
       } else {
-        // without a tariff with a joining fee the column stays empty anyway: billing is not asked
-        if (!Object.values(rates).some(r => hasJoiningFee(r))) {
+        // without billing or a tariff with a joining fee the column stays empty anyway: billing is not asked
+        if (!billing || !Object.values(rates).some(r => hasJoiningFee(r))) {
           return Api.eegService.exportMasterdata(tenant)
         }
         return exportMasterdataWithJoiningFees(
@@ -871,7 +873,7 @@ const ParticipantPaneComponent: FC = () => {
           }
         </div>
         <div className={"pane-footer"}>
-          {showAmount && (
+          {billing && showAmount && (
             <div>
               {totals && <BillingTotalsTable totals={totals} open={totalsOpen}/>}
               <IonRow>
@@ -1037,12 +1039,12 @@ const ParticipantPaneComponent: FC = () => {
           )}
           <div className={"button-bar"}>
             <div style={{marginLeft: "20px"}}>
-              <SlideButtonComponent
+              {billing && <SlideButtonComponent
                 checked={showAmount}
                 disabled={!billingEnabled}
                 title={billingSwitchTitle}
                 setChecked={(c) => activateBilling(c)}
-              ></SlideButtonComponent>
+              ></SlideButtonComponent>}
             </div>
             <div
               style={{

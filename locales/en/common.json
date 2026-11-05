@@ -11,5 +11,6 @@
   "rateGroupConsumer": "Consumer tariffs",
   "rateGroupOther": "Other tariffs",
   "rateSearchPlaceholder": "Search tariff",
-  "rateSearchEmpty": "No tariff found."
+  "rateSearchEmpty": "No tariff found.",
+  "no_billing": "eegfaktura provides no billing for peer-to-peer and self-supply communities."
 }

@@ -1,7 +1,7 @@
 import React, {FC, useEffect, useRef, useState} from "react";
 import {IonBadge, IonCard, IonContent, IonItem, IonLabel, IonList, IonPage, IonText} from "@ionic/react";
 import MenuHeaderComponent from "../components/core/MenuHeader.component";
-import {useAccessGroups, useTenant} from "../store/hook/Eeg.provider";
+import {useAccessGroups, useHasBilling, useTenant} from "../store/hook/Eeg.provider";
 import {useAppSelector} from "../store";
 import {eegSelector} from "../store/eeg";
 import {useLocale} from "../store/hook/useLocale";
@@ -20,6 +20,10 @@ const MailTemplatesPage: FC = () => {
   const admin = isAdmin()
   const {tenant} = useTenant()
   const eeg = useAppSelector(eegSelector)
+  // without billing (P2P, EVA; platform#229) only the mails of the backend, decided on render: the community may load
+  // after the list
+  const billing = useHasBilling()
+  const shown = (source: MailTemplateSource) => billing || source !== "billing"
 
   const [items, setItems] = useState<MailTemplateListItem[]>()
   const [failed, setFailed] = useState<MailTemplateSource[]>([])
@@ -67,11 +71,11 @@ const MailTemplatesPage: FC = () => {
               <div className="header">{t("mailtemplates.header")}</div>
               <IonCard color="eeglight">
                 {!items && <p style={{padding: "0 16px"}}>{t("mailtemplates.loading")}</p>}
-                {failed.map(s => (
+                {failed.filter(shown).map(s => (
                   <IonText key={s} color="danger"><p style={{padding: "0 16px"}}>{t(`mailtemplates.load_failed_${s}`)}</p></IonText>
                 ))}
                 {items && <IonList>
-                  {items.map(item => (
+                  {items.filter(item => shown(item.source)).map(item => (
                     <IonItem key={`${item.source}-${item.key}`} button detail onClick={() => setSelected(item)}>
                       <IonLabel className="ion-text-wrap">
                         <h2>{item.name}</h2>
