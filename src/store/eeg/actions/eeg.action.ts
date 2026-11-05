@@ -1,6 +1,7 @@
 import {createAction, createAsyncThunk} from "@reduxjs/toolkit";
 import {ErrorState, featureKey} from "../states/eeg.state";
 import {Api} from "../../../service";
+import {Eeg} from "../../../models/eeg.model";
 
 export const fetchEegModel = createAsyncThunk(
   `${featureKey}/fetchEeg`,
@@ -21,6 +22,9 @@ export const updateEegModel = createAsyncThunk(
 )
 
 export const selectTenant = createAction<string>(`${featureKey}/selectTenant`);
+
+// the EEG as the backend returned it after a change made elsewhere (interval change, platform#230)
+export const eegChanged = createAction<{ tenant: string, eeg: Eeg }>(`${featureKey}/eegChanged`);
 
 export const setErrorState = createAction<ErrorState>(`${featureKey}/setErrorState`)
 export const clearErrorState = createAction<void>(`${featureKey}/clearErrorState`)

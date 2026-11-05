@@ -192,6 +192,23 @@ export interface JoiningFeeState {
   paidExternally?: { paidOn: string, note: string | null } | null
 }
 
+// billing GET /api/billingRuns/tenant/{tenantId}/settlementState (platform#230): period identifiers of the final runs
+// with documents and of the runs being calculated; web passes them on to the backend for the interval change
+export interface SettlementState {
+  finalPeriods: string[]
+  runningPeriods: string[]
+}
+
+// backend POST /eeg/settlementinterval: the check (dryRun) or the change; effectiveFrom null = at once
+export interface SettlementIntervalResult {
+  allowed: boolean
+  effectiveFrom: string | null
+  lastFinalPeriod: string | null
+  message: string
+  earliestFrom: string | null
+  eeg: Eeg | null
+}
+
 // billing PUT .../participants/{participantId}/joiningFee
 export type JoiningFeeRecord =
   | { kind: "CHARGE_REQUESTED" }

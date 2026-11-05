@@ -1,4 +1,4 @@
-import {clearErrorState, fetchEegModel, selectTenant, setErrorState, updateEegModel} from "../actions/eeg.action";
+import {clearErrorState, eegChanged, fetchEegModel, selectTenant, setErrorState, updateEegModel} from "../actions/eeg.action";
 import {createReducer} from "@reduxjs/toolkit";
 import {adapter, ErrorState, initialState} from "../states/eeg.state";
 import i18next from '../../../util/I18n'
@@ -22,6 +22,10 @@ export const reducer = createReducer(initialState, builder =>
         loadError: message })
     })
     .addCase(updateEegModel.fulfilled, (state, action) => {
+      const { tenant, eeg } = action.payload;
+      return adapter.updateOne(state, {id: tenant, changes: eeg})
+    })
+    .addCase(eegChanged, (state, action) => {
       const { tenant, eeg } = action.payload;
       return adapter.updateOne(state, {id: tenant, changes: eeg})
     })
