@@ -6,9 +6,9 @@ import {fetchRatesModel} from "../rate";
 import {fetchParticipantModel} from "../participant";
 import {IonSpinner, useIonToast} from "@ionic/react";
 import {ActiveTenant, Eeg} from "../../models/eeg.model";
-import {SelectedPeriod} from "../../models/energy.model";
 import {selectedPeriodSelector, setSelectedPeriod} from "../energy";
 import {Api} from "../../service";
+import {periodOf} from "../../util/SettlementInterval.util";
 import {useSelector} from "react-redux";
 import {useAuth} from "react-oidc-context";
 import {useGetUserQuery, useLazyGetUserQuery, userApi} from "../user/userApi";
@@ -39,29 +39,11 @@ const initialState: EegState = {
 
 export const EegContext = createContext(initialState)
 
-// the period preselected for the community's settlement interval; also chosen again after an interval change (platform#230)
+// the period preselected for the community's settlement interval: today's (after an interval change the EEG page
+// selects the first open period instead, eegfaktura-dev#54 #7)
 export const getCurrentPeriod = async (eeg: Eeg | undefined) => {
   const currentDate = new Date(Date.now())
-  let period = "Y"
-  let segment = 0
-  if (eeg) {
-    switch (eeg.settlementInterval) {
-      case "MONTHLY":
-        period = "YM"
-        segment = currentDate.getMonth() + 1
-        break;
-      case "BIANNUAL":
-        period = "YH"
-        segment = (currentDate.getMonth() + 1 < 7 ? 1 : 2)
-        break;
-      case "QUARTER":
-        const m = currentDate.getMonth() + 1
-        period = "YQ"
-        segment = (m < 4 ? 1 : m < 7 ? 2 : m < 10 ? 3 : 4)
-        break
-    }
-  }
-  return {type: period, year: currentDate.getFullYear(), segment: segment} as SelectedPeriod
+  return periodOf(eeg?.settlementInterval, currentDate.getFullYear(), currentDate.getMonth() + 1)
 }
 
 export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {

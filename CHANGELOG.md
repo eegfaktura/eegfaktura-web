@@ -15,7 +15,10 @@ this changelog highlights the changes relevant for overview and operations.
   interval, from when the new one applies or why the change is not possible yet and from when it is, the last final
   period, two hints (existing documents stay; membership fee, metering point fee and free energy apply per billing, so
   the yearly amount changes with the same tariff) and a link to the user guide. „Wechseln“ reads the billing state again and saves the change with it
-  (the dialog cannot be closed meanwhile), then the current period of the new interval is selected; „Abbrechen“ keeps the stored interval. Needs billing and backend
+  (the dialog cannot be closed meanwhile), then the first open period of the new interval is selected and named in the
+  message (the one starting at the new interval's start, which may lie in the past, e.g. „Als Nächstes abzurechnen:
+  2. Quartal 2026.“; today's period when the change applies at once; eegfaktura-dev#54 #7). Opening the app still
+  selects today's period. „Abbrechen“ keeps the stored interval. Needs billing and backend
   with these endpoints (deploy them first).
 
 ### Changed
