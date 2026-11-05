@@ -83,6 +83,18 @@ describe("SettlementIntervalChangeDialog (platform#230)", () => {
     expect(confirmDisabled()).toBe(true)
   })
 
+  it("a gap of unbilled months is refused with the backend's text naming it (eegfaktura-dev#54 #2)", async () => {
+    const gap: SettlementIntervalResult = {
+      allowed: false, effectiveFrom: null, lastFinalPeriod: "Abr_YM-2026-3",
+      message: "Februar 2026 ist noch nicht endgültig abgerechnet.", earliestFrom: null, eeg: null,
+    }
+    changeSettlementInterval.mockResolvedValue(gap)
+    open()
+    await screen.findByText(gap.message)
+    expect(screen.getByText("Zuletzt endgültig abgerechnet: März 2026")).toBeTruthy()
+    expect(confirmDisabled()).toBe(true)
+  })
+
   it("before the first final run the change applies at once", async () => {
     changeSettlementInterval.mockResolvedValue(immediate)
     open()

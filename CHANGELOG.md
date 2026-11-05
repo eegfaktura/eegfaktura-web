@@ -18,7 +18,8 @@ this changelog highlights the changes relevant for overview and operations.
   (the dialog cannot be closed meanwhile), then the first open period of the new interval is selected and named in the
   message (the one starting at the new interval's start, which may lie in the past, e.g. „Als Nächstes abzurechnen:
   2. Quartal 2026.“; today's period when the change applies at once; eegfaktura-dev#54 #7). Opening the app still
-  selects today's period. „Abbrechen“ keeps the stored interval. Needs billing and backend
+  selects today's period. „Abbrechen“ keeps the stored interval. A refused change shows the backend's reason,
+  including the months not yet billed final that block it (eegfaktura-dev#54 #2, text from the backend). Needs billing and backend
   with these endpoints (deploy them first).
 
 ### Changed
