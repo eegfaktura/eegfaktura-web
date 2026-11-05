@@ -22,10 +22,17 @@ vi.mock("react-virtuoso", () => ({
   Virtuoso: ({totalCount, itemContent, context}: any) =>
     <div>{Array.from({length: totalCount}, (_, i) => <div key={i}>{itemContent(i, undefined, context)}</div>)}</div>,
 }))
+// bought and sold with two metering points without a tariff, without energy data in the store
+vi.mock("../../components/dashboard/EnergyOverview.functions", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../components/dashboard/EnergyOverview.functions")>()),
+  tradedSummary: () => ({taken: 5, spent: 3, withoutTariff: 2, withoutTariffKwh: 10}),
+}))
 
 import EegPage from "../../pages/Eeg.page";
 import ParticipantPaneComponent from "../../components/participantPane/ParticipantPane.component";
 import EegOverviewComponent from "../../components/dashboard/EegOverview.component";
+import EnergyOverviewComponent from "../../components/dashboard/EnergyOverview.component";
+import {PieSeriesType} from "../../pages/Dashboard.page";
 
 // platform#229: no billing for P2P and EVA on the EEG page, in the member list and on the dashboard
 const TENANT = "PP100100"
@@ -77,4 +84,17 @@ describe("no billing for P2P and EVA (platform#229): pages", () => {
     expect(screen.getByText("Übersicht EEG")).toBeTruthy()
     expect(!!screen.queryByText("Tarife")).toBe(shown)
   })
+
+  // both count only metering points with a tariff: without billing they would always read 0 kWh
+  it.each([["EVA", false], ["LOCAL", true]])("dashboard of %s: bought/sold and the hint on metering points without a tariff shown = %s",
+    (area, shown) => {
+      const series = {name: "", value: 0, fill: ""} as PieSeriesType
+      renderWithProviders(<EegContext.Provider value={ctx(area)}>
+        <EnergyOverviewComponent consumed={series} produced={series} allocated={series}
+                                 rates={{t1: {id: "t1"} as any}}/></EegContext.Provider>)
+      expect(screen.getByText("Verteilt")).toBeTruthy()
+      expect(!!screen.queryByText("Eingekauft")).toBe(shown)
+      expect(!!screen.queryByText("Verkauft")).toBe(shown)
+      expect(!!screen.queryByText(/2 Zählpunkte ohne gültigen Tarif sind hier nicht enthalten/)).toBe(shown)
+    })
 })

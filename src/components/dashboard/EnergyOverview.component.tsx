@@ -161,7 +161,9 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
           </div>
           <div style={{fontSize: "10px"}}>*) vorherige Periode{activePeriod ? `: ${periodDisplayString(getPreviousPeriod(activePeriod))}` : ""}</div>
         </div>
-        <div style={{display: "flex", flexFlow: "column", height: "100%", margin: "8px", flex: "1", flexBasis: "30%"}}>
+        {/* bought and sold count only metering points with a tariff, and the hint names those without one: none
+            without billing (P2P, EVA; platform#229) */}
+        {billing && <div style={{display: "flex", flexFlow: "column", height: "100%", margin: "8px", flex: "1", flexBasis: "30%"}}>
           <div style={{display: "flex", flexFlow: "column", height: "100%", background: "#EAE7D9", padding: "8px"}}>
             <div style={{borderBottom: "1.5px solid #368060"}}>Energiemengen:</div>
             <div style={{
@@ -188,9 +190,8 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
                   </div>
                 </div>
               </div>
-              {/* only once the tariffs are loaded: before, every metering point would read "ohne Tarif"; none without
-                  billing (P2P, EVA; platform#229) */}
-              {billing && traded.withoutTariff > 0 && Object.keys(rates).length > 0 && (
+              {/* only once the tariffs are loaded: before, every metering point would read "ohne Tarif" */}
+              {traded.withoutTariff > 0 && Object.keys(rates).length > 0 && (
                 <div style={{padding: "5px 16px", fontSize: "11px"}}>
                   {traded.withoutTariff === 1
                     ? `1 Zählpunkt ohne gültigen Tarif ist hier nicht enthalten (${renderKWH(traded.withoutTariffKwh)}).`
@@ -200,7 +201,7 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
             </div>
 
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   )
