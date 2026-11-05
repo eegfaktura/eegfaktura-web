@@ -315,7 +315,13 @@ export class EegService extends EegBaseService {
         ...this.getSecureHeaders(token, tenant),
         'Accept': 'application/json',
       },
-    }).then(this.handleErrors).then(res => res.json())
+    }).then(this.handleErrors).then(res => res.json()).then((state: SettlementState) => {
+      // never pass an incomplete state on: the backend would check against less than billing knows
+      if (!Array.isArray(state?.finalPeriods) || !Array.isArray(state?.runningPeriods)) {
+        throw new Error("unvollständige Antwort von billing")
+      }
+      return state
+    })
   }
 
   // extension 2026-10-27: request the fee for the next final run or record a payment made outside eegfaktura (PUT),

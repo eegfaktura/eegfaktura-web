@@ -14,8 +14,8 @@ this changelog highlights the changes relevant for overview and operations.
   and has the backend check the change (`POST /eeg/settlementinterval`, `dryRun`). The dialog shows the old and new
   interval, from when the new one applies or why the change is not possible yet and from when it is, the last final
   period, two hints (existing documents stay; membership fee, metering point fee and free energy apply per billing, so
-  the yearly amount changes with the same tariff) and a link to the user guide. „Wechseln“ saves the change, then the
-  current period of the new interval is selected; „Abbrechen“ keeps the stored interval. Needs billing and backend
+  the yearly amount changes with the same tariff) and a link to the user guide. „Wechseln“ reads the billing state again and saves the change with it
+  (the dialog cannot be closed meanwhile), then the current period of the new interval is selected; „Abbrechen“ keeps the stored interval. Needs billing and backend
   with these endpoints (deploy them first).
 
 ### Changed

@@ -26,9 +26,11 @@ const immediate: SettlementIntervalResult = {
 
 const fetchSettlementState = vi.fn()
 const changeSettlementInterval = vi.fn()
+const onSaving = vi.fn()
 
 const open = (onDone = vi.fn()) => {
-  render(<SettlementIntervalChangeDialog tenant="TE100200" current="MONTHLY" next="QUARTER" onDone={onDone}/>)
+  render(<SettlementIntervalChangeDialog tenant="TE100200" current="MONTHLY" next="QUARTER" onDone={onDone}
+                                         onSaving={onSaving}/>)
   return onDone
 }
 const confirmDisabled = () => (screen.getByText("Wechseln").closest("ion-button") as HTMLIonButtonElement).disabled
@@ -37,6 +39,7 @@ describe("SettlementIntervalChangeDialog (platform#230)", () => {
   beforeEach(() => {
     fetchSettlementState.mockReset().mockResolvedValue(billingState)
     changeSettlementInterval.mockReset()
+    onSaving.mockReset()
     Api.eegService = {fetchSettlementState, changeSettlementInterval} as unknown as typeof Api.eegService
   })
 
@@ -57,21 +60,25 @@ describe("SettlementIntervalChangeDialog (platform#230)", () => {
     expect(confirmDisabled()).toBe(false)
   })
 
-  it("confirming saves without dryRun and hands the result on", async () => {
+  it("confirming reads billing's state again and saves with it, without dryRun, and hands the result on", async () => {
     const saved = {...allowed, eeg: {id: "TE100200", settlementInterval: "QUARTER"} as Eeg}
+    const fresh = {finalPeriods: ["Abr_YM-2026-3"], runningPeriods: ["Abr_YM-2026-2"]}
+    fetchSettlementState.mockResolvedValueOnce(billingState).mockResolvedValueOnce(fresh)
     changeSettlementInterval.mockResolvedValueOnce(allowed).mockResolvedValueOnce(saved)
     const onDone = open()
     await screen.findByText(allowed.message)
     fireEvent.click(screen.getByText("Wechseln"))
+    expect(onSaving).toHaveBeenCalledWith(true)
     await waitFor(() => expect(onDone).toHaveBeenCalledWith(saved))
-    expect(changeSettlementInterval).toHaveBeenLastCalledWith("TE100200", "QUARTER", false, billingState)
+    expect(fetchSettlementState).toHaveBeenCalledTimes(2)
+    expect(changeSettlementInterval).toHaveBeenLastCalledWith("TE100200", "QUARTER", false, fresh)
   })
 
-  it("a refused change shows the reason and the earliest start and cannot be confirmed", async () => {
+  it("a refused change shows the reason with the earliest start and cannot be confirmed", async () => {
     changeSettlementInterval.mockResolvedValue(blocked)
     open()
     await screen.findByText(blocked.message)
-    expect(screen.getByText("Frühestmöglicher Beginn: 1. April 2026")).toBeTruthy()
+    expect(blocked.message).toContain("ab 1. April 2026")
     expect(screen.getByText("Zuletzt endgültig abgerechnet: Februar 2026")).toBeTruthy()
     expect(confirmDisabled()).toBe(true)
   })
@@ -81,7 +88,6 @@ describe("SettlementIntervalChangeDialog (platform#230)", () => {
     open()
     await screen.findByText(immediate.message)
     expect(screen.getByText("Zuletzt endgültig abgerechnet: noch nichts")).toBeTruthy()
-    expect(screen.queryByText(/Frühestmöglicher Beginn/)).toBeNull()
     expect(confirmDisabled()).toBe(false)
   })
 
@@ -102,14 +108,31 @@ describe("SettlementIntervalChangeDialog (platform#230)", () => {
     expect(confirmDisabled()).toBe(true)
   })
 
-  it("a refusal on saving (409, e.g. a run started meanwhile) shows the reason and stays open", async () => {
-    const reason = "Für März 2026 läuft gerade eine Berechnung. Bitte nach deren Ende erneut versuchen."
+  it("a run started meanwhile: the fresh state goes to the backend, its refusal (409) shows the reason, the dialog stays open", async () => {
+    const reason = "Für April 2026 läuft gerade eine Berechnung. Bitte nach deren Ende erneut versuchen."
+    const running = {finalPeriods: ["Abr_YM-2026-3"], runningPeriods: ["Abr_YM-2026-4"]}
+    fetchSettlementState.mockResolvedValueOnce(billingState).mockResolvedValueOnce(running)
     changeSettlementInterval.mockResolvedValueOnce(allowed).mockRejectedValueOnce(new Error(reason))
     const onDone = open()
     await screen.findByText(allowed.message)
     fireEvent.click(screen.getByText("Wechseln"))
     await screen.findByText(`Der Wechsel wurde nicht gespeichert: ${reason}`)
+    expect(changeSettlementInterval).toHaveBeenLastCalledWith("TE100200", "QUARTER", false, running)
     expect(onDone).not.toHaveBeenCalled()
+    expect(onSaving).toHaveBeenLastCalledWith(false)
+    expect(confirmDisabled()).toBe(true)
+  })
+
+  it("when billing cannot be read again on confirming, nothing is saved", async () => {
+    fetchSettlementState.mockResolvedValueOnce(billingState).mockRejectedValueOnce(new Error("Bad Gateway"))
+    changeSettlementInterval.mockResolvedValue(allowed)
+    const onDone = open()
+    await screen.findByText(allowed.message)
+    fireEvent.click(screen.getByText("Wechseln"))
+    await screen.findByText("Der Wechsel kann gerade nicht geprüft werden: Bad Gateway")
+    expect(changeSettlementInterval).toHaveBeenCalledTimes(1)
+    expect(onDone).not.toHaveBeenCalled()
+    expect(onSaving).toHaveBeenLastCalledWith(false)
     expect(confirmDisabled()).toBe(true)
   })
 })

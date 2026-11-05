@@ -63,6 +63,8 @@ const EegPage: FC = () => {
   const [tenantsState, setTenantsState] = useState<string[]>([])
   // the interval chosen in the select, open in the change dialog (platform#230)
   const [pendingInterval, setPendingInterval] = useState<Eeg["settlementInterval"]>()
+  // no closing by backdrop or Escape while the change is saved: its result must be seen
+  const [savingInterval, setSavingInterval] = useState(false)
   const [toaster] = useIonToast()
   // the latest EEG for the dialog's dismiss handler, which may run after the store has the changed EEG
   const eegRef = useRef(eeg)
@@ -103,6 +105,7 @@ const EegPage: FC = () => {
 
   const onIntervalDone = (result?: SettlementIntervalResult) => {
     setPendingInterval(undefined)
+    setSavingInterval(false)
     if (result?.eeg) {
       dispatcher(eegChanged({tenant, eeg: result.eeg}))
       getCurrentPeriod(result.eeg).then(p => dispatcher(setSelectedPeriod(p)))
@@ -146,10 +149,11 @@ const EegPage: FC = () => {
                   <SelectForm label={"Abrechnungszeitraum"} placeholder={"Abrechnungszeitraum"} control={control}
                               name={"settlementInterval"} options={SETTLEMENT_INTERVALS}
                               onChangePartial={onChangeInterval} disabled={!isAdmin()}></SelectForm>
-                  <IonModal isOpen={!!pendingInterval} onDidDismiss={() => pendingInterval && onIntervalDone()}>
+                  <IonModal isOpen={!!pendingInterval} backdropDismiss={!savingInterval} onDidDismiss={() => pendingInterval && onIntervalDone()}>
                     {pendingInterval && tenant &&
                       <SettlementIntervalChangeDialog tenant={tenant} current={eeg.settlementInterval}
-                                                      next={pendingInterval} onDone={onIntervalDone}/>}
+                                                      next={pendingInterval} onDone={onIntervalDone}
+                                                      onSaving={setSavingInterval}/>}
                   </IonModal>
                   {/*</form>*/}
                 </IonCard>

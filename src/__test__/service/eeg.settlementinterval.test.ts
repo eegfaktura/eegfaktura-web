@@ -29,6 +29,11 @@ describe("EegService: settlement interval change", () => {
     expect(init.headers.tenant).toBe("te100200")
   })
 
+  it("refuses an incomplete settlementState, so it is never passed on", async () => {
+    fetchMock.mockResolvedValue(json({finalPeriods: ["Abr_YM-2026-3"]}))
+    await expect(service.fetchSettlementState("TE100200")).rejects.toThrow("unvollständige Antwort von billing")
+  })
+
   it("posts interval, dryRun and the billing state to the backend", async () => {
     const result = {allowed: true, effectiveFrom: "2026-04-01", lastFinalPeriod: "Abr_YM-2026-3",
       message: "Das neue Intervall gilt ab 1. April 2026.", earliestFrom: null, eeg: null}
