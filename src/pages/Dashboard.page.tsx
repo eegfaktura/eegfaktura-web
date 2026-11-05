@@ -58,7 +58,7 @@ const DashboardPage: FC = () => {
     lineHeight: '24px',
   };
   if (!initialPeriod) {
-    // the same IonPage as below: a new IonPage element in a hidden page takes over the view of the shown URL (platform#237)
+    // the same IonPage as below (platform#237, see EegLoadState)
     return <IonPage><div style={{height: "100%", display: "flex"}}><IonSpinner
       style={{margin: "auto", height: "48px", width: "48px"}}></IonSpinner></div></IonPage>
   }

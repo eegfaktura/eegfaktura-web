@@ -72,7 +72,7 @@ const Participants: FC = () => {
     }
   }
   if (!eeg || !tenant) {
-    // the same IonPage as below: a new IonPage element in a hidden page takes over the view of the shown URL (platform#237)
+    // the same IonPage as below (platform#237, see EegLoadState)
     return <IonPage><EegLoadStateComponent/></IonPage>
   }
 

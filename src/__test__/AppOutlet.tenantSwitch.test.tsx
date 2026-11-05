@@ -60,7 +60,7 @@ const installCommit = () => {
     return true
   }
 }
-const settle = async () => { await act(async () => { await new Promise(r => setTimeout(r, 30)) }) }
+const settle = async () => { await act(async () => { await new Promise(r => setTimeout(r, 0)) }) }
 // the menu navigates with routerDirection "none"
 const go = async (path: string) => { await act(async () => { history.push(path, {direction: "none"}) }); await settle() }
 const visiblePages = () => [...document.querySelectorAll("ion-router-outlet > .ion-page")]
