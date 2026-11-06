@@ -16,7 +16,7 @@ import SelectForm from "../components/form/SelectForm.component";
 
 import "./Eeg.page.scss"
 import {useTenants} from "../store/hook/AuthProvider";
-import {getCurrentPeriod, useAccessGroups, useHasBilling, useTenant, useTenantSwitch} from "../store/hook/Eeg.provider";
+import {useAccessGroups, useHasBilling, useTenant, useTenantSwitch} from "../store/hook/Eeg.provider";
 import {areaLabel, zoneLevelLabel} from "../util/Area.util";
 import EegBillingConfigCardComponent from "../components/EegBillingConfigCard.component";
 import {AccountInfo, Address, Contact, Eeg, Optionals, SettlementIntervalResult} from "../models/eeg.model";
@@ -28,7 +28,7 @@ import EegLoadStateComponent from "../components/EegLoadState.component";
 import {useLeaveUnsaved} from "../store/hook/ParticipantProvider";
 import MenuHeaderComponent from "../components/core/MenuHeader.component";
 import SettlementIntervalChangeDialog from "../components/dialogs/SettlementIntervalChange.dialog";
-import {SETTLEMENT_INTERVALS} from "../util/SettlementInterval.util";
+import {afterIntervalChange, SETTLEMENT_INTERVALS} from "../util/SettlementInterval.util";
 import {setSelectedPeriod} from "../store/energy";
 
 
@@ -111,8 +111,9 @@ const EegPage: FC = () => {
     setSavingInterval(false)
     if (result?.eeg) {
       dispatcher(eegChanged({tenant, eeg: result.eeg}))
-      getCurrentPeriod(result.eeg).then(p => dispatcher(setSelectedPeriod(p)))
-      toaster({message: `Abrechnungszeitraum geändert. ${result.message}`, duration: 5000, position: "bottom"})
+      const {period, message} = afterIntervalChange(result)
+      dispatcher(setSelectedPeriod(period))
+      toaster({message, duration: 5000, position: "bottom"})
     } else {
       // cancelled: the select shows the stored interval again
       setValue("settlementInterval", eegRef.current?.settlementInterval ?? "MONTHLY")

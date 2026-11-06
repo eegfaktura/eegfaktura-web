@@ -8,6 +8,17 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **After an interval change the first open period is selected** (eegfaktura-dev#54 #7): after „Wechseln“ the first
+  open period of the new interval is selected and named in the
+  message (the one starting at the new interval's start, which may lie in the past, e.g. „Als Nächstes abzurechnen:
+  2. Quartal 2026.“; today's period without that sentence when the change applies at once, because earlier periods
+  may still be open; eegfaktura-dev#54 #7). Opening the app still
+  selects today's period. Before, the current period of the new interval was selected.
+- **A refused interval change shows the backend's reason** (eegfaktura-dev#54 #2): A refused change shows the
+  backend's reason, including the months not yet billed final that block it (eegfaktura-dev#54 #2, text from the
+  backend; needs eegfaktura-backend#148).
+
 ## [1.20.0] – 2026-11-06
 
 ### Added
