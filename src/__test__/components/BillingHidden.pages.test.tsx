@@ -60,6 +60,18 @@ describe("no billing for P2P and EVA (platform#229): pages", () => {
     expect(region.value).toBe(area === "P2P" ? "P2P" : "EEG lokal")
   })
 
+  // eegfaktura-dev#56 #13: the creditor ID serves direct debit only; the bank account stays
+  it.each([["P2P", false], ["EVA", false], ["LOCAL", true]])("EEG page of %s: creditor ID shown = %s", (area, shown) => {
+    const r = renderWithProviders(<MemoryRouter><EegContext.Provider value={ctx(area)}><EegPage/></EegContext.Provider></MemoryRouter>)
+    act(() => {
+      r.store.dispatch(selectTenant(TENANT))
+      r.store.dispatch(fetchEegModel.fulfilled({eeg: eegOf(area)}, "req", {tenant: TENANT}))
+    })
+    const input = (label: string) => !!r.container.querySelector(`ion-input[label="${label}"]`)
+    expect(input("Creditor-ID")).toBe(shown)
+    expect(["IBAN", "BIC", "Kontoinhaber", "Bankverbindung"].map(input)).toEqual([true, true, true, true])
+  })
+
   // addendum 05.11.2026: the zone level from the metering point list, read only
   it.each([[3, "3 Lokalbereich"], [null, "unbekannt"]])("EEG page with zone level %s shows „%s“", (level, text) => {
     const eeg = {...eegOf("LOCAL"), ecZoneLevel: level} as Eeg

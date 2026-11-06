@@ -22,8 +22,8 @@ this changelog highlights the changes relevant for overview and operations.
   BEG, P2P, EVA). eegfaktura provides no billing for P2P and EVA: web hides the menu item „Tarife“ (for admins and
   members), the billing mode, totals and invoice details in the member area, „Meine Rechnungen“, the tariff selects of
   members and metering points, the joining fee, the direct debit fields in the member forms (details and new member;
-  stored values stay, the IBAN is not required then), the billing settings and the settlement interval on the EEG
-  page,
+  stored values stay, the IBAN is not required then), the billing settings, the settlement interval and the Creditor-ID on the EEG
+  page (IBAN, BIC, Kontoinhaber and Bankverbindung stay; eegfaktura-dev#56 #13),
   the billing mail in „E-Mail-Texte“ (the backend mails stay), and on the dashboard the tariff block and the box
   „Energiemengen“ (bought/sold count only metering points with a tariff, and its hint on metering points without
   one). A direct URL to the tariffs shows a notice instead of the tariff editor.

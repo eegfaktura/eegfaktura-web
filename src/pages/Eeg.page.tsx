@@ -297,10 +297,12 @@ const EegPage: FC = () => {
                                       rules={{regex: /[a-zA-Z\s]*/}} type="text" readonly={!isAdmin()}
                                       onChangePartial={onChangeField("bankName")}
                                       error={errors.accountInfo?.bankName}/>
-                  <InputFormComponent name={"accountInfo.creditorId"} label={t("account.creditor-id")} control={control}
-                                      rules={{regex: /[a-zA-Z\s\-_]*/}} type="text" readonly={!isAdmin()}
-                                      onChangePartial={onChangeField("creditor_id")}
-                                      error={errors.accountInfo?.creditorId}/>
+                  {/* the creditor ID serves direct debit only: none without billing (eegfaktura-dev#56 #13) */}
+                  {billing &&
+                    <InputFormComponent name={"accountInfo.creditorId"} label={t("account.creditor-id")} control={control}
+                                        rules={{regex: /[a-zA-Z\s\-_]*/}} type="text" readonly={!isAdmin()}
+                                        onChangePartial={onChangeField("creditor_id")}
+                                        error={errors.accountInfo?.creditorId}/>}
                 </IonCard>
               </div>
               <div className={"eeg-property-card"}>
