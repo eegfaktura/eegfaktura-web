@@ -238,7 +238,8 @@
       "title": "Teilnehmerliste anfordern",
       "desc": "Anfordern der Teilnehmer einer EEG.",
       "info": "Nachdem der Antrag an den Netzbetreiber übermittelt wurde, wird automatisch eine E-Mail an den zuständigen Verantwortlichen der EEG gesendet, sobald eine Antwort vorliegt. Die Bearbeitung dieses Vorgangs kann je nach Netzbetreiber einige Zeit in Anspruch nehmen und erfolgt daher asynchron.",
-      "submit": "Zählpunktliste anfordern"
+      "submit": "Zählpunktliste anfordern",
+      "noOperator": "Für diese Gemeinschaft ist kein Netzbetreiber hinterlegt. Die Zählpunktliste kann daher nicht angefordert werden."
     },
     "activateMeter": {
       "title": "Zählpunkt aktivieren",

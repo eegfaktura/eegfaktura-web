@@ -72,28 +72,35 @@ const ProcessPodListComponent: FC<ProcessPodListComponentProps> = ({eeg, edaProc
     }
   }
 
+  // the grid operators of the metering points and the community's own one, which is also the preselected value
+  // (a community without metering points can request its first list there, eegfaktura-dev#56 #8)
   const getNetOperatorIds = () => {
     const meters = activeMetersSelector(store.getState())
     const operators: Record<string, string> = {}
+    if (eeg.gridOperator) operators[eeg.gridOperator] = JoinStrings(" - ", "", eeg.gridOperator, eeg.operatorName ?? "")
     meters.filter(m => m.gridOperatorId).forEach(m => operators[m.gridOperatorId] = JoinStrings(" - ", "", m.gridOperatorId, m.gridOperatorName))
     return Object.entries(operators).map(([k, v]) => ({value: k, label: v} as SelectOptions))
   }
+  const multipleOperators = hasMultipleGridOperators(eeg.area)
+  const operatorOptions = multipleOperators ? getNetOperatorIds() : []
+  const noOperator = multipleOperators ? operatorOptions.length === 0 : !eeg.gridOperator
 
   return (
     <div>
       <ProcessHeaderComponent name={edaProcess.name}/>
       <p>{t("process.podList.info")}</p>
+      {noOperator && <p>{t("process.podList.noOperator")}</p>}
       {/* several grid operators possible (BEG, P2P, EVA): the list is requested per grid operator (platform#229) */}
-      {hasMultipleGridOperators(eeg.area) &&
+      {multipleOperators && !noOperator &&
           <div style={{paddingBottom: "15px"}}>
               <BasicSelectComponent control={control} name={"operatorId"}
-                                    options={getNetOperatorIds()} label={t("grid-operator.id")} multiple={false}
+                                    options={operatorOptions} label={t("grid-operator.id")} multiple={false}
                                     rules={{
                                       required: true
                                     }} defaultValue={processValues.operatorId}/>
           </div>
       }
-      <IonButton onClick={handleSubmit(request)} disabled={!formState.isValid || formState.isSubmitting}>
+      <IonButton onClick={handleSubmit(request)} disabled={noOperator || !formState.isValid || formState.isSubmitting}>
         {t("process.podList.submit")}
       </IonButton>
     </div>

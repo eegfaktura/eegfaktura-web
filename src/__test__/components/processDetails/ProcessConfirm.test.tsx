@@ -13,9 +13,9 @@ vi.mock("@ionic/react", async (importOriginal) => ({
   useIonToast: () => [toaster],
 }))
 // the form widgets are not part of this test: plain inputs bound to the same form fields
-const select = vi.hoisted(() => ({control, name, rules, multiple}: any) =>
+const select = vi.hoisted(() => ({control, name, rules, multiple, options}: any) =>
   <Controller control={control} name={name} rules={rules} render={({field}) =>
-    <input aria-label={name} value={(multiple ? (field.value ?? []).join(",") : field.value) ?? ""}
+    <input aria-label={name} data-options={options?.map((o: any) => o.label).join("|")} value={(multiple ? (field.value ?? []).join(",") : field.value) ?? ""}
            onChange={e => field.onChange(multiple ? e.target.value.split(",") : e.target.value)}/>}/>)
 vi.mock("../../../components/form/BasicSelect.component", () => ({BasicSelectComponent: select}))
 vi.mock("../../../components/form/SelectForm.component", () => ({default: select}))
@@ -206,4 +206,25 @@ describe("Zählpunktliste anfordern", () => {
       render(<ProcessPodListComponent eeg={{...eeg, area} as Eeg} edaProcess={process("Zählpunktliste anfordern")}/>)
       expect(!!screen.queryByLabelText("operatorId")).toBe(shown)
     })
+
+  // eegfaktura-dev#56 #8: without metering points the community's grid operator is a visible, preselected option
+  it("P2P without metering points: offers the community's grid operator", () => {
+    render(<ProcessPodListComponent eeg={{...eeg, area: "P2P", operatorName: "Netz Test"} as Eeg}
+                                    edaProcess={process("Zählpunktliste anfordern")}/>)
+    const operator = screen.getByLabelText("operatorId")
+    expect(operator.getAttribute("data-options")).toBe("AT003000 - Netz Test")
+    expect((operator as HTMLInputElement).value).toBe("AT003000")
+    expect(screen.queryByText(/kein Netzbetreiber hinterlegt/)).toBeNull()
+  })
+
+  it.each(["P2P", "LOCAL"])("%s without any grid operator: hint, button disabled, nothing sent", async (area) => {
+    render(<ProcessPodListComponent eeg={{...eeg, area, gridOperator: ""} as Eeg}
+                                    edaProcess={process("Zählpunktliste anfordern")}/>)
+    expect(screen.getByText(/kein Netzbetreiber hinterlegt/)).toBeTruthy()
+    expect(screen.queryByLabelText("operatorId")).toBeNull()
+    expect(isDisabled(submitButton("Zählpunktliste anfordern"))).toBe(true)
+    await submit("Zählpunktliste anfordern")
+    expect(alert).not.toHaveBeenCalled()
+    expect(Api.eegService.syncMeteringPointList).not.toHaveBeenCalled()
+  })
 })
