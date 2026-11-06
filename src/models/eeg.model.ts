@@ -14,7 +14,9 @@ export interface Eeg {
   contactPerson: string;
   settlementInterval: 'MONTHLY' | "ANNUAL" | "BIANNUAL" | "QUARTER";
   allocationMode: "DYNAMIC" | "STATIC"
-  area: "LOCAL" | "REGIONAL" | "BEG" | "GEA"
+  area: "LOCAL" | "REGIONAL" | "BEG" | "GEA" | "P2P" | "EVA"
+  // zone level 1–7 from the metering point list (platform#229), read only; null or missing = unknown
+  ecZoneLevel?: number | null
   communityId: string;
   address: Address;
   contact: Contact;

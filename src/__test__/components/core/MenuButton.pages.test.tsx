@@ -43,6 +43,8 @@ describe("menu button below 992 px (261024-ca9)", () => {
     const dashboard = renderWithProviders(
       <ParticipantContext.Provider value={{participants: [], reloadEnergyReport: vi.fn()} as any}>
         <DashboardPage/></ParticipantContext.Provider>)
+    // also while the first period loads
+    expect(menuButton(dashboard.container)).toBeTruthy()
     act(() => { dashboard.store.dispatch(setSelectedPeriod({type: "YM", year: 2026, segment: 10})) })
     expect(menuButton(dashboard.container)).toBeTruthy()
   })

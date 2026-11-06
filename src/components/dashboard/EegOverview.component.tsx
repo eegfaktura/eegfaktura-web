@@ -7,6 +7,7 @@ import {selectedPeriodSelector} from "../../store/energy";
 import {periodDisplayString} from "../../util/Helper.util";
 import {countMemberActivity, countMemberFees} from "../../util/MemberActivity.util";
 import {countInactiveMeters, countMeters} from "../../util/MeterCount.util";
+import {useHasBilling} from "../../store/hook/Eeg.provider";
 
 interface EegOverviewComponentProps {
   participants: EegParticipant[]
@@ -25,6 +26,7 @@ const EegOverviewComponent: FC<EegOverviewComponentProps> = ({participants, rate
   // ones of the selected period): active = at least one active metering point
   const allParticipants = useAppSelector(allParticipantsSelector)
   const activePeriod = useAppSelector(selectedPeriodSelector)
+  const billing = useHasBilling()
   const members = useMemo(() => countMemberActivity(allParticipants), [allParticipants])
   // platform#223: membership fees of the active members, same basis as the member count above
   const memberFees = useMemo(() => countMemberFees(allParticipants), [allParticipants])
@@ -169,12 +171,13 @@ const EegOverviewComponent: FC<EegOverviewComponentProps> = ({participants, rate
                 </div>
               </div>
             </div>
-            <div style={{display: "flex", flex: "1", padding: "15px 16px", gap: "10px", flexFlow: "column"}}>
+            {/* no tariffs without billing (P2P, EVA; platform#229) */}
+            {billing && <div style={{display: "flex", flex: "1", padding: "15px 16px", gap: "10px", flexFlow: "column"}}>
               <div style={{flexBasis: "20%"}}>Tarife</div>
               <div style={{display: "flex", flexFlow: "row", flex: "1"}}>
                 {renderTariffUsage(tariffUsage)}
               </div>
-            </div>
+            </div>}
           </div>
         </div>
       </div>

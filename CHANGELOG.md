@@ -8,6 +8,19 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **After an interval change the first open period is selected** (eegfaktura-dev#54 #7): after „Wechseln“ the first
+  open period of the new interval is selected and named in the
+  message (the one starting at the new interval's start, which may lie in the past, e.g. „Als Nächstes abzurechnen:
+  2. Quartal 2026.“; today's period without that sentence when the change applies at once, because earlier periods
+  may still be open; eegfaktura-dev#54 #7). Opening the app still
+  selects today's period. Before, the current period of the new interval was selected.
+- **A refused interval change shows the backend's reason** (eegfaktura-dev#54 #2): A refused change shows the
+  backend's reason, including the months not yet billed final that block it (eegfaktura-dev#54 #2, text from the
+  backend; needs eegfaktura-backend#148).
+
+## [1.20.0] – 2026-11-06
+
 ### Added
 - **Admins can change the settlement interval on the EEG page** (platform#230). Choosing another „Abrechnungszeitraum“
   opens a dialog: web reads the billing state from billing (`GET /api/billingRuns/tenant/{tenantId}/settlementState`)
@@ -15,13 +28,36 @@ this changelog highlights the changes relevant for overview and operations.
   interval, from when the new one applies or why the change is not possible yet and from when it is, the last final
   period, two hints (existing documents stay; membership fee, metering point fee and free energy apply per billing, so
   the yearly amount changes with the same tariff) and a link to the user guide. „Wechseln“ reads the billing state again and saves the change with it
-  (the dialog cannot be closed meanwhile), then the first open period of the new interval is selected and named in the
-  message (the one starting at the new interval's start, which may lie in the past, e.g. „Als Nächstes abzurechnen:
-  2. Quartal 2026.“; today's period without that sentence when the change applies at once, because earlier periods
-  may still be open; eegfaktura-dev#54 #7). Opening the app still
-  selects today's period. „Abbrechen“ keeps the stored interval. A refused change shows the backend's reason,
-  including the months not yet billed final that block it (eegfaktura-dev#54 #2, text from the backend). Needs billing and backend
+  (the dialog cannot be closed meanwhile), then the current period of the new interval is selected; „Abbrechen“ keeps the stored interval. Needs billing and backend
   with these endpoints (deploy them first).
+- **Peer-to-peer (`P2P`) and self-supply (`EVA`) communities** (vfeeg-development/eegfaktura-platform#229). The EEG
+  page shows the community type in the field „Region“ with the short forms of admin (EEG lokal, EEG regional, GEA,
+  BEG, P2P, EVA). eegfaktura provides no billing for P2P and EVA: web hides the menu item „Tarife“ (for admins and
+  members), the billing mode, totals and invoice details in the member area, „Meine Rechnungen“, the tariff selects of
+  members and metering points, the joining fee, the direct debit fields in the member forms (details and new member;
+  stored values stay, the IBAN is not required then), the billing settings, the settlement interval and the Creditor-ID on the EEG
+  page (IBAN, BIC, Kontoinhaber and Bankverbindung stay; eegfaktura-dev#56 #13),
+  the billing mail in „E-Mail-Texte“ (the backend mails stay), and on the dashboard the tariff block and the box
+  „Energiemengen“ (bought/sold count only metering points with a tariff, and its hint on metering points without
+  one). A direct URL to the tariffs shows a notice instead of the tariff editor.
+  web does not request billing data for them either: the tariffs are loaded only after the community's own load
+  returned a type with billing (so they now load after the EEG, not beside it, for every community; after a failed EEG
+  load they load as before, and another community's tariffs are cleared first), „E-Mail-Texte“ shows the load state
+  until the community is there and then asks billing only with billing, and the member area looks up no billing runs
+  and no joining fees. Energy data,
+  dashboard, metering points and processes stay as they are; the other types are unchanged. billing rejects runs for
+  these communities itself. Deploy order: eda-xp → backend → billing, admin-backend → admin, web.
+- **P2P and EVA run like a BEG; zone level and metering point codes** (platform#229, addendum 05.11.2026). One helper
+  „several grid operators possible“ (BEG, P2P, EVA) replaces the BEG checks: P2P/EVA metering points show their grid
+  operator, and „Zählpunktliste anfordern“ asks for the grid operator. Its choice lists the grid operators of the
+  metering points and the community's own one (trimmed, upper case), preselected, so a community without metering points sees where its
+  first list is requested (eegfaktura-dev#56 #8). A community without any grid operator (for every type) gets a
+  hint instead, and the button stays disabled (for EEG lokal/regional and GEA it was active before and sent nothing). The EEG page shows the community's zone level
+  („Nahebereich“, GET /eeg `ecZoneLevel`: 1 Hauptleitung … 7 Keine Verbindung: mehrere Netzgebiete, none = „unbekannt“),
+  the metering point details show `techCode` and `fuelCode` as code; all three read only (zone level names in the
+  locales, de and en). The metering point saves send the codes along unchanged: the backend ignores them on insert and
+  update and returns the sent metering point, so the codes stay shown after a save. The EEG save sends single fields
+  only, never `ecZoneLevel`. Needs the backend with these fields (empty until then).
 
 ### Changed
 - **The general EEG save no longer sends the settlement interval** (platform#230); the backend ignores it there too.
@@ -31,6 +67,14 @@ this changelog highlights the changes relevant for overview and operations.
   and there is no newer Caddy image yet, so the Dockerfile updates the package.
 
 ### Fixed
+- **After switching the community, the menu shows the page of the URL again** (platform#237, reported 05.11.2026,
+  since web 1.10.0). The app keeps a page left through the menu, hidden. While the new community loaded, the EEG
+  page, the members and the processes swapped their page for a loading page; a hidden page that came back took over
+  the page shown, so e.g. `/page/participants` showed the EEG settings, and every later menu entry showed something
+  else until the browser was reloaded. The same happened after a failed EEG load and „Erneut versuchen“. These pages
+  now keep their page and only swap its content; the first-load spinner of the dashboard is wrapped the same way.
+- **The dashboard has the menu button below 992 px also while its first period loads.** The spinner showed no header,
+  so on narrow screens the menu could not be opened until the dashboard had loaded.
 - **Deleting a member and changing the business type recover from an expiring session like every other call**
   (WEB-CQ-24). Their token lookup started the session refresh without waiting for it and failed; it now waits and
   uses the refreshed token. A 401 on these two calls now leads to the login when the session expired; otherwise they

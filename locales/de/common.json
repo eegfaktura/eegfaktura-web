@@ -12,6 +12,7 @@
   "rateGroupOther": "Sonstige Tarife",
   "rateSearchPlaceholder": "Tarif suchen",
   "rateSearchEmpty": "Kein Tarif gefunden.",
+  "no_billing": "Für Peer-to-Peer und Eigenversorgung ist in eegfaktura keine Abrechnung vorgesehen.",
   "firstname": "Vorname",
   "lastname": "Nachname",
   "company-name": "Firmenname",
@@ -44,6 +45,8 @@
   "transformer_label": "Transformator",
   "equipmentNumber_label": "Anlagen-Nr.",
   "equipmentName_label": "Anlagenname",
+  "techCode_label": "TechCode",
+  "fuelCode_label": "FuelCode",
   "vatSupplementaryText": "Zusatztext für Umsatzsteuer",
   "discount": "Rabatt in %",
   "discount_card": "Rabatt",
@@ -167,7 +170,17 @@
     "business-nr": "Firmennummer",
     "vat-number": "Umsatzsteuer ID",
     "tax-number": "Steuernummer",
-    "allocation-mode": "Verteilung"
+    "allocation-mode": "Verteilung",
+    "area": "Region",
+    "zone-level": "Nahebereich",
+    "zone-level_1": "Hauptleitung",
+    "zone-level_2": "Standortbereich",
+    "zone-level_3": "Lokalbereich",
+    "zone-level_4": "Regionalbereich: ein Netzgebiet",
+    "zone-level_5": "Regionalbereich: mehrere Netzgebiete",
+    "zone-level_6": "Keine Verbindung: ein Netzgebiet",
+    "zone-level_7": "Keine Verbindung: mehrere Netzgebiete",
+    "zone-level_unknown": "unbekannt"
   },
   "warnings": {
     "email_missing": "E-Mail-Adresse fehlt!",
@@ -225,7 +238,8 @@
       "title": "Teilnehmerliste anfordern",
       "desc": "Anfordern der Teilnehmer einer EEG.",
       "info": "Nachdem der Antrag an den Netzbetreiber übermittelt wurde, wird automatisch eine E-Mail an den zuständigen Verantwortlichen der EEG gesendet, sobald eine Antwort vorliegt. Die Bearbeitung dieses Vorgangs kann je nach Netzbetreiber einige Zeit in Anspruch nehmen und erfolgt daher asynchron.",
-      "submit": "Zählpunktliste anfordern"
+      "submit": "Zählpunktliste anfordern",
+      "noOperator": "Für diese Gemeinschaft ist kein Netzbetreiber hinterlegt. Die Zählpunktliste kann daher nicht angefordert werden."
     },
     "activateMeter": {
       "title": "Zählpunkt aktivieren",

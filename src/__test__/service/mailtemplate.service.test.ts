@@ -51,6 +51,13 @@ describe("MailTemplateService", () => {
       expect(r.items).toEqual([])
       expect(r.failed).toEqual(["backend", "billing"])
     })
+
+    it("does not ask billing for a community without billing (platform#229)", async () => {
+      route(() => reply([summary("zp-active")]), () => reply([summary("billing-document")]))
+      const r = await new MailTemplateService(authService).fetchList("PP100100", false)
+      expect(r.items.map(i => `${i.source}:${i.key}`)).toEqual(["backend:zp-active"])
+      expect(fetchMock.mock.calls.map(c => c[0]).some((u: string) => u.endsWith("/api/mailtemplates"))).toBe(false)
+    })
   })
 
   describe("saveTemplate", () => {

@@ -15,6 +15,7 @@ import SelectForm from "./form/SelectForm.component";
 import {DebitExtensionComponent} from "./core/DebitExtensionComponent";
 import {isValidEmailList} from "../util/EmailAddress.util";
 import {isDirectDebit} from "../util/MandateReference.util";
+import {useHasBilling} from "../store/hook/Eeg.provider";
 
 interface ParticipantRegisterCommonPaneComponentProps {
   participant: EegParticipant;
@@ -28,8 +29,10 @@ const ParticipantRegisterCommonPaneComponent: FC<ParticipantRegisterCommonPaneCo
 
   const [selectedBusinessType, setSelectedBusinessType] = useState(0)
   const {control, setValue, watch, formState: {errors}} = useFormContext<EegParticipant>();
-  // "Kein SEPA": IBAN and owner optional (cash payment, platform#143)
-  const debit = isDirectDebit(watch("accountInfo.sepaDirectDebit"))
+  // "Kein SEPA": IBAN and owner optional (cash payment, platform#143); no direct debit without billing (P2P, EVA;
+  // platform#229)
+  const billing = useHasBilling()
+  const debit = billing && isDirectDebit(watch("accountInfo.sepaDirectDebit"))
   const {t} = useLocale("common")
 
   const onChangeBusinessType = (s: number) => {
@@ -116,7 +119,7 @@ const ParticipantRegisterCommonPaneComponent: FC<ParticipantRegisterCommonPaneCo
                          (!debit && !values.accountInfo?.iban?.trim()) || !!v?.trim() || t("warnings.account-owner_missing")}}
                        type="text" error={errors.accountInfo?.owner}/>
 
-            <DebitExtensionComponent />
+            {billing && <DebitExtensionComponent />}
 
             {/*<InputForm name={"accountInfo.bankName"} label={t("account.name")} control={control} type="text"*/}
             {/*           rules={{required: t("warnings.account-name_missing")}} error={errors.accountInfo?.bankName}/>*/}

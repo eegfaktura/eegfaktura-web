@@ -1,9 +1,9 @@
-import React, {FC, useEffect, useRef, useState} from "react";
+import React, {FC, useContext, useEffect, useRef, useState} from "react";
 import {IonBadge, IonCard, IonContent, IonItem, IonLabel, IonList, IonPage, IonText} from "@ionic/react";
 import MenuHeaderComponent from "../components/core/MenuHeader.component";
-import {useAccessGroups, useTenant} from "../store/hook/Eeg.provider";
-import {useAppSelector} from "../store";
-import {eegSelector} from "../store/eeg";
+import {EegContext, useAccessGroups, useTenant} from "../store/hook/Eeg.provider";
+import {hasBilling} from "../util/Area.util";
+import EegLoadStateComponent from "../components/EegLoadState.component";
 import {useLocale} from "../store/hook/useLocale";
 import {Api} from "../service";
 import {MailTemplateListItem, MailTemplateSource} from "../models/mailtemplate.model";
@@ -19,7 +19,11 @@ const MailTemplatesPage: FC = () => {
   const {isAdmin} = useAccessGroups()
   const admin = isAdmin()
   const {tenant} = useTenant()
-  const eeg = useAppSelector(eegSelector)
+  const {eeg} = useContext(EegContext)
+  // without billing (P2P, EVA; platform#229) only the mails of the backend: the list waits for the community's type;
+  // while it loads or after a failed load the page shows that, as the other pages do
+  const loaded = !!eeg
+  const billing = hasBilling(eeg?.area)
 
   const [items, setItems] = useState<MailTemplateListItem[]>()
   const [failed, setFailed] = useState<MailTemplateSource[]>([])
@@ -31,16 +35,16 @@ const MailTemplatesPage: FC = () => {
   const currentTenant = useRef(tenant)
   currentTenant.current = tenant
   const loadList = () => {
-    if (!tenant || !admin || tenant !== currentTenant.current) return
+    if (!tenant || !admin || !loaded || tenant !== currentTenant.current) return
     const current = ++request.current
-    Api.mailTemplateService.fetchList(tenant).then(r => {
+    Api.mailTemplateService.fetchList(tenant, billing).then(r => {
       if (current !== request.current) return
       setItems(r.items)
       setFailed(r.failed)
     }).catch(() => {
       if (current !== request.current) return
       setItems([])
-      setFailed(["backend", "billing"])
+      setFailed(billing ? ["backend", "billing"] : ["backend"])
     })
   }
 
@@ -49,7 +53,11 @@ const MailTemplatesPage: FC = () => {
     setItems(undefined)
     setFailed([])
     loadList()
-  }, [tenant, admin])
+  }, [tenant, admin, loaded, billing])
+
+  if (!eeg) {
+    return <EegLoadStateComponent/>
+  }
 
   return (
     <IonPage>
