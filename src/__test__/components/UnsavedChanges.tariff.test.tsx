@@ -13,7 +13,7 @@ vi.mock("@ionic/react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@ionic/react")>()),
   useIonAlert: () => [alert],
 }))
-vi.mock("../../store/hook/Eeg.provider", () => ({useTenant: () => ({tenant: "RC100100"})}))
+vi.mock("../../store/hook/Eeg.provider", () => ({useTenant: () => ({tenant: "RC100100"}), useHasBilling: () => true}))
 // the tariff form itself is not part of this test: one button changes the name like typing would
 vi.mock("../../components/Rate.component", () => ({
   default: () => {

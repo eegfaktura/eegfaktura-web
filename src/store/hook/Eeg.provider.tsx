@@ -2,7 +2,7 @@ import React, {createContext, FC, ReactNode, useCallback, useContext, useEffect,
 import {store, useAppDispatch, useAppSelector} from "../index";
 import {clearErrorState, eegSelector, fetchEegModel, selectError, selectTenant} from "../eeg";
 import {useGroups, useRoles1, useTenants} from "./AuthProvider";
-import {fetchRatesModel} from "../rate";
+import {clearRates, fetchRatesModel} from "../rate";
 import {fetchParticipantModel} from "../participant";
 import {IonSpinner, useIonToast} from "@ionic/react";
 import {ActiveTenant, Eeg} from "../../models/eeg.model";
@@ -12,6 +12,7 @@ import {Api} from "../../service";
 import {useSelector} from "react-redux";
 import {useAuth} from "react-oidc-context";
 import {useGetUserQuery, useLazyGetUserQuery, userApi} from "../user/userApi";
+import {hasBilling} from "../../util/Area.util";
 
 
 export interface EegState {
@@ -85,6 +86,7 @@ export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
   // only the load started last ends the loading state: an earlier one (previous community, A→B→A, a second
   // refresh) must not end it or set the period
   const loadSeq = useRef(0)
+  const loadedTenant = useRef<string>()
 
   const errorToast = (message: string | undefined) => {
     toaster({
@@ -176,10 +178,17 @@ export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
     setFetching(true)
     if (activeTenant && activeTenant.length > 0) {
       const seq = ++loadSeq.current;
+      // the tariffs load after the EEG now: another community's tariffs must not show meanwhile (a refresh of the same
+      // community keeps its list until the new one is there)
+      if (loadedTenant.current !== activeTenant) dispatch(clearRates())
+      loadedTenant.current = activeTenant;
       (await Promise.all([
         getUser(),
-        dispatch(fetchEegModel({tenant: activeTenant})),
-        dispatch(fetchRatesModel({tenant: activeTenant})),
+        // tariffs only for a community with billing, decided by the type this request loaded (platform#229); after a
+        // failed EEG load as before. Only for the load started last: a late answer of the previous community asks nothing.
+        dispatch(fetchEegModel({tenant: activeTenant})).then(r =>
+          seq === loadSeq.current && (!fetchEegModel.fulfilled.match(r) || hasBilling(r.payload.eeg?.area))
+            ? dispatch(fetchRatesModel({tenant: activeTenant})) : undefined),
         dispatch(fetchParticipantModel({tenant: activeTenant})),
       ]).then(() => {
         const eeg = eegSelector(store.getState())
@@ -229,6 +238,12 @@ export const useOnlineState = () => {
 export const useEegArea = () => {
   const {eeg} = useContext(EegContext)
   return eeg?.area
+}
+
+// a boolean, so it can be a hook dependency (platform#229)
+export const useHasBilling = () => {
+  const {eeg} = useContext(EegContext)
+  return hasBilling(eeg?.area)
 }
 
 export const useEegAllocation = () => {
