@@ -5,7 +5,7 @@ import {EdaProcess, Eeg} from "../../models/eeg.model";
 import {useLocale} from "../../store/hook/useLocale";
 import ProcessHeaderComponent from "./ProcessHeader.component";
 import {activeMetersSelector} from "../../store/participant";
-import {store} from "../../store";
+import {useAppSelector} from "../../store";
 import {BasicSelectComponent, SelectOptions} from "../form/BasicSelect.component";
 import {JoinStrings} from "../../util/Helper.util";
 import {useForm} from "react-hook-form";
@@ -47,8 +47,12 @@ const ProcessPodListComponent: FC<ProcessPodListComponentProps> = ({eeg, edaProc
       color: "danger",
     });
   };
+  // the community's grid operator as the metering points carry it: trimmed, upper case; blank is none
+  const communityOperator = eeg.gridOperator?.trim().toUpperCase() || undefined
+  const meters = useAppSelector(activeMetersSelector)
+
   const processValues = {
-    operatorId: eeg.gridOperator,
+    operatorId: communityOperator,
     rcNumber: eeg.rcNumber,
   }
 
@@ -75,15 +79,14 @@ const ProcessPodListComponent: FC<ProcessPodListComponentProps> = ({eeg, edaProc
   // the grid operators of the metering points and the community's own one, which is also the preselected value
   // (a community without metering points can request its first list there, eegfaktura-dev#56 #8)
   const getNetOperatorIds = () => {
-    const meters = activeMetersSelector(store.getState())
     const operators: Record<string, string> = {}
-    if (eeg.gridOperator) operators[eeg.gridOperator] = JoinStrings(" - ", "", eeg.gridOperator, eeg.operatorName ?? "")
+    if (communityOperator) operators[communityOperator] = JoinStrings(" - ", "", communityOperator, eeg.operatorName ?? "")
     meters.filter(m => m.gridOperatorId).forEach(m => operators[m.gridOperatorId] = JoinStrings(" - ", "", m.gridOperatorId, m.gridOperatorName))
     return Object.entries(operators).map(([k, v]) => ({value: k, label: v} as SelectOptions))
   }
   const multipleOperators = hasMultipleGridOperators(eeg.area)
   const operatorOptions = multipleOperators ? getNetOperatorIds() : []
-  const noOperator = multipleOperators ? operatorOptions.length === 0 : !eeg.gridOperator
+  const noOperator = multipleOperators ? operatorOptions.length === 0 : !communityOperator
 
   return (
     <div>

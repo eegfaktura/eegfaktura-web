@@ -37,7 +37,7 @@ this changelog highlights the changes relevant for overview and operations.
 - **P2P and EVA run like a BEG; zone level and metering point codes** (platform#229, addendum 05.11.2026). One helper
   „several grid operators possible“ (BEG, P2P, EVA) replaces the BEG checks: P2P/EVA metering points show their grid
   operator, and „Zählpunktliste anfordern“ asks for the grid operator. Its choice lists the grid operators of the
-  metering points and the community's own one, preselected, so a community without metering points sees where its
+  metering points and the community's own one (trimmed, upper case), preselected, so a community without metering points sees where its
   first list is requested (eegfaktura-dev#56 #8). A community without any grid operator (for every type) gets a
   hint instead, and the button stays disabled (for EEG lokal/regional and GEA it was active before and sent nothing). The EEG page shows the community's zone level
   („Nahebereich“, GET /eeg `ecZoneLevel`: 1 Hauptleitung … 7 Keine Verbindung: mehrere Netzgebiete, none = „unbekannt“),
