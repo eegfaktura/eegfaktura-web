@@ -120,7 +120,8 @@ const EegPage: FC = () => {
   }
 
   if (!eeg) {
-    return <EegLoadStateComponent/>
+    // the same IonPage as below (platform#237, see EegLoadState)
+    return <IonPage><EegLoadStateComponent/></IonPage>
   }
 
   return (

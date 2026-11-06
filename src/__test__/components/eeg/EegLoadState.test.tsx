@@ -50,18 +50,24 @@ describe("EegLoadState (261024-ca11)", () => {
   })
 })
 
-describe("EegLoadState is a page of the outlet (261024-ca11, review 1)", () => {
-  it("renders inside an IonPage in every state, so it replaces the previous page", () => {
+describe("EegLoadState is the content of the page's IonPage (platform#237)", () => {
+  // a page keeps its one IonPage while it loads: a second IonPage, mounted in a page hidden in the outlet, took over
+  // the view of the shown URL
+  it("renders no IonPage of its own in any state, with the menu header and the content", () => {
     tenants = ["TE100200"]
     const {container, store} = render()
-    expect(container.querySelector(".ion-page ion-spinner")).toBeTruthy()
+    expect(container.querySelector(".ion-page")).toBeNull()
+    expect(container.querySelector("ion-header ion-menu-button")).toBeTruthy()
+    expect(container.querySelector("ion-content ion-spinner")).toBeTruthy()
     act(() => { store.dispatch(fetchEegModel.rejected(new Error("Bad Gateway"), "req", {tenant: "TE100200"})) })
-    expect(container.querySelector(".ion-page ion-button")).toBeTruthy()
+    expect(container.querySelector(".ion-page")).toBeNull()
+    expect(container.querySelector("ion-content ion-button")).toBeTruthy()
   })
 
   it("also the empty state", () => {
     tenants = []
     const {container} = render()
-    expect(container.querySelector(".ion-page")?.textContent).toContain(NO_COMMUNITY)
+    expect(container.querySelector(".ion-page")).toBeNull()
+    expect(container.querySelector("ion-content")?.textContent).toContain(NO_COMMUNITY)
   })
 })

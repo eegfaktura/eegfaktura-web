@@ -74,7 +74,8 @@ const Participants: FC = () => {
     }
   }
   if (!eeg || !tenant) {
-    return <EegLoadStateComponent/>
+    // the same IonPage as below (platform#237, see EegLoadState)
+    return <IonPage><EegLoadStateComponent/></IonPage>
   }
 
   return (

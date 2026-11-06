@@ -58,8 +58,9 @@ const DashboardPage: FC = () => {
     lineHeight: '24px',
   };
   if (!initialPeriod) {
-    return <div style={{height: "100%", display: "flex"}}><IonSpinner
-      style={{margin: "auto", height: "48px", width: "48px"}}></IonSpinner></div>
+    // the same IonPage as below (platform#237, see EegLoadState)
+    return <IonPage><MenuHeaderComponent/><div style={{height: "100%", display: "flex"}}><IonSpinner
+      style={{margin: "auto", height: "48px", width: "48px"}}></IonSpinner></div></IonPage>
   }
 
   return (
