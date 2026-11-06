@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.20.0] – 2026-11-06
+
 ### Added
 - **Admins can change the settlement interval on the EEG page** (platform#230). Choosing another „Abrechnungszeitraum“
   opens a dialog: web reads the billing state from billing (`GET /api/billingRuns/tenant/{tenantId}/settlementState`)
