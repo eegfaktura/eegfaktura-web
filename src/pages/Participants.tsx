@@ -10,6 +10,7 @@ import {
 import {ParticipantContext} from "../store/hook/ParticipantProvider";
 import {MemberViewContext} from "../store/hook/MemberViewProvider";
 import {EegContext} from "../store/hook/Eeg.provider";
+import {hasBilling} from "../util/Area.util";
 import ParticipantDetailsPaneComponent from "../components/participantPane/ParticipantDetailsPane.component";
 import EegLoadStateComponent from "../components/EegLoadState.component";
 
@@ -44,7 +45,8 @@ const Participants: FC = () => {
 
   function showParticipantDetails() {
     if (selectedParticipant) {
-      if (showAmount) {
+      // no billing view for a community without billing (P2P, EVA; platform#229)
+      if (showAmount && hasBilling(eeg?.area)) {
         return (
           <Suspense fallback = { <div> Abrechnung wird geladen … </div> }>
             <ParticipantInvoiceDetailsComponent />

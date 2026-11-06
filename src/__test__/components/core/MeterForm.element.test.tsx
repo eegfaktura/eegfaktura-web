@@ -55,4 +55,31 @@ describe("<MeterFormElement /> grid operator", () => {
     await screen.findAllByText(/Zählpunkt/)
     expect(screen.queryByText(/Netzbetreiber-ID/)).not.toBeInTheDocument()
   });
+
+  // platform#229 addendum: P2P and EVA run like a BEG, with metering points at several grid operators
+  it.each(['P2P', 'EVA'])("%s: shows the grid operator set by the backend, like a BEG", async (area) => {
+    renderElement(area, {gridOperatorId: 'AT001000', gridOperatorName: 'Wiener Netze'})
+    await screen.findByText('AT001000')
+    screen.getByText('Wiener Netze')
+    screen.getByText(/Netzbetreiber-ID/)
+  });
+});
+
+// platform#229 addendum: TechCode and FuelCode from the metering point list, read only
+describe("<MeterFormElement /> codes of the metering point list", () => {
+  it("an existing metering point shows them as code, not as input", async () => {
+    const {container} = renderElement('LOCAL', {processState: 'ACTIVE', status: 'ACTIVE', techCode: 'PV01',
+      fuelCode: 'E01'} as Partial<Metering>, true)
+    await screen.findByText('PV01')
+    screen.getByText('E01')
+    screen.getByText(/TechCode/)
+    expect(container.querySelector('[name=techCode]')).toBeNull()
+    expect(container.querySelector('[name=fuelCode]')).toBeNull()
+  });
+
+  it("a new metering point has none", async () => {
+    renderElement('LOCAL', {})
+    await screen.findAllByText(/Zählpunkt/)
+    expect(screen.queryByText(/TechCode/)).not.toBeInTheDocument()
+  });
 });

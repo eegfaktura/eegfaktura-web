@@ -65,7 +65,10 @@ describe("UnsavedChangesGuard (261024-ca18)", () => {
       await act(async () => { (await screen.findByText(text)).click() })
     }
     await click("nach /b")
-    await waitFor(() => expect(window.location.pathname).toBe("/b"))
+    // the URL changes first; the outlet tells the page it leaves (ionViewWillLeave) only later, in its transition, and
+    // hides the page after it: wait for that, a click before it would still count as on the form (eegfaktura-dev#56 #17)
+    await waitFor(() => expect(screen.getByText("Formular").closest(".ion-page")!.classList).toContain("ion-page-hidden"))
+    expect(window.location.pathname).toBe("/b")
     expect(confirm).toHaveBeenCalledTimes(1)
     await click("nach /c")
     // the guard asks before the navigation: once the URL is /c, a question would already have come
