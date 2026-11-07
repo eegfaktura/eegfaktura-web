@@ -52,14 +52,15 @@ describe("period of the upper dashboard cards", () => {
     const all = [
       {id: "p1", status: "ACTIVE", meters: [meter("AT01", "ACTIVE", "ACTIVE", "CONSUMPTION", "t1"),
           meter("AT02", "ACTIVE", "ACTIVE", "GENERATION"), meter("AT03", "INACTIVE", "ACTIVE")]},
-      {id: "p2", status: "NEW", meters: [meter("AT04", "INIT", "PENDING")]},
+      {id: "p2", status: "NEW", meters: [meter("AT04", "INIT", "PENDING"), meter("AT05", "INIT", "NEW")]},
     ] as unknown as EegParticipant[]
     const store = configureStore({reducer, middleware: (d) => d({serializableCheck: false}),
       preloadedState: {participant: {...participantInitial, ids: ["p1", "p2"], entities: {p1: all[0], p2: all[1]}}} as any})
     store.dispatch(setSelectedPeriod({type: "YQ", year: 2020, segment: 1}))
     render(tree(store, <EegOverviewComponent rateMap={{t1: {id: "t1", name: "Bezugstarif"} as any}}/>))
     expect(screen.getByText("2 aktive", {selector: "span"})).toBeTruthy()
-    expect(screen.getByText("1 in Anmeldung", {selector: "span"})).toBeTruthy()
+    expect(screen.getByText("2 in Anmeldung", {selector: "span"})).toBeTruthy()   // metering points
+    expect(screen.getByText("1 in Anmeldung", {selector: "span"})).toBeTruthy()   // member p2
     expect(screen.getByText("1 Abnehmer")).toBeTruthy()
     expect(screen.getByText("1 Einspeiser")).toBeTruthy()
   })
