@@ -36,6 +36,22 @@ export const countMeters = (participants: EegParticipant[], tariffIds: string[])
 const REGISTERING: string[] = ['NEW', 'INIT', 'PENDING', 'APPROVED']
 const inUse = (m: Metering) => m.status === 'ACTIVE' || (m.status !== 'INACTIVE' && REGISTERING.includes(m.processState))
 
+// The dashboard's „Übersicht EEG“ in today's state over all members: the metering points active today, each number
+// once with direction and tariff of its active participation (countMeters), and the ones being registered that are
+// active at no member. Before, the active ones came from the members of the selected period and included the
+// registrations.
+export type MeterCountToday = MeterCount & {registering: number}
+
+export const countMetersToday = (participants: EegParticipant[], tariffIds: string[]): MeterCountToday => {
+  const active = participants.map(p => ({...p, meters: (p.meters ?? []).filter(m => m.status === 'ACTIVE')}))
+  const activeNumbers = new Set(active.flatMap(p => p.meters.map(m => m.meteringPoint)))
+  const registering = new Set<string>()
+  participants.forEach(p => (p.meters ?? []).forEach(m => {
+    if (m.status !== 'ACTIVE' && inUse(m) && !activeNumbers.has(m.meteringPoint)) registering.add(m.meteringPoint)
+  }))
+  return {...countMeters(active, tariffIds), registering: registering.size}
+}
+
 // Inactive metering points for the dashboard (platform#228): over all members (state today, like the member counts),
 // each metering point number once: it has left (a participation with status INACTIVE: left, revoked) and is neither
 // active nor being registered at any member. A metering point that moved to another member is not inactive.

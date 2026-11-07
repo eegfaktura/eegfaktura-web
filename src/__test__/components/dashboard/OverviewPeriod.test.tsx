@@ -38,10 +38,30 @@ describe("period of the upper dashboard cards", () => {
   })
   afterEach(() => { Api.energyService = energyService })
 
-  it("EEG overview names the selected period and marks the member counts as today's state", () => {
-    render(tree(newStore({type: "YQ", year: 2026, segment: 4}), <EegOverviewComponent participants={[]} rateMap={{}}/>))
-    expect(screen.getByText("Zeitraum: Okt-Dez 2026")).toBeTruthy()
-    expect(screen.getAllByText("(Stand heute)")).toHaveLength(2)   // members, inactive metering points (platform#228)
+  // the EEG overview shows today's state as a whole, not the selected period (07.11.2026)
+  it("EEG overview shows today's state once and no period", () => {
+    render(tree(newStore({type: "YQ", year: 2026, segment: 4}), <EegOverviewComponent rateMap={{}}/>))
+    expect(screen.getByText("Stand heute")).toBeTruthy()
+    expect(screen.queryByText(/^Zeitraum:/)).toBeNull()
+    expect(screen.queryByText(/\(Stand heute\)/)).toBeNull()
+  })
+
+  it("EEG overview counts the metering points active today over all members, whatever period is selected", () => {
+    const meter = (meteringPoint: string, status: string, processState: string, direction = "CONSUMPTION",
+                   tariff_id?: string) => ({meteringPoint, status, processState, direction, tariff_id})
+    const all = [
+      {id: "p1", status: "ACTIVE", meters: [meter("AT01", "ACTIVE", "ACTIVE", "CONSUMPTION", "t1"),
+          meter("AT02", "ACTIVE", "ACTIVE", "GENERATION"), meter("AT03", "INACTIVE", "ACTIVE")]},
+      {id: "p2", status: "NEW", meters: [meter("AT04", "INIT", "PENDING")]},
+    ] as unknown as EegParticipant[]
+    const store = configureStore({reducer, middleware: (d) => d({serializableCheck: false}),
+      preloadedState: {participant: {...participantInitial, ids: ["p1", "p2"], entities: {p1: all[0], p2: all[1]}}} as any})
+    store.dispatch(setSelectedPeriod({type: "YQ", year: 2020, segment: 1}))
+    render(tree(store, <EegOverviewComponent rateMap={{t1: {id: "t1", name: "Bezugstarif"} as any}}/>))
+    expect(screen.getByText("2 aktive", {selector: "span"})).toBeTruthy()
+    expect(screen.getByText("1 in Anmeldung", {selector: "span"})).toBeTruthy()
+    expect(screen.getByText("1 Abnehmer")).toBeTruthy()
+    expect(screen.getByText("1 Einspeiser")).toBeTruthy()
   })
 
   it("energy overview names the selected and the previous period, across a year boundary", async () => {
@@ -85,13 +105,13 @@ describe("period of the upper dashboard cards", () => {
     const all = [member("p1", ["AT01", "ACTIVE"], ["AT02", "INACTIVE"]), member("p2", ["AT03", "INACTIVE"])]
     const store = configureStore({reducer, middleware: (d) => d({serializableCheck: false}),
       preloadedState: {participant: {...participantInitial, ids: ["p1", "p2"], entities: {p1: all[0], p2: all[1]}}} as any})
-    render(tree(store, <EegOverviewComponent participants={[]} rateMap={{}}/>))
+    render(tree(store, <EegOverviewComponent rateMap={{}}/>))
     expect(screen.getByText(/^2 inaktive/)).toBeTruthy()
   })
 
   it("without a selected period no period line is shown", () => {
     render(tree(newStore(), <>
-      <EegOverviewComponent participants={[]} rateMap={{}}/>
+      <EegOverviewComponent rateMap={{}}/>
       {energyOverview}
     </>))
     expect(screen.queryByText(/^Zeitraum:/)).toBeNull()

@@ -93,7 +93,7 @@ const DashboardLayoutComponent: FC<LoadSharingComponentProps> = ({consumed, prod
       <div style={{flex: "1", display: "grid", gridTemplateColumns: "50% 50%", minHeight: 0}}>
         <div style={{display: "grid", gridTemplateRows: "50% 50%", overflowY: "auto"}}>
           <div className="eeg-card eeg-card-border" style={{margin: "10px"}}>
-            <EegOverviewComponent participants={participants} rateMap={rates} />
+            <EegOverviewComponent rateMap={rates} />
           </div>
           <div className="eeg-card-border" style={{margin: "10px"}}>
             {showChart(combinedReport.loadcurve, <LoadSharingComponent activePeriod={activePeriod} report={combinedReport.loadcurve} tenant={tenant} energyDate={energyDate}

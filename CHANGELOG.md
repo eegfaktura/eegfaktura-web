@@ -8,6 +8,18 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **Dashboard „Übersicht EEG“ shows today's state as a whole:** The card names „Stand heute“ once instead of the selected
+  period and the two „(Stand heute)“ marks.
+  - **Counting basis:** Active metering points, consumers/producers and the energy tariffs are now counted like the
+    members over all members as of today. Before, they came from the members of the selected period, so the card mixed
+    two bases.
+  - **Active:** „aktive“ metering points are the ones with an active participation, each number once. Registrations
+    are shown apart as „in Anmeldung“, like for members. Before, the period filter counted them as active.
+  - **Tariff list:** It is split into energy tariffs (counted per active metering point) and membership fees (counted
+    per active member), with the numbers right-aligned.
+  - The energy cards of the dashboard stay per period.
+
 ## [1.21.0] – 2026-11-07
 
 ### Changed
