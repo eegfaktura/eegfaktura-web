@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.21.0] – 2026-11-07
+
 ### Changed
 - **A rejected deregistration shows the grid operator's reason** (platform#238): the notification „Anfrage auf
   AUFHEBUNG der DATENFREIGABE abgelehnt“ (`ABLEHNUNG_CCMS`) shows the reason the backend stores before the full stop,
