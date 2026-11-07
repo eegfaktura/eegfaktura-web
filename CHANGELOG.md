@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.22.0] – 2026-11-08
+
 ### Added
 - **Search field in „Auswahl Gemeinschaft“** (platform#241, Harald): the community picker of the user menu is a dialog
   of its own now. With more than one community it has a search field that filters by number and name, ignoring case
