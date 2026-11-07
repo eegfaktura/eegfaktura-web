@@ -8,6 +8,12 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **CI: no image build for a commit that only changes `CHANGELOG.md`** (platform#239): pushes and pull requests whose
+  only change is the CHANGELOG, such as the release PR, skip the image build and the checks (PR checks, security
+  scan, Snyk Code; the weekly schedules still run). Tag pushes still build. A release promotes
+  the image of the last commit before the release PR; it has the same content.
+
 ### Fixed
 - **User menu: current community as information, switching as an entry of its own** (platform#241 follow-up): the
   caption and the community stood side by side and the name wrapped into a narrow column. The menu now shows
