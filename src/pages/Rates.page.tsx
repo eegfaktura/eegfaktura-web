@@ -26,13 +26,12 @@ import { get } from "react-hook-form";
 import {useHasBilling, useTenant} from "../store/hook/Eeg.provider";
 import NotFoundPage from "./NotFound.page";
 import UnsavedChangesGuard, {useConfirmDiscard} from "../components/core/UnsavedChangesGuard.component";
+import {foldForSearch} from "../util/Search.util";
 import {ParticipantContext} from "../store/hook/ParticipantProvider";
 
 // group headings: the kinds of the tariff form
 const RATE_GROUP_TITLE_KEY: Record<EegTariff["type"] | "OTHER", string> = {
   EEG: "rateGroupMember", EZP: "rateGroupProducer", VZP: "rateGroupConsumer", AKONTO: "rateGroupOther", OTHER: "rateGroupOther"}
-// search ignores case and accents, as the sort does („über“ finds „Uberschuss“)
-const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
 
 const RatesPage: FC = () => {
 
@@ -53,9 +52,9 @@ const RatesPage: FC = () => {
     searchOpen.current = !searchActive
     setSearchActive(!searchActive)
   }
-  const needle = fold(query.trim())
+  const needle = foldForSearch(query.trim())
   const searching = needle.length > 0
-  const matches = (r: EegTariff) => !searching || fold(r.name ?? "").includes(needle)
+  const matches = (r: EegTariff) => !searching || foldForSearch(r.name ?? "").includes(needle)
   // the selected tariff always stays visible, also in a collapsed group or outside the hits (e.g. right after saving)
   const isSelected = (r: EegTariff) => r.id === selectedTariff?.id
   // while searching the groups with hits are open; a click then would change the state restored after the search

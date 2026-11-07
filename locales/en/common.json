@@ -12,6 +12,11 @@
   "rateGroupOther": "Other tariffs",
   "rateSearchPlaceholder": "Search tariff",
   "rateSearchEmpty": "No tariff found.",
+  "tenantPickerTitle": "Select community",
+  "tenantPickerClose": "Close",
+  "tenantPickerCurrent": "current community",
+  "tenantSearchPlaceholder": "Search community",
+  "tenantSearchEmpty": "No community found.",
   "no_billing": "eegfaktura provides no billing for peer-to-peer and self-supply communities.",
   "common-info": {
     "area": "Model",
