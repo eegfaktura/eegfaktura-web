@@ -11,7 +11,11 @@ this changelog highlights the changes relevant for overview and operations.
 ### Changed
 - **EEG master data: the field „Region“ is now called „Modell“** (Harald, 07.11.2026). It shows the community model
   (e.g. „EEG regional“, „EEG lokal“, BEG, P2P), and „Region“ also appeared in the zone level below („Regionalbereich“).
-  Only the label changes; the value and the zone level stay as they are.
+  The field now shows the long form in brackets after the short form of admin, e.g. „EEG regional
+  (Erneuerbare-Energie-Gemeinschaft, regional)“, „GEA (Gemeinschaftliche Erzeugungsanlage)“, „BEG
+  (Bürgerenergiegemeinschaft)“, „P2P (Peer-to-Peer)“, „EVA (Eigenversorgungsanlage)“.
+- **EEG master data: „Nahebereich“ shows the zone's name in brackets:** e.g. „4 (Regionalbereich: ein Netzgebiet)“
+  instead of „4 Regionalbereich: ein Netzgebiet“.
 
 ## [1.21.0] – 2026-11-07
 

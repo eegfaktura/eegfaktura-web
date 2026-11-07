@@ -2,15 +2,15 @@ import {Eeg} from "../models/eeg.model";
 
 type Area = Eeg["area"]
 
-// Short forms of a community's type, the same as in admin (platform#229, E7). Typed with the area union, so a new
-// type without a label does not compile.
+// A community's type: the short form of admin (platform#229, E7) and the long form in brackets (07.11.2026, Harald:
+// field „Modell“). Typed with the area union, so a new type without a label does not compile.
 const AREA_LABELS: Record<Area, string> = {
-  LOCAL: "EEG lokal",
-  REGIONAL: "EEG regional",
-  GEA: "GEA",
-  BEG: "BEG",
-  P2P: "P2P",
-  EVA: "EVA",
+  LOCAL: "EEG lokal (Erneuerbare-Energie-Gemeinschaft, lokal)",
+  REGIONAL: "EEG regional (Erneuerbare-Energie-Gemeinschaft, regional)",
+  GEA: "GEA (Gemeinschaftliche Erzeugungsanlage)",
+  BEG: "BEG (Bürgerenergiegemeinschaft)",
+  P2P: "P2P (Peer-to-Peer)",
+  EVA: "EVA (Eigenversorgungsanlage)",
 }
 
 // Unknown or missing values are shown as they are.
@@ -28,7 +28,7 @@ export const hasBilling = (area?: string) => area !== "P2P" && area !== "EVA"
 export const hasMultipleGridOperators = (area?: string) => area === "BEG" || area === "P2P" || area === "EVA"
 
 // The community's zone level (ECZoneLevel 1–7 of the metering point list, platform#229 addendum 05.11.2026), named in
-// the locales (common-info.zone-level_1 … _7): "3 Lokalbereich"; no or an unknown value: zone-level_unknown
+// the locales (common-info.zone-level_1 … _7): "3 (Lokalbereich)"; no or an unknown value: zone-level_unknown
 export const zoneLevelLabel = (t: (key: string) => string, level?: number | null) =>
   level && Number.isInteger(level) && level >= 1 && level <= 7
-    ? `${level} ${t(`common-info.zone-level_${level}`)}` : t("common-info.zone-level_unknown")
+    ? `${level} (${t(`common-info.zone-level_${level}`)})` : t("common-info.zone-level_unknown")

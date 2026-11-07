@@ -3,9 +3,11 @@ import {areaLabel, hasBilling, hasMultipleGridOperators, zoneLevelLabel} from ".
 import i18next from "../../util/I18n";
 
 describe("community type (platform#229)", () => {
-  it("shows the short forms of admin", () => {
+  it("shows the short forms of admin with the long form in brackets", () => {
     expect(["LOCAL", "REGIONAL", "GEA", "BEG", "P2P", "EVA"].map(a => areaLabel(a)))
-      .toEqual(["EEG lokal", "EEG regional", "GEA", "BEG", "P2P", "EVA"])
+      .toEqual(["EEG lokal (Erneuerbare-Energie-Gemeinschaft, lokal)",
+        "EEG regional (Erneuerbare-Energie-Gemeinschaft, regional)", "GEA (Gemeinschaftliche Erzeugungsanlage)",
+        "BEG (Bürgerenergiegemeinschaft)", "P2P (Peer-to-Peer)", "EVA (Eigenversorgungsanlage)"])
   })
 
   it("shows unknown or missing values as they are", () => {
@@ -33,10 +35,10 @@ describe("community type (platform#229)", () => {
   it("names the zone levels 1–7 from the locales, anything else is unknown", () => {
     const t = i18next.getFixedT("de", "common")
     const label = (level?: number | null) => zoneLevelLabel(t, level)
-    expect([1, 2, 3, 4, 5, 6, 7].map(label)).toEqual(["1 Hauptleitung", "2 Standortbereich", "3 Lokalbereich",
-      "4 Regionalbereich: ein Netzgebiet", "5 Regionalbereich: mehrere Netzgebiete", "6 Keine Verbindung: ein Netzgebiet",
-      "7 Keine Verbindung: mehrere Netzgebiete"])
+    expect([1, 2, 3, 4, 5, 6, 7].map(label)).toEqual(["1 (Hauptleitung)", "2 (Standortbereich)", "3 (Lokalbereich)",
+      "4 (Regionalbereich: ein Netzgebiet)", "5 (Regionalbereich: mehrere Netzgebiete)",
+      "6 (Keine Verbindung: ein Netzgebiet)", "7 (Keine Verbindung: mehrere Netzgebiete)"])
     expect([null, undefined, 0, 8, 2.5].map(label)).toEqual(Array(5).fill("unbekannt"))
-    expect(zoneLevelLabel(i18next.getFixedT("en", "common"), 3)).toBe("3 Local area")
+    expect(zoneLevelLabel(i18next.getFixedT("en", "common"), 3)).toBe("3 (Local area)")
   })
 })
