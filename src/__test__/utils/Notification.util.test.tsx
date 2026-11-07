@@ -53,12 +53,17 @@ describe("buildNotificationText — ABLEHNUNG_CCMS", () => {
   const base = "Für die Zählpunkte AT001 wurde die Anfrage auf AUFHEBUNG der DATENFREIGABE abgelehnt"
 
   it.each([
-    ["177", "Keine Datenfreigabe vorhanden"],
-    ["180", "ConsentID abgelaufen"],
-    ["82", "Prozessdatum falsch"],
-    ["187", "ConsentID und Zählpunkt passen nicht zusammen"],
-  ])("shows the reason of code %s", (_code, reason) => {
+    "Keine Datenfreigabe vorhanden",
+    "ConsentID abgelaufen",
+    "Prozessdatum falsch",
+    "ConsentID und Zählpunkt passen nicht zusammen",
+  ])("shows the reason %s", (reason) => {
     expect(text(rejection({responseCodes: [reason]}))).toBe(`${base} (${reason}).`)
+  })
+
+  it("shows two reasons", () => {
+    expect(text(rejection({responseCodes: ["Keine Datenfreigabe vorhanden", "ConsentID abgelaufen"]})))
+      .toBe(`${base} (Keine Datenfreigabe vorhanden, ConsentID abgelaufen).`)
   })
 
   it("shows the number of an unknown code", () => {
