@@ -44,9 +44,12 @@ export function buildNotificationText(type: string, process: string, notificatio
         case 'ANTWORT_CCMS':
           return <p>Für die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurde die Anfrage auf <strong>AUFHEBUNG
             der DATENFREIGABE</strong> bestätigt.</p>
-        case 'ABLEHNUNG_CCMS':
+        case 'ABLEHNUNG_CCMS': {
+          // The backend stores the reason as text (unknown codes as the number); "-" or "" means no code.
+          const reason = String(n.message.responseCode)
           return <p>Für die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurde die Anfrage auf <strong>AUFHEBUNG
-            der DATENFREIGABE</strong> abgelehnt.</p>
+            der DATENFREIGABE</strong> abgelehnt{reason && reason !== "-" ? <> ({reason})</> : null}.</p>
+        }
         case 'ABLEHNUNG_CPF':
           return buildPartFactRejectionText(n.message.meteringPoint, n.message.responseCode)
         case 'ANFORDERUNG_CPF':

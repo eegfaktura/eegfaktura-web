@@ -9,6 +9,10 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Changed
+- **A rejected deregistration shows the grid operator's reason** (platform#238): the notification „Anfrage auf
+  AUFHEBUNG der DATENFREIGABE abgelehnt“ (`ABLEHNUNG_CCMS`) appends the reason the backend stores, as for
+  `ABLEHNUNG_PT` (e.g. „Keine Datenfreigabe vorhanden“, „ConsentID abgelaufen“, „Prozessdatum falsch“, „ConsentID
+  und Zählpunkt passen nicht zusammen“; an unknown code as its number). Without a code the text stays as before.
 - **After an interval change the first open period is selected** (eegfaktura-dev#54 #7): after „Wechseln“ the first
   open period of the new interval is selected and named in the
   message (the one starting at the new interval's start, which may lie in the past, e.g. „Als Nächstes abzurechnen:
