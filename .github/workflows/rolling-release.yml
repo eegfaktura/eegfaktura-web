@@ -31,12 +31,17 @@ on:
       - 'env/**'
     tags:
       - v*
+    # a commit that only changes the CHANGELOG (release PR) builds no image; the release promotes the image of the
+    # commit before (platform#239). Tag pushes still build: path filters do not apply to tags.
+    paths-ignore: ['CHANGELOG.md']
   # ready_for_review: a draft gets no image build; it runs once the PR is marked ready
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - master
       - main
+    # a pull request that only changes the CHANGELOG (release PR) builds no image either (platform#239)
+    paths-ignore: ['CHANGELOG.md']
 
 env:
   REGISTRY: "ghcr.io"
