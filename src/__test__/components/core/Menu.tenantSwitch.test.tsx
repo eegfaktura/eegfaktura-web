@@ -16,7 +16,6 @@ import {EegContext, EegState} from "../../../store/hook/Eeg.provider";
 import {ParticipantContext} from "../../../store/hook/ParticipantProvider";
 import {UNSAVED_DISCARD_MESSAGE} from "../../../components/core/UnsavedChangesGuard.component";
 
-// one list for every render: a new array on each render would re-sort endlessly
 const TWO = [{tenant: "RC100200", name: "Zwei"}, {tenant: "RC100100", name: "Eins"}]
 const MANY = [...TWO, {tenant: "RC104947", name: "EEG Sonnenwein"}, {tenant: "CC100076", name: "Über-Strom"}]
 
@@ -106,6 +105,17 @@ describe("community picker search (platform#241)", () => {
     search("xyz")
     expect(labels()).toEqual([])
     expect(screen.getByText("Keine Gemeinschaft gefunden.")).toBeTruthy()
+  })
+
+  it("shows no empty-result text without a search, also with no community loaded", () => {
+    setup(false, false, [])
+    expect(screen.queryByText("Keine Gemeinschaft gefunden.")).toBeNull()
+  })
+
+  it("finds the label as the menu shows it", () => {
+    const {labels, search} = setup(false, false, MANY)
+    search("RC104947-EEG Sonnenwein")
+    expect(labels()).toEqual(["RC104947-EEG Sonnenwein"])
   })
 
   it("shows no search field with a single community", () => {

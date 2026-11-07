@@ -24,7 +24,7 @@ export const TenantPickerList: FC<{onDone: () => void}> = ({onDone}) => {
   const sorted = useMemo<TenantOption[]>(() => [...(tenants ?? [])].sort((a, b) => a.tenant.localeCompare(b.tenant)),
     [tenants])
   const needle = foldForSearch(query.trim())
-  const shown = needle ? sorted.filter(o => foldForSearch(`${o.tenant} ${o.name}`).includes(needle)) : sorted
+  const shown = needle ? sorted.filter(o => foldForSearch(`${o.tenant}-${o.name}`).includes(needle)) : sorted
 
   const choose = (next: string) => {
     if (next === tenant) return onDone()
@@ -34,7 +34,7 @@ export const TenantPickerList: FC<{onDone: () => void}> = ({onDone}) => {
   return (
     <>
       {sorted.length > 1 && (
-        <IonSearchbar placeholder={t("tenantSearchPlaceholder")} debounce={200}
+        <IonSearchbar placeholder={t("tenantSearchPlaceholder")} debounce={500}
                       onIonInput={(e) => setQuery(e.detail.value ?? "")}/>
       )}
       <IonList>
@@ -45,7 +45,9 @@ export const TenantPickerList: FC<{onDone: () => void}> = ({onDone}) => {
           </IonItem>
         ))}
       </IonList>
-      {shown.length === 0 && <p style={{padding: "0 16px"}}>{t("tenantSearchEmpty")}</p>}
+      {/* as the tariff list: only while searching, same look as .rate-search-empty */}
+      {needle && shown.length === 0 &&
+        <p style={{margin: "12px 15px", fontSize: "13px", color: "var(--ion-color-medium-shade)"}}>{t("tenantSearchEmpty")}</p>}
     </>
   )
 }
@@ -53,8 +55,10 @@ export const TenantPickerList: FC<{onDone: () => void}> = ({onDone}) => {
 // A dialog of its own: the user popover closes on every click inside it, so it cannot hold a search field.
 const TenantPicker: FC<{isOpen: boolean, onClose: () => void}> = ({isOpen, onClose}) => {
   const {t} = useLocale("common")
+  // a new list on each opening starts with an empty search; it stays mounted while the dialog slides out
+  const [opening, setOpening] = useState(0)
   return (
-    <IonModal isOpen={isOpen} onDidDismiss={onClose}>
+    <IonModal isOpen={isOpen} onWillPresent={() => setOpening(n => n + 1)} onDidDismiss={onClose}>
       <IonHeader>
         <IonToolbar>
           <IonTitle>{t("tenantPickerTitle")}</IonTitle>
@@ -64,7 +68,7 @@ const TenantPicker: FC<{isOpen: boolean, onClose: () => void}> = ({isOpen, onClo
         </IonToolbar>
       </IonHeader>
       <IonContent>
-        {isOpen && <TenantPickerList onDone={onClose}/>}
+        <TenantPickerList key={opening} onDone={onClose}/>
       </IonContent>
     </IonModal>
   )

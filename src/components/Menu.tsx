@@ -59,7 +59,7 @@ export const UserDetailPopover:FC<{authSvc: AuthService | undefined, onPickTenan
       <IonItem lines="none">
         <div style={{padding:'10px', width:"100%"}}>
           {/* opens the community picker with a search field (platform#241); the popover closes on this click */}
-          <IonItem button detail={true} lines="full" onClick={onPickTenant} className="select-box">
+          <IonItem button detail={true} lines="full" onClick={onPickTenant}>
             <IonLabel position="stacked">{t("tenantPickerTitle")}</IonLabel>
             <IonLabel>{current ? `${current.tenant}-${current.name}` : tenant.tenant}</IonLabel>
           </IonItem>
