@@ -14,15 +14,15 @@
   "rateSearchEmpty": "No tariff found.",
   "no_billing": "eegfaktura provides no billing for peer-to-peer and self-supply communities.",
   "common-info": {
-    "area": "Region",
+    "area": "Model",
     "zone-level": "Zone level",
-    "zone-level_1": "Main line",
-    "zone-level_2": "Site area",
-    "zone-level_3": "Local area",
-    "zone-level_4": "Regional area: one grid area",
-    "zone-level_5": "Regional area: several grid areas",
-    "zone-level_6": "No connection: one grid area",
-    "zone-level_7": "No connection: several grid areas",
+    "zone-level_1": "Main/riser line",
+    "zone-level_2": "Site area – shared busbar",
+    "zone-level_3": "Local area – same transformer station",
+    "zone-level_4": "Regional area – same substation of one grid operator",
+    "zone-level_5": "Regional area – same substation of different grid operators",
+    "zone-level_6": "Bidding zone – several substations of one grid operator",
+    "zone-level_7": "Bidding zone – several substations of different grid operators",
     "zone-level_unknown": "unknown"
   }
 }

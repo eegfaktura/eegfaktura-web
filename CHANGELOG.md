@@ -9,6 +9,15 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Changed
+- **EEG master data: the field „Region“ is now called „Modell“** (Harald, 07.11.2026). It shows the community model
+  (e.g. „EEG regional“, „EEG lokal“, BEG, P2P), and „Region“ also appeared in the zone level below („Regionalbereich“).
+  The field now shows the long form in brackets after the short form of admin, e.g. „EEG regional
+  (Erneuerbare-Energie-Gemeinschaft, regional)“, „GEA (Gemeinschaftliche Erzeugungsanlage)“, „BEG
+  (Bürgerenergiegemeinschaft)“, „P2P (Peer-to-Peer)“, „EVA (Eigenversorgungsanlage)“.
+- **EEG master data: „Nahebereich“ shows the official name of the zone level in brackets** (ElWG, from Harald):
+  e.g. „4 (Regionalbereich – gleiches Umspannwerk eines Netzbetreibers)“ instead of „4 Regionalbereich: ein
+  Netzgebiet“. Levels 6 and 7 are now „Gebotszone – mehrere Umspannwerke eines/verschiedener Netzbetreiber“ (before
+  „Keine Verbindung: ein/mehrere Netzgebiete“).
 - **Dashboard „Übersicht EEG“ shows today's state as a whole:** The card names „Stand heute“ once instead of the selected
   period and the two „(Stand heute)“ marks.
   - **Counting basis:** Active metering points, consumers/producers and the energy tariffs are now counted like the
