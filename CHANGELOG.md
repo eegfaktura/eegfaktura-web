@@ -8,6 +8,11 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **User menu: „Auswahl Gemeinschaft“ above the community** (platform#241 follow-up): the caption and the community
+  stood side by side and the name wrapped into a narrow column; now the caption is on top and number and name on the
+  next line.
+
 ## [1.22.0] – 2026-11-08
 
 ### Added
