@@ -273,6 +273,8 @@
     "bank-data": "Bankdaten"
   },
   "menu": {
+    "currentTenant": "Aktuelle Gemeinschaft",
+    "switchTenant": "Gemeinschaft wechseln",
     "changePassword": "Passwort ändern",
     "logout": "Abmelden",
     "dashboard": "Dashboard",

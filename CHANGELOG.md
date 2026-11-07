@@ -8,6 +8,12 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **User menu: current community as information, switching as an entry of its own** (platform#241 follow-up): the
+  caption and the community stood side by side and the name wrapped into a narrow column. The menu now shows
+  „Aktuelle Gemeinschaft“ with number and name on the next line (not clickable) and, with more than one community, an
+  entry „Gemeinschaft wechseln“ next to „Passwort ändern“ and „Abmelden“ that opens the picker.
+
 ## [1.22.0] – 2026-11-08
 
 ### Added
