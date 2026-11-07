@@ -56,8 +56,8 @@ describe("no billing for P2P and EVA (platform#229): pages", () => {
     })
     expect(!!r.container.querySelector('ion-select[label="Abrechnungszeitraum"]')).toBe(shown)
     expect(!!screen.queryByText("Abrechnungs-Einstellungen")).toBe(shown)
-    const region = r.container.querySelector('ion-input[label="Region"]') as any
-    expect(region.value).toBe(area === "P2P" ? "P2P" : "EEG lokal")
+    const model = r.container.querySelector('ion-input[label="Modell"]') as any
+    expect(model.value).toBe(area === "P2P" ? "P2P" : "EEG lokal")
   })
 
   // eegfaktura-dev#56 #13: the creditor ID serves direct debit only; the bank account stays

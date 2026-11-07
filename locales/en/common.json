@@ -14,7 +14,7 @@
   "rateSearchEmpty": "No tariff found.",
   "no_billing": "eegfaktura provides no billing for peer-to-peer and self-supply communities.",
   "common-info": {
-    "area": "Region",
+    "area": "Model",
     "zone-level": "Zone level",
     "zone-level_1": "Main line",
     "zone-level_2": "Site area",

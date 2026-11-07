@@ -8,6 +8,11 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **EEG master data: the field „Region“ is now called „Modell“** (Harald, 07.11.2026). It shows the community model
+  (e.g. „EEG regional“, „EEG lokal“, BEG, P2P), and „Region“ also appeared in the zone level below („Regionalbereich“).
+  Only the label changes; the value and the zone level stay as they are.
+
 ## [1.21.0] – 2026-11-07
 
 ### Changed
