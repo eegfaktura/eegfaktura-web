@@ -46,7 +46,7 @@ export function buildNotificationText(type: string, process: string, notificatio
             der DATENFREIGABE</strong> bestätigt.</p>
         case 'ABLEHNUNG_CCMS':
           return <p>Für die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurde die Anfrage auf <strong>AUFHEBUNG
-            der DATENFREIGABE</strong> abgelehnt.</p>
+            der DATENFREIGABE</strong> abgelehnt{reasonSuffix(n.message.responseCode)}.</p>
         case 'ABLEHNUNG_CPF':
           return buildPartFactRejectionText(n.message.meteringPoint, n.message.responseCode)
         case 'ANFORDERUNG_CPF':
@@ -98,6 +98,13 @@ export function buildNotificationText(type: string, process: string, notificatio
   return ""
 }
 
+// The backend stores the reason codes as text (unknown codes as the number). Returns " (A, B)", or "" without a code
+// ("-" for a missing field, "" or an empty list).
+function reasonSuffix(responseCode: string | string[]): string {
+  const reason = Array.isArray(responseCode) ? responseCode.join(", ") : responseCode
+  return reason && reason !== "-" ? ` (${reason})` : ""
+}
+
 // The backend stores the rejection without metering points ([]; for a list it adds empty entries) but with the
 // reason as text; „Prozessdatum falsch“ (code 82) means the request reached the grid operator outside the time
 // window (see PartFactWindow.util).
@@ -110,7 +117,7 @@ function buildPartFactRejectionText(meteringPoint: string | string[], responseCo
         ? <>Für die Zählpunkte <strong>{meters}</strong> wurde die Anfrage auf <strong>ÄNDERUNG
           TEILNAHMEFAKTOR</strong> abgelehnt</>
         : <>Die Anfrage auf <strong>ÄNDERUNG TEILNAHMEFAKTOR</strong> wurde abgelehnt</>}
-      {reason !== "-" ? <> ({reason})</> : null}.
+      {reasonSuffix(responseCode)}.
       {reason.includes("Prozessdatum falsch") && <> Der Netzbetreiber nimmt Änderungen nur zwischen
         {PARTFACT_WINDOW_TEXT} an. Bitte fordere die Änderung in dieser Zeit erneut an.</>}
     </p>
