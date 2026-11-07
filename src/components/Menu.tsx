@@ -14,7 +14,7 @@ import {
 
 import {useLocation} from 'react-router-dom';
 import {
-  informationCircle, logOutOutline, newspaper,
+  informationCircle, logOutOutline, newspaper, swapHorizontalOutline,
   people, personCircle, refreshOutline, wallet, walletSharp
 } from 'ionicons/icons';
 import './Menu.css';
@@ -56,19 +56,19 @@ export const UserDetailPopover:FC<{authSvc: AuthService | undefined, onPickTenan
       </IonToolbar>
         </div>
       </IonItem>
-      <IonItem lines="none">
-        <div style={{padding:'10px', width:"100%"}}>
-          {/* opens the community picker with a search field (platform#241); the popover closes on this click */}
-          <IonItem button detail={true} lines="full" onClick={onPickTenant}>
-            {/* caption above, the community on the next line (two labels stood side by side) */}
-            <IonLabel className="ion-text-wrap">
-              <p>{t("tenantPickerTitle")}</p>
-              <div style={{fontSize: "16px"}}>{current ? `${current.tenant}-${current.name}` : tenant.tenant}</div>
-            </IonLabel>
-          </IonItem>
-        </div>
+      {/* the community shown now, information only; switching is the entry below (platform#241) */}
+      <IonItem lines="full">
+        <IonLabel className="ion-text-wrap">
+          <p>{t("menu.currentTenant")}</p>
+          <div style={{fontSize: "16px"}}>{current ? `${current.tenant}-${current.name}` : tenant.tenant}</div>
+        </IonLabel>
       </IonItem>
       <div style={{marginTop: "16px"}}>
+      {/* opens the community picker with a search field; the popover closes on this click */}
+      {(tenants?.length ?? 0) > 1 && <IonItem button onClick={onPickTenant} lines="full">
+        <IonIcon aria-hidden="true" icon={swapHorizontalOutline} slot="start" size="small"></IonIcon>
+        <IonLabel style={{fontSize: "16px"}}>{t("menu.switchTenant")}</IonLabel>
+      </IonItem>}
       <IonItem button onClick={() => authSvc?.redirectToUserAccount()} lines="full">
         <IonIcon aria-hidden="true" icon={refreshOutline} slot="start" size="small"></IonIcon>
         <IonLabel style={{fontSize: "16px"}}>{t("menu.changePassword")}</IonLabel>

@@ -125,11 +125,25 @@ describe("community picker search (platform#241)", () => {
 })
 
 describe("user popover (platform#241)", () => {
-  it("shows the current community and opens the picker on click", () => {
+  const popover = (tenants: {tenant: string, name: string}[]) => {
     const onPickTenant = vi.fn()
-    const eeg = {tenant: "RC100100", setTenant: vi.fn(), getTenants: () => TWO} as unknown as EegState
+    const eeg = {tenant: "RC100100", setTenant: vi.fn(), getTenants: () => tenants} as unknown as EegState
     render(<EegContext.Provider value={eeg}><UserDetailPopover authSvc={undefined} onPickTenant={onPickTenant}/></EegContext.Provider>)
+    return onPickTenant
+  }
+
+  it("shows the current community as information; „Gemeinschaft wechseln“ opens the picker", () => {
+    const onPickTenant = popover(TWO)
+    expect(screen.getByText("Aktuelle Gemeinschaft")).toBeTruthy()
     fireEvent.click(screen.getByText("RC100100-Eins").closest("ion-item")!)
+    expect(onPickTenant).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByText("Gemeinschaft wechseln").closest("ion-item")!)
     expect(onPickTenant).toHaveBeenCalled()
+  })
+
+  it("has no „Gemeinschaft wechseln“ with a single community", () => {
+    popover([{tenant: "RC100100", name: "Eins"}])
+    expect(screen.getByText("RC100100-Eins")).toBeTruthy()
+    expect(screen.queryByText("Gemeinschaft wechseln")).toBeNull()
   })
 })
