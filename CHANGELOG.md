@@ -13,6 +13,12 @@ this changelog highlights the changes relevant for overview and operations.
   only change is the CHANGELOG, such as the release PR, skip the image build. Tag pushes still build. A release promotes
   the image of the last commit before the release PR; it has the same content.
 
+### Fixed
+- **User menu: current community as information, switching as an entry of its own** (platform#241 follow-up): the
+  caption and the community stood side by side and the name wrapped into a narrow column. The menu now shows
+  „Aktuelle Gemeinschaft“ with number and name on the next line (not clickable) and, with more than one community, an
+  entry „Gemeinschaft wechseln“ next to „Passwort ändern“ and „Abmelden“ that opens the picker.
+
 ## [1.22.0] – 2026-11-08
 
 ### Added
