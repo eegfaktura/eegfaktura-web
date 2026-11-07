@@ -14,8 +14,10 @@ this changelog highlights the changes relevant for overview and operations.
   The field now shows the long form in brackets after the short form of admin, e.g. „EEG regional
   (Erneuerbare-Energie-Gemeinschaft, regional)“, „GEA (Gemeinschaftliche Erzeugungsanlage)“, „BEG
   (Bürgerenergiegemeinschaft)“, „P2P (Peer-to-Peer)“, „EVA (Eigenversorgungsanlage)“.
-- **EEG master data: „Nahebereich“ shows the zone's name in brackets:** e.g. „4 (Regionalbereich: ein Netzgebiet)“
-  instead of „4 Regionalbereich: ein Netzgebiet“.
+- **EEG master data: „Nahebereich“ shows the official name of the zone level in brackets** (ElWG, from Harald):
+  e.g. „4 (Regionalbereich – gleiches Umspannwerk eines Netzbetreibers)“ instead of „4 Regionalbereich: ein
+  Netzgebiet“. Levels 6 and 7 are now „Gebotszone – mehrere Umspannwerke eines/verschiedener Netzbetreiber“ (before
+  „Keine Verbindung: ein/mehrere Netzgebiete“).
 
 ## [1.21.0] – 2026-11-07
 

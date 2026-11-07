@@ -73,7 +73,7 @@ describe("no billing for P2P and EVA (platform#229): pages", () => {
   })
 
   // addendum 05.11.2026: the zone level from the metering point list, read only
-  it.each([[3, "3 (Lokalbereich)"], [null, "unbekannt"]])("EEG page with zone level %s shows „%s“", (level, text) => {
+  it.each([[3, "3 (Lokalbereich – gleiche Trafostation)"], [null, "unbekannt"]])("EEG page with zone level %s shows „%s“", (level, text) => {
     const eeg = {...eegOf("LOCAL"), ecZoneLevel: level} as Eeg
     const r = renderWithProviders(<MemoryRouter><EegContext.Provider value={ctx("LOCAL")}><EegPage/></EegContext.Provider></MemoryRouter>)
     act(() => {

@@ -35,10 +35,14 @@ describe("community type (platform#229)", () => {
   it("names the zone levels 1–7 from the locales, anything else is unknown", () => {
     const t = i18next.getFixedT("de", "common")
     const label = (level?: number | null) => zoneLevelLabel(t, level)
-    expect([1, 2, 3, 4, 5, 6, 7].map(label)).toEqual(["1 (Hauptleitung)", "2 (Standortbereich)", "3 (Lokalbereich)",
-      "4 (Regionalbereich: ein Netzgebiet)", "5 (Regionalbereich: mehrere Netzgebiete)",
-      "6 (Keine Verbindung: ein Netzgebiet)", "7 (Keine Verbindung: mehrere Netzgebiete)"])
+    // official names of the ElWG zone levels (Harald, 07.11.2026)
+    expect([1, 2, 3, 4, 5, 6, 7].map(label)).toEqual(["1 (Haupt-/Steigleitung)",
+      "2 (Standortbereich – gemeinsame Sammelschiene)", "3 (Lokalbereich – gleiche Trafostation)",
+      "4 (Regionalbereich – gleiches Umspannwerk eines Netzbetreibers)",
+      "5 (Regionalbereich – gleiches Umspannwerk verschiedener Netzbetreiber)",
+      "6 (Gebotszone – mehrere Umspannwerke eines Netzbetreibers)",
+      "7 (Gebotszone – mehrere Umspannwerke verschiedener Netzbetreiber)"])
     expect([null, undefined, 0, 8, 2.5].map(label)).toEqual(Array(5).fill("unbekannt"))
-    expect(zoneLevelLabel(i18next.getFixedT("en", "common"), 3)).toBe("3 (Local area)")
+    expect(zoneLevelLabel(i18next.getFixedT("en", "common"), 3)).toBe("3 (Local area – same transformer station)")
   })
 })
