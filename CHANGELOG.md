@@ -18,6 +18,16 @@ this changelog highlights the changes relevant for overview and operations.
   e.g. „4 (Regionalbereich – gleiches Umspannwerk eines Netzbetreibers)“ instead of „4 Regionalbereich: ein
   Netzgebiet“. Levels 6 and 7 are now „Gebotszone – mehrere Umspannwerke eines/verschiedener Netzbetreiber“ (before
   „Keine Verbindung: ein/mehrere Netzgebiete“).
+- **Dashboard „Übersicht EEG“ shows today's state as a whole:** The card names „Stand heute“ once instead of the selected
+  period and the two „(Stand heute)“ marks.
+  - **Counting basis:** Active metering points, consumers/producers and the energy tariffs are now counted like the
+    members over all members as of today. Before, they came from the members of the selected period, so the card mixed
+    two bases.
+  - **Active:** „aktive“ metering points are the ones with an active participation, each number once. Registrations
+    are shown apart as „in Anmeldung“, like for members. Before, the period filter counted them as active.
+  - **Tariff list:** It is split into energy tariffs (counted per active metering point) and membership fees (counted
+    per active member), with the numbers right-aligned.
+  - The energy cards of the dashboard stay per period.
 
 ## [1.21.0] – 2026-11-07
 

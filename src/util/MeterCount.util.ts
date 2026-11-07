@@ -2,8 +2,8 @@ import {EegParticipant} from "../models/members.model";
 import {Metering} from "../models/meteringpoint.model";
 import {entryRank} from "../components/notification/EnergyRequestSummary.functions";
 
-// Metering points of the period counted once per metering point number (platform#211): after an owner change the
-// period holds two participations of one metering point. Direction and tariff come from its current participation:
+// Metering points counted once per metering point number (platform#211): after an owner change two participations
+// of one metering point can be given (the dashboard passes only the active ones, see countMetersToday). Direction and tariff come from its current participation:
 // first by status as for the energy data request (entryRank: ACTIVE, then others, INIT last), then the latest
 // participantState.activeSince (one without a start date counts last); on a full tie the first one in the list wins.
 // So the tariff counts add up to the counted metering points that have a known tariff.
@@ -35,6 +35,21 @@ export const countMeters = (participants: EegParticipant[], tariffIds: string[])
 // a registration is running (the rule of memberActivity in MemberActivity.util)
 const REGISTERING: string[] = ['NEW', 'INIT', 'PENDING', 'APPROVED']
 const inUse = (m: Metering) => m.status === 'ACTIVE' || (m.status !== 'INACTIVE' && REGISTERING.includes(m.processState))
+
+// The dashboard's „Übersicht EEG“ in today's state over all members: the metering points active today, each number
+// once with direction and tariff of its active participation (countMeters), and the ones being registered that are
+// active at no member.
+export type MeterCountToday = MeterCount & {registering: number}
+
+export const countMetersToday = (participants: EegParticipant[], tariffIds: string[]): MeterCountToday => {
+  const active = participants.map(p => ({...p, meters: (p.meters ?? []).filter(m => m.status === 'ACTIVE')}))
+  const activeNumbers = new Set(active.flatMap(p => p.meters.map(m => m.meteringPoint)))
+  const registering = new Set<string>()
+  participants.forEach(p => (p.meters ?? []).forEach(m => {
+    if (m.status !== 'ACTIVE' && inUse(m) && !activeNumbers.has(m.meteringPoint)) registering.add(m.meteringPoint)
+  }))
+  return {...countMeters(active, tariffIds), registering: registering.size}
+}
 
 // Inactive metering points for the dashboard (platform#228): over all members (state today, like the member counts),
 // each metering point number once: it has left (a participation with status INACTIVE: left, revoked) and is neither

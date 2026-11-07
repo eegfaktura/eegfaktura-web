@@ -105,7 +105,7 @@ describe("no billing for P2P and EVA (platform#229): pages", () => {
 
   it.each([["P2P", false], ["GEA", true]])("dashboard of %s: tariff block shown = %s", (area, shown) => {
     renderWithProviders(<EegContext.Provider value={ctx(area)}>
-      <EegOverviewComponent participants={[]} rateMap={{}}/></EegContext.Provider>)
+      <EegOverviewComponent rateMap={{}}/></EegContext.Provider>)
     expect(screen.getByText("Übersicht EEG")).toBeTruthy()
     expect(!!screen.queryByText("Tarife")).toBe(shown)
   })

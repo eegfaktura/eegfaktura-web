@@ -1,6 +1,6 @@
 // @vitest-environment node
 import {describe, expect, it} from "vitest";
-import {countInactiveMeters, countMeters} from "../../util/MeterCount.util";
+import {countInactiveMeters, countMeters, countMetersToday} from "../../util/MeterCount.util";
 import {EegParticipant} from "../../models/members.model";
 
 type M = {meteringPoint: string, direction: 'CONSUMPTION' | 'GENERATION', tariff_id?: string, activeSince?: string,
@@ -142,5 +142,39 @@ describe("countInactiveMeters", () => {
       participant({meteringPoint: "AT01", direction: 'CONSUMPTION', activeSince: "2024-01-01", status: 'INACTIVE'}),
       participant({meteringPoint: "AT01", direction: 'CONSUMPTION', activeSince: "2025-06-01", status: 'INACTIVE'}),
     ])).toBe(1)
+  })
+})
+
+// dashboard „Übersicht EEG“ in today's state (07.11.2026)
+describe("countMetersToday", () => {
+  const registering = (meteringPoint: string, processState: string) => ({
+    meters: [{meteringPoint, direction: 'CONSUMPTION', status: 'INIT', processState}],
+  }) as unknown as EegParticipant
+
+  it("counts only the active metering points, with the tariff of the active participation", () => {
+    const r = countMetersToday([
+      participant({meteringPoint: "AT01", direction: 'CONSUMPTION', tariff_id: "old", status: 'INACTIVE'},
+        {meteringPoint: "AT02", direction: 'GENERATION', tariff_id: "gen"}),
+      participant({meteringPoint: "AT01", direction: 'CONSUMPTION', tariff_id: "new"}),
+    ], ["old", "new", "gen"])
+    expect(r).toEqual({consumers: 1, producers: 1, tariffs: {old: 0, new: 1, gen: 1}, registering: 0})
+  })
+
+  it("counts a registration apart, once, and not when the metering point is active at another member", () => {
+    const r = countMetersToday([
+      registering("AT01", 'PENDING'), registering("AT01", 'APPROVED'),
+      registering("AT02", 'NEW'), participant({meteringPoint: "AT02", direction: 'CONSUMPTION'}),
+      registering("AT03", 'REJECTED'),
+    ], [])
+    expect(r).toEqual({consumers: 1, producers: 0, tariffs: {}, registering: 1})
+  })
+
+  it("counts a metering point that left one member and is being registered at another one as registering only", () => {
+    const all = [
+      participant({meteringPoint: "AT01", direction: 'CONSUMPTION', activeSince: "2024-01-01", status: 'INACTIVE'}),
+      registering("AT01", 'PENDING'),
+    ]
+    expect(countMetersToday(all, [])).toEqual({consumers: 0, producers: 0, tariffs: {}, registering: 1})
+    expect(countInactiveMeters(all)).toBe(0)
   })
 })
