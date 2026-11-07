@@ -8,6 +8,13 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **Search field in „Auswahl Gemeinschaft“** (platform#241, Harald): the community picker of the user menu is a dialog
+  of its own now. With more than one community it has a search field that filters by number and name, ignoring case
+  and accents, like the tariff list („Keine Gemeinschaft gefunden.“ without hits). The current community is marked;
+  switching still asks first when a form holds unsaved input. The user menu shows the current community and opens the
+  dialog. The search folding of the tariff list moved to `util/Search.util.ts` and is shared.
+
 ### Changed
 - **EEG master data: the field „Region“ is now called „Modell“** (Harald, 07.11.2026). It shows the community model
   (e.g. „EEG regional“, „EEG lokal“, BEG, P2P), and „Region“ also appeared in the zone level below („Regionalbereich“).
