@@ -12,12 +12,6 @@ interface EegOverviewComponentProps {
 
 const EegOverviewComponent: FC<EegOverviewComponentProps> = ({rateMap}) => {
 
-  // const [participantCount, setParticipantCount] = useState<number>(0)
-  // const [consumerCount, setConsumerCount] = useState<number>(0)
-  // const [producerCount, setProducerCount] = useState<number>(0)
-  // const [tariffUsage, setTariffUssage] = useState<Record<string, number>>({})
-
-
   // platform#165: members counted by the current state of their metering points, over all members (not only the
   // ones of the selected period): active = at least one active metering point
   const allParticipants = useAppSelector(allParticipantsSelector)
@@ -31,29 +25,6 @@ const EegOverviewComponent: FC<EegOverviewComponentProps> = ({rateMap}) => {
   // platform#211: each metering point once, with the tariff of its current participation; state today over all members
   // like the counts above (the card shows no period)
   const meters = useMemo(() => countMetersToday(allParticipants, Object.keys(rateMap)), [allParticipants, rateMap])
-  const tariffUsage = meters.tariffs
-
-
-  // useEffect(() => {
-  //   const defaultRateCount: Record<string, number> = Object.keys(rateMap).reduce((o, v) => {
-  //     return {...o, [v]: 0}
-  //   }, {} as Record<string, number>)
-  //
-  //   const s = participants.reduce((r, p) => {
-  //     r.p += 1
-  //     p.meters.forEach(m => {
-  //       m.direction === 'CONSUMPTION' ? r.c += 1 : r.pp += 1
-  //       if (m.tariff_id) {
-  //         r.t[m.tariff_id] = r.t[m.tariff_id] + 1
-  //       }
-  //     })
-  //     return r
-  //   }, {p: 0, c: 0, pp: 0, t: defaultRateCount})
-  //   setConsumerCount(s.c)
-  //   setProducerCount(s.pp)
-  //   setParticipantCount(s.p)
-  //   setTariffUssage(s.t)
-  // }, [participants])
 
   // a count list: name left, number right-aligned
   const countList = (rows: [string, string, number][]) => (
@@ -66,7 +37,7 @@ const EegOverviewComponent: FC<EegOverviewComponentProps> = ({rateMap}) => {
       ))}
     </div>
   )
-  const energyTariffs: [string, string, number][] = Object.entries(tariffUsage)
+  const energyTariffs: [string, string, number][] = Object.entries(meters.tariffs)
     .filter(([id, c]) => c > 0 && rateMap[id]).map(([id, c]) => [id, rateMap[id].name, c])
   const feeTariffs: [string, string, number][] = [
     ...Object.entries(memberFees.tariffs).filter(([id]) => rateMap[id])

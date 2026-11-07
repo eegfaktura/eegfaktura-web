@@ -2,8 +2,8 @@ import {EegParticipant} from "../models/members.model";
 import {Metering} from "../models/meteringpoint.model";
 import {entryRank} from "../components/notification/EnergyRequestSummary.functions";
 
-// Metering points of the period counted once per metering point number (platform#211): after an owner change the
-// period holds two participations of one metering point. Direction and tariff come from its current participation:
+// Metering points counted once per metering point number (platform#211): after an owner change two participations
+// of one metering point can be given (the dashboard passes only the active ones, see countMetersToday). Direction and tariff come from its current participation:
 // first by status as for the energy data request (entryRank: ACTIVE, then others, INIT last), then the latest
 // participantState.activeSince (one without a start date counts last); on a full tie the first one in the list wins.
 // So the tariff counts add up to the counted metering points that have a known tariff.
@@ -38,8 +38,7 @@ const inUse = (m: Metering) => m.status === 'ACTIVE' || (m.status !== 'INACTIVE'
 
 // The dashboard's „Übersicht EEG“ in today's state over all members: the metering points active today, each number
 // once with direction and tariff of its active participation (countMeters), and the ones being registered that are
-// active at no member. Before, the active ones came from the members of the selected period and included the
-// registrations.
+// active at no member.
 export type MeterCountToday = MeterCount & {registering: number}
 
 export const countMetersToday = (participants: EegParticipant[], tariffIds: string[]): MeterCountToday => {

@@ -168,4 +168,13 @@ describe("countMetersToday", () => {
     ], [])
     expect(r).toEqual({consumers: 1, producers: 0, tariffs: {}, registering: 1})
   })
+
+  it("counts a metering point that left one member and is being registered at another one as registering only", () => {
+    const all = [
+      participant({meteringPoint: "AT01", direction: 'CONSUMPTION', activeSince: "2024-01-01", status: 'INACTIVE'}),
+      registering("AT01", 'PENDING'),
+    ]
+    expect(countMetersToday(all, [])).toEqual({consumers: 0, producers: 0, tariffs: {}, registering: 1})
+    expect(countInactiveMeters(all)).toBe(0)
+  })
 })

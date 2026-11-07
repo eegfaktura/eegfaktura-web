@@ -110,7 +110,7 @@ describe("period of the upper dashboard cards", () => {
     expect(screen.getByText(/^2 inaktive/)).toBeTruthy()
   })
 
-  it("without a selected period no period line is shown", () => {
+  it("without a selected period the energy card shows no period, the EEG overview none in any case", () => {
     render(tree(newStore(), <>
       <EegOverviewComponent rateMap={{}}/>
       {energyOverview}
