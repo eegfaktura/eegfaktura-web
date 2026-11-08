@@ -92,6 +92,7 @@ describe("JoiningFeeMember", () => {
   it("records a payment: date required, note optional and trimmed", async () => {
     await show([], tariff(50))
     expect(screen.getByText("Beitrittsgebühr: offen – wird mit der ersten Energieabrechnung verrechnet")).toBeInTheDocument()
+    expect(button("Beitrittsgebühr nachverrechnen")).toBeNull()   // comes with the first energy billing anyway
     fireEvent.click(button("Außerhalb bezahlt erfassen")!)
     expect(await confirmAlert({paidOn: "", note: "x"})).toBe(false) // the dialog stays open
     expect(toast.mock.lastCall![0].message).toBe("Bitte das Datum der Zahlung angeben.")
