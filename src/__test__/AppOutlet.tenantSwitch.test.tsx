@@ -36,7 +36,7 @@ import {eegSelector, fetchEegModel, selectTenant} from "../store/eeg";
 import {Eeg} from "../models/eeg.model";
 
 // what each page shows when its EEG is there
-const MEMBERS = "Mitgliederliste", EEG = "Einstellungen", PROCESSES = "Prozessdetails"
+const MEMBERS = "Mitgliederliste", EEG = "Gemeinschafts-ID", PROCESSES = "Prozessdetails"
 const PAGES: Record<string, string> = {"/page/participants": MEMBERS, "/page/eeg": EEG, "/page/processes": PROCESSES}
 
 const eegOf = (tenant: string) => ({id: tenant, name: `EEG ${tenant}`, rcNumber: tenant, communityId: "AT0000",

@@ -54,10 +54,23 @@ describe("no billing for P2P and EVA (platform#229): pages", () => {
       r.store.dispatch(selectTenant(TENANT))
       r.store.dispatch(fetchEegModel.fulfilled({eeg: eegOf(area)}, "req", {tenant: TENANT}))
     })
-    expect(!!r.container.querySelector('ion-select[label="Abrechnungszeitraum"]')).toBe(shown)
+    expect(!!r.container.querySelector('ion-select[label="Abrechnungsintervall"]')).toBe(shown)
     expect(!!screen.queryByText("Abrechnungs-Einstellungen")).toBe(shown)
     const model = r.container.querySelector('ion-input[label="Modell"]') as any
     expect(model.value).toBe(area === "P2P" ? "P2P (Peer-to-Peer)" : "EEG lokal (Erneuerbare-Energie-Gemeinschaft, lokal)")
+  })
+
+  // platform#245: no card „Einstellungen“ and no second community select; the interval is in „Allgemeines“
+  it("EEG page: interval in „Allgemeines“, no card „Einstellungen“", () => {
+    const r = renderWithProviders(<MemoryRouter><EegContext.Provider value={ctx("LOCAL")}><EegPage/></EegContext.Provider></MemoryRouter>)
+    act(() => {
+      r.store.dispatch(selectTenant(TENANT))
+      r.store.dispatch(fetchEegModel.fulfilled({eeg: eegOf("LOCAL")}, "req", {tenant: TENANT}))
+    })
+    expect(screen.queryByText("Einstellungen")).toBeNull()
+    expect(r.container.querySelector('ion-select[label="Auswahl Gemeinschaft"]')).toBeNull()
+    const card = r.container.querySelector('ion-select[label="Abrechnungsintervall"]')!.closest(".eeg-property-card")!
+    expect(card.querySelector(".header")!.textContent).toBe("Allgemeines")
   })
 
   // eegfaktura-dev#56 #13: the creditor ID serves direct debit only; the bank account stays

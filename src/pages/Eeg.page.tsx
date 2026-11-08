@@ -5,8 +5,8 @@ import {
   IonContent,
   IonInput,
   IonModal,
-  IonPage, IonSelect, IonSelectOption,
-  SelectCustomEvent, useIonToast
+  IonPage,
+  useIonToast
 } from "@ionic/react";
 import InputFormComponent from "../components/form/InputForm.component";
 import {useAppDispatch, useAppSelector} from "../store";
@@ -15,8 +15,7 @@ import {useForm} from "react-hook-form";
 import SelectForm from "../components/form/SelectForm.component";
 
 import "./Eeg.page.scss"
-import {useTenants} from "../store/hook/AuthProvider";
-import {useAccessGroups, useHasBilling, useTenant, useTenantSwitch} from "../store/hook/Eeg.provider";
+import {useAccessGroups, useHasBilling, useTenant} from "../store/hook/Eeg.provider";
 import {areaLabel, zoneLevelLabel} from "../util/Area.util";
 import EegBillingConfigCardComponent from "../components/EegBillingConfigCard.component";
 import {AccountInfo, Address, Contact, Eeg, Optionals, SettlementIntervalResult} from "../models/eeg.model";
@@ -25,7 +24,6 @@ import {PhoneInputForm} from "../components/form/PhoneInputForm";
 import {useLocale} from "../store/hook/useLocale";
 import {isValidEmailList} from "../util/EmailAddress.util";
 import EegLoadStateComponent from "../components/EegLoadState.component";
-import {useLeaveUnsaved} from "../store/hook/ParticipantProvider";
 import MenuHeaderComponent from "../components/core/MenuHeader.component";
 import SettlementIntervalChangeDialog from "../components/dialogs/SettlementIntervalChange.dialog";
 import {afterIntervalChange, SETTLEMENT_INTERVALS} from "../util/SettlementInterval.util";
@@ -53,9 +51,7 @@ const EegPage: FC = () => {
 
   const {isAdmin} = useAccessGroups()
   const billing = useHasBilling()
-  const switchTenant = useTenantSwitch()
   // another community drops unsaved input ("add metering point", details, tariff editor): ask first (platform#228 step 4)
-  const leaveUnsaved = useLeaveUnsaved(["addMeter", "details", "tariff"])
 
   const {handleSubmit, setValue, reset, control, formState: {errors, isDirty, dirtyFields}} =
     useForm({
@@ -63,7 +59,6 @@ const EegPage: FC = () => {
       values: eeg,
       mode: "all",
     })
-  const [tenantsState, setTenantsState] = useState<string[]>([])
   // the interval chosen in the select, open in the change dialog (platform#230)
   const [pendingInterval, setPendingInterval] = useState<Eeg["settlementInterval"]>()
   // no closing by backdrop or Escape while the change is saved: its result must be seen
@@ -72,12 +67,6 @@ const EegPage: FC = () => {
   // the latest EEG for the dialog's dismiss handler, which may run after the store has the changed EEG
   const eegRef = useRef(eeg)
   eegRef.current = eeg
-  const tenants = useTenants()
-
-  useEffect(() => {
-    // setTenantState(tenant);
-    setTenantsState(tenants.map(t => t.toUpperCase()).sort((a, b) => a.localeCompare(b)))
-  }, [tenants])
 
   useEffect(() => {
     if (!eeg) {
@@ -86,13 +75,6 @@ const EegPage: FC = () => {
       reset(eeg)
     }
   }, [eeg]);
-
-  const onSwitchTenant = (e: SelectCustomEvent<string>) => {
-    const next = e.detail.value;
-    const select = e.target
-    // declined: the select shows the current community again
-    leaveUnsaved(() => switchTenant(next), () => { select.value = tenant })
-  }
 
   const onChangeField = (mapper: string) => (name: string, value: any) => {
     dispatcher(updateEegModel({
@@ -134,26 +116,11 @@ const EegPage: FC = () => {
 
             <div style={{display: "flex", flexDirection: "column", flexGrow: "1"}}>
               <div className={"eeg-property-card"}>
-                <div className={"header"}>Einstellungen</div>
+                <div className={"header"}>{t("common-info.header")}</div>
                 <IonCard color="eeglight">
-                  <div className="form-element">
-                    {/*<IonItem fill="outline">*/}
-                    {/*<IonLabel position="floating">RC Nummer</IonLabel>*/}
-                    <IonSelect fill="outline" label="Auswahl Gemeinschaft" labelPlacement={"floating"}
-                               className="select-box"
-                               value={tenant}
-                               onIonChange={onSwitchTenant}>
-                      {tenantsState && tenantsState.map((o, idx) => (
-                          <IonSelectOption key={idx} value={o}>{o}</IonSelectOption>
-                        )
-                      )}
-                    </IonSelect>
-                    {/*</IonItem>*/}
-                  </div>
-                  {/*<form>*/}
-                  {/* the settlement interval is a billing setting: none without billing (platform#229) */}
+                  {/* first in „Allgemeines“ (platform#245); the settlement interval is a billing setting: none without billing (platform#229) */}
                   {billing && <>
-                  <SelectForm label={"Abrechnungszeitraum"} placeholder={"Abrechnungszeitraum"} control={control}
+                  <SelectForm label={"Abrechnungsintervall"} placeholder={"Abrechnungsintervall"} control={control}
                               name={"settlementInterval"} options={SETTLEMENT_INTERVALS}
                               onChangePartial={onChangeInterval} disabled={!isAdmin()}></SelectForm>
                   <IonModal isOpen={!!pendingInterval} backdropDismiss={!savingInterval} onDidDismiss={() => pendingInterval && onIntervalDone()}>
@@ -163,12 +130,6 @@ const EegPage: FC = () => {
                                                       onSaving={setSavingInterval}/>}
                   </IonModal>
                   </>}
-                  {/*</form>*/}
-                </IonCard>
-              </div>
-              <div className={"eeg-property-card"}>
-                <div className={"header"}>{t("common-info.header")}</div>
-                <IonCard color="eeglight">
 
                   <InputFormComponent name={"rcNumber"} label={t("common-info.ec-number")} control={control} rules={{}} type="text"
                                       readonly={true}/>

@@ -59,7 +59,7 @@ const SettlementIntervalChangeDialog: FC<SettlementIntervalChangeDialogProps> = 
 
   return (
     <div className="ion-padding" data-testid="settlement-interval-dialog">
-      <h6>Abrechnungszeitraum wechseln</h6>
+      <h6>Abrechnungsintervall wechseln</h6>
       <div>Bisher: {settlementIntervalLabel(current)}</div>
       <div>Neu: {settlementIntervalLabel(next)}</div>
       {phase === "checking" && <IonSpinner/>}
