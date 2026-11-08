@@ -50,7 +50,7 @@ describe("first open period after an interval change (eegfaktura-dev#54 #7)", ()
   it("selects that period and names it in the toast", () => {
     const after = afterIntervalChange(changed("QUARTER", "2026-04-01", "Das neue Intervall gilt ab 1. April 2026."), today)
     expect(after.period).toEqual({type: "YQ", year: 2026, segment: 2})
-    expect(after.message).toBe("Abrechnungszeitraum geändert. Das neue Intervall gilt ab 1. April 2026. "
+    expect(after.message).toBe("Abrechnungsintervall geändert. Das neue Intervall gilt ab 1. April 2026. "
       + "Als Nächstes abzurechnen: 2. Quartal 2026.")
   })
 
@@ -58,7 +58,7 @@ describe("first open period after an interval change (eegfaktura-dev#54 #7)", ()
     const after = afterIntervalChange(changed("QUARTER", null,
       "Das neue Intervall gilt sofort, es gibt noch keine endgültige Abrechnung."), today)
     expect(after.period).toEqual({type: "YQ", year: 2026, segment: 4})
-    expect(after.message).toBe("Abrechnungszeitraum geändert. Das neue Intervall gilt sofort, es gibt noch keine "
+    expect(after.message).toBe("Abrechnungsintervall geändert. Das neue Intervall gilt sofort, es gibt noch keine "
       + "endgültige Abrechnung.")
   })
 })

@@ -53,8 +53,8 @@ export const firstOpenPeriod = (interval: string | undefined, effectiveFrom: str
 // yet) earlier periods may still be open, so the toast does not call today's period the next one
 export const afterIntervalChange = (result: SettlementIntervalResult, today?: Date) => {
   const period = firstOpenPeriod(result.eeg?.settlementInterval, result.effectiveFrom, today)
-  if (!result.effectiveFrom) return {period, message: `Abrechnungszeitraum geändert. ${result.message}`}
+  if (!result.effectiveFrom) return {period, message: `Abrechnungsintervall geändert. ${result.message}`}
   const next = periodLabel(createPeriodIdentifier(period.type, period.year, period.segment))
-  return {period, message: `Abrechnungszeitraum geändert. ${result.message} Als Nächstes abzurechnen: ${next}.`}
+  return {period, message: `Abrechnungsintervall geändert. ${result.message} Als Nächstes abzurechnen: ${next}.`}
 }
 

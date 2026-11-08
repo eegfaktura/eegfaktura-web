@@ -9,6 +9,10 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Changed
+- **EEG page: no card „Einstellungen“, the interval under „Allgemeines“** (platform#245): the second community select
+  „Auswahl Gemeinschaft“ is gone — the community is switched in the user menu only. The settlement interval is the first
+  field of „Allgemeines“ and is called **„Abrechnungsintervall“**, also in the change dialog and its message; same rules
+  as before (shown only with billing, changeable only by `EEG_ADMIN`).
 - **Member search with several terms** (platform#244): the search field of the member list splits the input at spaces
   and finds the members that have **every** term in one of their fields — last name, first name, member number,
   e-mail, or a metering point's number or name — e.g. „huber maria“ or „huber 0815“; the order does not matter. Before,
