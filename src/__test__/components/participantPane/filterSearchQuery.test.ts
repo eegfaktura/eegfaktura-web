@@ -1,4 +1,3 @@
-// @vitest-environment node
 import {describe, expect, it} from "vitest";
 import {filterSearchQuery} from "../../../components/participantPane/ParticipantPane.functions";
 import {EegParticipant} from "../../../models/members.model";
