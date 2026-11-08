@@ -56,9 +56,18 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
   const [useableMeters, setUsableMeters] = useState<Metering[]>(meters)
   const [meteringPoint, participantId] = watch(['meteringPoint', 'participantId'])
 
+  // After an owner change one metering point number is at two members (the old one inactive): the member is the one
+  // chosen in the form. Only without a choice it follows from the metering point, and only when one member holds it;
+  // before, the first member by number was taken, which could be the old owner (bug 08.11.2026).
+  const holders = (mp: string) => participants.filter(p => p.meters.some(m => m.meteringPoint === mp))
+  const memberOf = (mp: string, chosenId: string | undefined) => {
+    const all = holders(mp)
+    return all.find(p => p.id === chosenId) ?? (all.length === 1 ? all[0] : undefined)
+  }
+
   useEffect(() => {
-    if (meteringPoint) {
-      const p = participants.find(p => p.meters.find(m => m.meteringPoint === meteringPoint))
+    if (meteringPoint && !holders(meteringPoint).some(p => p.id === participantId)) {
+      const p = memberOf(meteringPoint, undefined)
       if (p) {
         setValue('participantId', p.id)
       }
@@ -78,7 +87,7 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
 
   const onRequest = async (data: ProcessValues) => {
     if (data.meteringPoint) {
-      const p = participants.find(p => p.meters.find(m => m.meteringPoint === data.meteringPoint))
+      const p = memberOf(data.meteringPoint, data.participantId)
       const meter = p?.meters.find(m => m.meteringPoint === data.meteringPoint)
       if (p && meter) {
         // goes to the grid operator: ask first; the submit button stays disabled while the dialog is open
@@ -123,14 +132,14 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
             {/*})} label={"Zählpunkt"} selectInterface={"popover"}  rules={{required: true}}/>*/}
 
             <BasicSelectComponent control={control} name={"participantId"}
-                                  options={participants
+                                  options={[...participants]
                                     .sort((a, b) => a.lastname && b.lastname ? a.lastname.localeCompare(b.lastname) : a.firstname.localeCompare(b.firstname))
                                     .map((p) => {
                                     return {
                                       value: p.id,
                                       label: JoinStrings(" ", "-", p.participantNumber, (p.lastname ? p.lastname : ""), p.firstname)
                                     }
-                                  })} label={t("participant")}/>
+                                  })} label={t("participant")} rules={{required: true}}/>
             <BasicSelectComponent control={control} name={"meteringPoint"}
                                   options={useableMeters.filter(p => p.processState !== 'ACTIVE' /*&& p.status !== 'APPROVED' && p.status !== 'PENDING'*/).map((p) => {
                                     return {

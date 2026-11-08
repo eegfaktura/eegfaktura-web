@@ -143,6 +143,38 @@ describe("Zählpunkt anmelden", () => {
   })
 })
 
+// bug 08.11.2026: after an owner change the metering point is at two members; the chosen member was replaced by the
+// first one holding the number (the old owner, sorted first), in the dialog and in the request
+describe("Zählpunkt anmelden nach Besitzerwechsel", () => {
+  const moved = "AT0030000000000000000000000000009"
+  const oldOwner = {id: "p0", participantNumber: "220", firstname: "Berta", lastname: "Alt",
+    meters: [meter(moved, {processState: "INACTIVE", status: "INACTIVE"} as Partial<Metering>)]} as unknown as EegParticipant
+  const newOwner = {id: "p9", participantNumber: "337", firstname: "Carl", lastname: "Neu",
+    meters: [meter(moved, {processState: "INACTIVE", status: "INIT"} as Partial<Metering>)]} as unknown as EegParticipant
+
+  it("asks and sends for the chosen member, not the old owner", async () => {
+    render(<ProcessRegisterMeterComponent eeg={eeg} meters={[...oldOwner.meters, ...newOwner.meters]}
+                                          participants={[newOwner, oldOwner]} edaProcess={process("Zählpunkt anmelden")}/>)
+    type("participantId", "p9")
+    await flush()
+    type("meteringPoint", moved)
+    await flush()
+    await submit("Anfordern")
+    expect(alert.mock.lastCall![0].message).toBe(`Zählpunkt ${moved} (337 Neu Carl) online beim Netzbetreiber anmelden?`)
+    await dismiss("confirm")
+    expect(Api.eegService.registerMeteringPoint).toHaveBeenCalledWith("TE100200", "p9", moved, "CONSUMPTION")
+  })
+
+  it("does not pick a member by itself when two hold the metering point", async () => {
+    render(<ProcessRegisterMeterComponent eeg={eeg} meters={[...oldOwner.meters, ...newOwner.meters]}
+                                          participants={[newOwner, oldOwner]} edaProcess={process("Zählpunkt anmelden")}/>)
+    type("meteringPoint", moved)
+    await flush()
+    expect(isDisabled(submitButton("Anfordern"))).toBe(true)
+    expect(Api.eegService.registerMeteringPoint).not.toHaveBeenCalled()
+  })
+})
+
 describe("Energiedaten anfordern (ohne Smart)", () => {
   it("asks with meters and period; cancel sends nothing, confirm sends the request unchanged", async () => {
     render(<ProcessRequestValuesComponent eeg={eeg} meters={[m1]} participants={[participant]}
