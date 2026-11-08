@@ -65,39 +65,16 @@ describe("<MeterFormElement /> grid operator", () => {
   });
 });
 
-// platform#229 addendum: TechCode and FuelCode from the metering point list, read only
+// platform#246: TechCode and FuelCode of the metering point list are stored by the backend but not shown in V1
+// (decision 08.11.2026, the display comes with V3)
 describe("<MeterFormElement /> codes of the metering point list", () => {
-  const codeField = (container: HTMLElement, label: string) =>
-    container.querySelector(`ion-input[label="${label}"]`) as (HTMLElement & {value?: string, readonly?: boolean}) | null
-
-  it("an existing metering point shows them as read-only fields, not as input", async () => {
+  it("an existing metering point with codes does not show them", async () => {
     const {container} = renderElement('LOCAL', {processState: 'ACTIVE', status: 'ACTIVE', techCode: 'PV01',
       fuelCode: 'E01'} as Partial<Metering>, true)
     await screen.findAllByText(/Zählpunkt/)
-    expect(codeField(container, "Technologie (Code)")?.value).toBe('PV01')
-    expect(codeField(container, "Energieträger (Code)")?.value).toBe('E01')
-    expect(codeField(container, "Technologie (Code)")?.readonly).toBe(true)
+    expect(screen.queryByText('PV01')).not.toBeInTheDocument()
+    expect(screen.queryByText('E01')).not.toBeInTheDocument()
     expect(container.querySelector('[name=techCode]')).toBeNull()
     expect(container.querySelector('[name=fuelCode]')).toBeNull()
-  });
-
-  // review of 08.11.2026: no empty boxes when the metering point list delivered no code
-  it("an existing metering point without codes shows none, one code only that one", async () => {
-    const none = renderElement('LOCAL', {processState: 'ACTIVE', status: 'ACTIVE'} as Partial<Metering>, true)
-    await screen.findAllByText(/Zählpunkt/)
-    expect(codeField(none.container, "Technologie (Code)")).toBeNull()
-    expect(codeField(none.container, "Energieträger (Code)")).toBeNull()
-    none.unmount()
-
-    const one = renderElement('LOCAL', {processState: 'ACTIVE', status: 'ACTIVE', techCode: 'PV01'} as Partial<Metering>, true)
-    await screen.findAllByText(/Zählpunkt/)
-    expect(codeField(one.container, "Technologie (Code)")?.value).toBe('PV01')
-    expect(codeField(one.container, "Energieträger (Code)")).toBeNull()
-  });
-
-  it("a new metering point has none", async () => {
-    const {container} = renderElement('LOCAL', {})
-    await screen.findAllByText(/Zählpunkt/)
-    expect(codeField(container, "Technologie (Code)")).toBeNull()
   });
 });
