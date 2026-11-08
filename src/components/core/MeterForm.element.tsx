@@ -1,5 +1,5 @@
 import React, {ClipboardEvent, FC, useEffect, useState} from "react";
-import {IonButton, IonCol, IonGrid, IonIcon, IonList, IonRow, IonText, useIonAlert} from "@ionic/react";
+import {IonButton, IonCol, IonGrid, IonIcon, IonInput, IonList, IonRow, IonText, useIonAlert} from "@ionic/react";
 import SelectForm from "../form/SelectForm.component";
 import InputForm, {PartialChangeFunction} from "../form/InputForm.component";
 import CheckboxComponent from "../form/Checkbox.component";
@@ -38,7 +38,8 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
   const [selectedDirection, setSelectedDirection] = useState(0);
   const [withWechselrichter, setWithWechselrichter] = useState(false);
 
-  const [direction, processState, gridOperatorId] = watch(['direction', 'processState', 'gridOperatorId'])
+  const [direction, processState, gridOperatorId, techCode, fuelCode] =
+    watch(['direction', 'processState', 'gridOperatorId', 'techCode', 'fuelCode'])
 
   const isChangeable = () => {
     if (meterReadOnly === undefined) {
@@ -189,11 +190,14 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
         <InputForm name={"equipmentNumber"} label={t("equipmentNumber_label")} control={control} rules={{required: false}}
                    type="text" onChangePartial={_onChange}/>
         <InputForm name={"equipmentName"} label={t("equipmentName_label")} control={control} rules={{required: false}} type="text" onChangePartial={_onChange}/>
-        {/* codes of an existing metering point from the grid operator's metering point list, read only (platform#229) */}
-        {meterReadOnly && <>
-          <InputForm name={"techCode"} label={t("techCode_label")} control={control} type="text" protectedControl={true}/>
-          <InputForm name={"fuelCode"} label={t("fuelCode_label")} control={control} type="text" protectedControl={true}/>
-        </>}
+        {/* codes of an existing metering point from the grid operator's metering point list, read only (platform#229);
+            only when the list delivered one, in the style of the read-only fields of the EEG page */}
+        {meterReadOnly && ([["techCode_label", techCode], ["fuelCode_label", fuelCode]] as const)
+          .filter(([, code]) => !!code).map(([label, code]) => (
+            <div className="form-element" key={label}>
+              <IonInput fill="outline" labelPlacement="floating" label={t(label)} value={code} readonly={true}/>
+            </div>
+          ))}
       </IonList>
     </>
   )

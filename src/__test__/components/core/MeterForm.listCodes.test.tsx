@@ -51,7 +51,8 @@ describe("metering point details: codes of the metering point list after a save"
       r.store.dispatch(selectParticipant("p1"))
       r.store.dispatch(selectMetering(meter.meteringPoint))
     })
-    expect(screen.getByText("PV01")).toBeTruthy()
+    const code = (label: string) => (r.container.querySelector(`ion-input[label="${label}"]`) as any)?.value
+    expect(code("Technologie (Code)")).toBe("PV01")
 
     const field = r.container.querySelector('ion-input[name="equipmentName"]') as any
     field.value = "Wärmepumpe"
@@ -61,7 +62,7 @@ describe("metering point details: codes of the metering point list after a save"
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(fetchMock.mock.calls[0][0]).toMatch(/\/meteringpoint\/p1\/update\//)
-    expect(screen.getByText("PV01")).toBeTruthy()
-    expect(screen.getByText("E01")).toBeTruthy()
+    expect(code("Technologie (Code)")).toBe("PV01")
+    expect(code("Energieträger (Code)")).toBe("E01")
   })
 })

@@ -28,6 +28,11 @@ this changelog highlights the changes relevant for overview and operations.
   the status list of the concept. „Außerhalb bezahlt erfassen“ stays in both states. billing is unchanged.
 
 ### Fixed
+- **Metering point details: TechCode and FuelCode only when delivered** (platform#246): the two read-only fields of
+  the metering point list (platform#229, since 1.20.0) showed as empty boxes in an own style at every existing metering
+  point. Now a field is shown only with a code, in the style of the read-only fields of the EEG page, labelled
+  „Technologie (Code)“ and „Energieträger (Code)“; the codes stay without a description (V3).
+
 - **„Zählpunkt aktivieren“ registers the metering point for the chosen member** (reported 08.11.2026): after an owner
   change one metering point number is at two members (the old one inactive). The process took the first member holding
   the number — the participant list is sorted alphabetically in place, so often the old owner — in the confirmation and
