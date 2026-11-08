@@ -9,8 +9,15 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Changed
+<<<<<<< HEAD
 - **Member list: the member number in brackets after the name** (08.11.2026), e.g. „Max Mustermann (001)“. A long name
   is cut before the number, so the number stays visible. Members without a number show the name only.
+=======
+- **„Beitrittsgebühr nachverrechnen“ only for members billed with energy already** (decision 08.11.2026): with the
+  status „offen – wird mit der ersten Energieabrechnung verrechnet“ the button is no longer shown, because the fee comes
+  with the first final energy billing anyway; it stays for „nicht verrechnet – Mitglied wurde schon abgerechnet“, as in
+  the status list of the concept. „Außerhalb bezahlt erfassen“ stays in both states. billing is unchanged.
+>>>>>>> origin/master
 
 ### Fixed
 - **„Zählpunkt aktivieren“ registers the metering point for the chosen member** (reported 08.11.2026): after an owner

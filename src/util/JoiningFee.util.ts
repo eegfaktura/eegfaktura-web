@@ -103,7 +103,9 @@ export const joiningFeeStatusText = (status: JoiningFeeStatus): string => {
 }
 
 export interface JoiningFeeActions {
-  // „Beitrittsgebühr nachverrechnen“: never charged, not paid outside, not requested yet, the member's tariff has a fee
+  // „Beitrittsgebühr nachverrechnen“: the member was billed with energy already (status „nicht verrechnet“; before that
+  // the fee comes with the first energy billing anyway, decision 08.11.2026), never charged, not paid outside, not
+  // requested yet, the member's tariff has a fee
   request: boolean
   // „Vormerkung zurücknehmen“: requested and not charged yet
   withdraw: boolean
@@ -119,7 +121,7 @@ export const joiningFeeActions = (state: JoiningFeeState | undefined, tariff?: E
   const requested = !!state?.requested
   const paid = !!state?.paidExternally
   return {
-    request: !billed && !paid && !requested && hasJoiningFee(tariff),
+    request: !!state?.energyBilled && !billed && !paid && !requested && hasJoiningFee(tariff),
     withdraw: !billed && requested,
     recordPaid: !billed && !requested && !paid,
     changePaid: !billed && paid,
