@@ -8,6 +8,10 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **Member list: the member number in brackets after the name** (08.11.2026), e.g. „Max Mustermann (001)“. A long name
+  is cut before the number, so the number stays visible. Members without a number show the name only.
+
 ### Fixed
 - **„Zählpunkt aktivieren“ registers the metering point for the chosen member** (reported 08.11.2026): after an owner
   change one metering point number is at two members (the old one inactive). The process took the first member holding
