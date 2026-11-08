@@ -13,6 +13,7 @@ import {useAccessGroups, useEegAllocation, useEegArea} from "../../store/hook/Ee
 import {useLocale} from "../../store/hook/useLocale";
 import {swapHorizontalSharp} from "ionicons/icons";
 import NumberInputForm from "../form/NumberInput.component";
+import {hasBilling, hasMultipleGridOperators} from "../../util/Area.util";
 
 interface MeterFormElementProps {
   rates: EegTariff[]
@@ -66,7 +67,7 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
   const onChangeDirection = (s: number) => {
     // setSelectedDirection(s)
     const value = s === 0 ? "CONSUMPTION" : "GENERATION"
-    setValue(`direction`, value);
+    setValue(`direction`, value, {shouldDirty: true});  // counts as input (unsaved-changes question, platform#228)
     _onChange && _onChange("direction", value)
   }
 
@@ -102,20 +103,15 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
       t("producer_tariff")
   }
 
+  // a validator that returns false leaves react-hook-form with an empty message; return the text instead
   const validatePartFactor = (value: string) => {
     const n = Number(value)
-    if (isNaN(n)) {
-      return false
-    }
-    return n <= 100 && n > 0
+    return (!isNaN(n) && n <= 100 && n > 0) || t("warnings.partition-factor_invalid")
   }
 
   const validateAllocFactor = (value: string) => {
     const n = Number(value)
-    if (isNaN(n)) {
-      return false
-    }
-    return n <= 100.0 && n > 0
+    return (!isNaN(n) && n <= 100.0 && n > 0) || t("warnings.allocation-factor_invalid")
   }
 
   return (
@@ -146,7 +142,8 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
         </IonRow>
       </IonGrid>
       <IonList>
-        <SelectForm name={"tariff_id"} label={t("tariff")} control={control} options={getRatesOption()} onChangePartial={_onChange} interfaceOptions={{header: getTarifHeaderString()}}/>
+        {/* the tariff belongs to billing: none for P2P, EVA (platform#229) */}
+        {hasBilling(area) && <SelectForm name={"tariff_id"} label={t("tariff")} control={control} options={getRatesOption()} onChangePartial={_onChange} interfaceOptions={{header: getTarifHeaderString()}}/>}
         <InputForm name={"meteringPoint"} label={t("metering")} control={control} type="text" readonly={meterReadOnly} protectedControl={meterReadOnly}
                    counter={true} maxlength={33}
                    rules={{
@@ -169,14 +166,14 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
                    onChangePartial={_onChange}
         />
         <InputForm name={"partFact"} label={t("process.partFact.label")} control={control} isNumber={true}
-                   rules={{required:t("warnings.partition-factor_missing"), validate: validatePartFactor || "Ungültiger Wert"}}
+                   rules={{required:t("warnings.partition-factor_missing"), validate: validatePartFactor}}
                    type="number" inputmode="numeric" onChangePartial={onChangePartFact} protectedControl={!isChangeable()} error={errors?.partFact}/>
         {allocationMode === 'STATIC' &&
         <InputForm name={"allocationFactor"} label={t("process.allocationFactor.label")} control={control} isNumber={true}
-                   rules={{required:t("warnings.allocation-factor_missing"), validate: validateAllocFactor || "Ungültiger Wert"}}
+                   rules={{required:t("warnings.allocation-factor_missing"), validate: validateAllocFactor}}
                    type="number" inputmode="numeric" onChangePartial={_onChange} protectedControl={!isChangeable()} error={errors?.allocationFactor}/>
         }
-        {area && area === 'BEG' && <>
+        {hasMultipleGridOperators(area) && <>
             {/* Der Netzbetreiber wird im backend aus der Zählpunktnummer ermittelt (platform#107) */}
             <InputForm name={"gridOperatorId"} label={t("grid-operator.id")} control={control} type="text" protectedControl={true}/>
             <InputForm name={"gridOperatorName"} label={t("grid-operator.name")} control={control} type="text" protectedControl={true}/>

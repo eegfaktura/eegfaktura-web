@@ -10,6 +10,7 @@ import {
   SelectedPeriod
 } from "../../models/energy.model";
 import {calcXAxisName, dayOfYearToDate} from "../../util/Helper.util";
+import {formatKwh} from "../../util/Number.util";
 import {Metering} from "../../models/meteringpoint.model";
 import {EegParticipant} from "../../models/members.model";
 import {transformMeterReportToEnergySeries} from "../../util/ReportHelper";
@@ -138,7 +139,7 @@ const MeterChartComponent: FC<MeterChartComponentProps> = ({tenant, report, acti
                   and leave an uneven gap before it.) */}
               <XAxis dataKey="name" interval="preserveStart" minTickGap={20} fontSize={10}/>
               <YAxis fontSize={10} unit={" kWh"}/>
-              <Tooltip formatter={(value) => Number(value).toFixed(3) + " kWh"}/>
+              <Tooltip formatter={(value) => formatKwh(Number(value))}/>
               <Legend/>
               <Line name="EEG" type="monotone" dataKey="distributed" stroke="#82ca9d" dot={false} strokeWidth={2}/>
               <Line name="EVU" type="monotone" dataKey="consumed" stroke="#8884d8" dot={false} strokeWidth={2}/>
@@ -159,7 +160,7 @@ const MeterChartComponent: FC<MeterChartComponentProps> = ({tenant, report, acti
               <CartesianGrid strokeDasharray="3 3"/>
               <XAxis dataKey="name"/>
               <YAxis fontSize={10} unit={" kWh"}/>
-              <Tooltip formatter={(value) => Number(value).toFixed(3) + " kWh"}/>
+              <Tooltip formatter={(value) => formatKwh(Number(value))}/>
               <Legend/>
               <Bar name="EEG" dataKey="distributed" fill="#82ca9d"/>
               <Bar name="EVU" dataKey="consumed" fill="#8884d8"/>

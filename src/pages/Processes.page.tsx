@@ -81,7 +81,8 @@ const ProcessesPage: FC = () => {
   }
 
   if (!eeg) {
-    return <EegLoadStateComponent/>
+    // the same IonPage as below (platform#237, see EegLoadState)
+    return <IonPage><EegLoadStateComponent/></IonPage>
   } else {
     return (
       <IonPage>

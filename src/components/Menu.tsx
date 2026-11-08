@@ -7,14 +7,14 @@ import {
   IonLabel,
   IonList,
   IonMenu,
-  IonMenuToggle, IonModal, IonPopover, IonSelect, IonSelectOption,
+  IonMenuToggle, IonModal, IonPopover,
   IonTitle,
-  IonToolbar, SelectCustomEvent, useIonPopover,
+  IonToolbar, useIonPopover,
 } from '@ionic/react';
 
 import {useLocation} from 'react-router-dom';
 import {
-  informationCircle, logOutOutline, newspaper,
+  informationCircle, logOutOutline, newspaper, swapHorizontalOutline,
   people, personCircle, refreshOutline, wallet, walletSharp
 } from 'ionicons/icons';
 import './Menu.css';
@@ -22,38 +22,27 @@ import React, {FC, useEffect, useRef, useState} from "react";
 import {eegAvatar, eegChartBubble, eegChatIcon, eegProcess} from "../eegIcons";
 import {useAppSelector} from "../store";
 import {eegSelector} from "../store/eeg";
-import {useAccessGroups, useTenant, useTenantDescription, useTenantSwitch} from "../store/hook/Eeg.provider";
+import {useAccessGroups, useHasBilling, useTenant, useTenantDescription} from "../store/hook/Eeg.provider";
 import {useUser} from "../store/hook/AuthProvider";
 import {AuthService} from "../service/auth.service";
 import {User} from "oidc-client-ts";
 import {useAuth} from "react-oidc-context";
 import {useLocale} from "../store/hook/useLocale";
+import TenantPicker from "./core/TenantPicker.component";
 
 // const UserDetailPopover = (logout: () => Promise<void>, user: User) =>
-const UserDetailPopover:FC<{authSvc: AuthService | undefined}> = ({authSvc}) => {
+export const UserDetailPopover:FC<{authSvc: AuthService | undefined, onPickTenant: () => void}> = ({authSvc, onPickTenant}) => {
   const {t} = useLocale("common")
   const [user, setUser] = useState<User|null>()
-  const [sortedTenants, setSortedTenants] = useState<{tenant: string, name: string}[] | undefined>(undefined)
   const tenants = useTenantDescription()
   const tenant = useTenant()
-  const switchTenant = useTenantSwitch()
+  const current = tenants?.find(o => o.tenant === tenant.tenant)
 
   useEffect(() => {
     if (authSvc) {
       authSvc?.getUser().then(u => setUser(u))
     }
   }, [authSvc]);
-
-  useEffect(() => {
-    if (tenants) {
-      setSortedTenants([...tenants].sort((a, b) => a.tenant.localeCompare(b.tenant)))
-    }
-  }, [tenants])
-
-  const onSwitchTenant = (e: SelectCustomEvent<string>) => {
-    const tenant = e.detail.value;
-    switchTenant(tenant)
-  }
 
   return (
     <IonContent className="ion-padding">
@@ -67,20 +56,19 @@ const UserDetailPopover:FC<{authSvc: AuthService | undefined}> = ({authSvc}) => 
       </IonToolbar>
         </div>
       </IonItem>
-      <IonItem lines="none">
-        <div style={{padding:'10px', width:"100%"}}>
-          <IonSelect fill="outline" label="Auswahl Gemeinschaft" labelPlacement={"floating"} className="select-box"
-                     value={tenant.tenant}
-                     onIonChange={onSwitchTenant}
-          >
-            {sortedTenants && sortedTenants.map((o, idx) => (
-                <IonSelectOption key={idx} value={o.tenant}>{o.tenant}-{o.name}</IonSelectOption>
-              )
-            )}
-          </IonSelect>
-        </div>
+      {/* the community shown now, information only; switching is the entry below (platform#241) */}
+      <IonItem lines="full">
+        <IonLabel className="ion-text-wrap">
+          <p>{t("menu.currentTenant")}</p>
+          <div style={{fontSize: "16px"}}>{current ? `${current.tenant}-${current.name}` : tenant.tenant}</div>
+        </IonLabel>
       </IonItem>
       <div style={{marginTop: "16px"}}>
+      {/* opens the community picker with a search field; the popover closes on this click */}
+      {(tenants?.length ?? 0) > 1 && <IonItem button onClick={onPickTenant} lines="full">
+        <IonIcon aria-hidden="true" icon={swapHorizontalOutline} slot="start" size="small"></IonIcon>
+        <IonLabel style={{fontSize: "16px"}}>{t("menu.switchTenant")}</IonLabel>
+      </IonItem>}
       <IonItem button onClick={() => authSvc?.redirectToUserAccount()} lines="full">
         <IonIcon aria-hidden="true" icon={refreshOutline} slot="start" size="small"></IonIcon>
         <IonLabel style={{fontSize: "16px"}}>{t("menu.changePassword")}</IonLabel>
@@ -110,6 +98,7 @@ const Menu: FC = () => {
   const {isAdmin} = useAccessGroups()
   const {t} = useLocale("common")
   const authSvr = useUser()
+  const billing = useHasBilling()
 
   // const [userDetail, dismissUserDetail] = useIonPopover(<UserDetailPopover authSvc={authSvr} />, {
   //   onDismiss: (data: any, role: string) => dismissUserDetail(data, role),
@@ -117,6 +106,7 @@ const Menu: FC = () => {
 
   const popover = useRef<HTMLIonPopoverElement>(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [tenantPickerOpen, setTenantPickerOpen] = useState(false);
   const openPopover = (e: any) => {
     popover.current!.event = e;
     setPopoverOpen(true);
@@ -141,12 +131,13 @@ const Menu: FC = () => {
       iosIcon: people,
       mdIcon: people
     },
-    {
+    // no tariffs without billing (P2P, EVA; platform#229), for admins and members
+    ...(billing ? [{
       title: t("menu.rates"),
       url: '/page/rates',
       iosIcon: wallet,
       mdIcon: walletSharp
-    },
+    }] : []),
     // {
     //   title: 'Profil',
     //   url: '/page/profiles',
@@ -213,8 +204,9 @@ const Menu: FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonPopover className="user-popup-menu" ref={popover} isOpen={popoverOpen} onDidDismiss={() => setPopoverOpen(false)} side="bottom" alignment="end" size="auto" dismissOnSelect={true} reference="trigger">
-        <UserDetailPopover authSvc={authSvr} />
+        <UserDetailPopover authSvc={authSvr} onPickTenant={() => setTenantPickerOpen(true)} />
       </IonPopover>
+      <TenantPicker isOpen={tenantPickerOpen} onClose={() => setTenantPickerOpen(false)}/>
       <IonContent>
         {/* the notifications come from an admin-only backend call (261024-ca19) */}
         {isAdmin() && <IonItem button lines="full" routerLink={"/page/notifications"} routerDirection="none">

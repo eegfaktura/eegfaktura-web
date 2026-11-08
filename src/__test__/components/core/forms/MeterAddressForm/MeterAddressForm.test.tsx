@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {renderWithReactHookForm} from "../../../../test-utils";
-import {screen, waitFor} from "@testing-library/react";
+import {act, fireEvent, render, screen, waitFor} from "@testing-library/react";
 import React from "react";
+import {FormProvider, useForm} from "react-hook-form";
 import MeterAddressFormElement from "../../../../../components/core/forms/MeterAddressForm/MeterAddressForm.element";
 import {EegParticipant} from "../../../../../models/members.model";
 import {AccountInfo, Address, Contact, Optionals} from "../../../../../models/eeg.model";
@@ -52,7 +53,7 @@ const findByName = (container: HTMLElement | null, value: string) => {
 const renderElement = (online: boolean, admin: boolean, owner: boolean, status: string = 'ACTIVE', isEditable?: boolean) => {
   return renderWithReactHookForm(
     <EegContext.Provider value={ctxValue(admin, owner, false)} >
-      <MeterAddressFormElement participant={defaultParticipant} isOnline={online} isEditable={isEditable} showActivationMode={false}/>
+      <MeterAddressFormElement participant={defaultParticipant} isOnline={online} isEditable={isEditable}/>
     </EegContext.Provider>, { defaultValues: {
         status: status,
         processState: status,
@@ -119,5 +120,24 @@ describe("<MeterAddressForm />", () => {
       const streetNumber = findByName(container, "street")
       expect(streetNumber).toHaveValue("Sonnenweg")
     })
+  });
+
+  it.each(["8a+b", "8.1", "8,10", "8&10", "12/3"])("accepts the house number %s", async (streetNumber) => {
+    const Form = () => {
+      const methods = useForm({defaultValues: {streetNumber}})
+      return (
+        <EegContext.Provider value={ctxValue(true, false, false)}>
+          <FormProvider {...methods}>
+            <MeterAddressFormElement participant={defaultParticipant} isOnline={true}/>
+            <button onClick={() => methods.trigger("streetNumber")}>check</button>
+          </FormProvider>
+        </EegContext.Provider>
+      )
+    }
+    const {container} = render(<Form/>)
+
+    await act(async () => fireEvent.click(screen.getByText("check")))
+
+    expect(container.querySelector(".error-line")).toBeNull()
   });
 })

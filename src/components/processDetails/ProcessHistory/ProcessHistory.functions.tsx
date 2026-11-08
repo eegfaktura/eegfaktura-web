@@ -4,9 +4,10 @@ import {IonIcon} from "@ionic/react";
 import {chevronForwardOutline} from "ionicons/icons";
 import {GroupBy} from "../../../util/Helper.util";
 import moment from "moment";
+import {formatDate} from "../../../util/DateFormat.util";
 
 // Dates and times of the process history in German format (platform#224), in local time like the other dates of the app.
-export const formatHistoryDate = (d: Date) => moment(d).format("DD.MM.YYYY")
+export const formatHistoryDate = (d: Date) => formatDate(d)
 export const formatHistoryTime = (d: Date) => moment(d).format("HH:mm:ss")
 
 const renderTableWithConversationId = (headers: string[], e: EdaHistory[]) => {

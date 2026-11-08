@@ -1,10 +1,23 @@
 {
+  "saveStatus": {
+    "saved": "Alle Änderungen gespeichert",
+    "saving": "Wird gespeichert …",
+    "failed": "Nicht gespeichert",
+    "retry": "erneut versuchen",
+    "invalid": "Nicht gespeichert – bitte die markierten Felder prüfen"
+  },
   "rateGroupMember": "Mitgliedstarife",
   "rateGroupProducer": "Erzeugertarife",
   "rateGroupConsumer": "Verbrauchertarife",
   "rateGroupOther": "Sonstige Tarife",
   "rateSearchPlaceholder": "Tarif suchen",
   "rateSearchEmpty": "Kein Tarif gefunden.",
+  "tenantPickerTitle": "Auswahl Gemeinschaft",
+  "tenantPickerClose": "Schließen",
+  "tenantPickerCurrent": "aktuelle Gemeinschaft",
+  "tenantSearchPlaceholder": "Gemeinschaft suchen",
+  "tenantSearchEmpty": "Keine Gemeinschaft gefunden.",
+  "no_billing": "Für Peer-to-Peer und Eigenversorgung ist in eegfaktura keine Abrechnung vorgesehen.",
   "firstname": "Vorname",
   "lastname": "Nachname",
   "company-name": "Firmenname",
@@ -160,7 +173,17 @@
     "business-nr": "Firmennummer",
     "vat-number": "Umsatzsteuer ID",
     "tax-number": "Steuernummer",
-    "allocation-mode": "Verteilung"
+    "allocation-mode": "Verteilung",
+    "area": "Modell",
+    "zone-level": "Nahebereich",
+    "zone-level_1": "Haupt-/Steigleitung",
+    "zone-level_2": "Standortbereich – gemeinsame Sammelschiene",
+    "zone-level_3": "Lokalbereich – gleiche Trafostation",
+    "zone-level_4": "Regionalbereich – gleiches Umspannwerk eines Netzbetreibers",
+    "zone-level_5": "Regionalbereich – gleiches Umspannwerk verschiedener Netzbetreiber",
+    "zone-level_6": "Gebotszone – mehrere Umspannwerke eines Netzbetreibers",
+    "zone-level_7": "Gebotszone – mehrere Umspannwerke verschiedener Netzbetreiber",
+    "zone-level_unknown": "unbekannt"
   },
   "warnings": {
     "email_missing": "E-Mail-Adresse fehlt!",
@@ -179,6 +202,8 @@
     "account-debit_type_missing": "Einzugsart fehlt!",
     "partition-factor_missing": "Teilnahmefaktor fehlt!",
     "allocation-factor_missing": "Verteilungsfaktor fehlt!",
+    "partition-factor_invalid": "Teilnahmefaktor muss größer als 0 und höchstens 100 sein!",
+    "allocation-factor_invalid": "Verteilungsfaktor muss größer als 0 und höchstens 100 sein!",
     "metering_missing_msg": "Zählpunktnummer fehlt!",
     "fee_missing": "Gebühr fehlt!",
     "vat_missing": "USt. fehlt!",
@@ -216,7 +241,8 @@
       "title": "Teilnehmerliste anfordern",
       "desc": "Anfordern der Teilnehmer einer EEG.",
       "info": "Nachdem der Antrag an den Netzbetreiber übermittelt wurde, wird automatisch eine E-Mail an den zuständigen Verantwortlichen der EEG gesendet, sobald eine Antwort vorliegt. Die Bearbeitung dieses Vorgangs kann je nach Netzbetreiber einige Zeit in Anspruch nehmen und erfolgt daher asynchron.",
-      "submit": "Zählpunktliste anfordern"
+      "submit": "Zählpunktliste anfordern",
+      "noOperator": "Für diese Gemeinschaft ist kein Netzbetreiber hinterlegt. Die Zählpunktliste kann daher nicht angefordert werden."
     },
     "activateMeter": {
       "title": "Zählpunkt aktivieren",
@@ -248,6 +274,8 @@
     "bank-data": "Bankdaten"
   },
   "menu": {
+    "currentTenant": "Aktuelle Gemeinschaft",
+    "switchTenant": "Gemeinschaft wechseln",
     "changePassword": "Passwort ändern",
     "logout": "Abmelden",
     "dashboard": "Dashboard",
@@ -309,6 +337,11 @@
     "sort_city": "Ort",
     "cancel": "Abbrechen",
     "apply": "Übernehmen"
+  },
+  "dashboardCharts": {
+    "load_failed": "Die Diagrammdaten konnten nicht geladen werden.",
+    "no_data": "Für diesen Zeitraum liegen keine Diagrammdaten vor.",
+    "retry": "Erneut versuchen"
   },
   "mailtemplates": {
     "header": "E-Mail-Texte",

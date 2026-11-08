@@ -2,7 +2,7 @@ import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import {MailTemplateError, MailTemplateService} from "../../service/mailtemplate.service";
 import {AuthService} from "../../service/auth.service";
 
-const authService = {getToken: async () => "token"} as unknown as AuthService;
+const authService = {lookupToken: async () => "token"} as unknown as AuthService;
 const fetchMock = vi.fn();
 
 const reply = (body: any, status = 200) =>
@@ -50,6 +50,13 @@ describe("MailTemplateService", () => {
       const r = await new MailTemplateService(authService).fetchList("RC100100")
       expect(r.items).toEqual([])
       expect(r.failed).toEqual(["backend", "billing"])
+    })
+
+    it("does not ask billing for a community without billing (platform#229)", async () => {
+      route(() => reply([summary("zp-active")]), () => reply([summary("billing-document")]))
+      const r = await new MailTemplateService(authService).fetchList("PP100100", false)
+      expect(r.items.map(i => `${i.source}:${i.key}`)).toEqual(["backend:zp-active"])
+      expect(fetchMock.mock.calls.map(c => c[0]).some((u: string) => u.endsWith("/api/mailtemplates"))).toBe(false)
     })
   })
 

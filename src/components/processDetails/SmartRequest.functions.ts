@@ -1,4 +1,5 @@
 import moment from "moment";
+import {formatDate} from "../../util/DateFormat.util";
 import {Metering} from "../../models/meteringpoint.model";
 import {BillingCheckResponse} from "../../models/billingCheck.model";
 import {SyncEnergyMeter, SyncEnergyResult, SyncEnergySkipped} from "../../service/eeg.service";
@@ -116,7 +117,7 @@ export const NOTHING_BEFORE_TODAY = "Für heute und spätere Tage gibt es noch k
 
 // the note for a period cut at yesterday
 export const cappedNote = (end: Date) =>
-  `Geprüft wird bis gestern (${moment(end).format("DD.MM.YYYY")}), für heute gibt es noch keine Energiedaten.`
+  `Geprüft wird bis gestern (${formatDate(end)}), für heute gibt es noch keine Energiedaten.`
 
 const metersDative = (n: number) => n === 1 ? "1 Zählpunkt" : `${count(n)} Zählpunkten`
 const days = (n: number) => n === 1 ? "1 Tag" : `${count(n)} Tage`
@@ -150,7 +151,7 @@ export const smartConfirmation = (p: SmartPlan, cappedTo?: Date): SmartConfirmat
   }
   if (p.checked === 0) {
     // nothing could be checked (energystore failed or timed out): the expensive path, every metering point in full
-    const until = cappedTo ? ` bis gestern (${moment(cappedTo).format("DD.MM.YYYY")})` : ""
+    const until = cappedTo ? ` bis gestern (${formatDate(cappedTo)})` : ""
     parts.push(`Der Datenstand konnte nicht geprüft werden – es ${n === 1 ? "würde 1 Zählpunkt" : `würden alle ${meterCount(n)}`} `
       + `für den ganzen Zeitraum${until} angefordert. Trotzdem anfordern?`)
   } else {

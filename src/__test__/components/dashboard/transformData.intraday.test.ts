@@ -1,3 +1,4 @@
+// @vitest-environment node
 import {describe, expect, it} from "vitest";
 import {transformData} from "../../../components/dashboard/dashboard.functions";
 import {calcXAxisHourNameV2} from "../../../components/dashboard/LoadCurveReport.functions";

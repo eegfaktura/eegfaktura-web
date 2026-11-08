@@ -1,6 +1,7 @@
 import {ReportNamedData, SelectedPeriod} from "../../models/energy.model";
 import {CpPeriodType} from "../../models/reports.model";
 import {dateToDayOfYear, dayOfYearToDate, splitDate} from "../../util/Helper.util";
+import {formatDate} from "../../util/DateFormat.util";
 
 // One quarter hour of the whole community (sums over all metering points of a stored line).
 export type QuarterHourValues = {
@@ -38,7 +39,7 @@ const timeLabel = (ts: number, withMinutes: boolean) => {
 
 export const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
 
-export const formatDay = (d: Date) => `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`
+export const formatDay = (d: Date) => formatDate(d)
 
 // Request window for the load-curve report of one day. energystore rounds start to 00:00 and end to 23:45 of
 // their calendar days; an end on the next day's 00:00 would add the whole next day.

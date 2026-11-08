@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import {act, render, screen} from "@testing-library/react";
+import {act, render, screen, waitFor} from "@testing-library/react";
 import React from "react";
 import {MemoryRouter, useHistory} from "react-router";
 import {Route} from "react-router-dom";
@@ -63,12 +63,16 @@ describe("UnsavedChangesGuard (261024-ca18)", () => {
     </IonRouterOutlet></IonReactRouter></IonApp>)
     const click = async (text: string) => {
       await act(async () => { (await screen.findByText(text)).click() })
-      await act(async () => { await new Promise(r => setTimeout(r, 100)) })
     }
     await click("nach /b")
+    // the URL changes first; the outlet tells the page it leaves (ionViewWillLeave) only later, in its transition, and
+    // hides the page after it: wait for that, a click before it would still count as on the form (eegfaktura-dev#56 #17)
+    await waitFor(() => expect(screen.getByText("Formular").closest(".ion-page")!.classList).toContain("ion-page-hidden"))
+    expect(window.location.pathname).toBe("/b")
     expect(confirm).toHaveBeenCalledTimes(1)
     await click("nach /c")
-    expect(window.location.pathname).toBe("/c")
+    // the guard asks before the navigation: once the URL is /c, a question would already have come
+    await waitFor(() => expect(window.location.pathname).toBe("/c"))
     expect(confirm).toHaveBeenCalledTimes(1)
     confirm.mockRestore()
   })

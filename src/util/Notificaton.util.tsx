@@ -46,7 +46,7 @@ export function buildNotificationText(type: string, process: string, notificatio
             der DATENFREIGABE</strong> bestätigt.</p>
         case 'ABLEHNUNG_CCMS':
           return <p>Für die Zählpunkte <strong>{n.message.meteringPoint}</strong> wurde die Anfrage auf <strong>AUFHEBUNG
-            der DATENFREIGABE</strong> abgelehnt.</p>
+            der DATENFREIGABE</strong> abgelehnt{reasonSuffix(n.message.responseCode)}.</p>
         case 'ABLEHNUNG_CPF':
           return buildPartFactRejectionText(n.message.meteringPoint, n.message.responseCode)
         case 'ANFORDERUNG_CPF':
@@ -60,15 +60,22 @@ export function buildNotificationText(type: string, process: string, notificatio
         case 'Mail': {
           // Notices about the community's customised mails (E_MAIL_TEMPLATE: default sent instead,
           // I_MAIL_TEMPLATE_DEFAULT: new default available) carry a complete text; the mail was sent.
-          // Other entries are failed mails (z. B. ungültige Empfänger-Adresse). A notification may hold both.
+          // W_MAIL_UNCONFIRMED: the mail server did not answer in time, the mail was most likely sent.
+          // Other entries are failed mails (z. B. ungültige Empfänger-Adresse). A notification may hold several kinds.
           const all = n.message.logMessages ?? []
           const isTemplateNotice = (m: { message_code: string }) => (m.message_code ?? "").includes("_MAIL_TEMPLATE")
+          const isUnconfirmed = (m: { message_code: string }) => m.message_code === "W_MAIL_UNCONFIRMED"
           const notices = all.filter(isTemplateNotice)
-          const failures = all.filter(m => !isTemplateNotice(m))
+          const unconfirmed = all.filter(isUnconfirmed)
+          const failures = all.filter(m => !isTemplateNotice(m) && !isUnconfirmed(m))
           return <>
             {notices.length > 0 &&
               <p><strong><u>E-Mail-Texte:</u></strong> {notices.map(m => m.message).join(" ")}</p>}
-            {(failures.length > 0 || notices.length === 0) &&
+            {unconfirmed.length > 0 &&
+              <p><strong><u>Mailversand nicht bestätigt:</u></strong> {
+                unconfirmed.map(m => `${m.metering_point} — ${m.message}`).join("; ")
+              }</p>}
+            {(failures.length > 0 || (notices.length === 0 && unconfirmed.length === 0)) &&
               <p><strong><u>Mailversand fehlgeschlagen:</u></strong> {
                 failures.map(m => `${m.metering_point} — ${m.message}`).join("; ")
               }</p>}
@@ -91,6 +98,13 @@ export function buildNotificationText(type: string, process: string, notificatio
   return ""
 }
 
+// The backend stores the reason codes as text (unknown codes as the number). Returns " (A, B)", or "" without a code
+// ("-" for a missing field, "" or an empty list).
+function reasonSuffix(responseCode: string | string[]): string {
+  const reason = Array.isArray(responseCode) ? responseCode.join(", ") : responseCode
+  return reason && reason !== "-" ? ` (${reason})` : ""
+}
+
 // The backend stores the rejection without metering points ([]; for a list it adds empty entries) but with the
 // reason as text; „Prozessdatum falsch“ (code 82) means the request reached the grid operator outside the time
 // window (see PartFactWindow.util).
@@ -103,7 +117,7 @@ function buildPartFactRejectionText(meteringPoint: string | string[], responseCo
         ? <>Für die Zählpunkte <strong>{meters}</strong> wurde die Anfrage auf <strong>ÄNDERUNG
           TEILNAHMEFAKTOR</strong> abgelehnt</>
         : <>Die Anfrage auf <strong>ÄNDERUNG TEILNAHMEFAKTOR</strong> wurde abgelehnt</>}
-      {reason !== "-" ? <> ({reason})</> : null}.
+      {reasonSuffix(responseCode)}.
       {reason.includes("Prozessdatum falsch") && <> Der Netzbetreiber nimmt Änderungen nur zwischen
         {PARTFACT_WINDOW_TEXT} an. Bitte fordere die Änderung in dieser Zeit erneut an.</>}
     </p>

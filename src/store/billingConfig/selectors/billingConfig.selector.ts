@@ -11,12 +11,6 @@ export const billingConfigSelector = createSelector(
     }
 );
 
-export const billingConfigIsFetchingSelector = createSelector (
-    featureStateSelector, (billingConfigState) => {
-        return billingConfigState.isFetching;
-    }
-);
-
 export const billingConfigErrorSelector = createSelector (
     featureStateSelector, (billingConfigState) => {
         return billingConfigState.errorMessage;

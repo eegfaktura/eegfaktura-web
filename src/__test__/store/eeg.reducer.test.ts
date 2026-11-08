@@ -1,7 +1,8 @@
 import {describe, expect, it} from "vitest";
 import {reducer} from "../../store/eeg/reducers/eeg.reducer";
-import {fetchEegModel, updateEegModel} from "../../store/eeg/actions/eeg.action";
+import {eegChanged, fetchEegModel, updateEegModel} from "../../store/eeg/actions/eeg.action";
 import {initialState} from "../../store/eeg/states/eeg.state";
+import {Eeg} from "../../models/eeg.model";
 
 const saveFailed = (message: string) =>
   reducer(initialState, updateEegModel.rejected(new Error(message), "req", {tenant: "TE100200", eeg: {}}))
@@ -26,5 +27,14 @@ describe("eeg reducer: error texts (261024-ca7)", () => {
   it("an unknown load error shows a German text instead of the raw i18n key", () => {
     expect(loadFailed("Failed to fetch").error?.message)
       .toBe("Die EEG-Daten konnten nicht geladen werden. (Failed to fetch)")
+  })
+})
+
+describe("eeg reducer: interval change (platform#230)", () => {
+  it("takes the EEG the backend returned after the change", () => {
+    const loaded = reducer(initialState, fetchEegModel.fulfilled({eeg: {id: "TE100200", name: "EEG", settlementInterval: "MONTHLY"} as Eeg}, "req", {tenant: "TE100200"}))
+    const changed = reducer(loaded, eegChanged({tenant: "TE100200", eeg: {id: "TE100200", name: "EEG", settlementInterval: "QUARTER"} as Eeg}))
+    expect(changed.entities["TE100200"].settlementInterval).toBe("QUARTER")
+    expect(changed.entities["TE100200"].name).toBe("EEG")
   })
 })

@@ -2,9 +2,10 @@ import React, {FC} from "react";
 import {IonButton, IonIcon} from "@ionic/react";
 import {chevronDown, chevronForward} from "ionicons/icons";
 import {AmountSum, BillingTotals, REVERSE_CHARGE_VAT_PERCENT, SalesTaxation} from "./BillingTotals.functions";
+import {formatDecimal2} from "../../util/Number.util";
 
-// "+ 0" turns -0 into 0, so a total that rounds to zero does not show as "-0,00".
-export const euro = (v: number) => (v + 0).toLocaleString("de-AT", {minimumFractionDigits: 2, maximumFractionDigits: 2})
+// formatDecimal2 turns -0 into 0, so a total that rounds to zero does not show as "-0,00".
+export const euro = (v: number) => formatDecimal2(v)
 
 const cell: React.CSSProperties = {padding: "2px 6px", textAlign: "right", whiteSpace: "nowrap"}
 

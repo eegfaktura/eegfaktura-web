@@ -1,5 +1,4 @@
 import BaseService, {API_API_SERVER} from "./base.service";
-import {authKeycloak} from "../keycloak";
 import {EegParticipant} from "../models/members.model";
 import {AuthService} from "./auth.service";
 import {SelectedPeriod} from "../models/energy.model";

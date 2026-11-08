@@ -1,5 +1,6 @@
 import {describe, expect, it, vi} from "vitest";
-import {fireEvent, screen, waitFor} from "@testing-library/react";
+import {act, fireEvent, screen, waitFor} from "@testing-library/react";
+import {fetchEegModel} from "../../store/eeg";
 import React from "react";
 import "../../util/I18n";
 import {renderWithProviders} from "../test-utils";
@@ -19,8 +20,10 @@ const item = (key: string, name: string) => ({
   key, name, description: "", customized: false, defaultChanged: false, source: "backend" as const,
 })
 
-const page = (tenant: string) => (
-  <EegContext.Provider value={{tenant, isAdmin: () => true} as unknown as EegState}>
+// the list waits for the community's type (platform#229); null: the community is not loaded
+const page = (tenant: string, area: string | null = "LOCAL") => (
+  <EegContext.Provider value={{tenant, eeg: area === null ? undefined : {area}, isAdmin: () => true,
+    refresh: () => {}} as unknown as EegState}>
     <MailTemplatesPage/>
   </EegContext.Provider>
 )
@@ -89,5 +92,32 @@ describe("MailTemplatesPage", () => {
       .toEqual([["Standard", "medium"], ["Eigener Text", "success"]])
     expect(screen.getByText(/^Angepasst \(am 22\.10\.2026 [0-9:]+ von admin\)$/)).toBeTruthy()
     expect(screen.queryAllByText(/Angepasst/)).toHaveLength(1)
+  })
+
+  // platform#229: P2P and EVA have no billing, so billing is not asked for its mail
+  it("asks billing only for a community with billing, once its type is known", async () => {
+    const fetchList = vi.fn().mockResolvedValue({items: [item("zp-active", "Zählpunkt aktiv")], failed: []})
+    Api.mailTemplateService = {fetchList} as unknown as typeof Api.mailTemplateService
+
+    const {rerender} = renderWithProviders(page("PP100100", null))
+    await new Promise(r => setTimeout(r, 0))
+    expect(fetchList).not.toHaveBeenCalled()
+
+    rerender(page("PP100100", "P2P"))
+    await waitFor(() => expect(screen.getByText("Zählpunkt aktiv")).toBeTruthy())
+    expect(fetchList.mock.calls).toEqual([["PP100100", false]])
+
+    rerender(page("RC100100", "LOCAL"))
+    await waitFor(() => expect(fetchList).toHaveBeenCalledTimes(2))
+    expect(fetchList.mock.calls[1]).toEqual(["RC100100", true])
+  })
+
+  it("after a failed load of the community shows the load error with a retry instead of waiting", async () => {
+    const fetchList = vi.fn()
+    Api.mailTemplateService = {fetchList} as unknown as typeof Api.mailTemplateService
+    const r = renderWithProviders(page("RC100100", null))
+    act(() => { r.store.dispatch(fetchEegModel.rejected(new Error("Bad Gateway"), "req", {tenant: "RC100100"})) })
+    expect(screen.getByText("Erneut versuchen")).toBeTruthy()
+    expect(fetchList).not.toHaveBeenCalled()
   })
 })

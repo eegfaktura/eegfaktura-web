@@ -15,7 +15,6 @@ import {
   updateMeteringPointPartFact, updateParticipant, updateParticipantPartial
 } from "./participant";
 import {fetchEnergyReportV2, meteringEnergyGroup11} from "./energy";
-import {Metering} from "../models/meteringpoint.model";
 import {ErrorState, setErrorState} from "./eeg";
 import i18next from '../util/I18n'
 import {fetchRatesModel, saveNewRate} from "./rate";
@@ -126,13 +125,4 @@ export const activeMeterEnergyArray = createSelector(
   (participants, report) => participants.flatMap(p => p.meters.map((m) => {
     return { meter: m, utilization: report[p.id]?.[m.meteringPoint] as number | undefined }
   }))
-)
-
-export const activeMeterEnergyGroup = createSelector(
-  activeParticipantsSelector1,
-  meteringEnergyGroup11,
-  (participants, report) => participants.flatMap(p => p.meters.map(m => ({p, m}))).reduce((out, {p, m}) => {
-    out[m.meteringPoint] = {m: m, utilization: report[p.id]?.[m.meteringPoint]}
-    return out
-  }, {} as Record<string, {m: Metering, utilization: number | undefined}>)
 )

@@ -1,29 +1,33 @@
-import React, {FC, useContext, useEffect, useState} from "react";
+import React, {FC, useContext, useEffect, useRef, useState} from "react";
 import {
   IonButton,
   IonCard,
   IonContent,
-  IonPage, IonSelect, IonSelectOption,
-  SelectChangeEventDetail, SelectCustomEvent
+  IonInput,
+  IonModal,
+  IonPage,
+  useIonToast
 } from "@ionic/react";
 import InputFormComponent from "../components/form/InputForm.component";
 import {useAppDispatch, useAppSelector} from "../store";
-import {eegSelector, selectedTenant, selectTenant, updateEegModel} from "../store/eeg";
+import {eegChanged, eegSelector, selectedTenant, selectTenant, updateEegModel} from "../store/eeg";
 import {useForm} from "react-hook-form";
 import SelectForm from "../components/form/SelectForm.component";
 
 import "./Eeg.page.scss"
-import {useTenants} from "../store/hook/AuthProvider";
-import {IonSelectCustomEvent} from "@ionic/core/dist/types/components";
-import {useAccessGroups, useTenant, useTenantSwitch} from "../store/hook/Eeg.provider";
+import {useAccessGroups, useHasBilling, useTenant} from "../store/hook/Eeg.provider";
+import {areaLabel, zoneLevelLabel} from "../util/Area.util";
 import EegBillingConfigCardComponent from "../components/EegBillingConfigCard.component";
-import {AccountInfo, Address, Contact, Eeg, Optionals} from "../models/eeg.model";
+import {AccountInfo, Address, Contact, Eeg, Optionals, SettlementIntervalResult} from "../models/eeg.model";
 import {IbanInputForm} from "../components/form/IbanInputForm";
 import {PhoneInputForm} from "../components/form/PhoneInputForm";
 import {useLocale} from "../store/hook/useLocale";
 import {isValidEmailList} from "../util/EmailAddress.util";
 import EegLoadStateComponent from "../components/EegLoadState.component";
 import MenuHeaderComponent from "../components/core/MenuHeader.component";
+import SettlementIntervalChangeDialog from "../components/dialogs/SettlementIntervalChange.dialog";
+import {afterIntervalChange, SETTLEMENT_INTERVALS} from "../util/SettlementInterval.util";
+import {setSelectedPeriod} from "../store/energy";
 
 
 const EMPTY_EEG_ENTITY = {
@@ -46,7 +50,7 @@ const EegPage: FC = () => {
   const dispatcher = useAppDispatch();
 
   const {isAdmin} = useAccessGroups()
-  const switchTenant = useTenantSwitch()
+  const billing = useHasBilling()
 
   const {handleSubmit, setValue, reset, control, formState: {errors, isDirty, dirtyFields}} =
     useForm({
@@ -54,13 +58,14 @@ const EegPage: FC = () => {
       values: eeg,
       mode: "all",
     })
-  const [tenantsState, setTenantsState] = useState<string[]>([])
-  const tenants = useTenants()
-
-  useEffect(() => {
-    // setTenantState(tenant);
-    setTenantsState(tenants.map(t => t.toUpperCase()).sort((a, b) => a.localeCompare(b)))
-  }, [tenants])
+  // the interval chosen in the select, open in the change dialog (platform#230)
+  const [pendingInterval, setPendingInterval] = useState<Eeg["settlementInterval"]>()
+  // no closing by backdrop or Escape while the change is saved: its result must be seen
+  const [savingInterval, setSavingInterval] = useState(false)
+  const [toaster] = useIonToast()
+  // the latest EEG for the dialog's dismiss handler, which may run after the store has the changed EEG
+  const eegRef = useRef(eeg)
+  eegRef.current = eeg
 
   useEffect(() => {
     if (!eeg) {
@@ -70,23 +75,35 @@ const EegPage: FC = () => {
     }
   }, [eeg]);
 
-  const onSwitchTenant = (e: SelectCustomEvent<string>) => {
-    const tenant = e.detail.value;
-    switchTenant(tenant)
-  }
-
   const onChangeField = (mapper: string) => (name: string, value: any) => {
     dispatcher(updateEegModel({
       tenant, eeg: {[mapper]: value}
     }))
   }
 
-  const onChangeValue = (property: string) => (e: IonSelectCustomEvent<SelectChangeEventDetail>) => {
-    dispatcher(updateEegModel({tenant, eeg: {[property]: e.detail.value}}))
+  // platform#230: choosing an interval opens the change dialog, the generic save does not take it
+  // (onChangePartial, not onIonChange: the form keeps the choice, so a cancel can set the stored value back)
+  const onChangeInterval = (name: string, value: Eeg["settlementInterval"]) => {
+    if (value && value !== eegRef.current?.settlementInterval) setPendingInterval(value)
+  }
+
+  const onIntervalDone = (result?: SettlementIntervalResult) => {
+    setPendingInterval(undefined)
+    setSavingInterval(false)
+    if (result?.eeg) {
+      dispatcher(eegChanged({tenant, eeg: result.eeg}))
+      const {period, message} = afterIntervalChange(result)
+      dispatcher(setSelectedPeriod(period))
+      toaster({message, duration: 5000, position: "bottom"})
+    } else {
+      // cancelled: the select shows the stored interval again
+      setValue("settlementInterval", eegRef.current?.settlementInterval ?? "MONTHLY")
+    }
   }
 
   if (!eeg) {
-    return <EegLoadStateComponent/>
+    // the same IonPage as below (platform#237, see EegLoadState)
+    return <IonPage><EegLoadStateComponent/></IonPage>
   }
 
   return (
@@ -98,36 +115,20 @@ const EegPage: FC = () => {
 
             <div style={{display: "flex", flexDirection: "column", flexGrow: "1"}}>
               <div className={"eeg-property-card"}>
-                <div className={"header"}>Einstellungen</div>
-                <IonCard color="eeglight">
-                  <div className="form-element">
-                    {/*<IonItem fill="outline">*/}
-                    {/*<IonLabel position="floating">RC Nummer</IonLabel>*/}
-                    <IonSelect fill="outline" label="Auswahl Gemeinschaft" labelPlacement={"floating"}
-                               className="select-box"
-                               value={tenant}
-                               onIonChange={onSwitchTenant}>
-                      {tenantsState && tenantsState.map((o, idx) => (
-                          <IonSelectOption key={idx} value={o}>{o}</IonSelectOption>
-                        )
-                      )}
-                    </IonSelect>
-                    {/*</IonItem>*/}
-                  </div>
-                  {/*<form>*/}
-                  <SelectForm label={"Abrechnungszeitraum"} placeholder={"Abrechnungszeitraum"} control={control}
-                              name={"settlementInterval"} options={[
-                    {key: "MONTHLY", value: "Monatlich"},
-                    {key: "QUARTER", value: "Vierteljährlich"},
-                    {key: "BIANNUAL", value: "Halbjährlich"},
-                    {key: "ANNUAL", value: "Jährlich"},
-                  ]} onIonChange={onChangeValue("settlementInterval")} disabled={true}></SelectForm>
-                  {/*</form>*/}
-                </IonCard>
-              </div>
-              <div className={"eeg-property-card"}>
                 <div className={"header"}>{t("common-info.header")}</div>
                 <IonCard color="eeglight">
+                  {/* first in „Allgemeines“ (platform#245); the settlement interval is a billing setting: none without billing (platform#229) */}
+                  {billing && <>
+                  <SelectForm label={"Abrechnungsintervall"} placeholder={"Abrechnungsintervall"} control={control}
+                              name={"settlementInterval"} options={SETTLEMENT_INTERVALS}
+                              onChangePartial={onChangeInterval} disabled={!isAdmin()}></SelectForm>
+                  <IonModal isOpen={!!pendingInterval} backdropDismiss={!savingInterval} onDidDismiss={() => pendingInterval && onIntervalDone()}>
+                    {pendingInterval && tenant &&
+                      <SettlementIntervalChangeDialog tenant={tenant} current={eeg.settlementInterval}
+                                                      next={pendingInterval} onDone={onIntervalDone}
+                                                      onSaving={setSavingInterval}/>}
+                  </IonModal>
+                  </>}
 
                   <InputFormComponent name={"rcNumber"} label={t("common-info.ec-number")} control={control} rules={{}} type="text"
                                       readonly={true}/>
@@ -161,6 +162,16 @@ const EegPage: FC = () => {
                                       onChangePartial={onChangeField("taxNumber")}/>
                   <InputFormComponent name={"allocationMode"} label={t("common-info.allocation-mode")} control={control} rules={{}}
                                       type="text" readonly={true}/>
+                  {/* the type of the community with the short form of admin (platform#229, E7) */}
+                  <div className="form-element">
+                    <IonInput fill="outline" labelPlacement="floating" label={t("common-info.area")}
+                              value={areaLabel(eeg.area)} readonly={true}/>
+                  </div>
+                  {/* from the grid operator's metering point list, read only (platform#229) */}
+                  <div className="form-element">
+                    <IonInput fill="outline" labelPlacement="floating" label={t("common-info.zone-level")}
+                              value={zoneLevelLabel(t, eeg.ecZoneLevel)} readonly={true}/>
+                  </div>
                 </IonCard>
               </div>
               <div className={"eeg-property-card"}>
@@ -248,10 +259,12 @@ const EegPage: FC = () => {
                                       rules={{regex: /[a-zA-Z\s]*/}} type="text" readonly={!isAdmin()}
                                       onChangePartial={onChangeField("bankName")}
                                       error={errors.accountInfo?.bankName}/>
-                  <InputFormComponent name={"accountInfo.creditorId"} label={t("account.creditor-id")} control={control}
-                                      rules={{regex: /[a-zA-Z\s\-_]*/}} type="text" readonly={!isAdmin()}
-                                      onChangePartial={onChangeField("creditor_id")}
-                                      error={errors.accountInfo?.creditorId}/>
+                  {/* the creditor ID serves direct debit only: none without billing (eegfaktura-dev#56 #13) */}
+                  {billing &&
+                    <InputFormComponent name={"accountInfo.creditorId"} label={t("account.creditor-id")} control={control}
+                                        rules={{regex: /[a-zA-Z\s\-_]*/}} type="text" readonly={!isAdmin()}
+                                        onChangePartial={onChangeField("creditor_id")}
+                                        error={errors.accountInfo?.creditorId}/>}
                 </IonCard>
               </div>
               <div className={"eeg-property-card"}>
@@ -264,7 +277,7 @@ const EegPage: FC = () => {
                 </IonCard>
               </div>
 
-              <EegBillingConfigCardComponent/>
+              {billing && <EegBillingConfigCardComponent/>}
 
             </div>
           </div>

@@ -29,4 +29,51 @@ describe("buildNotificationText — Mail", () => {
     ]})}
     expect(text(n)).toBe("E-Mail-Texte: Neuer Standard.Mailversand fehlgeschlagen: AT001 — invalid address")
   })
+
+  it("shows an unconfirmed send as not confirmed, not as failed", () => {
+    const t = text(mail("WARNING", "W_MAIL_UNCONFIRMED",
+      "Zeitüberschreitung – die Mail wurde vermutlich trotzdem verschickt. Vor einem erneuten Versand bitte beim Empfänger nachfragen.", "AT001"))
+    expect(t).toBe("Mailversand nicht bestätigt: AT001 — Zeitüberschreitung – die Mail wurde vermutlich trotzdem verschickt. Vor einem erneuten Versand bitte beim Empfänger nachfragen.")
+    expect(t).not.toContain("fehlgeschlagen")
+  })
+
+  it("shows an unconfirmed send and a failed mail of the same notification separately", () => {
+    const n = {message: new Message({type: "Mail", messages: [
+      {kind: "WARNING", metering_point: "AT001", message_code: "W_MAIL_UNCONFIRMED", message: "Zeitüberschreitung."},
+      {kind: "ERROR", metering_point: "AT002", message_code: "E_MAIL", message: "invalid address"},
+    ]})}
+    expect(text(n)).toBe("Mailversand nicht bestätigt: AT001 — Zeitüberschreitung.Mailversand fehlgeschlagen: AT002 — invalid address")
+  })
+})
+
+// The backend stores the reason codes as text (eda/edaHelpers.go convertCodes2Strings), unknown codes as the number.
+describe("buildNotificationText — ABLEHNUNG_CCMS", () => {
+  const rejection = (properties: Record<string, unknown>) =>
+    ({message: new Message({type: "ABLEHNUNG_CCMS", meteringPoints: ["AT001"], ...properties})})
+  const base = "Für die Zählpunkte AT001 wurde die Anfrage auf AUFHEBUNG der DATENFREIGABE abgelehnt"
+
+  it.each([
+    "Keine Datenfreigabe vorhanden",
+    "ConsentID abgelaufen",
+    "Prozessdatum falsch",
+    "ConsentID und Zählpunkt passen nicht zusammen",
+  ])("shows the reason %s", (reason) => {
+    expect(text(rejection({responseCodes: [reason]}))).toBe(`${base} (${reason}).`)
+  })
+
+  it("shows two reasons", () => {
+    expect(text(rejection({responseCodes: ["Keine Datenfreigabe vorhanden", "ConsentID abgelaufen"]})))
+      .toBe(`${base} (Keine Datenfreigabe vorhanden, ConsentID abgelaufen).`)
+  })
+
+  it("shows the number of an unknown code", () => {
+    expect(text(rejection({responseCodes: ["123"]}))).toBe(`${base} (123).`)
+  })
+
+  it.each([
+    ["no responseCodes", {}],
+    ["empty responseCodes", {responseCodes: []}],
+  ])("keeps the text without a reason for %s", (_name, properties) => {
+    expect(text(rejection(properties))).toBe(`${base}.`)
+  })
 })

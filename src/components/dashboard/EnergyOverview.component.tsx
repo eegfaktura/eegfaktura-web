@@ -5,10 +5,11 @@ import {PieSeriesType} from "../../pages/Dashboard.page";
 import {EegTariff} from "../../models/eeg.model";
 import {selectedPeriodSelector} from "../../store/energy";
 import {getPreviousPeriod, periodDisplayString} from "../../util/Helper.util";
+import {formatKwh} from "../../util/Number.util";
 import {IonContent, IonIcon, IonPopover} from "@ionic/react";
 import {helpCircleOutline} from "ionicons/icons";
 import {Api} from "../../service";
-import {useTenant} from "../../store/hook/Eeg.provider";
+import {useHasBilling, useTenant} from "../../store/hook/Eeg.provider";
 import {TradedSummary, tradedSummary} from "./EnergyOverview.functions";
 
 interface OverviewComponentProps {
@@ -24,6 +25,7 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
   const activePeriod = useAppSelector(selectedPeriodSelector)
   // const tenant = useAppSelector(activeTenant)
   const tenant = useTenant()
+  const billing = useHasBilling()
 
   // const [producedEnergy, setProducedEnergy] = useState<number>(0)
   // const [consumedEnergy, setConsumedEnergy] = useState<number>(0)
@@ -70,7 +72,7 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
   }
 
   const renderKWH = (kwh:number): string => {
-    return `${kwh.toFixed(3)} kWh`
+    return formatKwh(kwh)
   }
 
   const getWidth = (basis: number, value: number): number => {
@@ -159,7 +161,9 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
           </div>
           <div style={{fontSize: "10px"}}>*) vorherige Periode{activePeriod ? `: ${periodDisplayString(getPreviousPeriod(activePeriod))}` : ""}</div>
         </div>
-        <div style={{display: "flex", flexFlow: "column", height: "100%", margin: "8px", flex: "1", flexBasis: "30%"}}>
+        {/* bought and sold count only metering points with a tariff, and the hint names those without one: none
+            without billing (P2P, EVA; platform#229) */}
+        {billing && <div style={{display: "flex", flexFlow: "column", height: "100%", margin: "8px", flex: "1", flexBasis: "30%"}}>
           <div style={{display: "flex", flexFlow: "column", height: "100%", background: "#EAE7D9", padding: "8px"}}>
             <div style={{borderBottom: "1.5px solid #368060"}}>Energiemengen:</div>
             <div style={{
@@ -197,7 +201,7 @@ const EnergyOverviewComponent: FC<OverviewComponentProps> = ({consumed, produced
             </div>
 
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   )

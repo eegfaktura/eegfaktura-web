@@ -1,4 +1,5 @@
 import moment from "moment";
+import {formatNumber} from "../../util/Number.util";
 import {EegParticipant} from "../../models/members.model";
 import {EegTariff} from "../../models/eeg.model";
 import {MeterDirectionType, Metering} from "../../models/meteringpoint.model";
@@ -49,7 +50,7 @@ const BALANCE_TOLERANCE_KWH = 0.01
 // The difference for the dialog: three decimals, cut off rather than rounded, so a green difference never reads
 // 0,01 (0,0097 -> 0,009) and a yellow one never reads 0. Float noise is rounded away first (0,006, not 0,00599...).
 export const kWhDiff = (v: number) =>
-  `${(Math.trunc(Math.round(v * 1e6) / 1e3) / 1e3 + 0).toLocaleString("de-AT", {maximumFractionDigits: 3})} kWh`
+  `${formatNumber(Math.trunc(Math.round(v * 1e6) / 1e3) / 1e3, 0, 3)} kWh`
 
 // Activation dates are days; the backend sends them as UTC midnight, which is a later hour of the same
 // day in local time. energystore expects the local start of the day.

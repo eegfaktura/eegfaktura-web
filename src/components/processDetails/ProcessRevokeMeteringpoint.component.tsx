@@ -1,8 +1,10 @@
-import React, {FC, forwardRef, useEffect, useState} from "react";
-import {IonButton, IonContent, IonInput, IonItem, useIonToast} from "@ionic/react";
+import React, {FC, useEffect, useRef, useState} from "react";
+import {IonButton, IonContent, IonItem, useIonToast} from "@ionic/react";
 import InputForm from "../form/InputForm.component";
 import SelectForm from "../form/SelectForm.component";
 import DatePicker from "react-datepicker";
+import DateTextInput from "../form/DateTextInput.component";
+import {DATE_PICKER_PROPS} from "../../util/DateFormat.util";
 import {useForm} from "react-hook-form";
 import {Metering} from "../../models/meteringpoint.model";
 import {EdaProcess, Eeg} from "../../models/eeg.model";
@@ -50,6 +52,7 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
     setValue, formState} = useForm<ProcessValues>({defaultValues: processValues})
   const [useableMeters, setUsableMeters] = useState<Metering[]>([])
   const [consentEndDate, setConsentEndDate] = useState<Date|null>(null);
+  const picker = useRef<DatePicker<never, false>>(null)
   const [meteringPoints, participantId, reasonInput] = watch(['meteringPoints', 'participantId', 'reason'])
   const reasonLength = revokeReasonLength(reasonInput)
 
@@ -114,20 +117,6 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
     }
   }
 
-  const Component = forwardRef<HTMLIonInputElement, {}>(function CustomInput(p, ref) {
-    return (
-      <IonInput
-        {...p}
-        label={t("button_labels.calendar")}
-        placeholder="Datum wählen"
-        fill="outline"
-        labelPlacement={"floating"}
-        ref={ref}
-      >
-      </IonInput>
-    );
-  });
-
   return (
     <>
       <ProcessHeaderComponent name={edaProcess.name} />
@@ -136,7 +125,7 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
           <>
             <InputForm name="communityId" label={t("common-info.community-id")} control={control} protectedControl={true}/>
             <BasicSelectComponent control={control} name={"participantId"}
-                                  options={participants
+                                  options={[...participants]
                                     .sort((a,b) => a.lastname && b.lastname ? a.lastname.localeCompare(b.lastname) : a.firstname.localeCompare(b.firstname))
                                     .map((p) => {
               return {value: p.id, label: JoinStrings(" ", " - ", p.participantNumber, (p.lastname ? p.lastname : ""), p.firstname)} as SelectOptions
@@ -160,8 +149,12 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
                 onChange={(update) => {
                   setConsentEndDate(update);
                 }}
-                customInput={<Component/>}
-                minDate={moment(Date.now()).add(1, 'day').toDate()}
+                customInput={<DateTextInput label={t("button_labels.calendar")}/>}
+                placeholderText="Datum wählen"
+                ref={picker}
+                onBlur={() => picker.current?.setOpen(false, true)} // drops typed text that is no valid date
+                {...DATE_PICKER_PROPS}
+                minDate={moment(Date.now()).add(1, 'day').startOf('day').toDate()}
               />
             </div>
             <IonItem lines="none" style={{zIndex: "0"}}>

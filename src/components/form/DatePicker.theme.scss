@@ -1,0 +1,58 @@
+// The colours of the app on every react-datepicker; the selectors outweigh the library stylesheet.
+.react-datepicker {
+  font-family: inherit;
+
+  .react-datepicker__header {
+    background-color: rgba(var(--ion-color-primary-rgb), 0.08);
+    border-bottom-color: rgba(var(--ion-color-primary-rgb), 0.2);
+  }
+
+  .react-datepicker__day--selected,
+  .react-datepicker__day--in-range,
+  .react-datepicker__day--selected:hover,
+  .react-datepicker__day--in-range:hover {
+    background-color: var(--ion-color-primary);
+    color: var(--ion-color-primary-contrast);
+  }
+
+  .react-datepicker__day--in-selecting-range:not(.react-datepicker__day--in-range) {
+    background-color: rgba(var(--ion-color-primary-rgb), 0.5);
+    color: var(--ion-color-primary-contrast);
+  }
+
+  .react-datepicker__day--keyboard-selected:not(.react-datepicker__day--selected, .react-datepicker__day--in-range) {
+    background-color: rgba(var(--ion-color-primary-rgb), 0.25);
+    color: inherit;
+  }
+
+  .react-datepicker__day--keyboard-selected:not(.react-datepicker__day--selected, .react-datepicker__day--in-range):hover {
+    background-color: var(--ion-color-primary-tint);
+    color: var(--ion-color-primary-contrast);
+  }
+}
+
+.date-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 6px 8px 10px;
+
+  button {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    color: inherit;
+    background: transparent;
+    font-size: 16px;
+  }
+
+  button:disabled {
+    opacity: 0.3;
+  }
+
+  select {
+    background: transparent;
+    margin: 1px;
+    padding: 3px 2px;
+  }
+}

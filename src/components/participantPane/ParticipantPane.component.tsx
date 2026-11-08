@@ -24,7 +24,7 @@ import ParticipantPeriodHeaderComponent from "./ParticipantPeriodHeader.componen
 import MemberComponent from "./Member.component";
 import {ClearingPreviewRequest, Metering,} from "../../models/meteringpoint.model";
 import MeterCardComponent from "./MeterCard.component";
-import {ParticipantContext} from "../../store/hook/ParticipantProvider";
+import {ParticipantContext, useLeaveUnsaved} from "../../store/hook/ParticipantProvider";
 import {MemberViewContext} from "../../store/hook/MemberViewProvider";
 
 import "./ParticipantPane.component.scss";
@@ -72,7 +72,7 @@ import {reformatDateTimeStamp,} from "../../util/Helper.util";
 import DatepickerPopover from "../dialogs/datepicker.popover";
 import {ExcelReportRequest, ParticipantCp} from "../../models/reports.model";
 import UploadPopup from "../dialogs/upload.popup";
-import {EegContext, useRefresh, useTenant} from "../../store/hook/Eeg.provider";
+import {EegContext, useHasBilling, useRefresh, useTenant} from "../../store/hook/Eeg.provider";
 import {
   billingRunErrorSelector,
   billingRunIsFetchingSelector,
@@ -90,6 +90,7 @@ import {billingRunBlocker, billingSwitchTooltip, billTotal, buildAllocationMap, 
 import {exportMasterdataWithJoiningFees, hasJoiningFee, JOINING_FEE_EXPORT_WITHOUT_BILLING} from "../../util/JoiningFee.util";
 import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
 import {withOpenProblems} from "./ParticipantPane.functions";
+import {useMemberSearch} from "./useMemberSearch";
 import {billingTotals, BillingTotals, salesTaxation} from "./BillingTotals.functions";
 import BillingTotalsTable, {
   euro,
@@ -100,7 +101,6 @@ import BillingTotalsTable, {
 } from "./BillingTotalsTable.component";
 import FilterSegmentComponent from "./FilterSegment.component";
 import {MemberSort, readActionFirst, readMemberSort, writeActionFirst, writeMemberSort} from "./participantSort";
-import {VariableSizeList} from "react-window";
 
 import HeaderFavButtonComponent from "../core/HeaderFavButton.component";
 import {Virtuoso} from "react-virtuoso";
@@ -145,6 +145,9 @@ const ParticipantPaneComponent: FC = () => {
     showDetailsPage,
     setShowAddMeterPane,
   } = useContext(ParticipantContext);
+  // another member, metering point or the billing view replaces the "add metering point" pane or the details: ask
+  // first while they hold unsaved input
+  const leaveUnsaved = useLeaveUnsaved(["addMeter", "details"])
   const {
     toggleMembersMeter,
     toggleMetering,
@@ -158,8 +161,7 @@ const ParticipantPaneComponent: FC = () => {
 
   const [presentAlert] = useIonAlert();
 
-  const [searchQuery, setSearchQuery] = useState<string | undefined>(undefined)
-  const [searchActive, setSearchActive] = useState(false);
+  const {searchQuery, searchActive, toggleSearch, onSearchInput} = useMemberSearch()
   const [selectedFilter, setSelectedFilter] = useState<string>('period');
   const [memberSort, setMemberSort] = useState<MemberSort>(readMemberSort);
   const [actionFirst, setActionFirst] = useState<boolean>(readActionFirst);
@@ -178,7 +180,8 @@ const ParticipantPaneComponent: FC = () => {
 
   const openBillingDownloadDialog = (billingRunId: string)=> {
     setDownloadBillingId(billingRunId)
-    billingDownload()
+    // the calendars open in a portal outside the modal, the focus trap would take the focus from their year and month
+    billingDownload({cssClass: "ion-disable-focus-trap"})
   }
 
   // Checks before a billing run (platform#148): shown before preview and billing.
@@ -257,12 +260,14 @@ const ParticipantPaneComponent: FC = () => {
   const energyReport = useAppSelector(meteringEnergyGroup1);
   const reportLoading = useAppSelector(energyReportLoadingSelector);
   const reportError = useAppSelector(energyReportErrorSelector);
+  // no billing mode for a community without billing (P2P, EVA; platform#229)
+  const billing = useHasBilling();
   useEffect(() => {
-    if (reportLoading) return;
-    const nextBillingEnabled = !!activePeriod && !billingRunBlocker(false, reportError, buildAllocationMap(participants).length);
+    if (billing && reportLoading) return;
+    const nextBillingEnabled = billing && !!activePeriod && !billingRunBlocker(false, reportError, buildAllocationMap(participants).length);
     setBillingEnabled(nextBillingEnabled);
     if (!nextBillingEnabled) toggleShowAmount(false);
-  }, [activePeriod, participants, energyReport, reportLoading, reportError]);
+  }, [billing, activePeriod, participants, energyReport, reportLoading, reportError]);
 
   // the tooltip is derived on render, so it follows a loading report and a period change at once
   const billingSwitchTitle = useMemo(() => billingSwitchTooltip({
@@ -348,7 +353,8 @@ const ParticipantPaneComponent: FC = () => {
 
   const activateBilling = (c: boolean) => {
     if (c) {
-      presentAlert({
+      // the billing view replaces the "add metering point" pane; declined, the switch goes back
+      leaveUnsaved(() => presentAlert({
         subHeader: "Abrechnungsmodus",
         message:
           "Im Abrechnungsmodus siehst Du je Mitglied die Beträge des gewählten Zeitraums. Abgerechnet werden immer alle aktiven Mitglieder mit Tarif; wer keinen Tarif hat, zeigt „Daten prüfen“. Mit „Vorschau erstellen“ werden Rechnungs- und Gutschriftsentwürfe mit dem Zusatz „VORSCHAU“ erstellt. Dazu kannst Du eine Zusammenstellung als Excel-Datei und alle Belege gesammelt als ZIP-Datei herunterladen. Änderst Du danach Stammdaten, Energiedaten oder Tarife, erstellt „Vorschau Akt.“ die Entwürfe beliebig oft neu. Erst „Abrechnung durchführen“ erstellt die endgültigen Belege mit fortlaufenden Rechnungsnummern; das ist nicht umkehrbar.",
@@ -382,7 +388,7 @@ const ParticipantPaneComponent: FC = () => {
             toggleShowAmount(false);
           }
         },
-      });
+      }), () => toggleShowAmount(false));
     } else {
       toggleShowAmount(false);
     }
@@ -390,7 +396,8 @@ const ParticipantPaneComponent: FC = () => {
 
   const onUpdatePeriodSelection = (selectedPeriod: SelectedPeriod) => {
     dispatcher(setSelectedPeriod(selectedPeriod));
-    dispatcher(
+    // no billing run to look up without billing (platform#229)
+    if (billing) dispatcher(
       fetchBillingRun({
         tenant: tenant,
         clearingPeriodType: selectedPeriod.type,
@@ -404,22 +411,24 @@ const ParticipantPaneComponent: FC = () => {
   };
 
   const onSelectParticipant =
-    (p: EegParticipant) => (e: React.MouseEvent<Element, MouseEvent>) => {
+    (p: EegParticipant) => (e: React.MouseEvent<Element, MouseEvent>) => leaveUnsaved(() => {
       dispatcher(selectParticipant(p.id));
       if (p.meters.length > 0) {
         dispatcher(selectMetering(p.meters[0].meteringPoint));
       }
       setShowAddMeterPane(false);
-    };
+    });
 
   const onShowAddMeterPage = (p: EegParticipant) => (e: React.MouseEvent<HTMLIonButtonElement, MouseEvent>) => {
-    dispatcher(selectParticipant(p.id));
-    if (p.meters.length > 0) {
-      dispatcher(selectMetering(p.meters[0].meteringPoint));
-    }
-    setShowAddMeterPane(true);
     e.preventDefault();
     e.stopPropagation();
+    leaveUnsaved(() => {
+      dispatcher(selectParticipant(p.id));
+      if (p.meters.length > 0) {
+        dispatcher(selectMetering(p.meters[0].meteringPoint));
+      }
+      setShowAddMeterPane(true);
+    })
   };
 
   const onSelectMeter = (
@@ -427,10 +436,12 @@ const ParticipantPaneComponent: FC = () => {
     participantId: string,
     meter: Metering
   ) => {
-    dispatcher(selectParticipant(participantId));
-    dispatcher(selectMetering(meter.meteringPoint));
     e.stopPropagation();
-    setShowAddMeterPane(false);
+    leaveUnsaved(() => {
+      dispatcher(selectParticipant(participantId));
+      dispatcher(selectMetering(meter.meteringPoint));
+      setShowAddMeterPane(false);
+    })
   };
 
   const billingSum = () => {
@@ -505,8 +516,8 @@ const ParticipantPaneComponent: FC = () => {
         } as ExcelReportRequest
         return Api.energyService.createReport({tenant, ecId, rcNr}, exportdata);
       } else {
-        // without a tariff with a joining fee the column stays empty anyway: billing is not asked
-        if (!Object.values(rates).some(r => hasJoiningFee(r))) {
+        // without billing or a tariff with a joining fee the column stays empty anyway: billing is not asked
+        if (!billing || !Object.values(rates).some(r => hasJoiningFee(r))) {
           return Api.eegService.exportMasterdata(tenant)
         }
         return exportMasterdataWithJoiningFees(
@@ -638,15 +649,10 @@ const ParticipantPaneComponent: FC = () => {
       exportBusy, errorToast, "ZIP-Datei");
   }
 
-  // const viewPortRef = useRef<HTMLDivElement | null>(null);
-  const viewPortRef = useRef(null);
-  // const listRef = useRef<ViewportListRef | null>(null);
-  const listRef = useRef<VariableSizeList>(null);
-  const rowHeights = useRef<Record<number, number>>({});
   const popoverRef = useRef<HTMLIonToolbarElement>(null);
 
   const handleSearchInput = (e: CustomEvent<SearchbarInputEventDetail>) => {
-    setSearchQuery(e.detail.value?.toLowerCase())
+    onSearchInput(e.detail.value)
   };
 
   // // const handleSearchClear = (e:  IonSearchbarCustomEvent<void>) => {
@@ -664,22 +670,6 @@ const ParticipantPaneComponent: FC = () => {
   // }
 
   const viewPortItems = filterSearchQuery(viewEntities, searchQuery)
-
-  const setRowHeight = (index: number, size: number) => {
-    // listRef.current?.resetAfterIndex(0);
-    console.log("setRowHeight", index, size)
-    rowHeights.current = {...rowHeights.current, [index]: size};
-  }
-
-  const getRowHeight = (index: number) => {
-    if (rowHeights.current) {
-      console.log("getRowHeight", index, rowHeights.current[index] + 8 || 82)
-      return rowHeights.current[index] + 8 || 82;
-    }
-    console.log("getRowHeight", index, "Default 200")
-    return 200
-  }
-
 
   const RowElement: FC<{ participant: EegParticipant }> = ({participant}) => {
     const command = participant
@@ -753,7 +743,7 @@ const ParticipantPaneComponent: FC = () => {
               <IonMenuButton/>
             </IonButtons>
             <IonButtons slot="end">
-              <HeaderFavButtonComponent icon={search} onClick={() => setSearchActive(!searchActive)}/>
+              <HeaderFavButtonComponent icon={search} onClick={toggleSearch}/>
               {/*{eeg && !eeg.online && (*/}
               <HeaderFavButtonComponent icon={cloudUploadOutline} onClick={(e: any) =>
                 uploadPopover({
@@ -772,7 +762,8 @@ const ParticipantPaneComponent: FC = () => {
                   size: "auto",
                   side: "bottom",
                   alignment: "start",
-                  cssClass: "upload-popover",
+                  // the calendar opens in a portal outside the popover, the focus trap would take the focus from its year and month
+                  cssClass: "upload-popover ion-disable-focus-trap",
                   // onDidDismiss: (e: CustomEvent) => onExport(e.detail.data),
                 })}/>
               <HeaderFavButtonComponent icon={add} routerLink="/page/addParticipant" routerDirection="root"/>
@@ -794,41 +785,8 @@ const ParticipantPaneComponent: FC = () => {
             activePeriod={activePeriod}
             onUpdatePeriod={onUpdatePeriodSelection}
           />
-          {/*<div className={"scroll-container"} ref={viewPortRef}>*/}
-          {/*<AutoSizer className={"scroll-container"} disableWidth={false}>*/}
-          {/*  {({ height, width }) => (*/}
-          {/*    <VariableSizeList*/}
-          {/*      className="List"*/}
-          {/*      height={height - 74}*/}
-          {/*      itemCount={viewPortItems.length}*/}
-          {/*      itemSize={getRowHeight}*/}
-          {/*      ref={listRef}*/}
-          {/*      width={width}*/}
-          {/*    >*/}
-          {/*      {ListRow}*/}
-          {/*    </VariableSizeList>*/}
-          {/*  )}*/}
-          {/*</AutoSizer>*/}
-          {/*  <AutoSizer disableWidth={true}>*/}
-          {/*    {({ height }) => {*/}
-          {/*      console.log("Autosizer: ", height)*/}
-          {/*      return(*/}
-          {/*  <ViewportList*/}
-
-          {/*    viewportRef={viewPortRef}*/}
-          {/*    items={viewPortItems}*/}
-          {/*    itemSize={Math.max(1, height / viewPortItems.length)}>*/}
-          {/*    {(item) => (*/}
-          {/*      <RowElement key={item.id} participant={item}/>*/}
-          {/*    )}*/}
-          {/*  </ViewportList>*/}
-          {/*      )}}*/}
-          {/*      </AutoSizer>*/}
-          {/*</div>*/}
           {viewPortItems.length > 0 &&
           <Virtuoso style={{overflowX: "hidden"}}
-            // ref={listRef}
-            // viewportRef={viewPortRef}
                     context={{isScrolling}}
                     isScrolling={setIsScrolling}
                     totalCount={viewPortItems.length}
@@ -916,7 +874,7 @@ const ParticipantPaneComponent: FC = () => {
           }
         </div>
         <div className={"pane-footer"}>
-          {showAmount && (
+          {billing && showAmount && (
             <div>
               {totals && <BillingTotalsTable totals={totals} open={totalsOpen}/>}
               <IonRow>
@@ -1082,12 +1040,12 @@ const ParticipantPaneComponent: FC = () => {
           )}
           <div className={"button-bar"}>
             <div style={{marginLeft: "20px"}}>
-              <SlideButtonComponent
+              {billing && <SlideButtonComponent
                 checked={showAmount}
                 disabled={!billingEnabled}
                 title={billingSwitchTitle}
                 setChecked={(c) => activateBilling(c)}
-              ></SlideButtonComponent>
+              ></SlideButtonComponent>}
             </div>
             <div
               style={{

@@ -46,9 +46,8 @@ export const revokeSummary = (meters: Metering[], consentEnd: Date, reason?: str
   + `Ende der Datenfreigabe: ${date(consentEnd)}.`
   + (reason ? ` ${i18n.t("process.revokeMeter.reason_summary")}: „${reason}“.` : "")
 
-export const registerSummary = (meteringPoint: string, member: string, offline: boolean) =>
-  `Zählpunkt ${meteringPoint} (${member}) ${offline ? "offline (mit Aktivierungs-Code)" : "online"} `
-  + `beim Netzbetreiber anmelden?`
+export const registerSummary = (meteringPoint: string, member: string) =>
+  `Zählpunkt ${meteringPoint} (${member}) online beim Netzbetreiber anmelden?`
 
 export const podListSummary = (operatorId: string) =>
   `Zählpunktliste beim Netzbetreiber ${operatorId} anfordern?`

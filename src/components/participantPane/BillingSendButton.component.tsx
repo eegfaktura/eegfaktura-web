@@ -15,23 +15,30 @@ export const documentCount = (totals: BillingTotals | undefined) =>
   totals ? totals.invoices.count + totals.creditNotes.count + totals.infos.count : undefined
 
 // platform#228 step 3: the billing mails of a run can be sent once. billing records the send in mailStatus
-// ("IN PROGRESS", then "SENT") and refuses every further send of the run (since bc52c5b), so the button is disabled
-// then and says why. Before the send it asks and names the number of mails (one per document; the count comes from the
+// ("IN PROGRESS", then "SENT") and refuses a further send of the run (since bc52c5b), so the button is disabled
+// then and says why. Only "FAILED" (no send reported success) can be sent again. Before the send it asks and names the number of mails (one per document; the count comes from the
 // documents loaded for the totals, undefined while they load).
+const FAILED_HINT = "Der Mailserver hat beim letzten Versand keine E-Mail bestätigt. Einzelne können trotzdem angekommen sein."
+
+const mailCount = (documentCount: number | undefined) => documentCount === undefined
+  ? "alle Abrechnungsdokumente"
+  : documentCount === 1 ? "1 Abrechnungsdokument" : `${count(documentCount)} Abrechnungsdokumente`
+
 export const sendMailState = (run: BillingRun, documentCount: number | undefined) => {
   if (run.mailStatus === "SENT") {
     return {disabled: true, label: run.mailStatusDateTime
         ? `Bereits versendet (${reformatDateTimeStamp(run.mailStatusDateTime)})` : "Bereits versendet"}
+  }
+  if (run.mailStatus === "FAILED") {
+    return {disabled: false, label: "Erneut senden", hint: FAILED_HINT,
+      message: `${FAILED_HINT} Jetzt ${mailCount(documentCount)} erneut per E-Mail an die Mitglieder versenden?`}
   }
   if (run.mailStatus) {
     // billing sets it before the first mail and "SENT" after the last; it stays when billing stops in between
     return {disabled: true, label: "Wird versendet …",
       hint: "Der Versand läuft. Bleibt dieser Stand bestehen, bitte den Support kontaktieren."}
   }
-  const mails = documentCount === undefined
-    ? "alle Abrechnungsdokumente"
-    : documentCount === 1 ? "1 Abrechnungsdokument" : `${count(documentCount)} Abrechnungsdokumente`
-  return {disabled: false, label: "SENDEN", message: `Jetzt ${mails} per E-Mail an die Mitglieder versenden?`}
+  return {disabled: false, label: "SENDEN", message: `Jetzt ${mailCount(documentCount)} per E-Mail an die Mitglieder versenden?`}
 }
 
 interface BillingSendButtonProps {
@@ -71,7 +78,12 @@ const BillingSendButton: FC<BillingSendButtonProps> = ({tenant, run, documentCou
         position: "bottom", color: "danger"})
     }
     // once after the send: the button shows the state billing recorded (no polling)
-    dispatcher(fetchBillingRunById({tenant, billingRunId}))
+    const reloaded = await dispatcher(fetchBillingRunById({tenant, billingRunId}))
+    if (billingRunSendmail.fulfilled.match(result) && fetchBillingRunById.fulfilled.match(reloaded)
+      && reloaded.payload.billingRun.mailStatus === "FAILED") {
+      toaster({message: "Der Mailversand ist fehlgeschlagen: Der Mailserver hat keine E-Mail bestätigt.", duration: 8000,
+        position: "bottom", color: "danger"})
+    }
   }
 
   return (

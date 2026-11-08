@@ -2,7 +2,7 @@ import {describe, it, expect, vi, beforeEach, afterEach} from "vitest";
 import {FileService} from "../../service/file.service";
 import {AuthService} from "../../service/auth.service";
 
-const authService = {getToken: async () => "token"} as unknown as AuthService;
+const authService = {lookupToken: async () => "token"} as unknown as AuthService;
 const fetchMock = vi.fn();
 
 const reply = (body: any) => ({ok: true, status: 200, json: async () => body});

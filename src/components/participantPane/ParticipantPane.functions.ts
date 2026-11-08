@@ -105,43 +105,36 @@ export const filterMeters = (p: EegParticipant[], hideProducers: boolean, hideCo
     .filter((m) => (m.meters.length > 0 || showEmptyMembers));
 };
 
+// Search of the member list (platform#244): the input is split at spaces into terms; a member matches when every term
+// is found in one of its fields (last name, first name, member number, e-mail) or in one of its metering points
+// (number, name), case-insensitively. Terms that hit metering points narrow the list to those metering points, as a
+// single term did before; otherwise all its metering points stay. A single term behaves as before.
 export const filterSearchQuery = (entities: EegParticipant[], query: string | undefined) => {
-  if (query && query.length > 0) {
-    const filterEntries = (d: EegParticipant): [boolean, Metering[]] => {
-      return [
-        (d.lastname && d.lastname.toLowerCase().indexOf(query) > -1) ||
-        (d.firstname && d.firstname.toLowerCase().indexOf(query) > -1) ||
-        (d.participantNumber && d.participantNumber.toLowerCase().indexOf(query) > -1) ||
-        (!!d.contact && !!d.contact.email && d.contact.email.toLowerCase().indexOf(query) > -1),
-        filterMetering(d),
-      ];
-    };
-    const filterMetering = (d: EegParticipant): Metering[] => {
-      return (
-        d.meters.filter((m) => {
-          const eq =
-            m.equipmentName && m.equipmentName.length > 0
-              ? m.equipmentName.toLowerCase().indexOf(query) > -1
-              : false
-          return m.meteringPoint.toLowerCase().indexOf(query) > -1 || eq
-        })
-      );
-    };
-
-    return entities.reduce((r: EegParticipant[], d: EegParticipant) => {
-      const [matchParticipant, matchMeter] = filterEntries(d);
-      if (matchParticipant || matchMeter.length > 0) {
-        if (matchMeter.length > 0) {
-          r.push({...d, meters: matchMeter});
-        } else {
-          r.push({...d})
-        }
-      }
-      return r;
-    }, [] as EegParticipant[]);
-  } else {
-    return entities;
+  const terms = (query ?? "").toLowerCase().split(/\s+/).filter(t => t.length > 0)
+  if (terms.length === 0) {
+    return entities
   }
+  const has = (value: string | null | undefined, term: string) => !!value && value.toLowerCase().includes(term)
+  const memberHas = (d: EegParticipant, term: string) =>
+    has(d.lastname, term) || has(d.firstname, term) || has(d.participantNumber, term) || has(d.contact?.email, term)
+  const meterHas = (m: Metering, term: string) => has(m.meteringPoint, term) || has(m.equipmentName, term)
+
+  return entities.reduce((r: EegParticipant[], d: EegParticipant) => {
+    const meters = d.meters ?? []
+    if (!terms.every(t => memberHas(d, t) || meters.some(m => meterHas(m, t)))) {
+      return r
+    }
+    // Narrow the meters by the terms the member's own fields do not cover (all terms if they cover every one).
+    // A meter must hold all of them, so „pv dach“ shows „PV Dach“ only; a single term narrows as before.
+    const rest = terms.filter(t => !memberHas(d, t))
+    const narrowBy = rest.length > 0 ? rest : terms
+    let hitMeters = meters.filter(m => narrowBy.every(t => meterHas(m, t)))
+    if (hitMeters.length === 0 && rest.length > 0) {
+      hitMeters = meters.filter(m => rest.some(t => meterHas(m, t)))
+    }
+    r.push(hitMeters.length > 0 ? {...d, meters: hitMeters} : {...d})
+    return r
+  }, [] as EegParticipant[])
 }
 
 // Uploads the documents chosen when a member is activated. A failed upload must not stop the

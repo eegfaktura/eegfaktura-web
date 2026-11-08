@@ -1,5 +1,5 @@
-// The day view works in local time; force Vienna so the DST days are exercised.
-process.env.TZ = 'Europe/Vienna'
+// @vitest-environment node
+// The day view works in local time; Vienna exercises the DST days (the suite runs in Europe/Vienna, vite.config.ts test.env).
 
 import {describe, expect, it} from "vitest"
 import {

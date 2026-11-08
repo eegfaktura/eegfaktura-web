@@ -4,6 +4,7 @@ import {readdirSync, readFileSync} from "fs";
 import {join} from "path";
 import {renderWithProviders} from "../../test-utils";
 import "../../../util/I18n";
+import {MemoryRouter} from "react-router";
 
 vi.mock("../../../store/hook/Eeg.provider", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../../../store/hook/Eeg.provider")>()),
@@ -42,12 +43,15 @@ describe("menu button below 992 px (261024-ca9)", () => {
     const dashboard = renderWithProviders(
       <ParticipantContext.Provider value={{participants: [], reloadEnergyReport: vi.fn()} as any}>
         <DashboardPage/></ParticipantContext.Provider>)
+    // also while the first period loads
+    expect(menuButton(dashboard.container)).toBeTruthy()
     act(() => { dashboard.store.dispatch(setSelectedPeriod({type: "YM", year: 2026, segment: 10})) })
     expect(menuButton(dashboard.container)).toBeTruthy()
   })
 
   it("the tariff page has it in its toolbar", () => {
-    const {container} = renderWithProviders(<RatesPage/>)
+    // the page holds an UnsavedChangesGuard (Prompt), which needs a router
+    const {container} = renderWithProviders(<MemoryRouter><RatesPage/></MemoryRouter>)
     expect(container.querySelector("ion-toolbar ion-menu-button")).toBeTruthy()
   })
 
