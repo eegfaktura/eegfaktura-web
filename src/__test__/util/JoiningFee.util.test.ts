@@ -134,9 +134,14 @@ describe("joiningFeeActions (extension 27.10.)", () => {
     ({participantId: "p", energyBilled: true, joiningFee: null, requested: false, paidExternally: null, ...extra})
   const paid = {paidOn: "2026-03-01", note: null}
 
-  it("open fee: request or record a payment", () => {
+  it("billed with energy, fee not charged: request or record a payment", () => {
     expect(joiningFeeActions(s(), fee)).toEqual({request: true, withdraw: false, recordPaid: true, changePaid: false})
-    expect(joiningFeeActions(undefined, fee)).toEqual({request: true, withdraw: false, recordPaid: true, changePaid: false})
+  })
+  // decision 08.11.2026: before the first final energy billing the fee comes with it anyway, so no request
+  it("not billed with energy yet (status „offen“): only record a payment", () => {
+    const onlyPaid = {request: false, withdraw: false, recordPaid: true, changePaid: false}
+    expect(joiningFeeActions(undefined, fee)).toEqual(onlyPaid)
+    expect(joiningFeeActions(s({energyBilled: false}), fee)).toEqual(onlyPaid)
   })
   it("no request without a fee in the member's tariff; a payment can still be recorded", () => {
     expect(joiningFeeActions(s(), eeg({joiningFee: 0}))).toEqual({request: false, withdraw: false, recordPaid: true, changePaid: false})

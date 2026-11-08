@@ -8,6 +8,12 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **„Beitrittsgebühr nachverrechnen“ only for members billed with energy already** (decision 08.11.2026): with the
+  status „offen – wird mit der ersten Energieabrechnung verrechnet“ the button is no longer shown, because the fee comes
+  with the first final energy billing anyway; it stays for „nicht verrechnet – Mitglied wurde schon abgerechnet“, as in
+  the status list of the concept. „Außerhalb bezahlt erfassen“ stays in both states. billing is unchanged.
+
 ## [1.22.1] – 2026-11-08
 
 ### Changed
