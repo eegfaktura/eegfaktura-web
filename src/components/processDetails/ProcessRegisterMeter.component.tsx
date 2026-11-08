@@ -56,20 +56,17 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
   const [useableMeters, setUsableMeters] = useState<Metering[]>(meters)
   const [meteringPoint, participantId] = watch(['meteringPoint', 'participantId'])
 
-  // After an owner change one metering point number is at two members (the old one inactive): the member is the one
-  // chosen in the form. Only without a choice it follows from the metering point, and only when one member holds it;
-  // before, the first member by number was taken, which could be the old owner (bug 08.11.2026).
+  // After an owner change one metering point number is at two members (the old one inactive): the request goes to the
+  // member chosen in the form (required). Choosing a metering point first fills the member only when one member holds
+  // it; choosing another member clears a metering point it does not hold. Before, the first member by number was
+  // taken, which could be the old owner (bug 08.11.2026).
   const holders = (mp: string) => participants.filter(p => p.meters.some(m => m.meteringPoint === mp))
-  const memberOf = (mp: string, chosenId: string | undefined) => {
-    const all = holders(mp)
-    return all.find(p => p.id === chosenId) ?? (all.length === 1 ? all[0] : undefined)
-  }
 
   useEffect(() => {
-    if (meteringPoint && !holders(meteringPoint).some(p => p.id === participantId)) {
-      const p = memberOf(meteringPoint, undefined)
-      if (p) {
-        setValue('participantId', p.id)
+    if (meteringPoint && !participantId) {
+      const all = holders(meteringPoint)
+      if (all.length === 1) {
+        setValue('participantId', all[0].id)
       }
     }
   }, [meteringPoint])
@@ -79,6 +76,10 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
       const p = participants.find(p => p.id === participantId)
       if (p) {
         setUsableMeters(p.meters)
+        // another member: a metering point it does not hold no longer counts
+        if (meteringPoint && !p.meters.some(m => m.meteringPoint === meteringPoint)) {
+          setValue('meteringPoint', undefined, {shouldValidate: true})
+        }
       }
     } else {
       setUsableMeters(meters)
@@ -87,7 +88,7 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
 
   const onRequest = async (data: ProcessValues) => {
     if (data.meteringPoint) {
-      const p = memberOf(data.meteringPoint, data.participantId)
+      const p = participants.find(p => p.id === data.participantId)
       const meter = p?.meters.find(m => m.meteringPoint === data.meteringPoint)
       if (p && meter) {
         // goes to the grid operator: ask first; the submit button stays disabled while the dialog is open
@@ -141,7 +142,10 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
                                     }
                                   })} label={t("participant")} rules={{required: true}}/>
             <BasicSelectComponent control={control} name={"meteringPoint"}
-                                  options={useableMeters.filter(p => p.processState !== 'ACTIVE' /*&& p.status !== 'APPROVED' && p.status !== 'PENDING'*/).map((p) => {
+                                  options={useableMeters.filter(p => p.processState !== 'ACTIVE' /*&& p.status !== 'APPROVED' && p.status !== 'PENDING'*/)
+                                    // without a chosen member a moved metering point is listed once
+                                    .filter((m, i, all) => all.findIndex(o => o.meteringPoint === m.meteringPoint) === i)
+                                    .map((p) => {
                                     return {
                                       value: p.meteringPoint,
                                       label: registerMeterLabel(p, t)

@@ -165,13 +165,33 @@ describe("Zählpunkt anmelden nach Besitzerwechsel", () => {
     expect(Api.eegService.registerMeteringPoint).toHaveBeenCalledWith("TE100200", "p9", moved, "CONSUMPTION")
   })
 
-  it("does not pick a member by itself when two hold the metering point", async () => {
+  it("does not pick a member by itself when two hold the metering point, and lists the number once", async () => {
     render(<ProcessRegisterMeterComponent eeg={eeg} meters={[...oldOwner.meters, ...newOwner.meters]}
                                           participants={[newOwner, oldOwner]} edaProcess={process("Zählpunkt anmelden")}/>)
+    const options = Array.from((screen.getByLabelText("meteringPoint") as HTMLSelectElement).options)
+    expect(options.filter(o => o.value === moved)).toHaveLength(1)
     type("meteringPoint", moved)
     await flush()
+    expect((screen.getByLabelText("participantId") as HTMLSelectElement).value).toBe("")
     expect(isDisabled(submitButton("Anfordern"))).toBe(true)
-    expect(Api.eegService.registerMeteringPoint).not.toHaveBeenCalled()
+  })
+
+  it("choosing another member after the metering point clears it; nothing goes to the metering point's holder", async () => {
+    const other = {id: "p5", participantNumber: "500", firstname: "Dora", lastname: "Dritt",
+      meters: [meter("AT0030000000000000000000000000008", {processState: "NEW"} as Partial<Metering>)]} as unknown as EegParticipant
+    render(<ProcessRegisterMeterComponent eeg={eeg} meters={[...other.meters, ...newOwner.meters]}
+                                          participants={[newOwner, other]} edaProcess={process("Zählpunkt anmelden")}/>)
+    type("meteringPoint", other.meters[0].meteringPoint)
+    await flush()
+    expect((screen.getByLabelText("participantId") as HTMLSelectElement).value).toBe("p5")
+    type("participantId", "p9")
+    await flush()
+    expect(isDisabled(submitButton("Anfordern"))).toBe(true)
+    type("meteringPoint", moved)
+    await flush()
+    await submit("Anfordern")
+    await dismiss("confirm")
+    expect(Api.eegService.registerMeteringPoint).toHaveBeenCalledWith("TE100200", "p9", moved, "CONSUMPTION")
   })
 })
 
