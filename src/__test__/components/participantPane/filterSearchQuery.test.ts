@@ -51,4 +51,16 @@ describe("member search with several terms (platform#244)", () => {
     expect(r[0].meters.map(m => m.meteringPoint)).toEqual(["AT0030000000000000000000000000002"])
     expect(filterSearchQuery(all, undefined)).toBe(all)
   })
+
+  it("narrows to the metering points that hold every term not covered by the member (review web#279)", () => {
+    const anna = member("4", "Anna", "Huber", "12", "anna@example.org", meter("AT0030000000000000000000000001200", "PV Dach"),
+      meter("AT0030000000000000000000000000005", "PV Garage"), meter("AT0030000000000000000000000000006", "Dachboden"),
+      meter("AT0030000000000000000000000000007", "Huber Haus"))
+    const names = (q: string) => filterSearchQuery([anna], q)[0].meters.map(m => m.equipmentName)
+    expect(names("pv dach")).toEqual(["PV Dach"])                     // one meter holds both terms
+    expect(names("anna huber")).toHaveLength(4)                       // both terms are the member's name
+    expect(names("huber 12")).toHaveLength(4)                         // name + member number, no meter holds both
+    expect(names("anna dach")).toEqual(["PV Dach", "Dachboden"])      // „dach“ is not in the member's fields
+    expect(names("huber")).toEqual(["Huber Haus"])                    // single term narrows as before
+  })
 })

@@ -12,10 +12,10 @@ this changelog highlights the changes relevant for overview and operations.
 - **Member search with several terms** (platform#244): the search field of the member list splits the input at spaces
   and finds the members that have **every** term in one of their fields — last name, first name, member number,
   e-mail, or a metering point's number or name — e.g. „huber maria“ or „huber 0815“; the order does not matter. Before,
-  the whole input was searched as one text, so a first and a last name together found nothing. Terms that hit
-  metering points show only those, as before; a single term finds what it found before.
-
-### Changed
+  the whole input was searched as one text, so a first and a last name together found nothing. Meters: a member's
+  metering points are narrowed to those holding every term that the member's own fields do not cover („pv dach“ shows
+  „PV Dach“ only, „maria huber“ keeps all meters of Maria Huber); a single term narrows as before. Spaces at the
+  edges are ignored.
 - **Member list: the member number in brackets after the name** (08.11.2026), e.g. „Max Mustermann (001)“. A long name
   is cut before the number, so the number stays visible. Members without a number show the name only.
 - **„Beitrittsgebühr nachverrechnen“ only for members billed with energy already** (decision 08.11.2026): with the

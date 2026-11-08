@@ -124,7 +124,14 @@ export const filterSearchQuery = (entities: EegParticipant[], query: string | un
     if (!terms.every(t => memberHas(d, t) || meters.some(m => meterHas(m, t)))) {
       return r
     }
-    const hitMeters = meters.filter(m => terms.some(t => meterHas(m, t)))
+    // Narrow the meters by the terms the member's own fields do not cover (all terms if they cover every one).
+    // A meter must hold all of them, so „pv dach“ shows „PV Dach“ only; a single term narrows as before.
+    const rest = terms.filter(t => !memberHas(d, t))
+    const narrowBy = rest.length > 0 ? rest : terms
+    let hitMeters = meters.filter(m => narrowBy.every(t => meterHas(m, t)))
+    if (hitMeters.length === 0 && rest.length > 0) {
+      hitMeters = meters.filter(m => rest.some(t => meterHas(m, t)))
+    }
     r.push(hitMeters.length > 0 ? {...d, meters: hitMeters} : {...d})
     return r
   }, [] as EegParticipant[])
