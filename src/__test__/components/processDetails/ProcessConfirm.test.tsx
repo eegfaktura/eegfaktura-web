@@ -143,6 +143,58 @@ describe("Zählpunkt anmelden", () => {
   })
 })
 
+// bug 08.11.2026: after an owner change the metering point is at two members; the chosen member was replaced by the
+// first one holding the number (the old owner, sorted first), in the dialog and in the request
+describe("Zählpunkt anmelden nach Besitzerwechsel", () => {
+  const moved = "AT0030000000000000000000000000009"
+  const oldOwner = {id: "p0", participantNumber: "220", firstname: "Berta", lastname: "Alt",
+    meters: [meter(moved, {processState: "INACTIVE", status: "INACTIVE"} as Partial<Metering>)]} as unknown as EegParticipant
+  const newOwner = {id: "p9", participantNumber: "337", firstname: "Carl", lastname: "Neu",
+    meters: [meter(moved, {processState: "INACTIVE", status: "INIT"} as Partial<Metering>)]} as unknown as EegParticipant
+
+  it("asks and sends for the chosen member, not the old owner", async () => {
+    render(<ProcessRegisterMeterComponent eeg={eeg} meters={[...oldOwner.meters, ...newOwner.meters]}
+                                          participants={[newOwner, oldOwner]} edaProcess={process("Zählpunkt anmelden")}/>)
+    type("participantId", "p9")
+    await flush()
+    type("meteringPoint", moved)
+    await flush()
+    await submit("Anfordern")
+    expect(alert.mock.lastCall![0].message).toBe(`Zählpunkt ${moved} (337 Neu Carl) online beim Netzbetreiber anmelden?`)
+    await dismiss("confirm")
+    expect(Api.eegService.registerMeteringPoint).toHaveBeenCalledWith("TE100200", "p9", moved, "CONSUMPTION")
+  })
+
+  it("does not pick a member by itself when two hold the metering point, and lists the number once", async () => {
+    render(<ProcessRegisterMeterComponent eeg={eeg} meters={[...oldOwner.meters, ...newOwner.meters]}
+                                          participants={[newOwner, oldOwner]} edaProcess={process("Zählpunkt anmelden")}/>)
+    const labels = screen.getByLabelText("meteringPoint").getAttribute("data-options")!.split("|")
+    expect(labels.filter(l => l.includes(moved))).toHaveLength(1)
+    type("meteringPoint", moved)
+    await flush()
+    expect((screen.getByLabelText("participantId") as HTMLInputElement).value).toBe("")
+    expect(isDisabled(submitButton("Anfordern"))).toBe(true)
+  })
+
+  it("choosing another member after the metering point clears it; nothing goes to the metering point's holder", async () => {
+    const other = {id: "p5", participantNumber: "500", firstname: "Dora", lastname: "Dritt",
+      meters: [meter("AT0030000000000000000000000000008", {processState: "NEW"} as Partial<Metering>)]} as unknown as EegParticipant
+    render(<ProcessRegisterMeterComponent eeg={eeg} meters={[...other.meters, ...newOwner.meters]}
+                                          participants={[newOwner, other]} edaProcess={process("Zählpunkt anmelden")}/>)
+    type("meteringPoint", other.meters[0].meteringPoint)
+    await flush()
+    expect((screen.getByLabelText("participantId") as HTMLInputElement).value).toBe("p5")
+    type("participantId", "p9")
+    await flush()
+    expect(isDisabled(submitButton("Anfordern"))).toBe(true)
+    type("meteringPoint", moved)
+    await flush()
+    await submit("Anfordern")
+    await dismiss("confirm")
+    expect(Api.eegService.registerMeteringPoint).toHaveBeenCalledWith("TE100200", "p9", moved, "CONSUMPTION")
+  })
+})
+
 describe("Energiedaten anfordern (ohne Smart)", () => {
   it("asks with meters and period; cancel sends nothing, confirm sends the request unchanged", async () => {
     render(<ProcessRequestValuesComponent eeg={eeg} meters={[m1]} participants={[participant]}

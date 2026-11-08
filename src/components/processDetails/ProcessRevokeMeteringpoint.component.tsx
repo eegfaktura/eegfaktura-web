@@ -123,7 +123,7 @@ const ProcessRevokeMeteringpointComponent: FC<ProcessRevokeMeteringpointComponen
           <>
             <InputForm name="communityId" label={t("common-info.community-id")} control={control} protectedControl={true}/>
             <BasicSelectComponent control={control} name={"participantId"}
-                                  options={participants
+                                  options={[...participants]
                                     .sort((a,b) => a.lastname && b.lastname ? a.lastname.localeCompare(b.lastname) : a.firstname.localeCompare(b.firstname))
                                     .map((p) => {
               return {value: p.id, label: JoinStrings(" ", " - ", p.participantNumber, (p.lastname ? p.lastname : ""), p.firstname)} as SelectOptions
