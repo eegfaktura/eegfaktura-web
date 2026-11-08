@@ -51,7 +51,6 @@ const EegPage: FC = () => {
 
   const {isAdmin} = useAccessGroups()
   const billing = useHasBilling()
-  // another community drops unsaved input ("add metering point", details, tariff editor): ask first (platform#228 step 4)
 
   const {handleSubmit, setValue, reset, control, formState: {errors, isDirty, dirtyFields}} =
     useForm({
