@@ -8,6 +8,14 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **„Zählpunkt aktivieren“ registers the metering point for the chosen member** (reported 08.11.2026): after an owner
+  change one metering point number is at two members (the old one inactive). The process took the first member holding
+  the number — the participant list is sorted alphabetically in place, so often the old owner — in the confirmation and
+  in the request sent to the grid operator, and choosing the metering point replaced the chosen member. Now the chosen
+  member counts; without a choice the member follows from the metering point only when one member holds it, otherwise
+  the member has to be chosen (the field is required). The member list is no longer sorted in place.
+
 ## [1.22.1] – 2026-11-08
 
 ### Changed
