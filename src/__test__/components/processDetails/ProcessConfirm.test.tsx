@@ -168,11 +168,11 @@ describe("Zählpunkt anmelden nach Besitzerwechsel", () => {
   it("does not pick a member by itself when two hold the metering point, and lists the number once", async () => {
     render(<ProcessRegisterMeterComponent eeg={eeg} meters={[...oldOwner.meters, ...newOwner.meters]}
                                           participants={[newOwner, oldOwner]} edaProcess={process("Zählpunkt anmelden")}/>)
-    const options = Array.from((screen.getByLabelText("meteringPoint") as HTMLSelectElement).options)
-    expect(options.filter(o => o.value === moved)).toHaveLength(1)
+    const labels = screen.getByLabelText("meteringPoint").getAttribute("data-options")!.split("|")
+    expect(labels.filter(l => l.includes(moved))).toHaveLength(1)
     type("meteringPoint", moved)
     await flush()
-    expect((screen.getByLabelText("participantId") as HTMLSelectElement).value).toBe("")
+    expect((screen.getByLabelText("participantId") as HTMLInputElement).value).toBe("")
     expect(isDisabled(submitButton("Anfordern"))).toBe(true)
   })
 
@@ -183,7 +183,7 @@ describe("Zählpunkt anmelden nach Besitzerwechsel", () => {
                                           participants={[newOwner, other]} edaProcess={process("Zählpunkt anmelden")}/>)
     type("meteringPoint", other.meters[0].meteringPoint)
     await flush()
-    expect((screen.getByLabelText("participantId") as HTMLSelectElement).value).toBe("p5")
+    expect((screen.getByLabelText("participantId") as HTMLInputElement).value).toBe("p5")
     type("participantId", "p9")
     await flush()
     expect(isDisabled(submitButton("Anfordern"))).toBe(true)
