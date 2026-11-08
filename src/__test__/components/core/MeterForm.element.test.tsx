@@ -65,21 +65,19 @@ describe("<MeterFormElement /> grid operator", () => {
   });
 });
 
-// platform#229 addendum: TechCode and FuelCode from the metering point list, read only
+// platform#246: TechCode and FuelCode of the metering point list are stored by the backend but not shown in V1
+// (decision 08.11.2026, the display comes with V3)
 describe("<MeterFormElement /> codes of the metering point list", () => {
-  it("an existing metering point shows them as code, not as input", async () => {
+  it("an existing metering point with codes does not show them", async () => {
     const {container} = renderElement('LOCAL', {processState: 'ACTIVE', status: 'ACTIVE', techCode: 'PV01',
       fuelCode: 'E01'} as Partial<Metering>, true)
-    await screen.findByText('PV01')
-    screen.getByText('E01')
-    screen.getByText(/TechCode/)
-    expect(container.querySelector('[name=techCode]')).toBeNull()
-    expect(container.querySelector('[name=fuelCode]')).toBeNull()
-  });
-
-  it("a new metering point has none", async () => {
-    renderElement('LOCAL', {})
     await screen.findAllByText(/Zählpunkt/)
-    expect(screen.queryByText(/TechCode/)).not.toBeInTheDocument()
+    expect(screen.queryByText('PV01')).not.toBeInTheDocument()
+    expect(screen.queryByText('E01')).not.toBeInTheDocument()
+    expect(screen.queryByText(/TechCode|FuelCode/)).not.toBeInTheDocument()
+    // neither as a field: an ion-input keeps its value as a property, not as text
+    const values = Array.from(container.querySelectorAll('ion-input')).map(i => (i as unknown as {value?: string}).value)
+    expect(values).not.toContain('PV01')
+    expect(values).not.toContain('E01')
   });
 });

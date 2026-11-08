@@ -189,11 +189,6 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
         <InputForm name={"equipmentNumber"} label={t("equipmentNumber_label")} control={control} rules={{required: false}}
                    type="text" onChangePartial={_onChange}/>
         <InputForm name={"equipmentName"} label={t("equipmentName_label")} control={control} rules={{required: false}} type="text" onChangePartial={_onChange}/>
-        {/* codes of an existing metering point from the grid operator's metering point list, read only (platform#229) */}
-        {meterReadOnly && <>
-          <InputForm name={"techCode"} label={t("techCode_label")} control={control} type="text" protectedControl={true}/>
-          <InputForm name={"fuelCode"} label={t("fuelCode_label")} control={control} type="text" protectedControl={true}/>
-        </>}
       </IonList>
     </>
   )

@@ -50,8 +50,6 @@
   "transformer_label": "Transformator",
   "equipmentNumber_label": "Anlagen-Nr.",
   "equipmentName_label": "Anlagenname",
-  "techCode_label": "TechCode",
-  "fuelCode_label": "FuelCode",
   "vatSupplementaryText": "Zusatztext für Umsatzsteuer",
   "discount": "Rabatt in %",
   "discount_card": "Rabatt",
