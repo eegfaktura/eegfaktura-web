@@ -74,7 +74,10 @@ describe("<MeterFormElement /> codes of the metering point list", () => {
     await screen.findAllByText(/Zählpunkt/)
     expect(screen.queryByText('PV01')).not.toBeInTheDocument()
     expect(screen.queryByText('E01')).not.toBeInTheDocument()
-    expect(container.querySelector('[name=techCode]')).toBeNull()
-    expect(container.querySelector('[name=fuelCode]')).toBeNull()
+    expect(screen.queryByText(/TechCode|FuelCode/)).not.toBeInTheDocument()
+    // neither as a field: an ion-input keeps its value as a property, not as text
+    const values = Array.from(container.querySelectorAll('ion-input')).map(i => (i as unknown as {value?: string}).value)
+    expect(values).not.toContain('PV01')
+    expect(values).not.toContain('E01')
   });
 });

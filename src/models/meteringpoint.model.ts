@@ -45,8 +45,8 @@ export interface Metering {
   partFact: number,
   activationMode: 'ONLINE' | 'OFFLINE'
   enabled: boolean
-  // from the grid operator's metering point list (platform#229), read only, null = unknown. The saves send them along:
-  // the backend ignores them and returns the sent metering point, which the display shows
+  // from the grid operator's metering point list (platform#229), read only, null = unknown; not shown in V1
+  // (platform#246). The saves send them along, the backend ignores them
   techCode?: string | null
   fuelCode?: string | null
 }
