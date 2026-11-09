@@ -556,7 +556,7 @@ const ParticipantPaneComponent: FC = () => {
               .then(() => infoToast("Stammdaten-Upload beendet."))
               .catch((e) => {
                 dismissLoading();
-                errorToast("Stammdaten sind nicht korrekt. " + e.toString());
+                errorToast("Stammdaten sind nicht korrekt. " + (e?.message ?? e));
               });
             break;
         }
