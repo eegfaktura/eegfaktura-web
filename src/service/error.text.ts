@@ -18,8 +18,15 @@ export const deleteParticipantErrTxt = (error: any): string => error?.data?.erro
   ? "Das Mitglied hat Zählpunkte, die beim Netzbetreiber angemeldet sind oder waren, und kann nicht gelöscht werden."
   : "Das Mitglied konnte nicht gelöscht werden."
 
+// backend codes whose message is already the German text for the user
+// (1206: the metering point is already at this member, platform#247)
+const USER_TEXT_CODES = [1206]
+
 export const determineErrTxt = (error: any): string => {
   if (error instanceof ErrorResponse) {
+    if (USER_TEXT_CODES.includes(error.error.code) && error.error.message) {
+      return error.error.message
+    }
     return i18n.t("E_" + error.error.code + "_" + error.error.error, { ns: 'error' })
   }
   return error
