@@ -28,6 +28,14 @@ this changelog highlights the changes relevant for overview and operations.
   the status list of the concept. „Außerhalb bezahlt erfassen“ stays in both states. billing is unchanged.
 
 ### Fixed
+- **Register a member: correct or remove a metering point** (platform#249): on „Mitglied registrieren“ an added
+  metering point could not be removed, and changing its number added a second entry and kept the wrong one — the
+  member could then not be registered, the input had to be entered again. Now the form of an added metering point
+  has **„Entfernen“**, and **„Übernehmen“** replaces exactly that entry, also with a changed number. A new metering point
+  with the number of a listed one still replaces that one.
+- **„Bankverbindung“ is optional and called „Bank (optional)“** (platform#249): on registration and in the member data, with direct debit (CORE, B2B) the field
+  was required, so a space was entered in its place. It is the name of the bank and is only printed on the invoice
+  („Bankverbindung: <Bank> | ******1234 | <Inhaber>“) and exported with the members. The EEG page keeps its label.
 - **Metering point details without TechCode and FuelCode** (platform#246, decision 08.11.2026): the two read-only
   fields of the metering point list (platform#229, since 1.20.0) showed as empty boxes in an own style at every existing
   metering point, and nothing in V1 uses the codes. They are no longer shown; the backend still stores them from the
