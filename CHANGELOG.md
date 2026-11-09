@@ -32,7 +32,8 @@ this changelog highlights the changes relevant for overview and operations.
   metering point could not be removed, and changing its number added a second entry and kept the wrong one — the
   member could then not be registered, the input had to be entered again. Now the form of an added metering point
   has **„Entfernen“**, and **„Übernehmen“** replaces exactly that entry, also with a changed number. A new metering point
-  with the number of a listed one still replaces that one.
+  with the number of a listed one still replaces that one; an entry changed to the number of another one replaces it,
+  so each number is listed once.
 - **„Bankverbindung“ is optional and called „Bank (optional)“** (platform#249): on registration and in the member data, with direct debit (CORE, B2B) the field
   was required, so a space was entered in its place. It is the name of the bank and is only printed on the invoice
   („Bankverbindung: <Bank> | ******1234 | <Inhaber>“) and exported with the members. The EEG page keeps its label.

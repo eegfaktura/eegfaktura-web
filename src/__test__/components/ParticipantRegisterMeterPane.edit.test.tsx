@@ -70,6 +70,32 @@ describe("registration: correct or remove an added metering point (platform#249)
     expect(screen.queryByText("nummer1")).toBeNull()
   })
 
+  it("an entry changed to the number of another one replaces it: one entry per number", async () => {
+    setup()
+    await addMeter("nummer1")
+    await addMeter("nummer2")
+    fireEvent.click(cards()[0])
+    fireEvent.click(screen.getByText("nummer2"))
+    await act(async () => fireEvent.click(screen.getByText("Übernehmen")))
+    expect(meters()).toBe("AT002")
+  })
+
+  it("„Entfernen“ of a changed form leaves no unsaved input behind", async () => {
+    const dirtyReports: boolean[] = []
+    renderWithReactHookForm(<>
+      <ParticipantRegisterMeterPaneComponent participant={{meters: []} as unknown as EegParticipant} onAddMeter={vi.fn()}
+                                             onDirtyChange={d => dirtyReports.push(d)}/>
+      <Meters/>
+    </>, {defaultValues: {meters: []}})
+    await addMeter("nummer1")
+    fireEvent.click(cards()[0])
+    fireEvent.click(screen.getByText("nummer2"))
+    expect(dirtyReports.at(-1)).toBe(true)
+    fireEvent.click(screen.getByText("Entfernen"))
+    expect(dirtyReports.at(-1)).toBe(false)
+    expect(meters()).toBe("")
+  })
+
   it("a new metering point has no „Entfernen“", () => {
     setup()
     fireEvent.click(screen.getByText("Zählpunkt hinzufügen"))

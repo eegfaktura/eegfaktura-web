@@ -73,11 +73,15 @@ const ParticipantRegisterMeterPaneComponent: FC<ParticipantRegisterMeterPaneComp
     setOpenIdx(undefined);
   }
 
-  // the open entry is replaced; a new metering point with the number of an entry replaces that entry, as before
+  // the open entry is replaced; another entry with the same number is replaced too (one entry per number, as for a
+  // new metering point before)
   const appendMeter = (meter: Metering) => {
-    const idx = openIdx ?? fields.findIndex((m) => m.meteringPoint === meter.meteringPoint)
-    if (idx >= 0) {
-      update(idx, meter)
+    const other = fields.findIndex((m, i) => i !== openIdx && m.meteringPoint === meter.meteringPoint)
+    if (openIdx !== undefined) {
+      update(openIdx, meter)
+      if (other >= 0) remove(other)
+    } else if (other >= 0) {
+      update(other, meter)
     } else {
       append(meter)
     }
