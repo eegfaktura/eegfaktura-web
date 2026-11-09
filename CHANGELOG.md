@@ -34,9 +34,13 @@ this changelog highlights the changes relevant for overview and operations.
   has **„Entfernen“**, and **„Übernehmen“** replaces exactly that entry, also with a changed number. A new metering point
   with the number of a listed one still replaces that one; an entry changed to the number of another one replaces it,
   so each number is listed once.
-- **„Bankverbindung“ is optional and called „Bank (optional)“** (platform#249): on registration and in the member data, with direct debit (CORE, B2B) the field
-  was required, so a space was entered in its place. It is the name of the bank and is only printed on the invoice
+- **„Bankverbindung“ is optional and called „Bank (optional)“** (platform#249): on registration and in the member data,
+  with direct debit (CORE, B2B) the field was required, so a space was entered in its place. It is the name of the bank and is only printed on the invoice
   („Bankverbindung: <Bank> | ******1234 | <Inhaber>“) and exported with the members. The EEG page keeps its label.
+- **Adding a metering point the member already has** (platform#247): the reason in brackets after „Der Zählpunkt
+  konnte nicht angelegt werden.“ is no longer „E_1111_Bad Process“ but the text of backend code 1206, e.g. „Dieser
+  Zählpunkt ist bei diesem Mitglied schon vorhanden. Einen inaktiven Zählpunkt meldest du unter Prozesse → Zählpunkt
+  aktivieren wieder an.“ (with an older backend the former text stays).
 - **Metering point details without TechCode and FuelCode** (platform#246, decision 08.11.2026): the two read-only
   fields of the metering point list (platform#229, since 1.20.0) showed as empty boxes in an own style at every existing
   metering point, and nothing in V1 uses the codes. They are no longer shown; the backend still stores them from the

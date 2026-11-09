@@ -48,6 +48,16 @@ describe("handleErrors", () => {
     await expect(svc.check(res)).rejects.toThrow(/^Internal Server Error$/)
   })
 
+  // platform#247: a metering point the member already has; the backend text names the way (Zählpunkt aktivieren)
+  it("shows the backend text of code 1206 instead of the key \"E_1206_…\"", async () => {
+    const svc = new TestService({} as AuthService)
+    const text = "Dieser Zählpunkt ist bei diesem Mitglied schon vorhanden. Einen inaktiven Zählpunkt meldest du unter " +
+      "Prozesse → Zählpunkt aktivieren wieder an."
+    const res = new Response(JSON.stringify({error: {error: text, code: 1206, message: text}}), {status: 409})
+    // the exact text: the former key "E_1206_<text>" contains it too
+    await expect(svc.check(res)).rejects.toMatchObject({message: text})
+  })
+
   it("passes an ok response through", async () => {
     const svc = new TestService({} as AuthService)
     const res = new Response("{}", {status: 200})
