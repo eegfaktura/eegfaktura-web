@@ -58,16 +58,34 @@ describe("handleErrors", () => {
     await expect(svc.check(res)).rejects.toMatchObject({message: text})
   })
 
-  // messages to the user (platform#248): metering point at another member, import sheet missing, invalid e-mail
+  // messages to the user (platform#248): metering point at another member, invalid e-mail, debit without IBAN,
+  // import sheet missing
   it.each([
-    [1207, 400, "Der Zählpunkt AT0030000000000000000000000953013 ist schon bei einem anderen Mitglied dieser " +
-      "Gemeinschaft aktiv oder in Anmeldung."],
+    [1207, 400, "Der Zählpunkt AT0030000000000000000000000953013 ist schon einem anderen Mitglied dieser " +
+      "Gemeinschaft zugeordnet."],
+    [1110, 400, "Die E-Mail-Adresse „foo@“ ist ungültig."],
+    [1112, 400, "Für die Einzugsart CORE oder B2B braucht das Mitglied eine IBAN."],
     [1064, 400, "Das Blatt „EEG Stammdaten“ gibt es in der Datei nicht."],
-    [2000, 400, "Die E-Mail-Adresse „foo@“ ist ungültig."],
   ])("shows the backend text of code %i", async (code, status, text) => {
     const svc = new TestService({} as AuthService)
     const res = new Response(JSON.stringify({error: {error: text, code, message: text}}), {status})
     await expect(svc.check(res)).rejects.toMatchObject({message: text})
+  })
+
+  // other codes keep the key lookup: their message can be a raw database or decoder text
+  it.each([
+    [1111, 'pq: duplicate key value violates unique constraint "meteringpointpk"'],
+    [2000, "json: cannot unmarshal string into Go struct field"],
+  ])("does not show the raw message of code %i", async (code, text) => {
+    const svc = new TestService({} as AuthService)
+    const res = new Response(JSON.stringify({error: {error: "Bad Process", code, message: text}}), {status: 400})
+    await expect(svc.check(res)).rejects.toMatchObject({message: `E_${code}_Bad Process`})
+  })
+
+  it("falls back to the key when a listed code has no message", async () => {
+    const svc = new TestService({} as AuthService)
+    const res = new Response(JSON.stringify({error: {error: "x", code: 1207, message: ""}}), {status: 409})
+    await expect(svc.check(res)).rejects.toMatchObject({message: "E_1207_x"})
   })
 
   it("passes an ok response through", async () => {
