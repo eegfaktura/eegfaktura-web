@@ -18,8 +18,9 @@ export const deleteParticipantErrTxt = (error: any): string => error?.data?.erro
   ? "Das Mitglied hat Zählpunkte, die beim Netzbetreiber angemeldet sind oder waren, und kann nicht gelöscht werden."
   : "Das Mitglied konnte nicht gelöscht werden."
 
-// backend codes whose message is already the German text for the user
-// (1206: the metering point is already at this member, platform#247)
+// backend codes whose message is already the German text for the user (1206: the metering point is already at this
+// member, platform#247). The key lookup below cannot work for them, because "error" is that sentence; a general
+// fallback to "message" would show raw database texts of other codes (e.g. 1111).
 const USER_TEXT_CODES = [1206]
 
 export const determineErrTxt = (error: any): string => {

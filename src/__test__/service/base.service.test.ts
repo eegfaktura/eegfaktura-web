@@ -54,7 +54,8 @@ describe("handleErrors", () => {
     const text = "Dieser Zählpunkt ist bei diesem Mitglied schon vorhanden. Einen inaktiven Zählpunkt meldest du unter " +
       "Prozesse → Zählpunkt aktivieren wieder an."
     const res = new Response(JSON.stringify({error: {error: text, code: 1206, message: text}}), {status: 409})
-    await expect(svc.check(res)).rejects.toThrow(text)
+    // the exact text: the former key "E_1206_<text>" contains it too
+    await expect(svc.check(res)).rejects.toMatchObject({message: text})
   })
 
   it("passes an ok response through", async () => {
