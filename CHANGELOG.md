@@ -28,6 +28,13 @@ this changelog highlights the changes relevant for overview and operations.
   the status list of the concept. „Außerhalb bezahlt erfassen“ stays in both states. billing is unchanged.
 
 ### Fixed
+- **Clear messages instead of „E_…“ keys** (platform#248): web shows the backend's own text for the codes **1207**
+  (metering point active at another member — on „Mitglied anlegen“ and on „+“ at a member), **1064** (import sheet
+  missing) and **2000** (invalid input such as an invalid e-mail address), as already for 1206. Example: „Das Mitglied
+  konnte nicht angelegt werden. Deine Eingaben bleiben erhalten. (Der Zählpunkt … ist schon bei einem anderen
+  Mitglied dieser Gemeinschaft aktiv oder in Anmeldung. …)“ instead of „(E_1104_participant could not be
+  registered)“. The master data import shows „Stammdaten sind nicht korrekt. <Text>“ without the prefix „Error: “.
+  The texts come from eegfaktura-backend with platform#248; with an older backend only the prefix „E_2000_“ disappears.
 - **Adding a metering point the member already has** (platform#247): the reason in brackets after „Der Zählpunkt
   konnte nicht angelegt werden.“ is no longer „E_1111_Bad Process“ but the text of backend code 1206, e.g. „Dieser
   Zählpunkt ist bei diesem Mitglied schon vorhanden. Einen inaktiven Zählpunkt meldest du unter Prozesse → Zählpunkt
