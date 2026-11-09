@@ -28,6 +28,10 @@ this changelog highlights the changes relevant for overview and operations.
   the status list of the concept. „Außerhalb bezahlt erfassen“ stays in both states. billing is unchanged.
 
 ### Fixed
+- **Adding a metering point the member already has** (platform#247): the reason in brackets after „Der Zählpunkt
+  konnte nicht angelegt werden.“ is no longer „E_1111_Bad Process“ but the text of backend code 1206, e.g. „Dieser
+  Zählpunkt ist bei diesem Mitglied schon vorhanden. Einen inaktiven Zählpunkt meldest du unter Prozesse → Zählpunkt
+  aktivieren wieder an.“ (with an older backend the former text stays).
 - **Metering point details without TechCode and FuelCode** (platform#246, decision 08.11.2026): the two read-only
   fields of the metering point list (platform#229, since 1.20.0) showed as empty boxes in an own style at every existing
   metering point, and nothing in V1 uses the codes. They are no longer shown; the backend still stores them from the
