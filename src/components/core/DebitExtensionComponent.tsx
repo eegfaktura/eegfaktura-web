@@ -104,9 +104,9 @@ export const DebitExtensionComponent: FC<{
               <div style={{padding: "0 16px 6px", fontSize: "12px", color: "var(--ion-color-medium)"}}>
                 {t("account.mandate-hint")}
               </div>
-              <InputForm name={"accountInfo.bankName"} label={t("account.name")} control={control} type="text"
-                         rules={{required: t("warnings.account-name_missing")}} error={errors.accountInfo?.bankName}
-                         onChangePartial={onUpdateBaseData}/>
+              {/* the bank name is printed on the invoice only: optional (platform#249) */}
+              <InputForm name={"accountInfo.bankName"} label={t("account.name-optional")} control={control} type="text"
+                         error={errors.accountInfo?.bankName} onChangePartial={onUpdateBaseData}/>
               <InputForm name={"accountInfo.mandateReference"} label={t("account.mandate-reference")} control={control}
                          type="text" onChangePartial={onUpdateBaseData}
                          rules={{required: t("warnings.account-mandate_reference_missing")}} error={errors.accountInfo?.mandateReference}/>
