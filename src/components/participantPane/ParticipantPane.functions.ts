@@ -107,8 +107,9 @@ export const filterMeters = (p: EegParticipant[], hideProducers: boolean, hideCo
 
 // Search of the member list (platform#244): the input is split at spaces into terms; a member matches when every term
 // is found in one of its fields (last name, first name, member number, e-mail) or in one of its metering points
-// (number, name), case-insensitively. Terms that hit metering points narrow the list to those metering points, as a
-// single term did before; otherwise all its metering points stay. A single term behaves as before.
+// (number, name), case-insensitively. Terms that the member's own fields do not cover narrow its metering points to
+// the hits; a term that hits the member itself keeps all its metering points (platform#253: „markt“ shows every
+// metering point of „Marktgemeinde …“, not only „Pumpwerk Marktplatz“).
 export const filterSearchQuery = (entities: EegParticipant[], query: string | undefined) => {
   const terms = (query ?? "").toLowerCase().split(/\s+/).filter(t => t.length > 0)
   if (terms.length === 0) {
@@ -124,12 +125,15 @@ export const filterSearchQuery = (entities: EegParticipant[], query: string | un
     if (!terms.every(t => memberHas(d, t) || meters.some(m => meterHas(m, t)))) {
       return r
     }
-    // Narrow the meters by the terms the member's own fields do not cover (all terms if they cover every one).
-    // A meter must hold all of them, so „pv dach“ shows „PV Dach“ only; a single term narrows as before.
+    // Narrow the meters by the terms the member's own fields do not cover; none left: all meters stay.
+    // A meter must hold all of them, so „pv dach“ shows „PV Dach“ only.
     const rest = terms.filter(t => !memberHas(d, t))
-    const narrowBy = rest.length > 0 ? rest : terms
-    let hitMeters = meters.filter(m => narrowBy.every(t => meterHas(m, t)))
-    if (hitMeters.length === 0 && rest.length > 0) {
+    if (rest.length === 0) {
+      r.push({...d})
+      return r
+    }
+    let hitMeters = meters.filter(m => rest.every(t => meterHas(m, t)))
+    if (hitMeters.length === 0) {
       hitMeters = meters.filter(m => rest.some(t => meterHas(m, t)))
     }
     r.push(hitMeters.length > 0 ? {...d, meters: hitMeters} : {...d})

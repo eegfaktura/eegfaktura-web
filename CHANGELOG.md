@@ -18,8 +18,12 @@ this changelog highlights the changes relevant for overview and operations.
   e-mail, or a metering point's number or name — e.g. „huber maria“ or „huber 0815“; the order does not matter. Before,
   the whole input was searched as one text, so a first and a last name together found nothing. Meters: a member's
   metering points are narrowed to those holding every term that the member's own fields do not cover („pv dach“ shows
-  „PV Dach“ only); if the fields cover every term, only meters holding all terms are kept, else all („maria huber“
-  keeps all meters of Maria Huber). A single term narrows as before. Spaces at the edges are ignored.
+  „PV Dach“ only); if the fields cover every term, all meters stay („maria huber“ keeps all meters of Maria Huber).
+  Spaces at the edges are ignored.
+  **A hit in the member's own fields keeps all its meters** (platform#253): „markt“ shows every metering point of
+  „Marktgemeinde …“, also when meter names such as „Pumpwerk Marktplatz“ contain the term; „markt pumpwerk“ shows its
+  pumping stations, „pumpwerk“ alone still only the pumping stations. Before (also in 1.22), a single term that hit
+  the member and some meter names showed only those meters.
 - **Member list: the member number in brackets after the name** (08.11.2026), e.g. „Max Mustermann (001)“. A long name
   is cut before the number, so the number stays visible. Members without a number show the name only.
 - **„Beitrittsgebühr nachverrechnen“ only for members billed with energy already** (decision 08.11.2026): with the

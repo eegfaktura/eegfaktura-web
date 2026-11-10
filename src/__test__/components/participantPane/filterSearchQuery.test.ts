@@ -43,7 +43,7 @@ describe("member search with several terms (platform#244)", () => {
     expect(filterSearchQuery(all, "   ")).toBe(all)
   })
 
-  it("a single term behaves as before: any field, metering point hits narrow the list", () => {
+  it("a single term: any field; metering point hits narrow the list unless the term hits the member", () => {
     expect(ids(filterSearchQuery(all, "maria"))).toEqual(["1", "3"])
     expect(ids(filterSearchQuery(all, "example.org"))).toEqual(["1", "2", "3"])
     const r = filterSearchQuery(all, "0000000000000000000000000002")
@@ -61,6 +61,18 @@ describe("member search with several terms (platform#244)", () => {
     expect(names("anna huber")).toHaveLength(4)                       // both terms are the member's name
     expect(names("huber 12")).toHaveLength(4)                         // name + member number, no meter holds both
     expect(names("anna dach")).toEqual(["PV Dach", "Dachboden"])      // „dach“ is not in the member's fields
-    expect(names("huber")).toEqual(["Huber Haus"])                    // single term narrows as before
+    expect(names("huber")).toHaveLength(4)                            // the member's name: all meters (platform#253)
+  })
+
+  it("a term in the member's name keeps all its metering points, also when a meter name holds it (platform#253)", () => {
+    const naarn = member("5", "", "Marktgemeinde Naarn", "100", "amt@example.org",
+      meter("AT0030000000000000000000000000010", "Pumpwerk Marktplatz"), meter("AT0030000000000000000000000000011", "Marktgemeindeamt"),
+      meter("AT0030000000000000000000000000012", "Mittelschule"), meter("AT0030000000000000000000000000013", "Pumpwerk Erlenweg"))
+    const pumpwerk = member("6", "", "Wasserverband", "200", "wv@example.org",
+      meter("AT0030000000000000000000000000014", "Pumpwerk Au"), meter("AT0030000000000000000000000000015", "Büro"))
+    const names = (q: string) => filterSearchQuery([naarn, pumpwerk], q).map(p => p.meters.map(m => m.equipmentName))
+    expect(names("markt")).toEqual([["Pumpwerk Marktplatz", "Marktgemeindeamt", "Mittelschule", "Pumpwerk Erlenweg"]])
+    expect(names("markt pumpwerk")).toEqual([["Pumpwerk Marktplatz", "Pumpwerk Erlenweg"]])
+    expect(names("pumpwerk")).toEqual([["Pumpwerk Marktplatz", "Pumpwerk Erlenweg"], ["Pumpwerk Au"]])  // meter hits only: narrowed
   })
 })
