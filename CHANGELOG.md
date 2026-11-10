@@ -18,7 +18,7 @@ this changelog highlights the changes relevant for overview and operations.
   e-mail, or a metering point's number or name — e.g. „huber maria“ or „huber 0815“; the order does not matter. Before,
   the whole input was searched as one text, so a first and a last name together found nothing. Meters: a member's
   metering points are narrowed to those holding every term that the member's own fields do not cover („pv dach“ shows
-  „PV Dach“ only); if the fields cover every term, all meters stay („maria huber“ keeps all meters of Maria Huber).
+  „PV Dach“ only; if no meter holds them all, those holding any); if the fields cover every term, all meters stay („maria huber“ keeps all meters of Maria Huber).
   Spaces at the edges are ignored.
   **A hit in the member's own fields keeps all its meters** (platform#253): „markt“ shows every metering point of
   „Marktgemeinde …“, also when meter names such as „Pumpwerk Marktplatz“ contain the term; „markt pumpwerk“ shows its

@@ -43,7 +43,7 @@ describe("member search with several terms (platform#244)", () => {
     expect(filterSearchQuery(all, "   ")).toBe(all)
   })
 
-  it("a single term: any field; metering point hits narrow the list unless the term hits the member", () => {
+  it("a single term: any field; metering point hits narrow the list", () => {
     expect(ids(filterSearchQuery(all, "maria"))).toEqual(["1", "3"])
     expect(ids(filterSearchQuery(all, "example.org"))).toEqual(["1", "2", "3"])
     const r = filterSearchQuery(all, "0000000000000000000000000002")

@@ -126,7 +126,8 @@ export const filterSearchQuery = (entities: EegParticipant[], query: string | un
       return r
     }
     // Narrow the meters by the terms the member's own fields do not cover; none left: all meters stay.
-    // A meter must hold all of them, so „pv dach“ shows „PV Dach“ only.
+    // Meters holding all of them („pv dach“ shows „PV Dach“ only), else those holding any. Each term is in some
+    // meter (check above), so the list is never empty.
     const rest = terms.filter(t => !memberHas(d, t))
     if (rest.length === 0) {
       r.push({...d})
@@ -136,7 +137,7 @@ export const filterSearchQuery = (entities: EegParticipant[], query: string | un
     if (hitMeters.length === 0) {
       hitMeters = meters.filter(m => rest.some(t => meterHas(m, t)))
     }
-    r.push(hitMeters.length > 0 ? {...d, meters: hitMeters} : {...d})
+    r.push({...d, meters: hitMeters})
     return r
   }, [] as EegParticipant[])
 }
