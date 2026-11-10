@@ -8,6 +8,13 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Fixed
+- **„Gemeinschaft wechseln“ is always offered in the user menu** (platform#254): since 1.22.1 (platform#241) the entry
+  showed only when the backend named more than one community. In the pilot it names only the communities that exist
+  there, so a user whose current community exists only in prod (e.g. CC101172) got „E_1000_sql: no rows in result set“
+  and had no way to switch to the pilot community. The entry is there again with a single community too, as before
+  1.22.1; the picker lists the communities of this zone.
+
 ## [1.23.0] – 2026-11-10
 
 ### Changed
