@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.23.1] – 2026-11-10
+
 ### Fixed
 - **„Gemeinschaft wechseln“ is always offered in the user menu** (platform#254): since 1.22.1 (platform#241) the entry
   showed only when the backend named more than one community. In the pilot it names only the communities that exist
