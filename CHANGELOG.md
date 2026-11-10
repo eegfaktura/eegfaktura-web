@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.23.0] – 2026-11-10
+
 ### Changed
 - **EEG page: no card „Einstellungen“, the interval under „Allgemeines“** (platform#245): the second community select
   „Auswahl Gemeinschaft“ is gone — the community is switched in the user menu only. The settlement interval is the first
