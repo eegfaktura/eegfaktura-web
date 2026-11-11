@@ -8,6 +8,15 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **Peer-to-peer and self-supply: all billing functions, a preview only** (platform#255, decision 11.11.2026): web no
+  longer hides billing for communities of type P2P or EVA (hidden since platform#229). Tariffs (menu, page, member and
+  metering point), the billing switch with preview, the totals, „Meine Rechnungen“, joining fee, direct debit, the
+  creditor ID, the settlement interval, the billing settings and the billing mail texts are there as for any
+  community. After a preview, instead of „ABRECHNUNG DURCHFÜHREN“ the member list says „Bei Peer-to-Peer und
+  Eigenversorgung erstellt eegFaktura nur eine Vorschau, keine endgültige Abrechnung.“; billing refuses a final run
+  for them as well. The tariffs load for every community again.
+
 ## [1.23.1] – 2026-11-10
 
 ### Fixed

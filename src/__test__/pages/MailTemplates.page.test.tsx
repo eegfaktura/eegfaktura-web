@@ -94,8 +94,7 @@ describe("MailTemplatesPage", () => {
     expect(screen.queryAllByText(/Angepasst/)).toHaveLength(1)
   })
 
-  // platform#229: P2P and EVA have no billing, so billing is not asked for its mail
-  it("asks billing only for a community with billing, once its type is known", async () => {
+  it("asks backend and billing once the community is loaded, also for P2P (platform#255)", async () => {
     const fetchList = vi.fn().mockResolvedValue({items: [item("zp-active", "Zählpunkt aktiv")], failed: []})
     Api.mailTemplateService = {fetchList} as unknown as typeof Api.mailTemplateService
 
@@ -105,11 +104,11 @@ describe("MailTemplatesPage", () => {
 
     rerender(page("PP100100", "P2P"))
     await waitFor(() => expect(screen.getByText("Zählpunkt aktiv")).toBeTruthy())
-    expect(fetchList.mock.calls).toEqual([["PP100100", false]])
+    expect(fetchList.mock.calls).toEqual([["PP100100"]])
 
     rerender(page("RC100100", "LOCAL"))
     await waitFor(() => expect(fetchList).toHaveBeenCalledTimes(2))
-    expect(fetchList.mock.calls[1]).toEqual(["RC100100", true])
+    expect(fetchList.mock.calls[1]).toEqual(["RC100100"])
   })
 
   it("after a failed load of the community shows the load error with a retry instead of waiting", async () => {

@@ -22,7 +22,7 @@ import React, {FC, useEffect, useRef, useState} from "react";
 import {eegAvatar, eegChartBubble, eegChatIcon, eegProcess} from "../eegIcons";
 import {useAppSelector} from "../store";
 import {eegSelector} from "../store/eeg";
-import {useAccessGroups, useHasBilling, useTenant, useTenantDescription} from "../store/hook/Eeg.provider";
+import {useAccessGroups, useTenant, useTenantDescription} from "../store/hook/Eeg.provider";
 import {useUser} from "../store/hook/AuthProvider";
 import {AuthService} from "../service/auth.service";
 import {User} from "oidc-client-ts";
@@ -99,7 +99,6 @@ const Menu: FC = () => {
   const {isAdmin} = useAccessGroups()
   const {t} = useLocale("common")
   const authSvr = useUser()
-  const billing = useHasBilling()
 
   // const [userDetail, dismissUserDetail] = useIonPopover(<UserDetailPopover authSvc={authSvr} />, {
   //   onDismiss: (data: any, role: string) => dismissUserDetail(data, role),
@@ -132,13 +131,12 @@ const Menu: FC = () => {
       iosIcon: people,
       mdIcon: people
     },
-    // no tariffs without billing (P2P, EVA; platform#229), for admins and members
-    ...(billing ? [{
+    {
       title: t("menu.rates"),
       url: '/page/rates',
       iosIcon: wallet,
       mdIcon: walletSharp
-    }] : []),
+    },
     // {
     //   title: 'Profil',
     //   url: '/page/profiles',

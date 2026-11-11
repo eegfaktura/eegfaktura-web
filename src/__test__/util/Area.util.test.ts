@@ -1,5 +1,5 @@
 import {describe, expect, it} from "vitest";
-import {areaLabel, hasBilling, hasMultipleGridOperators, zoneLevelLabel} from "../../util/Area.util";
+import {areaLabel, hasMultipleGridOperators, isPreviewOnly, zoneLevelLabel} from "../../util/Area.util";
 import i18next from "../../util/I18n";
 
 describe("community type (platform#229)", () => {
@@ -16,17 +16,12 @@ describe("community type (platform#229)", () => {
     expect(areaLabel(undefined)).toBeUndefined()
   })
 
-  it("has no billing for peer-to-peer and self-supply only", () => {
-    expect(hasBilling("P2P")).toBe(false)
-    expect(hasBilling("EVA")).toBe(false)
-    expect(["LOCAL", "REGIONAL", "GEA", "BEG"].every(a => hasBilling(a))).toBe(true)
+  it("bills a preview only for peer-to-peer and self-supply (platform#255)", () => {
+    expect(isPreviewOnly("P2P")).toBe(true)
+    expect(isPreviewOnly("EVA")).toBe(true)
+    expect(["LOCAL", "REGIONAL", "GEA", "BEG", undefined].some(a => isPreviewOnly(a))).toBe(false)
   })
 
-  it("keeps billing while the community is not loaded", () => {
-    expect(hasBilling(undefined)).toBe(true)
-  })
-
-  // addendum 05.11.2026: P2P and EVA run like a BEG
   it("may have several grid operators for BEG, P2P and EVA", () => {
     expect(["BEG", "P2P", "EVA"].every(a => hasMultipleGridOperators(a))).toBe(true)
     expect(["LOCAL", "REGIONAL", "GEA", undefined].some(a => hasMultipleGridOperators(a))).toBe(false)

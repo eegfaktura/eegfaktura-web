@@ -13,7 +13,7 @@ import {useAccessGroups, useEegAllocation, useEegArea} from "../../store/hook/Ee
 import {useLocale} from "../../store/hook/useLocale";
 import {swapHorizontalSharp} from "ionicons/icons";
 import NumberInputForm from "../form/NumberInput.component";
-import {hasBilling, hasMultipleGridOperators} from "../../util/Area.util";
+import {hasMultipleGridOperators} from "../../util/Area.util";
 
 interface MeterFormElementProps {
   rates: EegTariff[]
@@ -142,8 +142,7 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
         </IonRow>
       </IonGrid>
       <IonList>
-        {/* the tariff belongs to billing: none for P2P, EVA (platform#229) */}
-        {hasBilling(area) && <SelectForm name={"tariff_id"} label={t("tariff")} control={control} options={getRatesOption()} onChangePartial={_onChange} interfaceOptions={{header: getTarifHeaderString()}}/>}
+        <SelectForm name={"tariff_id"} label={t("tariff")} control={control} options={getRatesOption()} onChangePartial={_onChange} interfaceOptions={{header: getTarifHeaderString()}}/>
         <InputForm name={"meteringPoint"} label={t("metering")} control={control} type="text" readonly={meterReadOnly} protectedControl={meterReadOnly}
                    counter={true} maxlength={33}
                    rules={{

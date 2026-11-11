@@ -42,7 +42,7 @@ import MeterChartComponent from "./MeterChart.component";
 import {Api} from "../../service";
 import {uploadActivationDocuments} from "./ParticipantPane.functions";
 import {useLocale} from "../../store/hook/useLocale";
-import {useAccessGroups, useHasBilling, useTenant} from "../../store/hook/Eeg.provider";
+import {useAccessGroups, useTenant} from "../../store/hook/Eeg.provider";
 import {useMoveMeteringPointHook} from "../../store/hook/MoveMeteringPoint.hook";
 import moment from "moment";
 import {formatDate} from "../../util/DateFormat.util";
@@ -110,7 +110,6 @@ const ParticipantDetailsPaneComponent: FC = () => {
   }
 
   const {isAdmin} = useAccessGroups()
-  const billing = useHasBilling()
   // const [moveMeterModal] = useIonModal(MoveParticipantModel, {meter: selectedMeter, participants: participantsSelector1(store.getState())});
   const {showMoveMeteringModal} = useMoveMeteringPointHook(selectedMeter!,
     allParticipantsSelector(store.getState()), (name: string, value: string, event?: any) => {
@@ -164,7 +163,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
       case "meterForm":
         return selectedMeter ? <MeterFormComponent key={selectedMeter.meteringPoint} meteringPoint={selectedMeter}/> : <></>
       case "invoiceForm":
-        return selectedParticipant && billing ?
+        return selectedParticipant ?
           <InvoiceDocumentComponent tenant={tenant!.tenant} participant={selectedParticipant}/> : <></>
       case "documentForm":
         return selectedParticipant ?
@@ -382,8 +381,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
                   </div>
                 </IonItem>
               </div>
-              {/* no invoices without billing (P2P, EVA; platform#229) */}
-              {billing && <div>
+              <div>
                 <IonItem button lines="full"
                          className={cn("eeg-item-box", {"selected": activeMenu === "invoiceForm"})}
                          onClick={() => setActiveMenu("invoiceForm")}>
@@ -392,7 +390,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
                     <div className={"detail-header"}>Meine Rechnungen</div>
                   </IonLabel>
                 </IonItem>
-              </div>}
+              </div>
               <div>
                 <IonItem lines="full" className={"eeg-item-box"}>
                   <IonIcon icon={eegShieldCrown} slot="start"></IonIcon>

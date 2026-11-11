@@ -17,10 +17,9 @@ const AREA_LABELS: Record<Area, string> = {
 export const areaLabel = (area?: string) =>
   area && Object.prototype.hasOwnProperty.call(AREA_LABELS, area) ? AREA_LABELS[area as Area] : area
 
-// Is billing (tariffs, billing runs, invoices, joining fee) provided for this community? Not for peer-to-peer and
-// self-supply (platform#229, E4/E5); billing rejects their runs as well. While the community is not loaded yet
-// (undefined) the answer is true, as before.
-export const hasBilling = (area?: string) => area !== "P2P" && area !== "EVA"
+// Peer-to-peer and self-supply get every billing function except the final run: a preview only ("Vorlage-Rechnungen",
+// platform#255; until then no billing at all, platform#229). billing refuses their final runs as well.
+export const isPreviewOnly = (area?: string) => area === "P2P" || area === "EVA"
 
 // May the community have metering points at several grid operators? BEG, and P2P/EVA like a BEG (handled centrally by
 // ebUtilities, platform#229 addendum 05.11.2026): each metering point shows its grid operator, and the metering point

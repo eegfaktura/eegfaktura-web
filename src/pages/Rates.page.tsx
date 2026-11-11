@@ -23,8 +23,7 @@ import RateDetailPaneComponent from "../components/RateDetailPane.component";
 import {selectedTenant} from "../store/eeg";
 import {useRateType} from "../store/hook/Rate.provider";
 import { get } from "react-hook-form";
-import {useHasBilling, useTenant} from "../store/hook/Eeg.provider";
-import NotFoundPage from "./NotFound.page";
+import {useTenant} from "../store/hook/Eeg.provider";
 import UnsavedChangesGuard, {useConfirmDiscard} from "../components/core/UnsavedChangesGuard.component";
 import {foldForSearch} from "../util/Search.util";
 import {ParticipantContext} from "../store/hook/ParticipantProvider";
@@ -64,7 +63,6 @@ const RatesPage: FC = () => {
     return next
   })
   const {tenant} = useTenant()
-  const billing = useHasBilling()
 
   const [showToast] = useIonToast();
 
@@ -161,11 +159,6 @@ const RatesPage: FC = () => {
       return false;
     }
     return true;
-  }
-
-  // a direct URL of a community without billing (P2P, EVA; platform#229): no tariff actions
-  if (!billing) {
-    return <NotFoundPage message={t("no_billing")}/>
   }
 
   return (

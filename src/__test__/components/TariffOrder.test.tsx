@@ -7,7 +7,7 @@ import {fetchRatesModel, selectRate} from "../../store/rate";
 import "../../util/I18n";
 import {MemoryRouter} from "react-router";
 
-vi.mock("../../store/hook/Eeg.provider", () => ({useTenant: () => ({tenant: "RC100100"}), useHasBilling: () => true}))
+vi.mock("../../store/hook/Eeg.provider", () => ({useTenant: () => ({tenant: "RC100100"})}))
 // the detail pane is not part of this test
 vi.mock("../../components/RateDetailPane.component", () => ({default: () => <div/>}))
 

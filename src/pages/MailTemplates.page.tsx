@@ -2,7 +2,6 @@ import React, {FC, useContext, useEffect, useRef, useState} from "react";
 import {IonBadge, IonCard, IonContent, IonItem, IonLabel, IonList, IonPage, IonText} from "@ionic/react";
 import MenuHeaderComponent from "../components/core/MenuHeader.component";
 import {EegContext, useAccessGroups, useTenant} from "../store/hook/Eeg.provider";
-import {hasBilling} from "../util/Area.util";
 import EegLoadStateComponent from "../components/EegLoadState.component";
 import {useLocale} from "../store/hook/useLocale";
 import {Api} from "../service";
@@ -20,10 +19,8 @@ const MailTemplatesPage: FC = () => {
   const admin = isAdmin()
   const {tenant} = useTenant()
   const {eeg} = useContext(EegContext)
-  // without billing (P2P, EVA; platform#229) only the mails of the backend: the list waits for the community's type;
-  // while it loads or after a failed load the page shows that, as the other pages do
+  // the list waits for the community; while it loads or after a failed load the page shows that, as the other pages do
   const loaded = !!eeg
-  const billing = hasBilling(eeg?.area)
 
   const [items, setItems] = useState<MailTemplateListItem[]>()
   const [failed, setFailed] = useState<MailTemplateSource[]>([])
@@ -37,14 +34,14 @@ const MailTemplatesPage: FC = () => {
   const loadList = () => {
     if (!tenant || !admin || !loaded || tenant !== currentTenant.current) return
     const current = ++request.current
-    Api.mailTemplateService.fetchList(tenant, billing).then(r => {
+    Api.mailTemplateService.fetchList(tenant).then(r => {
       if (current !== request.current) return
       setItems(r.items)
       setFailed(r.failed)
     }).catch(() => {
       if (current !== request.current) return
       setItems([])
-      setFailed(billing ? ["backend", "billing"] : ["backend"])
+      setFailed(["backend", "billing"])
     })
   }
 
@@ -53,7 +50,7 @@ const MailTemplatesPage: FC = () => {
     setItems(undefined)
     setFailed([])
     loadList()
-  }, [tenant, admin, loaded, billing])
+  }, [tenant, admin, loaded])
 
   if (!eeg) {
     return <EegLoadStateComponent/>
