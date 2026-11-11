@@ -16,7 +16,7 @@ vi.mock("../../store/user/userApi", async (importOriginal) => ({
 import {EegContext, EegProvider} from "../../store/hook/Eeg.provider";
 import {ratesSelector} from "../../store/rate";
 
-// platform#229: tariffs are loaded only for a community with billing, decided by the type its own EEG load returned
+// Tariffs load after the community's own EEG load, for every type (platform#255; until then only with billing, platform#229)
 const eegOf = (tenant: string) => ({id: tenant, area: tenant.startsWith("PP") ? "P2P" : "LOCAL", settlementInterval: "MONTHLY"})
 const fetchEeg = vi.fn(async (tenant: string): Promise<any> => eegOf(tenant))
 const fetchRates = vi.fn(async (tenant: string): Promise<any> => [{id: `${tenant}-t1`, name: `Tarif ${tenant}`, type: "EEG"}])
@@ -27,7 +27,7 @@ const SwitchButton = ({to}: {to: string}) => {
 }
 const flush = () => act(async () => { await new Promise(r => setTimeout(r, 0)) })
 
-describe("EegProvider: tariffs only with billing (platform#229)", () => {
+describe("EegProvider: tariffs after the EEG load, for every community (platform#255)", () => {
   const eegService = Api.eegService
   const participantService = Api.participantService
   beforeEach(() => {

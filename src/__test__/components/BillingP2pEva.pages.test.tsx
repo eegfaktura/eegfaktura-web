@@ -51,14 +51,14 @@ const member = {id: "001", firstname: "Anna", lastname: "Muster", businessRole: 
 describe("P2P and EVA have the billing functions (platform#255): pages", () => {
   afterEach(() => cleanup())
 
-  it.each([["P2P", true], ["LOCAL", true]])("EEG page of %s: interval and billing settings shown = %s", (area, shown) => {
+  it.each(["P2P", "LOCAL"])("EEG page of %s: interval and billing settings shown", (area) => {
     const r = renderWithProviders(<MemoryRouter><EegContext.Provider value={ctx(area)}><EegPage/></EegContext.Provider></MemoryRouter>)
     act(() => {
       r.store.dispatch(selectTenant(TENANT))
       r.store.dispatch(fetchEegModel.fulfilled({eeg: eegOf(area)}, "req", {tenant: TENANT}))
     })
-    expect(!!r.container.querySelector('ion-select[label="Abrechnungsintervall"]')).toBe(shown)
-    expect(!!screen.queryByText("Abrechnungs-Einstellungen")).toBe(shown)
+    expect(!!r.container.querySelector('ion-select[label="Abrechnungsintervall"]')).toBe(true)
+    expect(!!screen.queryByText("Abrechnungs-Einstellungen")).toBe(true)
     const model = r.container.querySelector('ion-input[label="Modell"]') as any
     expect(model.value).toBe(area === "P2P" ? "P2P (Peer-to-Peer)" : "EEG lokal (Erneuerbare-Energie-Gemeinschaft, lokal)")
   })
@@ -77,14 +77,14 @@ describe("P2P and EVA have the billing functions (platform#255): pages", () => {
   })
 
   // eegfaktura-dev#56 #13: the creditor ID serves direct debit only; the bank account stays
-  it.each([["P2P", true], ["EVA", true], ["LOCAL", true]])("EEG page of %s: creditor ID shown = %s", (area, shown) => {
+  it.each(["P2P", "EVA", "LOCAL"])("EEG page of %s: creditor ID shown", (area) => {
     const r = renderWithProviders(<MemoryRouter><EegContext.Provider value={ctx(area)}><EegPage/></EegContext.Provider></MemoryRouter>)
     act(() => {
       r.store.dispatch(selectTenant(TENANT))
       r.store.dispatch(fetchEegModel.fulfilled({eeg: eegOf(area)}, "req", {tenant: TENANT}))
     })
     const input = (label: string) => !!r.container.querySelector(`ion-input[label="${label}"]`)
-    expect(input("Creditor-ID")).toBe(shown)
+    expect(input("Creditor-ID")).toBe(true)
     expect(["IBAN", "BIC", "Kontoinhaber", "Bankverbindung"].map(input)).toEqual([true, true, true, true])
   })
 
@@ -101,7 +101,7 @@ describe("P2P and EVA have the billing functions (platform#255): pages", () => {
     expect(zone.readonly).toBe(true)
   })
 
-  it.each([["EVA", true], ["LOCAL", true]])("member list of %s: billing switch and footer shown = %s", (area, shown) => {
+  it.each(["EVA", "LOCAL"])("member list of %s: billing switch and footer shown", (area) => {
     const r = renderWithProviders(
       <EegContext.Provider value={ctx(area)}>
         <ParticipantContext.Provider value={{participants: [member], allParticipants: [member], billingEnabled: true,
@@ -115,8 +115,8 @@ describe("P2P and EVA have the billing functions (platform#255): pages", () => {
       </EegContext.Provider>)
     act(() => { r.store.dispatch(fetchParticipantModel.fulfilled({participants: [member]}, "req", {tenant: TENANT})) })
     expect(screen.getAllByText(/Muster/).length).toBeGreaterThan(0)
-    expect(!!r.container.querySelector(".eeg-sliding-box")).toBe(shown)
-    expect(!!screen.queryByText(/Saldo Zahlungen/)).toBe(shown)
+    expect(!!r.container.querySelector(".eeg-sliding-box")).toBe(true)
+    expect(!!screen.queryByText(/Saldo Zahlungen/)).toBe(true)
   })
 
   it.each([["P2P", false], ["EVA", false], ["LOCAL", true]])("member list of %s after a preview: final run offered = %s", (area, finalRun) => {
@@ -145,23 +145,23 @@ describe("P2P and EVA have the billing functions (platform#255): pages", () => {
     expect(!!screen.queryByText(/erstellt eegFaktura nur eine Vorschau/)).toBe(!finalRun)
   })
 
-  it.each([["P2P", true], ["GEA", true]])("dashboard of %s: tariff block shown = %s", (area, shown) => {
+  it.each(["P2P", "GEA"])("dashboard of %s: tariff block shown", (area) => {
     renderWithProviders(<EegContext.Provider value={ctx(area)}>
       <EegOverviewComponent rateMap={{}}/></EegContext.Provider>)
     expect(screen.getByText("Übersicht EEG")).toBeTruthy()
-    expect(!!screen.queryByText("Tarife")).toBe(shown)
+    expect(!!screen.queryByText("Tarife")).toBe(true)
   })
 
-  // both count only metering points with a tariff: without billing they would always read 0 kWh
-  it.each([["EVA", true], ["LOCAL", true]])("dashboard of %s: bought/sold and the hint on metering points without a tariff shown = %s",
-    (area, shown) => {
+  // both count only metering points with a tariff
+  it.each(["EVA", "LOCAL"])("dashboard of %s: bought/sold and the hint on metering points without a tariff shown",
+    (area) => {
       const series = {name: "", value: 0, fill: ""} as PieSeriesType
       renderWithProviders(<EegContext.Provider value={ctx(area)}>
         <EnergyOverviewComponent consumed={series} produced={series} allocated={series}
                                  rates={{t1: {id: "t1"} as any}}/></EegContext.Provider>)
       expect(screen.getByText("Verteilt")).toBeTruthy()
-      expect(!!screen.queryByText("Eingekauft")).toBe(shown)
-      expect(!!screen.queryByText("Verkauft")).toBe(shown)
-      expect(!!screen.queryByText(/2 Zählpunkte ohne gültigen Tarif sind hier nicht enthalten/)).toBe(shown)
+      expect(!!screen.queryByText("Eingekauft")).toBe(true)
+      expect(!!screen.queryByText("Verkauft")).toBe(true)
+      expect(!!screen.queryByText(/2 Zählpunkte ohne gültigen Tarif sind hier nicht enthalten/)).toBe(true)
     })
 })

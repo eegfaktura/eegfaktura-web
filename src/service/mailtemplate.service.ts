@@ -97,8 +97,7 @@ export class MailTemplateService extends EegBaseService {
   }
 
   // Lists the mails of both services as one list. A service that fails does not hide the
-  // mails of the other one; its name is returned in `failed`. Without billing (P2P, EVA; platform#229) billing is
-  // not asked.
+  // mails of the other one; its name is returned in `failed`.
   async fetchList(tenant: string): Promise<MailTemplateList> {
     const sources: MailTemplateSource[] = ["backend", "billing"]
     const results = await Promise.allSettled(sources.map(source =>

@@ -70,33 +70,33 @@ describe("P2P and EVA have the billing functions (platform#255)", () => {
     expect(screen.queryByText(/keine Abrechnung vorgesehen/)).toBeNull()
   })
 
-  it.each([["P2P", true], ["LOCAL", true]])("member details of %s: tariff, joining fee and direct debit shown = %s", (area, shown) => {
+  it.each(["P2P", "LOCAL"])("member details of %s: tariff, joining fee and direct debit shown", (area) => {
     const {container} = renderWithProviders(withEeg(area,
       <ParticipantContext.Provider value={{setUnsaved: vi.fn()} as any}>
         <MemberFormComponent participant={participant} rates={[]} formId="" onSubmit={vi.fn()}
                              onSubmitPartial={vi.fn()} changeable={false}/>
       </ParticipantContext.Provider>, true))
-    expect(!!container.querySelector('ion-select[label="Mitglieds-Tarif"]')).toBe(shown)
-    expect(!!screen.queryByText("Beitrittsgebühr")).toBe(shown)
-    expect(!!container.querySelector('ion-select[label="Einzugsart"]')).toBe(shown)
+    expect(!!container.querySelector('ion-select[label="Mitglieds-Tarif"]')).toBe(true)
+    expect(!!screen.queryByText("Beitrittsgebühr")).toBe(true)
+    expect(!!container.querySelector('ion-select[label="Einzugsart"]')).toBe(true)
   })
 
-  it.each([["EVA", true], ["LOCAL", true]])("new member of %s: direct debit shown and IBAN required = %s", async (area, shown) => {
+  it.each(["EVA", "LOCAL"])("new member of %s: direct debit shown and IBAN required", async (area) => {
     const {container} = renderWithProviders(withEeg(area, <RegisterForm/>))
-    expect(!!container.querySelector('ion-select[label="Einzugsart"]')).toBe(shown)
+    expect(!!container.querySelector('ion-select[label="Einzugsart"]')).toBe(true)
     await act(async () => { screen.getByText("prüfen").click() })
     const iban = container.querySelector('ion-input[label="IBAN"]') as any
-    expect(iban.helperText === "IBAN fehlt").toBe(shown)
-  })
+    expect(iban.helperText === "IBAN fehlt").toBe(true)
+  }, 15_000)  // the register form with direct debit renders slowly under load
 
-  it.each([["EVA", true], ["GEA", true]])("metering point of %s: tariff shown = %s", (area, shown) => {
+  it.each(["EVA", "GEA"])("metering point of %s: tariff shown", (area) => {
     const {container} = renderWithReactHookForm(
       <EegContext.Provider value={ctx(area, true)}><MeterFormElement rates={[]}/></EegContext.Provider>,
       {defaultValues: {status: "INIT", processState: "NEW", direction: "CONSUMPTION"} as Metering})
-    expect(!!container.querySelector('ion-select[label="Tarif"]')).toBe(shown)
+    expect(!!container.querySelector('ion-select[label="Tarif"]')).toBe(true)
   })
 
-  it.each([["P2P", true], ["REGIONAL", true]])("member pane of %s: „Meine Rechnungen“ shown = %s", (area, shown) => {
+  it.each(["P2P", "REGIONAL"])("member pane of %s: „Meine Rechnungen“ shown", (area) => {
     const r = renderWithProviders(withEeg(area,
       <ParticipantContext.Provider value={{unsaved: {}, setUnsaved: vi.fn()} as any}>
         <ParticipantDetailsPaneComponent/>
@@ -106,7 +106,7 @@ describe("P2P and EVA have the billing functions (platform#255)", () => {
       r.store.dispatch(selectParticipant("p1"))
       r.store.dispatch(selectMetering(participant.meters[0].meteringPoint))
     })
-    expect(!!screen.queryByText("Meine Rechnungen")).toBe(shown)
+    expect(!!screen.queryByText("Meine Rechnungen")).toBe(true)
     expect(screen.getByText("Dokumente")).toBeTruthy()
   })
 })

@@ -162,7 +162,6 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
                          rules={{required: t("warnings.company-name_missing")}} type="text" error={errors.firstname} onChangePartial={onUpdateBaseData}/>
             )
           }
-          {/* member tariff and joining fee belong to billing: none for P2P, EVA (platform#229) */}
           <SelectForm name={"tariffId"} label={t("participant_tariff")} control={control} options={getRatesOption()} onChangePartial={onUpdateBaseData}/>
           {tenant && isAdmin() && <JoiningFeeMember tenant={tenant} participantId={participant.id}
                                                     tariff={rates.find(r => r.id === tariffId)}

@@ -94,7 +94,6 @@ describe("MailTemplatesPage", () => {
     expect(screen.queryAllByText(/Angepasst/)).toHaveLength(1)
   })
 
-  // platform#229: P2P and EVA have no billing, so billing is not asked for its mail
   it("asks backend and billing once the community is loaded, also for P2P (platform#255)", async () => {
     const fetchList = vi.fn().mockResolvedValue({items: [item("zp-active", "Zählpunkt aktiv")], failed: []})
     Api.mailTemplateService = {fetchList} as unknown as typeof Api.mailTemplateService

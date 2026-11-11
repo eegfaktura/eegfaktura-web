@@ -142,7 +142,6 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
         </IonRow>
       </IonGrid>
       <IonList>
-        {/* the tariff belongs to billing: none for P2P, EVA (platform#229) */}
         <SelectForm name={"tariff_id"} label={t("tariff")} control={control} options={getRatesOption()} onChangePartial={_onChange} interfaceOptions={{header: getTarifHeaderString()}}/>
         <InputForm name={"meteringPoint"} label={t("metering")} control={control} type="text" readonly={meterReadOnly} protectedControl={meterReadOnly}
                    counter={true} maxlength={33}
