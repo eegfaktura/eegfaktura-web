@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.24.0] – 2026-11-11
+
 ### Changed
 - **Peer-to-peer and self-supply: all billing functions, a preview only** (platform#255, decision 11.11.2026): web no
   longer hides billing for communities of type P2P or EVA (hidden since platform#229). Tariffs (menu, page, member and
