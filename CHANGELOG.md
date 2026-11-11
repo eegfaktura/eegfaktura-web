@@ -8,36 +8,7 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
-### Changed
-- **EEG page: no card „Einstellungen“, the interval under „Allgemeines“** (platform#245): the second community select
-  „Auswahl Gemeinschaft“ is gone — the community is switched in the user menu only. The settlement interval is the first
-  field of „Allgemeines“ and is called **„Abrechnungsintervall“**, also in the change dialog and its message; same rules
-  as before (shown only with billing, changeable only by `EEG_ADMIN`).
-- **Member search with several terms** (platform#244): the search field of the member list splits the input at spaces
-  and finds the members that have **every** term in one of their fields — last name, first name, member number,
-  e-mail, or a metering point's number or name — e.g. „huber maria“ or „huber 0815“; the order does not matter. Before,
-  the whole input was searched as one text, so a first and a last name together found nothing. Meters: a member's
-  metering points are narrowed to those holding every term that the member's own fields do not cover („pv dach“ shows
-  „PV Dach“ only); if the fields cover every term, only meters holding all terms are kept, else all („maria huber“
-  keeps all meters of Maria Huber). A single term narrows as before. Spaces at the edges are ignored.
-- **Member list: the member number in brackets after the name** (08.11.2026), e.g. „Max Mustermann (001)“. A long name
-  is cut before the number, so the number stays visible. Members without a number show the name only.
-- **„Beitrittsgebühr nachverrechnen“ only for members billed with energy already** (decision 08.11.2026): with the
-  status „offen – wird mit der ersten Energieabrechnung verrechnet“ the button is no longer shown, because the fee comes
-  with the first final energy billing anyway; it stays for „nicht verrechnet – Mitglied wurde schon abgerechnet“, as in
-  the status list of the concept. „Außerhalb bezahlt erfassen“ stays in both states. billing is unchanged.
-
 ### Fixed
-- **Metering point details without TechCode and FuelCode** (platform#246, decision 08.11.2026): the two read-only
-  fields of the metering point list (platform#229, since 1.20.0) showed as empty boxes in an own style at every existing
-  metering point, and nothing in V1 uses the codes. They are no longer shown; the backend still stores them from the
-  metering point list, for V3.
-- **„Zählpunkt aktivieren“ registers the metering point for the chosen member** (reported 08.11.2026): after an owner
-  change one metering point number is at two members (the old one inactive). The process took the first member holding
-  the number — the participant list is sorted alphabetically in place, so often the old owner — in the confirmation and
-  in the request sent to the grid operator, and choosing the metering point replaced the chosen member. Now the chosen
-  member counts; without a choice the member follows from the metering point only when one member holds it, otherwise
-  the member has to be chosen (the field is required). The member list is no longer sorted in place.
 - **„Datenfreigabe aufheben“: the optional „Begründung“ reaches the grid operator** (revoke reason, 2026-10-30). The
   field was never read: the request always went out without a reason. It is now sent as `reason`, cleaned as the
   backend cleans it (control characters and runs of white space become one space, ends trimmed; blank is not sent).
@@ -48,6 +19,86 @@ this changelog highlights the changes relevant for overview and operations.
   field) and eegfaktura/eegfaktura-eda-xp#59 (ReasonKey 0 + Reason); deploy order eda-xp → backend → web.
   When the backend refuses a revoke (codes 5011 reason too long, 5012 no consent end or a metering point of another
   member, 5013 no active consent of the member), the error shows the German text instead of a raw key `E_<code>_…`.
+
+## [1.24.0] – 2026-11-11
+
+### Changed
+- **Peer-to-peer and self-supply: all billing functions, a preview only** (platform#255, decision 11.11.2026): web no
+  longer hides billing for communities of type P2P or EVA (hidden since platform#229). Tariffs (menu, page, member and
+  metering point), the billing switch with preview, the totals, „Meine Rechnungen“, joining fee, direct debit, the
+  creditor ID, the settlement interval, the billing settings and the billing mail texts are there as for any
+  community. After a preview, instead of „ABRECHNUNG DURCHFÜHREN“ the member list says „Bei Peer-to-Peer und
+  Eigenversorgung erstellt eegFaktura nur eine Vorschau, keine endgültige Abrechnung.“; billing refuses a final run
+  for them as well. The tariffs load for every community again.
+
+## [1.23.1] – 2026-11-10
+
+### Fixed
+- **„Gemeinschaft wechseln“ is always offered in the user menu** (platform#254): since 1.22.1 (platform#241) the entry
+  showed only when the backend named more than one community. In the pilot it names only the communities that exist
+  there, so a user whose current community exists only in prod (e.g. CC101172) got „E_1000_sql: no rows in result set“
+  and had no way to switch to the pilot community. The entry is there again with a single community too, as before
+  1.22.1; the picker lists the communities of this zone.
+
+## [1.23.0] – 2026-11-10
+
+### Changed
+- **EEG page: no card „Einstellungen“, the interval under „Allgemeines“** (platform#245): the second community select
+  „Auswahl Gemeinschaft“ is gone — the community is switched in the user menu only. The settlement interval is the first
+  field of „Allgemeines“ and is called **„Abrechnungsintervall“**, also in the change dialog and its message; same rules
+  as before (shown only with billing, changeable only by `EEG_ADMIN`).
+- **Member search with several terms** (platform#244): the search field of the member list splits the input at spaces
+  and finds the members that have **every** term in one of their fields — last name, first name, member number,
+  e-mail, or a metering point's number or name — e.g. „huber maria“ or „huber 0815“; the order does not matter. Before,
+  the whole input was searched as one text, so a first and a last name together found nothing. Meters: a member's
+  metering points are narrowed to those holding every term that the member's own fields do not cover („pv dach“ shows
+  „PV Dach“ only; if no meter holds them all, those holding any); if the fields cover every term, all meters stay („maria huber“ keeps all meters of Maria Huber).
+  Spaces at the edges are ignored.
+  **A hit in the member's own fields keeps all its meters** (platform#253): „markt“ shows every metering point of
+  „Marktgemeinde …“, also when meter names such as „Pumpwerk Marktplatz“ contain the term; „markt pumpwerk“ shows its
+  pumping stations, „pumpwerk“ alone still only the pumping stations. Before (also in 1.22), a single term that hit
+  the member and some meter names showed only those meters.
+- **Member list: the member number in brackets after the name** (08.11.2026), e.g. „Max Mustermann (001)“. A long name
+  is cut before the number, so the number stays visible. Members without a number show the name only.
+- **„Beitrittsgebühr nachverrechnen“ only for members billed with energy already** (decision 08.11.2026): with the
+  status „offen – wird mit der ersten Energieabrechnung verrechnet“ the button is no longer shown, because the fee comes
+  with the first final energy billing anyway; it stays for „nicht verrechnet – Mitglied wurde schon abgerechnet“, as in
+  the status list of the concept. „Außerhalb bezahlt erfassen“ stays in both states. billing is unchanged.
+
+### Fixed
+- **Register a member: correct or remove a metering point** (platform#249): on „Mitglied registrieren“ an added
+  metering point could not be removed, and changing its number added a second entry and kept the wrong one — the
+  member could then not be registered, the input had to be entered again. Now the form of an added metering point
+  has **„Entfernen“**, and **„Übernehmen“** replaces exactly that entry, also with a changed number. A new metering point
+  with the number of a listed one still replaces that one; an entry changed to the number of another one replaces it,
+  so each number is listed once.
+- **„Bankverbindung“ is optional and called „Bank (optional)“** (platform#249): on registration and in the member
+  data, with direct debit (CORE, B2B) the field was required, so a space was entered in its place. It is the name of
+  the bank and is only printed on the invoice („Bankverbindung: <Bank> | ******1234 | <Inhaber>“) and exported with
+  the members. The EEG page keeps its label.
+- **Clear messages instead of „E_…“ keys** (platform#248): web shows the backend's own text for the codes **1207**
+  (metering point assigned to another member — on „Mitglied anlegen“ and on „+“ at a member), **1110** (invalid e-mail
+  address — on create, on saving the member and on changing the e-mail), **1112** (direct debit without IBAN) and
+  **1064** (import sheet missing), as already for 1206. Example: „Das Mitglied konnte nicht angelegt werden. Deine
+  Eingaben bleiben erhalten. (Der Zählpunkt … ist schon einem anderen Mitglied dieser Gemeinschaft zugeordnet. …)“
+  instead of „(E_1104_participant could not be registered)“. Other codes keep the key, so raw database or decoder
+  texts are not shown as if they were meant for the user. The master data import shows „Stammdaten sind nicht
+  korrekt. <Text>“ without the prefix „Error: “. The texts come from eegfaktura-backend with platform#248; with an
+  older backend the messages stay as before.
+- **Adding a metering point the member already has** (platform#247): the reason in brackets after „Der Zählpunkt
+  konnte nicht angelegt werden.“ is no longer „E_1111_Bad Process“ but the text of backend code 1206, e.g. „Dieser
+  Zählpunkt ist bei diesem Mitglied schon vorhanden. Einen inaktiven Zählpunkt meldest du unter Prozesse → Zählpunkt
+  aktivieren wieder an.“ (with an older backend the former text stays).
+- **Metering point details without TechCode and FuelCode** (platform#246, decision 08.11.2026): the two read-only
+  fields of the metering point list (platform#229, since 1.20.0) showed as empty boxes in an own style at every existing
+  metering point, and nothing in V1 uses the codes. They are no longer shown; the backend still stores them from the
+  metering point list, for V3.
+- **„Zählpunkt aktivieren“ registers the metering point for the chosen member** (reported 08.11.2026): after an owner
+  change one metering point number is at two members (the old one inactive). The process took the first member holding
+  the number — the participant list is sorted alphabetically in place, so often the old owner — in the confirmation and
+  in the request sent to the grid operator, and choosing the metering point replaced the chosen member. Now the chosen
+  member counts; without a choice the member follows from the metering point only when one member holds it, otherwise
+  the member has to be chosen (the field is required). The member list is no longer sorted in place.
 
 ## [1.22.1] – 2026-11-08
 

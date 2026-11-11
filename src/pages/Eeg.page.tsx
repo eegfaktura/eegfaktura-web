@@ -15,7 +15,7 @@ import {useForm} from "react-hook-form";
 import SelectForm from "../components/form/SelectForm.component";
 
 import "./Eeg.page.scss"
-import {useAccessGroups, useHasBilling, useTenant} from "../store/hook/Eeg.provider";
+import {useAccessGroups, useTenant} from "../store/hook/Eeg.provider";
 import {areaLabel, zoneLevelLabel} from "../util/Area.util";
 import EegBillingConfigCardComponent from "../components/EegBillingConfigCard.component";
 import {AccountInfo, Address, Contact, Eeg, Optionals, SettlementIntervalResult} from "../models/eeg.model";
@@ -50,7 +50,6 @@ const EegPage: FC = () => {
   const dispatcher = useAppDispatch();
 
   const {isAdmin} = useAccessGroups()
-  const billing = useHasBilling()
 
   const {handleSubmit, setValue, reset, control, formState: {errors, isDirty, dirtyFields}} =
     useForm({
@@ -117,8 +116,7 @@ const EegPage: FC = () => {
               <div className={"eeg-property-card"}>
                 <div className={"header"}>{t("common-info.header")}</div>
                 <IonCard color="eeglight">
-                  {/* first in „Allgemeines“ (platform#245); the settlement interval is a billing setting: none without billing (platform#229) */}
-                  {billing && <>
+                  {/* first in „Allgemeines“ (platform#245) */}
                   <SelectForm label={"Abrechnungsintervall"} placeholder={"Abrechnungsintervall"} control={control}
                               name={"settlementInterval"} options={SETTLEMENT_INTERVALS}
                               onChangePartial={onChangeInterval} disabled={!isAdmin()}></SelectForm>
@@ -128,7 +126,6 @@ const EegPage: FC = () => {
                                                       next={pendingInterval} onDone={onIntervalDone}
                                                       onSaving={setSavingInterval}/>}
                   </IonModal>
-                  </>}
 
                   <InputFormComponent name={"rcNumber"} label={t("common-info.ec-number")} control={control} rules={{}} type="text"
                                       readonly={true}/>
@@ -259,12 +256,10 @@ const EegPage: FC = () => {
                                       rules={{regex: /[a-zA-Z\s]*/}} type="text" readonly={!isAdmin()}
                                       onChangePartial={onChangeField("bankName")}
                                       error={errors.accountInfo?.bankName}/>
-                  {/* the creditor ID serves direct debit only: none without billing (eegfaktura-dev#56 #13) */}
-                  {billing &&
-                    <InputFormComponent name={"accountInfo.creditorId"} label={t("account.creditor-id")} control={control}
-                                        rules={{regex: /[a-zA-Z\s\-_]*/}} type="text" readonly={!isAdmin()}
-                                        onChangePartial={onChangeField("creditor_id")}
-                                        error={errors.accountInfo?.creditorId}/>}
+                  <InputFormComponent name={"accountInfo.creditorId"} label={t("account.creditor-id")} control={control}
+                                      rules={{regex: /[a-zA-Z\s\-_]*/}} type="text" readonly={!isAdmin()}
+                                      onChangePartial={onChangeField("creditor_id")}
+                                      error={errors.accountInfo?.creditorId}/>
                 </IonCard>
               </div>
               <div className={"eeg-property-card"}>
@@ -277,7 +272,7 @@ const EegPage: FC = () => {
                 </IonCard>
               </div>
 
-              {billing && <EegBillingConfigCardComponent/>}
+              <EegBillingConfigCardComponent/>
 
             </div>
           </div>

@@ -4,7 +4,6 @@ import {useAppSelector} from "../../store";
 import {allParticipantsSelector} from "../../store/participant";
 import {countMemberActivity, countMemberFees} from "../../util/MemberActivity.util";
 import {countInactiveMeters, countMetersToday} from "../../util/MeterCount.util";
-import {useHasBilling} from "../../store/hook/Eeg.provider";
 
 interface EegOverviewComponentProps {
   rateMap: Record<string, EegTariff>
@@ -15,7 +14,6 @@ const EegOverviewComponent: FC<EegOverviewComponentProps> = ({rateMap}) => {
   // platform#165: members counted by the current state of their metering points, over all members (not only the
   // ones of the selected period): active = at least one active metering point
   const allParticipants = useAppSelector(allParticipantsSelector)
-  const billing = useHasBilling()
   const members = useMemo(() => countMemberActivity(allParticipants), [allParticipants])
   // platform#223: membership fees of the active members, same basis as the member count above
   const memberFees = useMemo(() => countMemberFees(allParticipants), [allParticipants])
@@ -81,8 +79,7 @@ const EegOverviewComponent: FC<EegOverviewComponentProps> = ({rateMap}) => {
               </div>
             </div>
           </div>
-          {/* no tariffs without billing (P2P, EVA; platform#229) */}
-          {billing && <div style={row}>
+          <div style={row}>
             <div>Tarife</div>
             <div style={{display: "flex", flexFlow: "column", gap: "12px"}}>
               {energyTariffs.length > 0 && <div>
@@ -94,7 +91,7 @@ const EegOverviewComponent: FC<EegOverviewComponentProps> = ({rateMap}) => {
                 {countList(feeTariffs)}
               </div>}
             </div>
-          </div>}
+          </div>
         </div>
       </div>
     </div>

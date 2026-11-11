@@ -125,9 +125,9 @@ describe("community picker search (platform#241)", () => {
 })
 
 describe("user popover (platform#241)", () => {
-  const popover = (tenants: {tenant: string, name: string}[]) => {
+  const popover = (tenants: {tenant: string, name: string}[], current = "RC100100") => {
     const onPickTenant = vi.fn()
-    const eeg = {tenant: "RC100100", setTenant: vi.fn(), getTenants: () => tenants} as unknown as EegState
+    const eeg = {tenant: current, setTenant: vi.fn(), getTenants: () => tenants} as unknown as EegState
     render(<EegContext.Provider value={eeg}><UserDetailPopover authSvc={undefined} onPickTenant={onPickTenant}/></EegContext.Provider>)
     return onPickTenant
   }
@@ -141,9 +141,18 @@ describe("user popover (platform#241)", () => {
     expect(onPickTenant).toHaveBeenCalled()
   })
 
-  it("has no „Gemeinschaft wechseln“ with a single community", () => {
-    popover([{tenant: "RC100100", name: "Eins"}])
+  it("offers „Gemeinschaft wechseln“ also with a single community (platform#254)", () => {
+    const onPickTenant = popover([{tenant: "RC100100", name: "Eins"}])
     expect(screen.getByText("RC100100-Eins")).toBeTruthy()
-    expect(screen.queryByText("Gemeinschaft wechseln")).toBeNull()
+    fireEvent.click(screen.getByText("Gemeinschaft wechseln").closest("ion-item")!)
+    expect(onPickTenant).toHaveBeenCalled()
+  })
+
+  it("a current community this zone does not know: shown by its number, the switch leads out (platform#254)", () => {
+    // pilot: the account has CC101172 (prod only) and CC100334; the backend names only CC100334
+    const onPickTenant = popover([{tenant: "CC100334", name: "BEG UnserStrom"}], "CC101172")
+    expect(screen.getByText("CC101172")).toBeTruthy()
+    fireEvent.click(screen.getByText("Gemeinschaft wechseln").closest("ion-item")!)
+    expect(onPickTenant).toHaveBeenCalled()
   })
 })

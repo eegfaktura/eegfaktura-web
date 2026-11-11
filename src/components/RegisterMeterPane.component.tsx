@@ -14,6 +14,8 @@ interface RegisterMeterPaneComponentProps {
   meteringPoint: Metering
   onAdd: (meter: Metering) => void
   onChancel: () => void
+  // set for a metering point already in the list: the form offers to remove it (platform#249)
+  onRemove?: () => void
   // reports unsaved input, so the register page asks before it is lost (platform#228 step 4)
   onDirtyChange?: (dirty: boolean) => void
 }
@@ -22,6 +24,7 @@ const RegisterMeterPaneComponent: FC<RegisterMeterPaneComponentProps> = ({
                                                                            meteringPoint,
                                                                            onAdd,
                                                                            onChancel,
+                                                                           onRemove,
                                                                            onDirtyChange
                                                                          }) => {
 
@@ -54,7 +57,8 @@ const RegisterMeterPaneComponent: FC<RegisterMeterPaneComponentProps> = ({
         <IonFooter>
           <IonToolbar className={"ion-padding-horizontal"}>
             <IonButton fill="clear" slot="start" onClick={() => confirmDiscard(isDirty, onChancel)}>Abbrechen</IonButton>
-            <IonButton slot="end" onClick={handleSubmit(onAppend)}>Hinzufügen</IonButton>
+            {onRemove && <IonButton fill="clear" color="danger" slot="start" onClick={onRemove}>Entfernen</IonButton>}
+            <IonButton slot="end" onClick={handleSubmit(onAppend)}>{onRemove ? "Übernehmen" : "Hinzufügen"}</IonButton>
           </IonToolbar>
         </IonFooter>
       </div>

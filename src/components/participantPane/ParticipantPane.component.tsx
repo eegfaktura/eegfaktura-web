@@ -72,7 +72,7 @@ import {reformatDateTimeStamp,} from "../../util/Helper.util";
 import DatepickerPopover from "../dialogs/datepicker.popover";
 import {ExcelReportRequest, ParticipantCp} from "../../models/reports.model";
 import UploadPopup from "../dialogs/upload.popup";
-import {EegContext, useHasBilling, useRefresh, useTenant} from "../../store/hook/Eeg.provider";
+import {EegContext, usePreviewOnly, useRefresh, useTenant} from "../../store/hook/Eeg.provider";
 import {
   billingRunErrorSelector,
   billingRunIsFetchingSelector,
@@ -260,14 +260,14 @@ const ParticipantPaneComponent: FC = () => {
   const energyReport = useAppSelector(meteringEnergyGroup1);
   const reportLoading = useAppSelector(energyReportLoadingSelector);
   const reportError = useAppSelector(energyReportErrorSelector);
-  // no billing mode for a community without billing (P2P, EVA; platform#229)
-  const billing = useHasBilling();
+  // P2P and EVA: a preview only, no final run (platform#255)
+  const previewOnly = usePreviewOnly();
   useEffect(() => {
-    if (billing && reportLoading) return;
-    const nextBillingEnabled = billing && !!activePeriod && !billingRunBlocker(false, reportError, buildAllocationMap(participants).length);
+    if (reportLoading) return;
+    const nextBillingEnabled = !!activePeriod && !billingRunBlocker(false, reportError, buildAllocationMap(participants).length);
     setBillingEnabled(nextBillingEnabled);
     if (!nextBillingEnabled) toggleShowAmount(false);
-  }, [billing, activePeriod, participants, energyReport, reportLoading, reportError]);
+  }, [activePeriod, participants, energyReport, reportLoading, reportError]);
 
   // the tooltip is derived on render, so it follows a loading report and a period change at once
   const billingSwitchTitle = useMemo(() => billingSwitchTooltip({
@@ -396,8 +396,7 @@ const ParticipantPaneComponent: FC = () => {
 
   const onUpdatePeriodSelection = (selectedPeriod: SelectedPeriod) => {
     dispatcher(setSelectedPeriod(selectedPeriod));
-    // no billing run to look up without billing (platform#229)
-    if (billing) dispatcher(
+    dispatcher(
       fetchBillingRun({
         tenant: tenant,
         clearingPeriodType: selectedPeriod.type,
@@ -516,8 +515,8 @@ const ParticipantPaneComponent: FC = () => {
         } as ExcelReportRequest
         return Api.energyService.createReport({tenant, ecId, rcNr}, exportdata);
       } else {
-        // without billing or a tariff with a joining fee the column stays empty anyway: billing is not asked
-        if (!billing || !Object.values(rates).some(r => hasJoiningFee(r))) {
+        // without a tariff with a joining fee the column stays empty anyway: billing is not asked
+        if (!Object.values(rates).some(r => hasJoiningFee(r))) {
           return Api.eegService.exportMasterdata(tenant)
         }
         return exportMasterdataWithJoiningFees(
@@ -556,7 +555,7 @@ const ParticipantPaneComponent: FC = () => {
               .then(() => infoToast("Stammdaten-Upload beendet."))
               .catch((e) => {
                 dismissLoading();
-                errorToast("Stammdaten sind nicht korrekt. " + e.toString());
+                errorToast("Stammdaten sind nicht korrekt. " + (e?.message ?? e));
               });
             break;
         }
@@ -874,7 +873,7 @@ const ParticipantPaneComponent: FC = () => {
           }
         </div>
         <div className={"pane-footer"}>
-          {billing && showAmount && (
+          {showAmount && (
             <div>
               {totals && <BillingTotalsTable totals={totals} open={totalsOpen}/>}
               <IonRow>
@@ -988,11 +987,14 @@ const ParticipantPaneComponent: FC = () => {
                           {"EXCEL"}
                         </IonButton>
                       </div>
-                      <IonButton
-                        expand="block"
-                        disabled={activePeriod === undefined || !previewValid}
-                        onClick={() => openBillingCheck('billing', documentDateBilling.current)}
-                      >{`ABRECHNUNG DURCHFÜHREN (${billingInfo.length})`}</IonButton>
+                      {previewOnly
+                        ? <div>Bei Peer-to-Peer und Eigenversorgung erstellt eegFaktura nur eine Vorschau, keine
+                            endgültige Abrechnung.</div>
+                        : <IonButton
+                          expand="block"
+                          disabled={activePeriod === undefined || !previewValid}
+                          onClick={() => openBillingCheck('billing', documentDateBilling.current)}
+                        >{`ABRECHNUNG DURCHFÜHREN (${billingInfo.length})`}</IonButton>}
                     </>
                   )}
                   {!billingRunIsFetching && billingRunStatus === "DONE" && (
@@ -1040,12 +1042,12 @@ const ParticipantPaneComponent: FC = () => {
           )}
           <div className={"button-bar"}>
             <div style={{marginLeft: "20px"}}>
-              {billing && <SlideButtonComponent
+              <SlideButtonComponent
                 checked={showAmount}
                 disabled={!billingEnabled}
                 title={billingSwitchTitle}
                 setChecked={(c) => activateBilling(c)}
-              ></SlideButtonComponent>}
+              ></SlideButtonComponent>
             </div>
             <div
               style={{

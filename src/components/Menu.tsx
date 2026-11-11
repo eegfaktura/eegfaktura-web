@@ -22,7 +22,7 @@ import React, {FC, useEffect, useRef, useState} from "react";
 import {eegAvatar, eegChartBubble, eegChatIcon, eegProcess} from "../eegIcons";
 import {useAppSelector} from "../store";
 import {eegSelector} from "../store/eeg";
-import {useAccessGroups, useHasBilling, useTenant, useTenantDescription} from "../store/hook/Eeg.provider";
+import {useAccessGroups, useTenant, useTenantDescription} from "../store/hook/Eeg.provider";
 import {useUser} from "../store/hook/AuthProvider";
 import {AuthService} from "../service/auth.service";
 import {User} from "oidc-client-ts";
@@ -64,11 +64,12 @@ export const UserDetailPopover:FC<{authSvc: AuthService | undefined, onPickTenan
         </IonLabel>
       </IonItem>
       <div style={{marginTop: "16px"}}>
-      {/* opens the community picker with a search field; the popover closes on this click */}
-      {(tenants?.length ?? 0) > 1 && <IonItem button onClick={onPickTenant} lines="full">
+      {/* opens the community picker with a search field; the popover closes on this click. Always offered: the
+          current community may be one this zone does not know (pilot), and the way out is the picker (platform#254) */}
+      <IonItem button onClick={onPickTenant} lines="full">
         <IonIcon aria-hidden="true" icon={swapHorizontalOutline} slot="start" size="small"></IonIcon>
         <IonLabel style={{fontSize: "16px"}}>{t("menu.switchTenant")}</IonLabel>
-      </IonItem>}
+      </IonItem>
       <IonItem button onClick={() => authSvc?.redirectToUserAccount()} lines="full">
         <IonIcon aria-hidden="true" icon={refreshOutline} slot="start" size="small"></IonIcon>
         <IonLabel style={{fontSize: "16px"}}>{t("menu.changePassword")}</IonLabel>
@@ -98,7 +99,6 @@ const Menu: FC = () => {
   const {isAdmin} = useAccessGroups()
   const {t} = useLocale("common")
   const authSvr = useUser()
-  const billing = useHasBilling()
 
   // const [userDetail, dismissUserDetail] = useIonPopover(<UserDetailPopover authSvc={authSvr} />, {
   //   onDismiss: (data: any, role: string) => dismissUserDetail(data, role),
@@ -131,13 +131,12 @@ const Menu: FC = () => {
       iosIcon: people,
       mdIcon: people
     },
-    // no tariffs without billing (P2P, EVA; platform#229), for admins and members
-    ...(billing ? [{
+    {
       title: t("menu.rates"),
       url: '/page/rates',
       iosIcon: wallet,
       mdIcon: walletSharp
-    }] : []),
+    },
     // {
     //   title: 'Profil',
     //   url: '/page/profiles',
