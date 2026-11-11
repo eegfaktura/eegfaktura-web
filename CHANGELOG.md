@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.24.1] – 2026-11-11
+
 ### Fixed
 - **„Datenfreigabe aufheben“: the optional „Begründung“ reaches the grid operator** (revoke reason, 2026-10-30). The
   field was never read: the request always went out without a reason. It is now sent as `reason`, cleaned as the
