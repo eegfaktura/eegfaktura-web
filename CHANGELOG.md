@@ -11,14 +11,16 @@ this changelog highlights the changes relevant for overview and operations.
 ### Fixed
 - **„Datenfreigabe aufheben“: the optional „Begründung“ reaches the grid operator** (revoke reason, 2026-10-30). The
   field was never read: the request always went out without a reason. It is now sent as `reason`, cleaned as the
-  backend cleans it (control characters and runs of white space become one space, ends trimmed; blank is not sent).
+  backend cleans it (format characters such as soft hyphens and zero-width spaces and characters XML does not allow are
+  dropped, control characters and runs of white space become one space, ends trimmed; blank is not sent).
   A counter under the field counts the cleaned text in characters (as the backend and CMRevoke count them) up to 50;
   above 50 „Höchstens 50 Zeichen.“ appears and „Anfordern“ stays disabled. A hint says that the reason goes to the grid
   operator and is stored in the history (user decision 2026-10-30) and asks not to enter personal data. The
   confirmation names the reason. Needs eegfaktura/eegfaktura-backend#127 (reads `reason`; an older backend ignores the
   field) and eegfaktura/eegfaktura-eda-xp#59 (ReasonKey 0 + Reason); deploy order eda-xp → backend → web.
-  When the backend refuses a revoke (codes 5011 reason too long, 5012 no consent end or a metering point of another
-  member, 5013 no active consent of the member), the error shows the German text instead of a raw key `E_<code>_…`.
+  When the backend refuses a revoke (codes 5011 reason too long, 5012 a metering point of another member or without
+  grid operator, 5013 a metering point without active consent of the member, 5014 no consent end), the error shows the
+  backend's German text instead of a raw key `E_<code>_…`.
 
 ## [1.24.0] – 2026-11-11
 

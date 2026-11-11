@@ -20,23 +20,18 @@ export const deleteParticipantErrTxt = (error: any): string => error?.data?.erro
 
 // backend codes whose message is already the German text for the user: 1206 the metering point is already at this
 // member (platform#247), 1207 it is assigned to another member, 1110 invalid e-mail address, 1112 direct debit without
-// IBAN, 1064 the import sheet is missing (platform#248). The key lookup below cannot work for them, because "error" is
-// that sentence; a general fallback to "message" would show raw texts of other codes (database texts of 1111, Go
-// decoder texts of 2000).
-const USER_TEXT_CODES = [1206, 1207, 1110, 1112, 1064]
+// IBAN, 1064 the import sheet is missing (platform#248), 5011-5014 the revoke refusals (reason too long, metering point
+// not of the member or without grid operator, no active consent, no consent end). The key lookup below cannot work for
+// them, because "error" is that sentence; a general fallback to "message" would show raw texts of other codes
+// (database texts of 1111, Go decoder texts of 2000).
+const USER_TEXT_CODES = [1206, 1207, 1110, 1112, 1064, 5011, 5012, 5013, 5014]
 
 export const determineErrTxt = (error: any): string => {
   if (error instanceof ErrorResponse) {
     if (USER_TEXT_CODES.includes(error.error.code) && error.error.message) {
       return error.error.message
     }
-    const key = "E_" + error.error.code + "_" + error.error.error
-    if (!i18n.exists(key, {ns: 'error'}) && i18n.exists("E_" + error.error.code, {ns: 'error'})) {
-      // a text per code (the backend's revoke refusals 5011-5013, whose message carries dots and cannot be a key);
-      // 5012 has two messages and shows the backend's German one
-      return i18n.t("E_" + error.error.code, {ns: 'error', message: error.error.error, interpolation: {escapeValue: false}})
-    }
-    return i18n.t(key, { ns: 'error' })
+    return i18n.t("E_" + error.error.code + "_" + error.error.error, { ns: 'error' })
   }
   return error
 }

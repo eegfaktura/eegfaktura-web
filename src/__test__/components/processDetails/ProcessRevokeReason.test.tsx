@@ -1,6 +1,6 @@
 import {describe, expect, it, vi} from "vitest";
 import React from "react";
-import {fireEvent, render, screen} from "@testing-library/react";
+import {fireEvent, render, screen, waitFor} from "@testing-library/react";
 import {Controller} from "react-hook-form";
 
 // The reason input of "Datenfreigabe aufheben" with the real InputForm: the hint that the text goes to the grid operator
@@ -16,7 +16,8 @@ const select = vi.hoisted(() => ({control, name, rules, multiple}: any) =>
            onChange={e => field.onChange(multiple ? e.target.value.split(",") : e.target.value)}/>}/>)
 vi.mock("../../../components/form/BasicSelect.component", () => ({BasicSelectComponent: select}))
 vi.mock("../../../components/form/SelectForm.component", () => ({default: select}))
-vi.mock("react-datepicker", () => ({default: () => null}))
+vi.mock("react-datepicker", () => ({default: ({onChange}: any) =>
+  <button onClick={() => onChange(new Date(2030, 0, 1))}>Ende wählen</button>}))
 
 import "../../../util/I18n";
 import {Eeg, EdaProcess} from "../../../models/eeg.model";
@@ -33,7 +34,14 @@ const renderForm = () => {
     input.value = value
     fireEvent(input, new CustomEvent("ionInput", {detail: {value}}))
   }
-  return {type}
+  // member, metering point and consent end chosen, so only the reason decides whether "Anfordern" is enabled
+  const fillRest = () => {
+    fireEvent.change(screen.getByLabelText("participantId"), {target: {value: "p1"}})
+    fireEvent.change(screen.getByLabelText("meteringPoints"), {target: {value: "AT0030000000000000000000000000001"}})
+    fireEvent.click(screen.getByText("Ende wählen"))
+  }
+  const request = () => container.querySelector("ion-button[slot=\"end\"]") as HTMLElement
+  return {type, fillRest, request}
 }
 
 describe("Datenfreigabe aufheben: Begründung", () => {
@@ -56,5 +64,14 @@ describe("Datenfreigabe aufheben: Begründung", () => {
     type("x".repeat(51))
     expect(screen.getByTestId("reason-counter").textContent).toBe("51/50")
     expect(screen.getByText("Höchstens 50 Zeichen.")).toBeTruthy()
+  })
+
+  it("keeps \"Anfordern\" disabled above 50 characters", async () => {
+    const {type, fillRest, request} = renderForm()
+    fillRest()
+    type("x".repeat(50))
+    await waitFor(() => expect(request().getAttribute("disabled")).toBe("false"))
+    type("x".repeat(51))
+    await waitFor(() => expect(request().getAttribute("disabled")).toBe("true"))
   })
 })

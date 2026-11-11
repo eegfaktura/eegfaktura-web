@@ -42,6 +42,10 @@ describe("summaries before an EDA process (platform#228 step 3)", () => {
   it("cleans the revoke reason as the backend does and counts characters, not UTF-16 units", () => {
     expect(cleanRevokeReason(" Auszug\u0001des\r\nMitglieds\t\u00a0")).toBe("Auszug des Mitglieds")
     expect(cleanRevokeReason(undefined)).toBe("")
+    // format characters and characters XML does not allow are dropped, as the backend and eda-xp drop them
+    expect(cleanRevokeReason("Aus﻿zug­​‮")).toBe("Auszug")
+    expect(cleanRevokeReason("​")).toBe("")
+    expect(revokeReasonLength("x".repeat(48) + "­­" + "yy")).toBe(50)
     expect(revokeReasonLength("😀")).toBe(1)
     expect(revokeReasonLength("  ab  ")).toBe(2)
   })

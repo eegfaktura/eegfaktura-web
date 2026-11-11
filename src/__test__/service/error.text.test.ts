@@ -2,16 +2,17 @@ import {describe, expect, it} from "vitest";
 import "../../util/I18n";
 import {determineErrTxt, ErrorResponse} from "../../service/error.text";
 
-// The backend's revoke refusals (5011-5013) carry German messages with dots, which cannot be i18n keys: the web shows a
-// text per code instead of the raw key "E_<code>_<message>".
+// The backend's revoke refusals (5011-5014) carry the German text for the user in "message": the web shows it instead
+// of the raw key "E_<code>_<message>".
 describe("determineErrTxt", () => {
   const response = (code: number, message: string) => new ErrorResponse({code, error: message, message})
 
   it("shows the revoke refusals readable", () => {
     expect(determineErrTxt(response(5011, "Die Begründung ist zu lang (höchstens 50 Zeichen).")))
       .toBe("Die Begründung ist zu lang (höchstens 50 Zeichen).")
-    expect(determineErrTxt(response(5013, "Keiner der Zählpunkte hat eine aktive Datenfreigabe dieses Mitglieds.")))
-      .toBe("Keiner der Zählpunkte hat eine aktive Datenfreigabe dieses Mitglieds.")
+    expect(determineErrTxt(response(5013, "Mindestens ein Zählpunkt hat keine aktive Datenfreigabe dieses Mitglieds.")))
+      .toBe("Mindestens ein Zählpunkt hat keine aktive Datenfreigabe dieses Mitglieds.")
+    expect(determineErrTxt(response(5014, "Das Ende der Datenfreigabe fehlt."))).toBe("Das Ende der Datenfreigabe fehlt.")
     expect(determineErrTxt(response(5012, "Mindestens ein Zählpunkt gehört nicht zu diesem Mitglied.")))
       .toBe("Mindestens ein Zählpunkt gehört nicht zu diesem Mitglied.")
   })
