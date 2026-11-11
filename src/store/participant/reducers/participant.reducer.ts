@@ -32,6 +32,9 @@ export const reducer = createReducer(initialState, builder =>
       state.selectedParticipant = undefined
       state.selectedMeter = undefined
     })
+    .addCase(fetchParticipantModel.rejected, (state, action) => {
+      return {...state, isFetching: false}  // the loading state stayed on after a failed load
+    })
     .addCase(newParticipant, (state, action) => {
       return {...state, isFetching: false,
         selectedParticipant: {...action.payload, status: "NEW", id: v4(), role: "EEG_USER",

@@ -1,5 +1,5 @@
 import {createReducer} from "@reduxjs/toolkit";
-import {archiveRate, fetchRatesModel, saveNewRate, selectRate, updateRate} from "../actions/rate.action";
+import {archiveRate, clearRates, fetchRatesModel, saveNewRate, selectRate, updateRate} from "../actions/rate.action";
 import {adapter, initialState} from "../states";
 
 export const reducer = createReducer(initialState, builder =>
@@ -20,4 +20,5 @@ export const reducer = createReducer(initialState, builder =>
     .addCase(archiveRate.fulfilled, (state, action) => {
       return adapter.removeOne({...state, selectedRate: undefined}, action.payload)
     })
+    .addCase(clearRates, () => initialState)
 );

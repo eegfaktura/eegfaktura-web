@@ -1,4 +1,4 @@
-import React, {FC, useEffect, useMemo} from "react";
+import React, {FC, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {
   IonButton,
   IonButtons,
@@ -8,7 +8,8 @@ import {
   IonMenuButton,
   IonPage,
   IonTitle,
-  IonToolbar
+  IonToolbar,
+  useIonToast
 } from "@ionic/react";
 
 
@@ -27,6 +28,7 @@ import {Metering} from "../models/meteringpoint.model";
 import {RouteComponentProps} from "react-router";
 import {useTenant} from "../store/hook/Eeg.provider";
 import moment from "moment/moment";
+import UnsavedChangesGuard from "../components/core/UnsavedChangesGuard.component";
 
 const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
 
@@ -81,8 +83,14 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
     tariffId: '',
     meters: []} as EegParticipant
 
+  const [toaster] = useIonToast()
   const formMethods = useForm<EegParticipant>({defaultValues: selectedParticipant, mode: "onBlur", reValidateMode: 'onChange'})
-  const {reset, handleSubmit, setValue, formState: {dirtyFields}} = formMethods
+  const {reset, handleSubmit, setValue, formState: {dirtyFields, isDirty, isSubmitting}} = formMethods
+  // set right before the navigation after a successful save, so the leave guard does not ask (261024-ca18)
+  const saved = useRef(false)
+  const allowLeave = useCallback(() => saved.current, [])
+  // the open metering point form has its own form: its input counts as unsaved too (platform#228 step 4)
+  const [meterPaneDirty, setMeterPaneDirty] = useState(false)
   // const {append} = useFieldArray<EegParticipant>({control, name: 'meters'})
 
   // Async-Race: useForm({defaultValues}) erfasst die Nummer beim ersten Render,
@@ -94,10 +102,20 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
     }
   }, [nextParticipantNumber, dirtyFields.participantNumber, setValue])
 
-  const onRegisterParticipant = (participant: EegParticipant) => {
+  // navigate and clear only after the member was saved; on failure the input stays for a retry
+  const onRegisterParticipant = (participant: EegParticipant) =>
     dispatch(createParticipant({tenant, participant}))
-    history.replace("/page/participants")
-  }
+      .unwrap()
+      .then(() => {
+        saved.current = true
+        reset()
+        history.replace("/page/participants")
+      })
+      .catch((e) => toaster({
+        message: "Das Mitglied konnte nicht angelegt werden. Deine Eingaben bleiben erhalten."
+          + (e?.message ? ` (${e.message})` : ""),
+        color: "danger", position: "bottom", buttons: [{text: "OK"}],
+      }))
 
   const onAddMeter = (meter: Metering) => {
     // append(meter)
@@ -110,8 +128,7 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
     data.residentAddress.street = data.billingAddress.street
     data.residentAddress.streetNumber = data.billingAddress.streetNumber
     data.meters = data.meters.map(m => {return {...m, registeredSince: data.participantSince} as Metering})
-    onRegisterParticipant(data)
-    reset()
+    return onRegisterParticipant(data)  // handleSubmit keeps isSubmitting until the save finished
   }
 
   return (
@@ -137,17 +154,19 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
               </div>
               <div className="register-content-pane">
                 <h4>Zählpunkte</h4>
-                <ParticipantRegisterMeterPaneComponent participant={selectedParticipant} onAddMeter={onAddMeter}/>
+                <ParticipantRegisterMeterPaneComponent participant={selectedParticipant} onAddMeter={onAddMeter}
+                                                       onDirtyChange={setMeterPaneDirty}/>
               </div>
             </div>
             </div>
           </form>
         </FormProvider>
       </IonContent>
+      <UnsavedChangesGuard dirty={isDirty || meterPaneDirty} allowLeave={allowLeave}/>
       <IonFooter>
         <IonToolbar className={"ion-padding-horizontal"}>
           <IonButton fill="clear" slot="start" routerLink="/page/participants" routerDirection="root">Zurück</IonButton>
-          <IonButton form="submit-register-participant" type="submit" slot="end">Registrieren</IonButton>
+          <IonButton form="submit-register-participant" type="submit" slot="end" disabled={isSubmitting}>Registrieren</IonButton>
         </IonToolbar>
       </IonFooter>
     </IonPage>

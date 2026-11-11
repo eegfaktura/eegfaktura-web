@@ -7,3 +7,18 @@
 .react-datepicker__input-container > input {
   width: 100%;
 }
+
+.upload-drop-zone {
+  border: 2px dashed transparent;
+  border-radius: 6px;
+}
+
+.upload-drop-zone.drag-over {
+  border-color: var(--ion-color-primary);
+  background: rgba(var(--ion-color-primary-rgb), 0.06);
+}
+
+.upload-drop-hint {
+  font-size: 12px;
+  color: var(--ion-color-danger);
+}

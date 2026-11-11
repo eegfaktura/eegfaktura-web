@@ -15,8 +15,8 @@ const member = (meters: Metering[]) => ({
 }) as unknown as EegParticipant
 
 const renderMember = (listEntry: EegParticipant, stored: EegParticipant) => renderWithProviders(
-  <MemberComponent hideMember={false} hideMeter={false} isChecked={false} participant={listEntry}
-                   showDetailsPage={() => {}} showAmount={false} onCheck={() => {}}
+  <MemberComponent hideMember={false} hideMeter={false} participant={listEntry}
+                   showDetailsPage={() => {}} showAmount={false}
                    onShowAddMeterPage={() => () => vi.fn()}/>,
   {preloadedState: {participant: {...participantInitial, ids: [stored.id], entities: {[stored.id]: stored}}}})
 

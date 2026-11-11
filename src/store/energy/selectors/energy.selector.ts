@@ -1,10 +1,9 @@
 import {createSelector} from "@reduxjs/toolkit";
 
 // import { EnergyState, adapter, featureKey } from '../states';
-import {featureKey, EnergyEntitieState, metaAdapter, reportAdapter, participantReportAdapter} from "../states";
+import {featureKey, EnergyEntitieState, metaAdapter, participantReportAdapter} from "../states";
 import {
   ConsumerReport, EnergyMeta,
-  EnergyReport,
   EnergySeries,
   MeterEnergySeries,
   ProducerReport, SelectedPeriod
@@ -14,23 +13,18 @@ import {Metering, MeteringEnergyGroupType} from "../../../models/meteringpoint.m
 import {transformMeterReportToEnergySeries} from "../../../util/ReportHelper";
 import {activeMetersSelector} from "../../participant";
 
-const {selectAll, selectById, selectEntities} = metaAdapter.getSelectors();
+const {selectAll, selectById} = metaAdapter.getSelectors();
 const {selectAll: selectAllParticipants, selectById: selectParticipantById} = participantReportAdapter.getSelectors();
 
 
 const nowTimeString = () => {
  const now = new Date()
- return `${now.getDay()}.${now.getMonth()+1}.${now.getFullYear()}`
+ return `${now.getDate()}.${now.getMonth()+1}.${now.getFullYear()}`
 }
 
 const featureStateSelector = (state: { [featureKey]: EnergyEntitieState }) => state[featureKey];
 
 // const intermediateReportEntitiesSelector = (state: { [featureKey]: EnergyEntitieState }) => state[featureKey].intermediateReportResults;
-
-export const stateSelector = createSelector(
-  featureStateSelector,
-  state => selectEntities
-);
 
 // export const rateSelector = createSelector(
 //   featureStateSelector,
@@ -42,11 +36,6 @@ const selectAllMeta = createSelector(
   items => selectAll(items.meta)
 )
 
-export const selectAllIntermediates = createSelector(
-  featureStateSelector,
-  items => reportAdapter.getSelectors().selectAll(items.intermediateReportResults)
-)
-
 export const selectAllIntermediatesV2 = createSelector(
   featureStateSelector,
   items => selectAllParticipants(items.participantReports).flatMap(r => r.meters.map(m => m.report.intermediate)),
@@ -56,10 +45,6 @@ export const selectMeta = (meterId: string) => createSelector(
   items => selectById(items.meta, meterId)
 )
 
-const selectReport = createSelector(
-  featureStateSelector,
-  items => items.report
-)
 const selectParticipantReport = (participantId: string | undefined) => createSelector(
   featureStateSelector,
   items => participantId ? selectParticipantById(items.participantReports, participantId) : undefined
@@ -162,53 +147,42 @@ export const periodsSelector = createSelector(
   }, {begin: nowTimeString(), end: ""})
 )
 
+export const energyReportErrorSelector = createSelector(
+  featureStateSelector,
+  state => state.reportError
+)
+
+export const energyReportLoadingSelector = createSelector(
+  featureStateSelector,
+  state => !!state.reportLoading
+)
+
 export const selectedPeriodSelector = createSelector(
   featureStateSelector,
   items => items.selectedPeriod
-)
-
-export const energySeriesByMeter = (meter: string) => createSelector(
-  selectMeta(meter),
-  selectAllIntermediates,
-  (meta, entities:EnergyReport[]) =>
-    entities.map(r =>
-      (meta && r.allocated.length > meta.sourceIdx) ?
-        { allocated: meta.dir === "CONSUMPTION" ? r.allocated[meta.sourceIdx] : r.distributed[meta.sourceIdx],
-          consumed: meta.dir === "CONSUMPTION" ? r.consumed[meta.sourceIdx] : r.produced[meta.sourceIdx] } as {allocated: number, consumed: number} :
-        { allocated: 0, consumed: 0 } as {allocated: number, consumed: number})
-)
-
-export const meteringEnergyGroup = createSelector(
-  selectAllMeta,
-  selectReport,
-  (entities, report) => entities.reduce((e, m) => {
-    let allocation = 0.0
-    if (report) {
-      if (m.dir === "CONSUMPTION") {
-        allocation = report.allocated[m.sourceIdx]
-      } else {
-        allocation = report.produced[m.sourceIdx] - report.distributed[m.sourceIdx]
-      }
-    }
-    return {...e, [m.name]: allocation} //{meteringPoint: m.name, allocationKWh: allocation} as MeteringEnergyGroupType
-  }, {} as Record<string, number>)
 )
 
 export const meteringEnergyGroup1 = createSelector(
   featureStateSelector,
   (state:EnergyEntitieState) => selectAllParticipants(state.participantReports),
 )
+// Value per participant and metering point: with an owner change one metering point has two participations,
+// each keeps its own value.
 export const meteringEnergyGroup11 = createSelector(
   meteringEnergyGroup1,
-  items => items.flatMap(i => i.meters).reduce((i, s) => {
-    let utilization = 0.0
-    if (s.meterDir === "CONSUMPTION") {
-      utilization = s.report.summary.utilization
-    } else {
-      utilization = s.report.summary.production - s.report.summary.allocation
-    }
-    return {...i, [s.meterId]: utilization}
-  }, {} as Record<string, number>),
+  items => items.reduce((out, p) => {
+    out[p.participantId] = p.meters.reduce((i, s) => {
+      let utilization = 0.0
+      if (s.meterDir === "CONSUMPTION") {
+        utilization = s.report.summary.utilization
+      } else {
+        utilization = s.report.summary.production - s.report.summary.allocation
+      }
+      i[s.meterId] = utilization
+      return i
+    }, {} as Record<string, number>)
+    return out
+  }, {} as Record<string, Record<string, number>>),
 )
 
 export const selectMetaRecord = createSelector(

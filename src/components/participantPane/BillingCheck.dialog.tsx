@@ -17,6 +17,8 @@ import {
 } from "@ionic/react";
 import {alertCircle, checkmarkCircle, helpCircle, warning} from "ionicons/icons";
 import moment from "moment";
+import {formatNumber} from "../../util/Number.util";
+import {formatDate, formatDateTime} from "../../util/DateFormat.util";
 import {EegParticipant} from "../../models/members.model";
 import {ActiveTenant, EegTariff} from "../../models/eeg.model";
 import {SelectedPeriod} from "../../models/energy.model";
@@ -31,6 +33,7 @@ import {
   evaluateBillingChecks,
   formatDayRanges,
   IncompleteMeter,
+  L3Finding,
   kWhDiff,
 } from "./BillingCheck.functions";
 
@@ -44,11 +47,13 @@ const statusIcon: Record<CheckStatus, { icon: string, color: string, text: strin
 }
 
 // rounded first, so a rounding difference of -0.001 is shown as 0, not -0
-const kWh = (v: number) => `${(Math.round(v * 100) / 100 + 0).toLocaleString("de-AT", {maximumFractionDigits: 2})} kWh`
-const date = (t: number) => moment(t).format("DD.MM.YYYY")
-const dateTime = (t: number) => moment(t).format("DD.MM.YYYY HH:mm")
+const kWh = (v: number) => `${formatNumber(Math.round(v * 100) / 100, 0, 2)} kWh`
+const date = (t: number) => formatDate(t)
+const dateTime = (t: number) => formatDateTime(t)
 const meterLabel = (m: CheckedMeter) =>
   `${m.participantName} – ${m.equipmentName ? m.equipmentName + " – " : ""}${m.meteringPoint}`
+
+export const l3Text = (f: L3Finding) => `${meterLabel(f.meter)}: L3-Werte (${formatDayRanges([...f.days].sort())})`
 
 export const incompleteText = (m: IncompleteMeter) => {
   if (m.firstData === null || m.lastData === null) {

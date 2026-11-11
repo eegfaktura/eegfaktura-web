@@ -12,15 +12,16 @@ import {Api} from "../../service";
 import {BasicSelectComponent} from "../form/BasicSelect.component";
 import {JoinStrings} from "../../util/Helper.util";
 import {meteringDisplayName} from "../../util/FilterHelper";
+import {TFunction} from "i18next";
 import {useLocale} from "../../store/hook/useLocale";
-import CheckboxComponent from "../form/Checkbox.component";
+import {useProcessFeedback} from "./useProcessFeedback";
+import {useConfirm} from "../core/useConfirm";
+import {registerSummary} from "./ProcessConfirm.functions";
 
 interface ProcessValues {
   communityId: string | undefined
   participantId: string | undefined
   meteringPoint: string | undefined
-  activationMode: 'ONLINE' | 'OFFLINE'
-  activationCode: string | undefined
 }
 
 interface ProcessRegisterMeterComponentProps {
@@ -29,6 +30,8 @@ interface ProcessRegisterMeterComponentProps {
   participants: EegParticipant[]
   edaProcess: EdaProcess
 }
+
+export const registerMeterLabel = (m: Metering, t: TFunction) => JoinStrings(" ", "", meteringDisplayName(m, t), m.processState)
 
 const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
                                                                                  eeg,
@@ -40,11 +43,11 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
     communityId: eeg.communityId,
     participantId: undefined,
     meteringPoint: undefined,
-    activationMode: 'ONLINE' as 'ONLINE' | 'OFFLINE',
-    activationCode: undefined,
   }
 
   const {t} = useLocale("common")
+  const {sent, failed} = useProcessFeedback()
+  const confirm = useConfirm()
   const {
     handleSubmit, reset,
     control, watch,
@@ -52,13 +55,18 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
   } = useForm<ProcessValues>({defaultValues: processValues})
   const [useableMeters, setUsableMeters] = useState<Metering[]>(meters)
   const [meteringPoint, participantId] = watch(['meteringPoint', 'participantId'])
-  const [offline, setOffline] = useState(false)
+
+  // After an owner change one metering point number is at two members (the old one inactive): the request goes to the
+  // member chosen in the form (required). Choosing a metering point first fills the member only when one member holds
+  // it; choosing another member clears a metering point it does not hold. Before, the first member by number was
+  // taken, which could be the old owner (bug 08.11.2026).
+  const holders = (mp: string) => participants.filter(p => p.meters.some(m => m.meteringPoint === mp))
 
   useEffect(() => {
-    if (meteringPoint) {
-      const p = participants.find(p => p.meters.find(m => m.meteringPoint === meteringPoint))
-      if (p) {
-        setValue('participantId', p.id)
+    if (meteringPoint && !participantId) {
+      const all = holders(meteringPoint)
+      if (all.length === 1) {
+        setValue('participantId', all[0].id)
       }
     }
   }, [meteringPoint])
@@ -68,21 +76,30 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
       const p = participants.find(p => p.id === participantId)
       if (p) {
         setUsableMeters(p.meters)
+        // another member: a metering point it does not hold no longer counts
+        if (meteringPoint && !p.meters.some(m => m.meteringPoint === meteringPoint)) {
+          setValue('meteringPoint', undefined, {shouldValidate: true})
+        }
       }
     } else {
       setUsableMeters(meters)
     }
   }, [participantId])
 
-  const onRequest = (data: ProcessValues) => {
+  const onRequest = async (data: ProcessValues) => {
     if (data.meteringPoint) {
-      const p = participants.find(p => p.meters.find(m => m.meteringPoint === data.meteringPoint))
+      const p = participants.find(p => p.id === data.participantId)
       const meter = p?.meters.find(m => m.meteringPoint === data.meteringPoint)
       if (p && meter) {
-        Api.eegService.registerMeteringPoint(eeg.id.toUpperCase(), p.id, data.meteringPoint, meter.direction, offline ? 'OFFLINE' : 'ONLINE', data.activationCode)
-          .finally(() => {
+        // goes to the grid operator: ask first; the submit button stays disabled while the dialog is open
+        const member = JoinStrings(" ", "-", p.participantNumber, (p.lastname ? p.lastname : ""), p.firstname)
+        if (!await confirm(edaProcess.name, registerSummary(data.meteringPoint, member), "Senden")) return
+        return Api.eegService.registerMeteringPoint(eeg.id.toUpperCase(), p.id, data.meteringPoint, meter.direction)
+          .then(() => {
+            sent()
             reset()
           })
+          .catch(failed)  // keep the input on failure
       }
     }
   }
@@ -92,7 +109,7 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
       <IonInput
         {...p}
         label={t("button_labels.calendar")}
-        placeholder="Enter text"
+        placeholder="Datum wählen"
         fill="outline"
         labelPlacement={"floating"}
         ref={ref}
@@ -116,28 +133,27 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
             {/*})} label={"Zählpunkt"} selectInterface={"popover"}  rules={{required: true}}/>*/}
 
             <BasicSelectComponent control={control} name={"participantId"}
-                                  options={participants
+                                  options={[...participants]
                                     .sort((a, b) => a.lastname && b.lastname ? a.lastname.localeCompare(b.lastname) : a.firstname.localeCompare(b.firstname))
                                     .map((p) => {
                                     return {
                                       value: p.id,
                                       label: JoinStrings(" ", "-", p.participantNumber, (p.lastname ? p.lastname : ""), p.firstname)
                                     }
-                                  })} label={t("participant")}/>
+                                  })} label={t("participant")} rules={{required: true}}/>
             <BasicSelectComponent control={control} name={"meteringPoint"}
-                                  options={useableMeters.filter(p => p.processState !== 'ACTIVE' /*&& p.status !== 'APPROVED' && p.status !== 'PENDING'*/).map((p) => {
+                                  options={useableMeters.filter(p => p.processState !== 'ACTIVE' /*&& p.status !== 'APPROVED' && p.status !== 'PENDING'*/)
+                                    // without a chosen member a moved metering point is listed once
+                                    .filter((m, i, all) => all.findIndex(o => o.meteringPoint === m.meteringPoint) === i)
+                                    .map((p) => {
                                     return {
                                       value: p.meteringPoint,
-                                      label: JoinStrings(" ", "", meteringDisplayName(p), p.processState)
+                                      label: registerMeterLabel(p, t)
                                     }
                                   })} label={t("metering")} rules={{required: true}}/>
 
-            <CheckboxComponent label={"Offline-Registrierung"} checked={offline} setChecked={setOffline}></CheckboxComponent>
-            { offline && 
-              <InputForm name="activationCode" control={control} label={"Aktivierungs-Code"} counter={true} maxlength={35}/>
-            }
             <IonItem lines="none" style={{zIndex: "0"}}>
-              <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={!formState.isValid}>
+              <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={!formState.isValid || formState.isSubmitting}>
                 {t("process.submit")}
               </IonButton>
             </IonItem>

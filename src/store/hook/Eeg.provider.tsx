@@ -1,17 +1,18 @@
-import React, {createContext, FC, ReactNode, useCallback, useContext, useEffect, useState} from "react";
+import React, {createContext, FC, ReactNode, useCallback, useContext, useEffect, useRef, useState} from "react";
 import {store, useAppDispatch, useAppSelector} from "../index";
 import {clearErrorState, eegSelector, fetchEegModel, selectError, selectTenant} from "../eeg";
 import {useGroups, useRoles1, useTenants} from "./AuthProvider";
-import {fetchRatesModel} from "../rate";
+import {clearRates, fetchRatesModel} from "../rate";
 import {fetchParticipantModel} from "../participant";
 import {IonSpinner, useIonToast} from "@ionic/react";
 import {ActiveTenant, Eeg} from "../../models/eeg.model";
-import {SelectedPeriod} from "../../models/energy.model";
 import {selectedPeriodSelector, setSelectedPeriod} from "../energy";
 import {Api} from "../../service";
+import {firstOpenPeriod} from "../../util/SettlementInterval.util";
 import {useSelector} from "react-redux";
 import {useAuth} from "react-oidc-context";
 import {useGetUserQuery, useLazyGetUserQuery, userApi} from "../user/userApi";
+import {isPreviewOnly} from "../../util/Area.util";
 
 
 export interface EegState {
@@ -39,6 +40,10 @@ const initialState: EegState = {
 
 export const EegContext = createContext(initialState)
 
+// the period preselected for the community's settlement interval: today's (after an interval change the EEG page
+// selects the first open period instead, eegfaktura-dev#54 #7)
+export const getCurrentPeriod = async (eeg: Eeg | undefined) => firstOpenPeriod(eeg?.settlementInterval, null)
+
 export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
 
   const dispatch = useAppDispatch();
@@ -57,6 +62,10 @@ export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
 
   const [activeTenant, setActiveTenant] = useState<string>()
   const [fetching, setFetching] = useState<boolean>(false)
+  // only the load started last ends the loading state: an earlier one (previous community, A→B→A, a second
+  // refresh) must not end it or set the period
+  const loadSeq = useRef(0)
+  const loadedTenant = useRef<string>()
 
   const errorToast = (message: string | undefined) => {
     toaster({
@@ -144,53 +153,30 @@ export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
   //   }
   // }, [eeg]);
 
-  const getCurrentPeriod = async (eeg: Eeg | undefined) => {
-    const currentDate = new Date(Date.now())
-    let period = "Y"
-    let segment = 0
-    if (eeg) {
-      switch (eeg.settlementInterval) {
-        case "MONTHLY":
-          period = "YM"
-          segment = currentDate.getMonth() + 1
-          break;
-        case "BIANNUAL":
-          period = "YH"
-          segment = (currentDate.getMonth() + 1 < 7 ? 1 : 2)
-          break;
-        case "QUARTER":
-          const m = currentDate.getMonth() + 1
-          period = "YQ"
-          segment = (m < 4 ? 1 : m < 7 ? 2 : m < 10 ? 3 : 4)
-          break
-      }
-    }
-    return {type: period, year: currentDate.getFullYear(), segment: segment} as SelectedPeriod
-  }
-
   const initApplication = useCallback(async () => {
     setFetching(true)
     if (activeTenant && activeTenant.length > 0) {
+      const seq = ++loadSeq.current;
+      // the tariffs load after the EEG now: another community's tariffs must not show meanwhile (a refresh of the same
+      // community keeps its list until the new one is there)
+      if (loadedTenant.current !== activeTenant) dispatch(clearRates())
+      loadedTenant.current = activeTenant;
       (await Promise.all([
         getUser(),
-        dispatch(fetchEegModel({tenant: activeTenant})),
-        dispatch(fetchRatesModel({tenant: activeTenant})),
+        // tariffs after the EEG, only for the load started last: a late answer of the previous community asks nothing
+        dispatch(fetchEegModel({tenant: activeTenant})).then(() =>
+          seq === loadSeq.current ? dispatch(fetchRatesModel({tenant: activeTenant})) : undefined),
         dispatch(fetchParticipantModel({tenant: activeTenant})),
       ]).then(() => {
         const eeg = eegSelector(store.getState())
         return getCurrentPeriod(eeg)
       }).then((a) => {
+        if (seq !== loadSeq.current) return
         dispatch(setSelectedPeriod(a))
         setFetching(false)
       }))
     }
   }, [activeTenant])
-
-  const _setTenant = (tenant: string) => {
-    setActiveTenant(tenant)
-    localStorage.setItem("tenant", tenant.toUpperCase())
-    dispatch(selectTenant(tenant))
-  }
 
   const value = {
     eeg: eeg,
@@ -229,6 +215,12 @@ export const useOnlineState = () => {
 export const useEegArea = () => {
   const {eeg} = useContext(EegContext)
   return eeg?.area
+}
+
+// a boolean, so it can be a hook dependency (platform#255)
+export const usePreviewOnly = () => {
+  const {eeg} = useContext(EegContext)
+  return isPreviewOnly(eeg?.area)
 }
 
 export const useEegAllocation = () => {

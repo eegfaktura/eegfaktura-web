@@ -53,6 +53,7 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
 
     const useVat = watch("useVat");
     const useMeteringPointFee = watch("useMeteringPointFee")
+    const joiningFeeUseVat = watch("joiningFeeUseVat")
 
     // ZVT (zeitvariabler Tarif)
     const useTimeTariff = watch("useTimeTariff")
@@ -182,8 +183,8 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
               <>
                   <InputFormComponent label={t("vatInPercent")} control={control} name="vatInPercent"
                                       rules={{required: t("warnings.vat_missing"),
-                                        max: {value: 100, message: t("warnings.vat_zero")},
-                                        min: {value: 0, message: t("warnings.vat_to_big")}}}/>
+                                        max: {value: 100, message: t("warnings.vat_to_big")},
+                                        min: {value: 0, message: t("warnings.vat_zero")}}}/>
                   <InputFormComponent label={t("vatSupplementaryText")} control={control} name="vatSupplementaryText" rules={{required: false}}/>
               </>
           }
@@ -255,6 +256,25 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
       </div>
     )
 
+    // platform#217: a one-time joining fee with its own VAT setting, membership fee tariffs only
+    const renderJoiningFee = () => (
+      <>
+        <IonListHeader>{t("joiningFee.header")}</IonListHeader>
+        <NumberInputForm label={t("joiningFee.amount")} control={control} name={"joiningFee"}
+                         rules={{min: {value: 0, message: t("joiningFee.warn_negative")}}}/>
+        <CheckboxComponent label={t("joiningFee.useVat")}
+                           setChecked={(c) => setValue("joiningFeeUseVat", c, {shouldValidate: true, shouldDirty: true})}
+                           checked={!!joiningFeeUseVat}/>
+        {joiningFeeUseVat &&
+            <NumberInputForm label={t("joiningFee.vatInPercent")} control={control} name={"joiningFeeVatInPercent"}
+                             rules={{max: {value: 100, message: t("joiningFee.warn_vat_range")},
+                               min: {value: 0, message: t("joiningFee.warn_vat_range")},
+                               // the backend stores a whole number; „USt anführen“ with 0 % would print 0 %
+                               validate: (v: unknown) => (v !== "" && v !== null && v !== undefined
+                                 && Number.isInteger(Number(v)) && Number(v) > 0) || t("joiningFee.warn_vat_whole")}}/>}
+      </>
+    )
+
     const RateFormType = (rate: EegTariff) => {
       switch (currentRateType) {
         case "EEG":
@@ -266,6 +286,7 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
               <InputFormComponent label={t("discount")} control={control} name={"discount"}
                                   rules={{pattern: {value: /^[0-9]*$/, message: "Nur Zahlen erlaubt"}}} isNumber={true}
                                   error={errors.discount}/>
+              {renderJoiningFee()}
             </div>
           )
         case "EZP":
@@ -348,9 +369,12 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
             <IonList color="eeglight">
               <InputFormComponent label={t("tariffLabel")} control={control} name="name"
                                   rules={{
+                                    // umlauts and ß are allowed (platform#228 step 4): billing prints the name on the
+                                    // invoice (PDF font Helvetica, WinAnsi covers them) and in the XLSX; the SEPA file
+                                    // does not carry it. Other characters stay out, they may not print in the PDF.
                                     pattern: {
-                                      value: /^[A-Za-z0-9\s-_]*$/,
-                                      message: "Bitte nur Buchstaben, Ziffern und '-_ ' eingeben"
+                                      value: /^[A-Za-z0-9ÄÖÜäöüß\s-_]*$/,
+                                      message: "Bitte nur Buchstaben (auch Umlaute und ß), Ziffern und '-_ ' eingeben"
                                     }
                                   }} type="text" error={errors.name}/>
               {renderUseVat()}

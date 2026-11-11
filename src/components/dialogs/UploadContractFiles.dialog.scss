@@ -28,6 +28,27 @@
   margin-bottom: 10px;
   padding: 10px;
   color: #1e2023;
+  border: 2px dashed transparent;
+  border-radius: 6px;
+
+  // a file is dragged over the window (drag & drop)
+  &.drag-over {
+    border-color: var(--ion-color-primary);
+    background: rgba(var(--ion-color-primary-rgb), 0.06);
+  }
+
+  .drop-hint {
+    margin-top: 6px;
+    font-size: 12px;
+    text-align: center;
+    color: var(--ion-color-medium-shade);
+  }
+
+  .drop-refused {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--ion-color-danger);
+  }
 }
 
 .bottom-fixed-content {

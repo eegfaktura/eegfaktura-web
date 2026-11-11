@@ -5,15 +5,25 @@ describe("reformatDateTimeStamp", () => {
   const pad = (n: number) => n.toString().padStart(2, "0");
   const localOfUtc = (naive: string) => {
     const d = new Date(naive + "Z");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
 
-  it("renders a naive billing (UTC) timestamp in local time, format 'YYYY-MM-DD, HH:mm'", () => {
+  it("renders a naive billing (UTC) timestamp in local time, format 'DD.MM.YYYY HH:mm'", () => {
     // billing sends LocalDateTime.now() from a UTC container (no offset).
     const input = "2026-07-05T17:26:00.000";
-    expect(reformatDateTimeStamp(input)).toMatch(/^\d{4}-\d{2}-\d{2}, \d{2}:\d{2}$/);
+    expect(reformatDateTimeStamp(input)).toMatch(/^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}$/);
     // interpreted as UTC, not sliced raw:
     expect(reformatDateTimeStamp(input)).toBe(localOfUtc(input));
+  });
+
+  it("accepts a timestamp without fractional seconds", () => {
+    const input = "2026-07-05T17:26:00";
+    expect(reformatDateTimeStamp(input)).toBe(localOfUtc(input));
+    expect(reformatDateTimeStamp("2026-07-05T17:26:00.123456")).toBe(localOfUtc("2026-07-05T17:26:00.123"));
+  });
+
+  it("returns empty string for a timestamp that is no real date", () => {
+    expect(reformatDateTimeStamp("2026-13-05T17:26:00.000")).toBe("");
   });
 
   it("returns empty string for malformed / non-datetime input", () => {

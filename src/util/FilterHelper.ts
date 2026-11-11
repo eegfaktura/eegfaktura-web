@@ -1,5 +1,6 @@
 import {Metering, MeteringProcessStateType} from "../models/meteringpoint.model";
 import {SelectedPeriod} from "../models/energy.model";
+import {TFunction} from "i18next";
 
 
 export function FilterByMeterState(meters: Metering[], status: MeteringProcessStateType[]): Metering[] {
@@ -18,11 +19,14 @@ export const selectedMeters = (offered: Metering[], ids: string[] | undefined): 
     })
     .filter((m): m is Metering => !!m)
 
-export const meteringDisplayName = (m: Metering): string => {
+// Label of a metering point in the process selections: direction (the terms of the meter form, "Verbraucher" /
+// "Erzeuger"), the equipment name when set, and the metering point number.
+export const meteringDisplayName = (m: Metering, t: TFunction): string => {
+  const direction = t(m.direction === 'GENERATION' ? "producer" : "consumer")
   if (m.equipmentName && m.equipmentName.length > 0) {
-    return `${m.equipmentName} - ${m.meteringPoint}`
+    return `${direction} - ${m.equipmentName} - ${m.meteringPoint}`
   }
-  return m.meteringPoint
+  return `${direction} - ${m.meteringPoint}`
 }
 
 export const getPeriodDates = (period?: SelectedPeriod) => {

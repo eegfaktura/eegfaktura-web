@@ -1,8 +1,10 @@
-import React, {FC, forwardRef, useEffect, useState} from "react";
-import {IonButton, IonContent, IonInput, IonItem} from "@ionic/react";
+import React, {FC, useEffect, useRef, useState} from "react";
+import {IonButton, IonContent, IonItem, useIonAlert} from "@ionic/react";
 import InputForm from "../form/InputForm.component";
 import SelectForm from "../form/SelectForm.component";
 import DatePicker from "react-datepicker";
+import DateTextInput from "../form/DateTextInput.component";
+import {DATE_PICKER_PROPS} from "../../util/DateFormat.util";
 import {useForm} from "react-hook-form";
 import {Metering} from "../../models/meteringpoint.model";
 import {EdaProcess, Eeg} from "../../models/eeg.model";
@@ -13,11 +15,28 @@ import ProcessContentComponent from "./ProcessContent.component";
 import {Api} from "../../service";
 import CheckboxComponent from "../form/Checkbox.component";
 import {useLocale} from "../../store/hook/useLocale";
-import {useAppDispatch} from "../../store";
-import {ErrorState, setErrorState} from "../../store/eeg";
 import {BasicSelectComponent, SelectOptions} from "../form/BasicSelect.component";
 import {JoinStrings} from "../../util/Helper.util";
 import {meteringDisplayName, selectedMeters} from "../../util/FilterHelper";
+import {TFunction} from "i18next";
+import {useProcessFeedback} from "./useProcessFeedback";
+import {useTenant} from "../../store/hook/Eeg.provider";
+import {SyncEnergyMeter, SyncEnergyResult} from "../../service/eeg.service";
+import {buildBillingCheckRequest} from "../participantPane/BillingCheck.functions";
+import {useConfirm} from "../core/useConfirm";
+import {requestValuesSummary} from "./ProcessConfirm.functions";
+import {
+  metersToCheck,
+  cappedNote,
+  NOTHING_BEFORE_TODAY,
+  NOTHING_MISSING,
+  NOTHING_TO_CHECK,
+  sendFeedback,
+  smartConfirmation,
+  smartPeriod,
+  smartPlan,
+  smartRequest
+} from "./SmartRequest.functions";
 
 interface ProcessValues {
   communityId: string | undefined
@@ -31,6 +50,8 @@ interface ProcessRequestValuesComponentProps {
   edaProcess: EdaProcess
 }
 
+export const requestValuesMeterLabel = (m: Metering, t: TFunction) => JoinStrings(" ", "", meteringDisplayName(m, t), m.processState)
+
 const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({eeg, meters, participants, edaProcess}) => {
   const processValues = {
     communityId: eeg.communityId,
@@ -39,16 +60,22 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
   }
 
   const {t} = useLocale("common")
+  const {sent, failed, info} = useProcessFeedback()
+  const tenant = useTenant()
+  const [alert] = useIonAlert()
+  const confirm = useConfirm()
   const {handleSubmit, reset,
     control, watch,
     setValue, formState} = useForm<ProcessValues>({defaultValues: processValues})
   const [useableMeters, setUsableMeters] = useState<Metering[]>([])
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
   const [startDate, endDate] = dateRange;
+  const picker = useRef<DatePicker<never, true>>(null)
   const [selectEntire, setSelectEntire] = useState(false)
+  const [smart, setSmart] = useState(true)
+  const [checking, setChecking] = useState(false)
   const [meteringPoints, participantId] = watch(['meteringPoints', 'participantId'])
 
-  const dispatcher = useAppDispatch()
   // useEffect(() => {
   //   if (!participantId) {
   //     if (meteringPoint) {
@@ -71,45 +98,75 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
     }
   }, [participantId])
 
-  const onRequest = (data: ProcessValues) => {
+  // resolves with the role of the chosen button; the submit stays running (button disabled) until then
+  const ask = (message: string, buttons: { text: string, role: string }[]) => new Promise<string | undefined>(resolve =>
+    alert({
+      subHeader: edaProcess.name, message,
+      buttons: [{text: "Abbrechen", role: "cancel"}, ...buttons],
+      onDidDismiss: (e: CustomEvent) => resolve(e.detail.role),
+    }))
+
+  const send = (request: SyncEnergyMeter[], complete: string[], start: Date, end: Date, note?: string) =>
+    Api.eegService.syncMeteringPoint(eeg.id.toUpperCase(), request, start.getTime(), end.getTime(), complete)
+      .then((r: SyncEnergyResult) => {
+        const feedback = sendFeedback(r, note)
+        if (feedback.kind === 'info') {
+          info(feedback.text!)
+        } else {
+          sent(feedback.text)
+        }
+        reset()
+        setDateRange([null, null])
+        setSelectEntire(false)
+      })
+      .catch(failed)  // keep the input on failure
+
+  // Smart: check the energy data first, request only the metering points with gaps or L3 values, each over those days
+  const requestSmart = async (meter: Metering[], from: Date, until: Date) => {
+    const period = smartPeriod(from, until)
+    if (!period) {
+      info(NOTHING_BEFORE_TODAY)
+      return
+    }
+    const {start, end, capped} = period
+    const toCheck = metersToCheck(meter.map(m => m.meteringPoint), meters, start, end)
+    if (toCheck.length === 0) {
+      info(NOTHING_TO_CHECK)
+      return
+    }
+    setChecking(true)
+    const plan = await Api.energyService.fetchBillingCheck(tenant, buildBillingCheckRequest(toCheck, start, end))
+      .then(res => smartPlan(toCheck, res))
+      .catch(() => smartPlan(toCheck, {error: "Energiedaten konnten nicht abgefragt werden."}))
+      .finally(() => setChecking(false))
+    const confirmation = smartConfirmation(plan, capped ? end : undefined)
+    if (!confirmation) {
+      info(capped ? `${NOTHING_MISSING} ${cappedNote(end)}` : NOTHING_MISSING)
+      return
+    }
+    const choice = await ask(confirmation.message, confirmation.buttons)
+    if (choice === 'missing' || choice === 'all') {
+      const {meters: request, complete, note} = smartRequest(plan, choice)
+      return send(request, complete, start, end, note)
+    }
+  }
+
+  const onRequest = async (data: ProcessValues) => {
     if (data.meteringPoints && startDate && endDate) {
 
       // „Gesamte Gemeinschaft“ fills the selection from all meters and keeps an earlier participant choice
       const meter = selectedMeters(selectEntire ? meters : useableMeters, data.meteringPoints)
       if (meter.length > 0) {  // empty: the selection does not belong to the chosen participant
-        Api.eegService.syncMeteringPoint(
-          eeg.id.toUpperCase(),
-          meter.map(m => {return {meter: m.meteringPoint, direction: m.direction}}),
-          startDate.getTime(), endDate.getTime())
-          .catch(e => dispatcher(setErrorState({message: "Fehler beim Senden!"} as ErrorState)))
-          .finally(() => {
-            reset()
-            setDateRange([null, null])
-            setSelectEntire(false)
-          })
+        if (smart) {
+          return requestSmart(meter, startDate, endDate)
+        }
+        // goes to the grid operator: ask first, with the metering points and the period
+        if (!await confirm(edaProcess.name, requestValuesSummary(meter, startDate, endDate, selectEntire), "Anfordern")) {
+          return
+        }
+        return send(meter.map(m => {return {meter: m.meteringPoint, direction: m.direction}}), [], startDate, endDate)
       }
     }
-  }
-
-  const Component = forwardRef<HTMLIonInputElement, {}>(function CustomInput(p, ref) {
-    return (
-      <IonInput
-        {...p}
-        label={t("button_labels.calendar")}
-        placeholder="Enter text"
-        fill="outline"
-        labelPlacement={"floating"}
-        ref={ref}
-      >
-      </IonInput>
-    );
-  });
-
-  const meteringDisplayName = (m: Metering): string => {
-    if (m.equipmentName && m.equipmentName.length > 0) {
-      return `${m.equipmentName} - ${m.meteringPoint}`
-    }
-    return m.meteringPoint
   }
 
   const selectAllMeteringPoints = (s: boolean) => {
@@ -132,6 +189,7 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
             <InputForm name="communityId" label={t("common-info.community-id")} control={control} protectedControl={true}/>
             <CheckboxComponent label={t("process.requestValue.selectEntire")} setChecked={(c) => selectAllMeteringPoints(c)}
                                checked={selectEntire!}/>
+            <CheckboxComponent label="Nur fehlende Daten oder L3-Werte anfordern (Smart)" setChecked={setSmart} checked={smart}/>
             <BasicSelectComponent control={control} name={"participantId"}
                                   options={participants
                                     .sort((a,b) => a.lastname && b.lastname ? a.lastname.localeCompare(b.lastname) : a.firstname.localeCompare(b.firstname))
@@ -140,7 +198,7 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
                                   })} label={t("participant")} disabled={selectEntire}/>
             <BasicSelectComponent control={control} name={"meteringPoints"}
                                   options={useableMeters.filter(p => p.processState === 'ACTIVE' || p.processState == 'INACTIVE').map((p) => {
-                                    return {value: p.meteringPoint, label: JoinStrings(" ", "", meteringDisplayName(p), p.processState)}
+                                    return {value: p.meteringPoint, label: requestValuesMeterLabel(p, t)}
                                   })} label={t("metering")} multiple={true} rules={{required: true}} disabled={selectEntire}/>
             <div className="form-element">
               <DatePicker
@@ -150,14 +208,19 @@ const ProcessRequestValuesComponent: FC<ProcessRequestValuesComponentProps> = ({
                 onChange={(update) => {
                   setDateRange(update);
                 }}
-                customInput={<Component/>}
+                customInput={<DateTextInput label={t("button_labels.calendar")} onRange={setDateRange}/>}
+                placeholderText="Datum wählen"
+                ref={picker}
+                onBlur={() => picker.current?.setOpen(false, true)} // drops typed text that is no range
+                {...DATE_PICKER_PROPS}
               />
             </div>
             <IonItem lines="none" style={{zIndex: "0"}}>
-              <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={((!formState.isValid && !selectEntire) || !startDate || !endDate)}>
+              <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={((!formState.isValid && !selectEntire) || !startDate || !endDate || formState.isSubmitting)}>
                 {t("process.submit")}
               </IonButton>
             </IonItem>
+            {checking && <p style={{paddingLeft: "16px"}}>Datenstand wird geprüft …</p>}
           </>
       </CorePageTemplate>
       </ProcessContentComponent>

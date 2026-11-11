@@ -26,6 +26,7 @@ import {
 } from "../store/billingConfig/actions";
 import InputForm from "./form/InputForm.component";
 import {Api} from "../service";
+import {useConfirm} from "./core/useConfirm";
 
 const EegBillingConfigCardComponent: FC = () => {
 
@@ -60,8 +61,11 @@ const EegBillingConfigCardComponent: FC = () => {
     const onSubmit = (billingConfigData: BillingConfig) => {
         if (!billingConfigData) return;
         if (Object.keys(dirtyFields).length > 0) {
+            // only on real success: the error toast comes from the reducer's errorMessage
             dispatcher(updateBillingConfig({tenant, billingConfig : billingConfigData}))
-                .then(() => succesToast("Änderung gespeichert"));
+                .unwrap()
+                .then(() => succesToast("Änderung gespeichert"))
+                .catch(() => {});
         }
     }
 
@@ -72,6 +76,7 @@ const EegBillingConfigCardComponent: FC = () => {
     }
 
     const [toaster] = useIonToast()
+    const confirm = useConfirm()
 
     const errorToast = (message: string) => {
         toaster({
@@ -121,7 +126,8 @@ const EegBillingConfigCardComponent: FC = () => {
 
     const onDeleteImage = (billingConfigId : string, imageType : 'logo' | 'footer') => {
         if (billingConfig && tenant) {
-            dispatcher(deleteImageBillingConfig({billingConfig, imageType, tenant}))
+            confirm("Bild löschen", `Soll das Bild für ${imageType === 'logo' ? "das Logo" : "die Fußzeile"} gelöscht werden?`, "Löschen",
+                () => dispatcher(deleteImageBillingConfig({billingConfig, imageType, tenant})))
         }
     }
 

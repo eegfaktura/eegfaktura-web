@@ -16,7 +16,6 @@ interface MeterAddressFormElementProps {
   isEditable?: boolean
   // showStatus?: boolean
   isOnline?: boolean
-  showActivationMode: boolean
   onChange?: (values: {name: string, value: any}[], event?: any) => void
 }
 
@@ -25,17 +24,14 @@ const MeterAddressFormElement: FC<MeterAddressFormElementProps> = ({
                                                                      isOnline,
                                                                      isEditable,
                                                                      onChange,
-                                                                     showActivationMode,
                                                                    }) => {
   const {t} = useLocale("common")
   const {control, watch, setValue, formState: {errors}} = useFormContext<Metering>()
   const [withOwner, setWithOwner] = useState(false);
-  // const [offline, setOffline] = useState(false);
   const {isAdmin} = useAccessGroups()
 
   // const isEditable = setValue !== undefined
   const currentMeterProcessState = watch ? watch("processState") : "NEW"
-  const offline = watch ? watch("activationMode") : 'ONLINE'
 
   const isTakeOverAddressEnabled = () => participant !== undefined && isEditable
   const disableAddressFields = isTakeOverAddressEnabled() && withOwner
@@ -43,11 +39,6 @@ const MeterAddressFormElement: FC<MeterAddressFormElementProps> = ({
   useEffect(() => {
     setWithOwner(false)
   }, [participant])
-
-  const onSetOffline = (o: boolean) => {
-    // setOffline(o)
-    setValue("activationMode", o ? "OFFLINE" : "ONLINE")
-  }
 
   const takeOverAddress = (ok: boolean) => {
     if (isTakeOverAddressEnabled() && participant!.billingAddress) {
@@ -84,26 +75,12 @@ const MeterAddressFormElement: FC<MeterAddressFormElementProps> = ({
       <InputForm name={"street"} label={t("address.street")} control={control} rules={{required: t("warnings.street_missing")}} type="text"
                  error={errors?.street} disabled={disableAddressFields} onChangePartial={_onChange}/>
       <InputForm name={"streetNumber"} label={t("address.street_number")} control={control}
-                 rules={{
-                   required: t("warnings.street-number_missing"),
-                   pattern: {
-                     value: /^[0-9A-Za-z\/\-\\\s]*$/,
-                     message: "Ungültige Zeichen. Erlaubt sind 0-9, A-Z, a-z, \,/,-, ]"
-                   }
-                 }}
+                 rules={{required: t("warnings.street-number_missing")}}
                  type="text" error={errors?.streetNumber} disabled={disableAddressFields} onChangePartial={_onChange}/>
       <InputForm name={"zip"} label={t("address.zip")} control={control} rules={{required: t("warnings.zip_missing")}}
                  type="text" error={errors?.zip} disabled={disableAddressFields} onChangePartial={_onChange}/>
       <InputForm name={"city"} label={t("address.city")} control={control} rules={{required: t("warnings.city_missing")}} type="text"
                  error={errors?.city} disabled={disableAddressFields} onChangePartial={_onChange}/>
-      {showActivationMode &&
-      <CheckboxComponent label="Offline-Registrierung" setChecked={onSetOffline}
-                         checked={offline === 'OFFLINE'} style={{paddingTop: "0px"}}></CheckboxComponent>
-      }
-      { showActivationMode && offline === 'OFFLINE' &&
-          <InputForm name={"activationCode"} label="Aktivierungs-Code" control={control} rules={{required: "Aktivierungs-Code erforderlich"}} type="text"
-                     counter={true} maxlength={35} error={errors?.activationCode} onChangePartial={_onChange}/>
-      }
       {isAdmin() && !isOnline &&
           <>
               <SelectForm control={control}

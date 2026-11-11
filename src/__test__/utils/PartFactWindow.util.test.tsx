@@ -34,6 +34,11 @@ describe("ABLEHNUNG_CPF notification", () => {
     expect(screen.queryByText(/Zählpunkte/)).toBeNull()
   })
 
+  it("shows no reason for an empty list", () => {
+    show({type: "ABLEHNUNG_CPF", meteringPoints: [], responseCodes: []})
+    expect(screen.getByText(/wurde abgelehnt/).textContent).toBe("Die Anfrage auf ÄNDERUNG TEILNAHMEFAKTOR wurde abgelehnt.")
+  })
+
   it("names the metering points and no hint for other reasons", () => {
     show({type: "ABLEHNUNG_CPF", meteringPoints: ["", "AT1"], responseCodes: ["Teilnahmefaktor von 100 % würde überschritten werden"]})
     expect(screen.getByText("AT1")).toBeTruthy()

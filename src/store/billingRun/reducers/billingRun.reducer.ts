@@ -32,6 +32,7 @@ export const reducer = createReducer(initialState, builder =>
             return { ...state, isFetching: false, errorMessage : null }
         })
         .addCase(billingRunSendmail.rejected, state => {
-            return { ...state, isFetching: false, errorMessage : 'Mailversand ist fehlgeschlagen.' };
+            // the billing pane shows the refusal with billing's reason itself (web 261030-mm1)
+            return { ...state, isFetching: false, errorMessage : null };
         })
 );

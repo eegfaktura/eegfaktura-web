@@ -1,17 +1,8 @@
-import {EegParticipant} from "../models/members.model";
 import {ReportType, SelectedPeriod, TariffTimeWindow} from "../models/energy.model";
 import {CpPeriodType} from "../models/reports.model";
 import {EegTariff, MONTHNAME} from "../models/eeg.model";
+import {formatDateTime} from "./DateFormat.util";
 
-
-export const formatedName = (participant: EegParticipant) => {
-  let title = ""
-  if (participant.titleBefore && participant.titleBefore.length > 0) {
-    title = participant.titleBefore + " ";
-  }
-
-  return title + `${participant.firstname} ${participant.lastname}`
-}
 
 const splitDatePattern = /\.|\s|:/
 export const splitDate = (date: string) => date.split(splitDatePattern).map(s=>Number(s))
@@ -29,10 +20,6 @@ export const formatMeteringPointString = (m: string | undefined) => {
     return m.slice(0, 8) + "..." + m.slice(23)
   }
   return m
-}
-
-export const isParticipantActivated = (participants: EegParticipant[], id: string) => {
-  return participants.find((p) => p.id === id && p.status === 'ACTIVE') !== undefined
 }
 
 export const getPeriodSegment = (period: string, month: number) => {
@@ -60,19 +47,6 @@ export const determinePeriodEnd = (period: SelectedPeriod) => {
     case "YQ": return [period.segment * 3, period.year]
     default: return [period.segment, period.year]
   }
-}
-
-export const calcSegment = (period: SelectedPeriod, cpPeriod?: CpPeriodType) => {
-  const [month, year] = determinePeriodEnd(period)
-  if (cpPeriod) {
-    const [beginYear, beginMonth, endYear, endMonth] = splitCpPeriod(cpPeriod)
-    if (endYear > period.year) {
-      return [year, month]
-    } else {
-      return [year, Math.min(endMonth, month)]
-    }
-  }
-  return [year, month]
 }
 
 export const periodDisplayString = (period: SelectedPeriod) => {
@@ -160,16 +134,31 @@ export const getPreviousPeriod = (period: SelectedPeriod) => {
   return prePeriod
 }
 
+// The last day with energy data of a range ("DD.MM.YYYY HH:mm:ss"), local 00:00; undefined if it has no end.
+// energystore stores the start of the last quarter hour (…23:45:00, day blocks); an end exactly at 00:00:00 (data
+// stored before the day blocks, exclusive end) belongs to the day before.
+const lastDataDay = (cpPeriod?: CpPeriodType): Date | undefined => {
+  if (!cpPeriod || !cpPeriod.end) return undefined
+  const [day, month, year, hour, minute] = splitDate(cpPeriod.end)
+  if (!day || !month || !year) return undefined
+  return new Date(year, month - 1, hour === 0 && minute === 0 ? day - 1 : day)
+}
+
 export const createNewPeriod = (period: SelectedPeriod | undefined, target: ReportType, currentSegmentIdx: number, cpPeriod?: CpPeriodType) => {
   if (period !== undefined) {
     switch (target) {
       case 'D': {
-        // Current period: default to yesterday, not today — today's 15-minute
-        // data is still incomplete, so open on the last fully-recorded day.
-        const yesterday = new Date()
-        yesterday.setDate(yesterday.getDate() - 1)
-        if (yesterday.getFullYear() === period.year) {
-          return {type: target, year: period.year, segment: dateToDayOfYear(yesterday)}
+        // Default to yesterday, not today — today's 15-minute data is still
+        // incomplete, so open on the last fully-recorded day. If the data ends
+        // earlier (cpPeriod.end, energy data usually arrives a few days late),
+        // open on that last day with data instead, also when it lies in the
+        // selected earlier year.
+        const now = new Date()
+        const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
+        const end = lastDataDay(cpPeriod)
+        const last = end && end.getTime() < yesterday.getTime() ? end : yesterday
+        if (yesterday.getFullYear() === period.year || last.getFullYear() === period.year) {
+          return {type: target, year: last.getFullYear(), segment: dateToDayOfYear(last)}
         }
         // A non-current billing period: open on its first day (period start),
         // not 1 January.
@@ -247,34 +236,16 @@ export const calcCurrentPeriod = (period: SelectedPeriod) => {
     return currentPeroid;
 }
 
-export function findPartial<O extends object, OT extends keyof object>(obj: O, key: string): Partial<O> {
-  let result = {}
-  Object.keys(obj).forEach(k => {
-    if (typeof obj[k as OT] === 'object') {
-      const sub = findPartial(obj[k as OT], key)
-      if (Object.keys(sub).length !== 0) {
-        result = {[k]: sub}
-      }
-    } else if (k === key) {
-      result = {[k]: obj[k as OT]}
-    }
-  })
-  return result
-}
-
-// Kuerzt lange Timestampangaben. Z.B.: 2023-07-31T19:55:04.234769 -> 2023-07-31, 19:55
+// Kuerzt lange Timestampangaben. Z.B.: 2023-07-31T19:55:04.234769 oder 2023-07-31T19:55:04 -> 31.07.2023 21:55 (Ortszeit)
 export function reformatDateTimeStamp(dateTimeStampString : string) : string {
-  if (dateTimeStampString && /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d*$/.test(dateTimeStampString)) {
+  if (dateTimeStampString && /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d*)?$/.test(dateTimeStampString)) {
     // billing serialises these status timestamps from LocalDateTime.now() in a UTC container,
     // i.e. a naive UTC wall-clock without offset. Interpret it as UTC and render in the
     // viewer's local time instead of slicing the raw (UTC) string (which showed 2h early in
-    // summer). Output format unchanged: "YYYY-MM-DD, HH:mm".
+    // summer). Output in the app's date notation "DD.MM.YYYY HH:mm" (platform#228).
+    // Empty for a timestamp that is no real date (e.g. month 13), like any other malformed input.
     const d = new Date(dateTimeStampString + "Z");
-    if (isNaN(d.getTime())) {
-      return dateTimeStampString.substring(0,10)+", "+dateTimeStampString.substring(11,16)
-    }
-    const pad = (n: number) => n.toString().padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}, ${pad(d.getHours())}:${pad(d.getMinutes())}`
+    return isNaN(d.getTime()) ? "" : formatDateTime(d)
   } else {
     return "";
   }

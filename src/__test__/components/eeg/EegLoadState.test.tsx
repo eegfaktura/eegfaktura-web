@@ -1,0 +1,73 @@
+import {describe, expect, it, vi} from "vitest";
+import {act, fireEvent, screen} from "@testing-library/react";
+import {renderWithProviders} from "../../test-utils";
+
+let tenants: string[] = ["TE100200"]
+vi.mock("../../../store/hook/AuthProvider", () => ({useTenants: () => tenants}))
+
+import EegLoadStateComponent from "../../../components/EegLoadState.component";
+import {EegContext} from "../../../store/hook/Eeg.provider";
+import {fetchEegModel} from "../../../store/eeg";
+
+const NO_COMMUNITY = "Ihrem Konto ist keine Gemeinschaft zugeordnet. Bitte wenden Sie sich an den Support."
+
+const render = (refresh = vi.fn()) => {
+  const r = renderWithProviders(<EegContext.Provider value={{refresh} as any}><EegLoadStateComponent/></EegContext.Provider>)
+  return {...r, refresh}
+}
+
+describe("EegLoadState (261024-ca11)", () => {
+  it("shows a spinner while the EEG loads, not \"Keine aktive EEG geladen\"", () => {
+    tenants = ["TE100200"]
+    const {container} = render()
+    expect(container.querySelector("ion-spinner")).toBeTruthy()
+    expect(screen.queryByText(NO_COMMUNITY)).toBeNull()
+  })
+
+  it("shows the load error with \"Erneut versuchen\", which loads again", () => {
+    tenants = ["TE100200"]
+    const {store, refresh, container} = render()
+    act(() => { store.dispatch(fetchEegModel.rejected(new Error("Bad Gateway"), "req", {tenant: "TE100200"})) })
+    expect(screen.getByText("Die EEG-Daten konnten nicht geladen werden. (Bad Gateway)")).toBeTruthy()
+    expect(container.querySelector("ion-spinner")).toBeNull()
+    fireEvent.click(screen.getByText("Erneut versuchen"))
+    expect(refresh).toHaveBeenCalledTimes(1)
+  })
+
+  it("a new load replaces the error by the spinner", () => {
+    tenants = ["TE100200"]
+    const {store, container} = render()
+    act(() => { store.dispatch(fetchEegModel.rejected(new Error("Bad Gateway"), "req", {tenant: "TE100200"})) })
+    act(() => { store.dispatch(fetchEegModel.pending("req2", {tenant: "TE100200"})) })
+    expect(container.querySelector("ion-spinner")).toBeTruthy()
+  })
+
+  it("without any community for the account it says so", () => {
+    tenants = []
+    render()
+    expect(screen.getByText(NO_COMMUNITY)).toBeTruthy()
+    expect(screen.queryByText("Keine aktive EEG geladen")).toBeNull()
+  })
+})
+
+describe("EegLoadState is the content of the page's IonPage (platform#237)", () => {
+  // a page keeps its one IonPage while it loads: a second IonPage, mounted in a page hidden in the outlet, took over
+  // the view of the shown URL
+  it("renders no IonPage of its own in any state, with the menu header and the content", () => {
+    tenants = ["TE100200"]
+    const {container, store} = render()
+    expect(container.querySelector(".ion-page")).toBeNull()
+    expect(container.querySelector("ion-header ion-menu-button")).toBeTruthy()
+    expect(container.querySelector("ion-content ion-spinner")).toBeTruthy()
+    act(() => { store.dispatch(fetchEegModel.rejected(new Error("Bad Gateway"), "req", {tenant: "TE100200"})) })
+    expect(container.querySelector(".ion-page")).toBeNull()
+    expect(container.querySelector("ion-content ion-button")).toBeTruthy()
+  })
+
+  it("also the empty state", () => {
+    tenants = []
+    const {container} = render()
+    expect(container.querySelector(".ion-page")).toBeNull()
+    expect(container.querySelector("ion-content")?.textContent).toContain(NO_COMMUNITY)
+  })
+})

@@ -1,9 +1,12 @@
-import React, {FC, useState} from "react";
+import React, {FC, useId, useState} from "react";
 import {
   IonCheckbox,
   IonCol,
   IonContent,
+  IonDatetime,
+  IonDatetimeButton,
   IonGrid,
+  IonModal,
   IonRow,
   IonSelect,
   IonSelectOption
@@ -13,17 +16,19 @@ import "./ChartProperty.popup.scss"
 import {generatePeriodOptions, transformPeriodFromSegment} from "../../util/PeriodHelper.functions";
 import {CpPeriodType} from "../../models/reports.model";
 import moment from "moment";
-import {periodDisplayString, splitCpPeriod} from "../../util/Helper.util";
+import {dateToDayOfYear, dayOfYearToDate, periodDisplayString, splitCpPeriod, toLocalISODate} from "../../util/Helper.util";
 import {ReportType, SelectedPeriod} from "../../models/energy.model";
 import cn from "classnames";
+import {clampDay, DayBounds} from "./DayView.functions";
 
 interface ChartPropertiesProps {
   selectedPeriod: SelectedPeriod;
   periods: CpPeriodType
   onDismiss: (selectedPeriod: SelectedPeriod) => void
+  dayRange?: DayBounds   // offers the row "Tag" (dashboard day view): energy data range up to yesterday
 }
 
-const ChartProperties:FC<ChartPropertiesProps> = ({selectedPeriod, periods, onDismiss}) => {
+const ChartProperties:FC<ChartPropertiesProps> = ({selectedPeriod, periods, onDismiss, dayRange}) => {
 
   // const periods = {begin: "01.01.2023 00:00:0000", end: moment().format("DD.MM.YYYY HH:mm:ss")} as CpPeriodType
   // const [selectedPeriod, setSelectedPeriod] = useState<SelectedPeriod>(activePeriod);
@@ -73,6 +78,22 @@ const ChartProperties:FC<ChartPropertiesProps> = ({selectedPeriod, periods, onDi
 
   const onChange = (value: string) => {
     onDismiss(getPeroidFromString(value))
+  }
+
+  const selectedDay = (range: DayBounds) =>
+    selectedPeriod.type === 'D' ? clampDay(dayOfYearToDate(selectedPeriod.year, selectedPeriod.segment), range)! : range.last
+
+  // one popover per card: the datetime id must be unique in the page
+  const datetimeId = "chart-day-datetime-" + useId().replace(/:/g, "")
+
+  const onDay = (range: DayBounds, iso: string) => {
+    const [y, m, d] = iso.slice(0, 10).split('-').map(Number)   // IonDatetime may append a time
+    if (!y || !m || !d) return
+    const typed = new Date(y, m - 1, d)
+    // keyboard entry passes intermediate dates (year "0002"): ignore them instead of jumping to the last day
+    if (typed.getTime() < range.first.getTime() || typed.getTime() > range.last.getTime()) return
+    const day = clampDay(typed, range)!
+    onDismiss({type: 'D', year: day.getFullYear(), segment: dateToDayOfYear(day)})
   }
 
   const isSelected = (period: ReportType): boolean => {
@@ -128,6 +149,31 @@ const ChartProperties:FC<ChartPropertiesProps> = ({selectedPeriod, periods, onDi
             </IonSelect>
           </IonCol>
         </IonRow>
+        {dayRange && (
+          <IonRow className={cn({selected: isSelected('D')})}>
+            <IonCol>
+              <IonCheckbox labelPlacement="end" checked={isSelected('D')} onIonChange={() => onDay(dayRange, toLocalISODate(selectedDay(dayRange)))}>Tag</IonCheckbox>
+            </IonCol>
+            <IonCol>
+              {/* date chip of the meter chart (participantPane/MeterChartNavbar.component.tsx), without arrows here:
+                  stepping day by day happens with the arrows of the card in day mode (DayCharts) */}
+              <div style={{display: "flex", alignItems: "center", gap: "4px"}}>
+                <IonDatetimeButton datetime={datetimeId} style={{flexShrink: 0}}/>
+                <IonModal keepContentsMounted={true}>
+                  <IonDatetime
+                    id={datetimeId}
+                    presentation="date"
+                    locale="de-DE"
+                    value={toLocalISODate(selectedDay(dayRange))}
+                    min={toLocalISODate(dayRange.first)}
+                    max={toLocalISODate(dayRange.last)}
+                    onIonChange={(e) => { if (typeof e.detail.value === 'string') onDay(dayRange, e.detail.value) }}
+                  />
+                </IonModal>
+              </div>
+            </IonCol>
+          </IonRow>
+        )}
       </IonGrid>
     </IonContent>
   )

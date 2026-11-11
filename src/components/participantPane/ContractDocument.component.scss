@@ -8,3 +8,14 @@ ion-modal.upload-contract {
 ion-modal.upload-contract::part(content) {
   //min-height: 300px;
 }
+
+// files can be dropped on the contract area; it opens the upload dialog with them
+.contract-drop-area {
+  border: 2px dashed transparent;
+  border-radius: 6px;
+
+  &.drag-over {
+    border-color: var(--ion-color-primary);
+    background: rgba(var(--ion-color-primary-rgb), 0.06);
+  }
+}

@@ -2,6 +2,7 @@ import React, {FC, useEffect, useState} from "react";
 import {Bar, BarChart, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
 
 import {periodDisplayString} from "../../util/Helper.util";
+import {formatKwh} from "../../util/Number.util";
 import {IonIcon, IonSpinner, useIonPopover} from "@ionic/react";
 import {Api} from "../../service";
 import {ReportNamedData, SelectedPeriod} from "../../models/energy.model";
@@ -9,6 +10,8 @@ import ChartProperties from "./ChartProperties.component";
 import {settings} from "ionicons/icons";
 import {ActiveTenant} from "../../models/eeg.model";
 import {LoadSharingData, transformData} from "./dashboard.functions";
+import {DayBounds, dayToPeriod, periodToDay} from "./DayView.functions";
+import {DayHourChart} from "./DayCharts.component";
 
 import "./eeg-card.scss"
 import "./IntraDayReport.component.scss"
@@ -23,9 +26,10 @@ interface IntraDayReportComponentProps {
   report: ReportNamedData[] | undefined;
   energyDate: {begin: string, end: string}
   activePeriod: SelectedPeriod
+  dayRange?: DayBounds
 }
 
-const IntraDayReportComponent: FC<IntraDayReportComponentProps> = ({tenant, report, energyDate, activePeriod}) => {
+const IntraDayReportComponent: FC<IntraDayReportComponentProps> = ({tenant, report, energyDate, activePeriod, dayRange}) => {
 
   const [selectedPeriod, setSelectedPeriod] = useState<SelectedPeriod>(activePeriod)
   const [data, setData] = useState<LoadSharingData[]>(EMPTY_DATA)
@@ -34,6 +38,7 @@ const IntraDayReportComponent: FC<IntraDayReportComponentProps> = ({tenant, repo
   const [properties, dismiss] = useIonPopover(ChartProperties, {
     periods: energyDate, //{begin: "01.01.2023 00:00:0000", end: moment().format("DD.MM.YYYY HH:mm:ss")},
     selectedPeriod: selectedPeriod,
+    dayRange: dayRange,
     onDismiss: (data: SelectedPeriod, role: string) => { dismiss(data, role)},
   });
 
@@ -46,6 +51,10 @@ const IntraDayReportComponent: FC<IntraDayReportComponentProps> = ({tenant, repo
   }, [activePeriod]);
 
   const onSelectionChanged = async (selectedPeriod: SelectedPeriod) => {
+    if (selectedPeriod?.type === 'D') {   // "Tag": only this card switches to the day view
+      setSelectedPeriod(selectedPeriod)
+      return
+    }
     if (selectedPeriod) {
       dismissLoading(true)
       Api.energyService.fetchIntraDayReportV2(tenant, selectedPeriod).then((d) => {
@@ -79,6 +88,17 @@ const IntraDayReportComponent: FC<IntraDayReportComponentProps> = ({tenant, repo
   //   );
   // }
 
+  const openProperties = (e: any) => properties({
+    event: e,
+    onDidDismiss: (e: CustomEvent) => onSelectionChanged(e.detail.data),
+    cssClass: "property-popover"
+  })
+
+  if (selectedPeriod?.type === 'D' && dayRange) {
+    return <DayHourChart tenant={tenant} day={periodToDay(selectedPeriod, dayRange)} bounds={dayRange}
+                         onDayChange={(d) => setSelectedPeriod(dayToPeriod(d))} onProperties={openProperties}/>
+  }
+
   if (!selectedPeriod || loading) {
     return <div style={{height: "100%", display: "flex"}}><IonSpinner style={{margin: "auto", height: "48px", width: "48px"}}></IonSpinner></div>
   } else {
@@ -93,12 +113,7 @@ const IntraDayReportComponent: FC<IntraDayReportComponentProps> = ({tenant, repo
           fontSize: "24px",
           cursor: "pointer"
         }}>
-          <IonIcon icon={settings} size="32px" color="primary" onClick={(e: any) =>
-            properties({
-              event: e,
-              onDidDismiss: (e: CustomEvent) => onSelectionChanged(e.detail.data),
-              cssClass: "property-popover"
-            })}></IonIcon>
+          <IonIcon icon={settings} size="32px" color="primary" onClick={openProperties}></IonIcon>
         </div>
         <div style={{display: "flex", flexFlow: "column", height: "100%"}}>
           <div style={{textAlign: "center", margin: "6px"}}>
@@ -112,7 +127,7 @@ const IntraDayReportComponent: FC<IntraDayReportComponentProps> = ({tenant, repo
                 <BarChart width={600} height={400} data={data} margin={{top: 15, right: 15, bottom: 5, left: 0}}>
                   <YAxis fontSize={10} unit={" kWh"}/>
                   <XAxis dataKey="name" angle={315} tickMargin={5} fontSize={10}/>
-                  <Tooltip formatter={(value) => Number(value).toFixed(3) + " kWh"}/>
+                  <Tooltip formatter={(value) => formatKwh(Number(value))}/>
                   <Legend align={'center'} verticalAlign={'bottom'} height={20} wrapperStyle={{fontSize: "10px"}}/>
                   {/*<Legend content={renderLegend} align={'center'} verticalAlign={'bottom'} height={40} fontSize={"4px"}/>*/}
                   <Bar name="EEG" stackId="a" dataKey="distributed" fill="#0AF2D3"/>

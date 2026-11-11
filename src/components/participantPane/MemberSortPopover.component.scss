@@ -1,0 +1,10 @@
+// The popover is narrow (Ionic default 250px): long texts such as „Mitglieder mit nötiger Aktion oben“ wrap instead of
+// being cut off with „…“ (Ionic sets nowrap + ellipsis on the label part of radio and checkbox).
+.member-sort-popover {
+  & ion-radio::part(label),
+  & ion-checkbox::part(label) {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+}

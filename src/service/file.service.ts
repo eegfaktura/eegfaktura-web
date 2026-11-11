@@ -61,9 +61,10 @@ export class FileService extends BaseService {
     return addFile as ContractInfo
   }
 
+  // rejects unless the filestore deleted the file: HTTP error, GraphQL errors or a DeleteFileError (261005-ca3)
   async deleteContractDocuments(tenant: string, fileId: string) {
     const token = await this.lookupToken()
-    return await fetch(`${FILESTORE_API_SERVER}/graphql`, {
+    const res = await fetch(`${FILESTORE_API_SERVER}/graphql`, {
       method: 'POST',
       headers: {
         ...this.getSecureHeaders(token, tenant),
@@ -71,8 +72,16 @@ export class FileService extends BaseService {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(deleteContractFilesMutation(fileId))
-    }).then(this.handleFilestoreResponse);
+    }).then(this.handleErrors).then(res => res.json());
 
+    if (res.errors && res.errors.length > 0) {
+      throw new Error(res.errors[0].message)
+    }
+    const deleteFile = res.data?.deleteFile
+    if (!deleteFile || deleteFile.message) {
+      throw new Error(deleteFile?.message || "Löschen fehlgeschlagen")
+    }
+    return deleteFile
   }
 
   async downloadDocument(tenant: string, fileId: string): Promise<Blob> {

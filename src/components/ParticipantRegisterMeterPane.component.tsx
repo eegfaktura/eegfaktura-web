@@ -7,13 +7,16 @@ import {useFieldArray, useFormContext} from "react-hook-form";
 import RegisterMeterPaneComponent from "./RegisterMeterPane.component";
 import { Metering } from "../models/meteringpoint.model";
 import {useEegArea, useOnlineState} from "../store/hook/Eeg.provider";
+import {useConfirmDiscard} from "./core/UnsavedChangesGuard.component";
 
 interface ParticipantRegisterMeterPaneComponentProps {
   participant: EegParticipant;
   onAddMeter: (meter: Metering) => void
+  // reports unsaved input of the open metering point form, so the page asks before leaving (platform#228 step 4)
+  onDirtyChange?: (dirty: boolean) => void
 }
 
-const ParticipantRegisterMeterPaneComponent: FC<ParticipantRegisterMeterPaneComponentProps> = ({participant}) => {
+const ParticipantRegisterMeterPaneComponent: FC<ParticipantRegisterMeterPaneComponentProps> = ({participant, onDirtyChange}) => {
 
   const isOnline = useOnlineState()
 
@@ -29,6 +32,18 @@ const ParticipantRegisterMeterPaneComponent: FC<ParticipantRegisterMeterPaneComp
 
   const [addMeterPaneActive, setAddMeterPaneActive] = useState(false)
   const [meteringPoint, setMeteringPoint] = useState<Metering | undefined>()
+  // the list entry of the open form (undefined: a new metering point). The entry is found by its place, not by its
+  // number: a changed number used to add a second entry and keep the wrong one (platform#249)
+  const [openIdx, setOpenIdx] = useState<number | undefined>()
+  const [meterDirty, setMeterDirty] = useState(false)
+  // a new form per opened metering point: the form takes its values only when it mounts, so another metering point
+  // used to show the input of the one before
+  const [formKey, setFormKey] = useState(0)
+  const confirmDiscard = useConfirmDiscard()
+  const onMeterDirtyChange = (dirty: boolean) => {
+    setMeterDirty(dirty)
+    onDirtyChange?.(dirty)
+  }
 
   const { control, watch} = useFormContext<EegParticipant>();
   const {fields, append, update, remove} = useFieldArray<EegParticipant>({control, name: 'meters'})
@@ -39,25 +54,45 @@ const ParticipantRegisterMeterPaneComponent: FC<ParticipantRegisterMeterPaneComp
 
  const meters = watch("meters")
 
-  const showMeter = (meter: Metering) => {
-    setMeteringPoint(meter);
-    setAddMeterPaneActive(true);
+  // another metering point or a new one replaces the open form: ask first while it holds unsaved input. The card of the
+  // open metering point keeps the form as it is.
+  const isOpen = (idx?: number) => addMeterPaneActive && idx !== undefined && idx === openIdx
+  const showMeter = (meter: Metering, idx?: number) => {
+    if (isOpen(idx)) return
+    confirmDiscard(addMeterPaneActive && meterDirty, () => {
+      setMeteringPoint(meter);
+      setOpenIdx(idx);
+      setFormKey(k => k + 1);
+      setAddMeterPaneActive(true);
+    })
   }
 
+  const closeMeter = () => {
+    setAddMeterPaneActive(false);
+    setMeteringPoint(undefined);
+    setOpenIdx(undefined);
+  }
+
+  // the open entry is replaced; another entry with the same number is replaced too (one entry per number, as for a
+  // new metering point before)
   const appendMeter = (meter: Metering) => {
-    setAddMeterPaneActive(false)
-    const currentFieldIdx = fields.findIndex((m) => m.meteringPoint === meter.meteringPoint)
-    if (currentFieldIdx >= 0) {
-      update(currentFieldIdx, meter)
+    const other = fields.findIndex((m, i) => i !== openIdx && m.meteringPoint === meter.meteringPoint)
+    if (openIdx !== undefined) {
+      update(openIdx, meter)
+      if (other >= 0) remove(other)
+    } else if (other >= 0) {
+      update(other, meter)
     } else {
       append(meter)
     }
-    setMeteringPoint(undefined);
+    closeMeter()
   }
 
-  const removeMeter = () => {
-    setAddMeterPaneActive(false);
-    setMeteringPoint(undefined);
+  const removeOpenMeter = () => {
+    if (openIdx !== undefined) {
+      remove(openIdx)
+    }
+    closeMeter()
   }
 
   const allMeteringPoints = () => {
@@ -72,8 +107,8 @@ const ParticipantRegisterMeterPaneComponent: FC<ParticipantRegisterMeterPaneComp
         </IonCard>
       )
     }
-    return fields.map((m) => (
-      <MeterCardComponent key={m.id} participant={participant} meter={m} hideMeter={true} onSelect={() => showMeter(m)}/>
+    return fields.map((m, idx) => (
+      <MeterCardComponent key={m.id} participant={participant} meter={m} hideMeter={true} onSelect={() => showMeter(m, idx)}/>
     ))
   }
 
@@ -102,7 +137,9 @@ const ParticipantRegisterMeterPaneComponent: FC<ParticipantRegisterMeterPaneComp
           </IonGrid>
         </div>
         <div style={{flexGrow: 1}}>
-          {addMeterPaneActive && meteringPoint && <RegisterMeterPaneComponent meteringPoint={meteringPoint} onAdd={appendMeter} onChancel={removeMeter} />}
+          {addMeterPaneActive && meteringPoint && <RegisterMeterPaneComponent key={formKey} meteringPoint={meteringPoint} onAdd={appendMeter} onChancel={closeMeter}
+                                                                                    onRemove={openIdx !== undefined ? removeOpenMeter : undefined}
+                                                                                    onDirtyChange={onMeterDirtyChange}/>}
         </div>
       </div>
     </div>

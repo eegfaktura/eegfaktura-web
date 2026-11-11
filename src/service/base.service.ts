@@ -1,88 +1,47 @@
 import {AuthService} from "./auth.service";
 import {determineErrTxt, ErrorResponse, IErrorResponse} from "./error.text";
-import {Mutex} from "async-mutex";
 
 export const API_API_SERVER = import.meta.env.VITE_API_SERVER_URL;
 export const FILESTORE_API_SERVER = import.meta.env.VITE_FILESTORE_SERVER_URL;
 export const ENERGY_API_SERVER = import.meta.env.VITE_ENERGY_SERVER_URL;
 
-export interface ErrorMessage {
-  code: number
-  message: string
-}
-
-export class HttpError extends Error {
-  public constructor(public reasonObject: ErrorMessage, public statusText: string) {
-    super(statusText);
+export const SESSION_EXPIRED = "Deine Sitzung ist abgelaufen. Bitte melde Dich neu an."
+export const NO_PERMISSION = "Dafür fehlt Dir die Berechtigung."
+// Several calls can fail with 401 at once, and a 401 that is not about the session (a misconfigured service)
+// would come back right after the login: at most one redirect per minute, also across the reload.
+const LOGIN_REDIRECT_KEY = "eegfaktura.loginRedirectAt"
+const LOGIN_REDIRECT_PAUSE_MS = 60_000
+export const mayRedirectToLogin = (now: number = Date.now()): boolean => {
+  try {
+    const last = Number(sessionStorage.getItem(LOGIN_REDIRECT_KEY) || 0)
+    if (now - last < LOGIN_REDIRECT_PAUSE_MS) return false
+    sessionStorage.setItem(LOGIN_REDIRECT_KEY, String(now))
+    return true
+  } catch {
+    return false  // no storage: show the error, do not risk a loop
   }
 }
-
-function createLoc<T>() {
-  const queue: any[] = [];
-  let active = false;
-  return (fn: any) => {
-    let deferredResolve: (value: (T | PromiseLike<T>)) => void;
-    let deferredReject: (value: (T | PromiseLike<T>)) => void;
-    const deferred = new Promise<T>((resolve, reject) => {
-      deferredResolve = resolve;
-      deferredReject = reject;
-    });
-    const exec = async () => {
-      await fn().then(deferredResolve, deferredReject);
-      if (queue.length > 0) {
-        queue.shift()();
-      } else {
-        active = false;
-      }
-    };
-    if (active) {
-      queue.push(exec);
-    } else {
-      active = true;
-      exec();
-    }
-    return deferred;
-  };
-};
-const Lock = createLoc<string>()
-const mutex = new Mutex();
+// The session check of a 401 (also used by the RTK Query participant API). The backend also answers 401 for a
+// missing access group: only an expired or missing session goes to the login, a valid token gets "no permission"
+// (no redirect loop).
+export const handleUnauthorized = async (authService: AuthService): Promise<never> => {
+  const user = await authService.getUser().catch(() => null)
+  if (user && !user.expired) {
+    throw new Error(NO_PERMISSION)
+  }
+  if (mayRedirectToLogin()) {
+    authService.login().catch(() => {})
+  }
+  throw new Error(SESSION_EXPIRED)
+}
 
 class EegBaseService {
 
   public constructor(private authService: AuthService) {
   }
 
-  protected async getUser() {
-    return await this.authService.getToken().catch(e => {
-      return this.authService.refresh().then(_ => this.authService.getToken())
-    })
-  }
-
-  // lock = this.createLoc<string>()
   protected async lookupToken() {
-    // return Lock(async () => {
-    //   try {
-    //     const token = await this.getUser()
-    //     if (token) {
-    //       return token
-    //     }
-    //   } catch {
-    //     console.log("Not Authenticated")
-    //   }
-    //   throw new Error()
-    // })
-
-    return mutex.runExclusive(async () => {
-      try {
-        const token = await this.getUser()
-        if (token) {
-          return token
-        }
-      } catch {
-        console.log("Not Authenticated")
-      }
-      return Promise.reject("new Error()")
-    })
+    return this.authService.lookupToken()
   }
   protected getSecureHeaders(token: string, tenant: string) {
     return {'Authorization': `Bearer ${token}`, "tenant": tenant}
@@ -91,7 +50,8 @@ class EegBaseService {
     return {'Authorization': `Bearer ${token}`, "X-Tenant": tenant}
   }
 
-  protected async handleErrors(response: Response):Promise<Response> {
+  // arrow property: most callers pass it unbound (`.then(this.handleErrors)`), and the 401 branch needs `this`
+  protected handleErrors = async (response: Response): Promise<Response> => {
 
     const isErrorResponse = (err: any): err is IErrorResponse => {
       return err.error !== undefined
@@ -100,11 +60,18 @@ class EegBaseService {
     if (!response.ok) {
       switch (response.status) {
         case 401:
-          // await this.authService.logout()
-          break
+          // used to pass as success
+          return handleUnauthorized(this.authService)
         default:
-          const errorBody = await response.json().catch(e => response.text())
-          if (isErrorResponse(errorBody)) {
+          // read the body once: a second read after a failed json() throws and hides the real error
+          const errorText = await response.text()
+          let errorBody: unknown = errorText
+          try { errorBody = JSON.parse(errorText) } catch { /* not JSON, keep the text */ }
+          if (isErrorResponse(errorBody) && typeof errorBody.error === "string") {
+            // energystore ({"error": "<text>"}) and Spring ({"error": "<reason phrase>", ...}): the text itself,
+            // not the code lookup, which made "E_undefined_undefined" of it
+            throw new Error(errorBody.error || response.statusText || "Error while fetching data!");
+          } else if (isErrorResponse(errorBody)) {
             throw new Error(determineErrTxt(new ErrorResponse(errorBody.error)));
           } else {
             if (!response || !response.statusText) {
@@ -115,14 +82,6 @@ class EegBaseService {
       }
     }
     return response;
-  }
-
-  protected async handleFilestoreResponse(response: Response) {
-    const data = await response.json()
-    if (data && data.data && data.data.deleteFile && data.data.deleteFile.message) {
-      throw new Error(data.data.deleteFile.message)
-    }
-    return data
   }
 
   protected async handleGQLResponse(response: Response) {

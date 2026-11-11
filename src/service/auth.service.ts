@@ -1,7 +1,6 @@
 import {User, UserManager, UserManagerSettings, UserProfile, WebStorageStateStore, Log} from "oidc-client-ts";
 import {Mutex} from "async-mutex";
 
-// import {keycloakConfig} from "../keycloak";
 
 // const keycloakConfig = {
 //   url: "https://login.ourproject.at/auth/realms/VFEEG/",
@@ -88,19 +87,20 @@ export class AuthService extends UserManager {
     return token
   }
 
-  public async lookupToken(){
+  // the one token lookup of the app (class services and the RTK Query participant API), one at a time: a failed
+  // getToken waits for the refresh and uses its token (WEB-CQ-24)
+  public async lookupToken(): Promise<string> {
     return this.mutex.runExclusive(async () => {
       try {
-        const token = await this.getToken().catch(e => {
-          this.refresh()
-        })
+        // the refreshed token itself; getToken again only when the refresh went through the redirect
+        const token = await this.getToken().catch(() => this.refresh().then(t => t || this.getToken()))
         if (token) {
           return token
         }
       } catch {
         console.log("Not Authenticated")
       }
-      throw new Error()
+      throw new Error("Not Authenticated")
     })
   }
 
@@ -160,9 +160,10 @@ export class AuthService extends UserManager {
     // window.location.href = `${endSessionEndpoint}?post_logout_redirect_uri=${window.location.origin}&client_id=at.ourproject.vfeeg.app`
   }
 
+  // "Passwort ändern": a regular sign-in request (state and PKCE like the login, redirect_uri from the settings)
+  // with the Keycloak action; a hand-built URL without state failed on the way back (261005-ca4)
   public async redirectToUserAccount () {
-    const url = await this.metadataService.getAuthorizationEndpoint()
-    window.location.href = `${url}?response_type=code&client_id=${this.settings.client_id}&redirect_uri=${window.location.origin}&kc_action=UPDATE_PASSWORD`
+    await this.signinRedirect({extraQueryParams: {kc_action: "UPDATE_PASSWORD"}})
   }
 
   get logoutActive () {

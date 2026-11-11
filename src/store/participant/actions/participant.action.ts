@@ -2,7 +2,6 @@ import {createAction, createAsyncThunk} from "@reduxjs/toolkit";
 import {featureKey} from "../states/participant.state";
 import {EegParticipant} from "../../../models/members.model";
 import {Metering} from "../../../models/meteringpoint.model";
-import {HttpError} from "../../../service/base.service";
 import {SelectedPeriod} from "../../../models/energy.model";
 import {Api} from "../../../service";
 
@@ -139,9 +138,6 @@ export const archiveParticipant = createAsyncThunk(
       await Api.participantService.archiveParticipant(tenant, participant.id);
       return participant.id
     } catch (e) {
-      if (e instanceof HttpError) {
-        return rejectWithValue(e.reasonObject)
-      }
       return rejectWithValue(e)
     }
   }

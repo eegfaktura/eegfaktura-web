@@ -1,0 +1,79 @@
+import { describe, expect, it, vi } from "vitest";
+import {act, render, screen, waitFor} from "@testing-library/react";
+import React from "react";
+import {MemoryRouter, useHistory} from "react-router";
+import {Route} from "react-router-dom";
+import {IonApp, IonContent, IonItem, IonPage, IonRouterOutlet} from "@ionic/react";
+import {IonReactRouter} from "@ionic/react-router";
+import UnsavedChangesGuard, {UNSAVED_CHANGES_MESSAGE} from "../../../components/core/UnsavedChangesGuard.component";
+
+// renders the guard in a memory router and hands out its history to navigate with
+const setup = (dirty: boolean, allowLeave?: () => boolean) => {
+  const confirm = vi.fn((_message: string, callback: (ok: boolean) => void) => callback(false))
+  let history: ReturnType<typeof useHistory> | undefined
+  const Capture = () => { history = useHistory(); return null }
+  render(
+    <MemoryRouter initialEntries={["/page/addParticipant"]} getUserConfirmation={confirm}>
+      <UnsavedChangesGuard dirty={dirty} allowLeave={allowLeave}/>
+      <Capture/>
+    </MemoryRouter>
+  )
+  return {confirm, history: history!}
+}
+
+describe("UnsavedChangesGuard (261024-ca18)", () => {
+  it("asks before leaving a form with unsaved input and stays when declined", () => {
+    const {confirm, history} = setup(true)
+    act(() => history.push("/page/participants"))
+    expect(confirm).toHaveBeenCalledWith(UNSAVED_CHANGES_MESSAGE, expect.any(Function))
+    expect(history.location.pathname).toBe("/page/addParticipant")
+  })
+
+  it("lets a clean form go without asking", () => {
+    const {confirm, history} = setup(false)
+    act(() => history.push("/page/participants"))
+    expect(confirm).not.toHaveBeenCalled()
+    expect(history.location.pathname).toBe("/page/participants")
+  })
+
+  it("lets the navigation after a successful save pass", () => {
+    const {confirm, history} = setup(true, () => true)
+    act(() => history.push("/page/participants"))
+    expect(confirm).not.toHaveBeenCalled()
+    expect(history.location.pathname).toBe("/page/participants")
+  })
+
+  it("asks the browser before a reload or closing the tab", () => {
+    setup(true)
+    const event = new Event("beforeunload", {cancelable: true})
+    window.dispatchEvent(event)
+    expect(event.defaultPrevented).toBe(true)
+  })
+
+  it("asks only while its page is shown: a page left through the menu stays mounted, hidden", async () => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true)
+    const page = (name: string, next?: string) => () =>
+      <IonPage><IonContent>{name}{name === "Formular" && <UnsavedChangesGuard dirty={true}/>}
+        {next && <IonItem routerLink={next} routerDirection="none">nach {next}</IonItem>}</IonContent></IonPage>
+    window.history.pushState({}, "", "/form")
+    render(<IonApp><IonReactRouter><IonRouterOutlet>
+      <Route path="/form" exact component={page("Formular", "/b")}/>
+      <Route path="/b" exact component={page("Seite B", "/c")}/>
+      <Route path="/c" exact component={page("Seite C")}/>
+    </IonRouterOutlet></IonReactRouter></IonApp>)
+    const click = async (text: string) => {
+      await act(async () => { (await screen.findByText(text)).click() })
+    }
+    await click("nach /b")
+    // the URL changes first; the outlet tells the page it leaves (ionViewWillLeave) only later, in its transition, and
+    // hides the page after it: wait for that, a click before it would still count as on the form (eegfaktura-dev#56 #17)
+    await waitFor(() => expect(screen.getByText("Formular").closest(".ion-page")!.classList).toContain("ion-page-hidden"))
+    expect(window.location.pathname).toBe("/b")
+    expect(confirm).toHaveBeenCalledTimes(1)
+    await click("nach /c")
+    // the guard asks before the navigation: once the URL is /c, a question would already have come
+    await waitFor(() => expect(window.location.pathname).toBe("/c"))
+    expect(confirm).toHaveBeenCalledTimes(1)
+    confirm.mockRestore()
+  })
+})

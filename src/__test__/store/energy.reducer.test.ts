@@ -33,3 +33,40 @@ describe("energy reducer: only the latest report request counts (platform#174)",
     expect(s.participantReports.ids).toEqual(["p1"])
   })
 })
+
+describe("energy reducer: a failed report load is kept as an error (261024-ca6)", () => {
+  it("the latest failed request sets the error, a new request and a success clear it", () => {
+    let s = reducer(initialState, pending("a"))
+    s = reducer(s, fetchEnergyReportV2.rejected(new Error("Bad Gateway"), "a", {} as any))
+    expect(s.reportError).toBe("Bad Gateway")
+    s = reducer(s, pending("b"))
+    expect(s.reportError).toBeUndefined()
+    s = reducer(s, rejected("b"))
+    s = reducer(s, pending("c"))
+    s = reducer(s, fulfilled("c", "p1"))
+    expect(s.reportError).toBeUndefined()
+  })
+
+  it("an older request failing late sets no error", () => {
+    let s = reducer(initialState, pending("old"))
+    s = reducer(s, pending("new"))
+    s = reducer(s, fulfilled("new", "p1"))
+    s = reducer(s, rejected("old"))
+    expect(s.reportError).toBeUndefined()
+  })
+})
+
+describe("energy reducer: the report of the period is loading (platform#189)", () => {
+  it("is loading from the request until the latest one answers or fails", () => {
+    let s = reducer(initialState, pending("old"))
+    expect(s.reportLoading).toBe(true)
+    s = reducer(s, pending("new"))
+    s = reducer(s, fulfilled("old", "p-old"))
+    expect(s.reportLoading).toBe(true)
+    s = reducer(s, fulfilled("new", "p-new"))
+    expect(s.reportLoading).toBe(false)
+    s = reducer(s, pending("again"))
+    s = reducer(s, rejected("again"))
+    expect(s.reportLoading).toBe(false)
+  })
+})

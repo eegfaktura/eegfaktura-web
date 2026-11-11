@@ -37,13 +37,28 @@ describe("<MemberComponent />", () => {
   it("displays the header", async () => {
 
     const { container, findAllByRole  } = renderWithProviders(
-      <MemberComponent hideMember={false} hideMeter={false} isChecked={false} participant={defaultParticipant}
+      <MemberComponent hideMember={false} hideMeter={false} participant={defaultParticipant}
                        showDetailsPage={(e) => {}}
                        showAmount={false}
-                       onCheck={(e) => {}}
                        onShowAddMeterPage={(e) => () => vi.fn()} />);
     // console.log(container)
     // const role = screen.getByText(/Max Mustermann/)
     expect(screen.getByText(/Max Mustermann/)).toBeInTheDocument();
+  });
+
+  // 08.11.2026: the member number in brackets after the name
+  it("shows the member number in brackets after the name", () => {
+    renderWithProviders(
+      <MemberComponent hideMember={false} hideMeter={false} participant={defaultParticipant}
+                       showDetailsPage={() => {}} showAmount={false} onShowAddMeterPage={() => () => vi.fn()}/>);
+    expect(screen.getByText("Max Mustermann")).toBeInTheDocument();
+    expect(screen.getByText("(001)")).toBeInTheDocument();
+  });
+
+  it("shows no brackets without a member number", () => {
+    const {container} = renderWithProviders(
+      <MemberComponent hideMember={false} hideMeter={false} participant={{...defaultParticipant, participantNumber: ""}}
+                       showDetailsPage={() => {}} showAmount={false} onShowAddMeterPage={() => () => vi.fn()}/>);
+    expect(container.textContent).not.toContain("(")
   });
 })

@@ -1,3 +1,4 @@
+// @vitest-environment node
 import {describe, expect, it} from "vitest";
 import {EMAIL_LIST_PATTERN, isValidEmailList, normalizeEmailList} from "../../util/EmailAddress.util";
 

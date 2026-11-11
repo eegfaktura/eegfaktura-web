@@ -5,6 +5,7 @@ import {IonButton, IonIcon, IonInput, IonLabel, IonRow} from "@ionic/react";
 import "react-datepicker/dist/react-datepicker.css";
 import "./data.component.scss"
 import {calendar} from "ionicons/icons";
+import {DATE_PICKER_PROPS, formatDate} from "../../util/DateFormat.util";
 
 interface DateComponentProps {
   initialDate: [Date|null, Date|null]
@@ -23,7 +24,7 @@ const DateComponent: FC<DateComponentProps> = ({range, initialDate}) => {
   const DateInputComponent = forwardRef<HTMLIonButtonElement, any>(function CustomInput(p, ref) {
     return (
       <IonRow ref={ref} {...p} style={{alignItems:"center"}}>
-        <div><span>{startDate?.toDateString()}</span> - <span>{endDate?.toDateString()}</span></div>
+        <div><span>{startDate && formatDate(startDate)}</span> - <span>{endDate && formatDate(endDate)}</span></div>
         <IonButton fill="clear" size="small">
           <IonIcon slot="icon-only" icon={calendar}/>
         </IonButton>
@@ -44,7 +45,7 @@ const DateComponent: FC<DateComponentProps> = ({range, initialDate}) => {
         customInput={
           <DateInputComponent/>
         }
-        dateFormat="dd.MMM yyyy"
+        {...DATE_PICKER_PROPS}
         portalId="root-portal"
       />
   )

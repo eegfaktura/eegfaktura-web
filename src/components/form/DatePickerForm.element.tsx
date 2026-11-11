@@ -1,12 +1,11 @@
-import React, {FC, FormEvent, forwardRef, HTMLProps, useEffect, useState} from "react";
+import React, {FC} from "react";
 import DatePicker from "react-datepicker";
-import {Control, Controller, FieldError, UseFormClearErrors, useWatch} from "react-hook-form";
-import {IonInput} from "@ionic/react";
+import {Control, FieldError, useController, UseFormClearErrors} from "react-hook-form";
 
 import "./DatePickerForm.element.scss"
-import {IonInputCustomEvent} from "@ionic/core/dist/types/components";
-import {InputInputEventDetail} from "@ionic/core/dist/types/components/input/input-interface";
-import moment from "moment";
+import {DATE_PICKER_EXAMPLE, DATE_PICKER_PROPS} from "../../util/DateFormat.util";
+import DateTextInput from "./DateTextInput.component";
+import {useDateOnLeave} from "./useDateOnLeave.hook";
 
 interface DatePickerFormProps {
   control: Control<any, any>,
@@ -22,75 +21,30 @@ interface DatePickerFormProps {
 
 const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, label, placeholder, error, disabled, onChangeDate}) => {
 
-  const value = useWatch({control, name: name, defaultValue: undefined})
-  const [showDate, setShowDate] = useState<Date | undefined>()
+  const {field} = useController({name, control, rules})
+  const stored = typeof field.value === 'string' ? (field.value ? new Date(field.value) : undefined) : field.value instanceof Date ? field.value : undefined
 
-  useEffect(() => {
-    // const dateValue = typeof value === 'string' ? new Date(value) : value instanceof Date ? value : new Date(Date.now())
-    const dateValue = typeof value === 'string' ? new Date(value) : value instanceof Date ? value : undefined
-    setShowDate(dateValue)
-  }, [value]);
-
-  const handleUpdate = (onChange: (...event: any[]) => void) => () => {
-    onChange(showDate)
-    onChangeDate && onChangeDate(name, showDate)
-  }
-
-  // const Component = forwardRef<HTMLIonInputElement, { /*onIonChange: (event: IonInputCustomEvent<InputChangeEventDetail>) => void, onIonInput: (event: IonInputCustomEvent<InputInputEventDetail>) => void*/}>(function CustomInput(p, ref) {
-  const Component = forwardRef<HTMLIonInputElement, HTMLProps<HTMLIonInputElement>>(function CustomInput(p, ref) {
-    const handleInput1 = (event: IonInputCustomEvent<InputInputEventDetail>) => {
-      const date = event.detail.value
-      const valid = !!date && date.match(/^\w*\s\d{1,2},\s\d{4}$/)
-      if (valid && valid.length > 0) {
-        const dateObj = moment(date, "MMMM D, YYYY")
-        setShowDate(dateObj.toDate())
-      }
-    }
-
-    return (
-        <IonInput
-          value={p.value ? p.value.toString() : undefined}
-          onClick={p.onClick}
-          onIonChange={(e) => {
-            p.onChange && p.onChange(e as unknown as FormEvent<HTMLIonInputElement>)
-          }}
-          style={{flexDirection: "row-reverse"}}
-          label={label}
-          placeholder={placeholder + " z.B. April 2, 2024"}
-          fill="outline"
-          labelPlacement={"floating"}
-          ref={ref}
-          disabled={disabled}
-        />
-    );
-  });
+  const {picker, onTyping, pickerProps} = useDateOnLeave(stored, (date) => {
+    field.onChange(date)
+    onChangeDate && onChangeDate(name, date)
+  })
 
   return (
     <div className="form-element">
-      <Controller
+      <DatePicker
+        // selectsRange={false}
         name={name}
-        control={control}
-        rules={rules}
-        render={({field, fieldState, formState}) => {
-          const {onChange, onBlur, value, name, ref} = field;
-          // const dateValue = typeof value === 'string' ? new Date(value) : value instanceof Date ? value : new Date(Date.now())
-          return (
-            <DatePicker
-              // selectsRange={false}
-              selected={showDate}
-              adjustDateOnChange={true}
-              name={name}
-              onChange={(update) => {
-                update && setShowDate(update)
-              }}
-              customInput={<Component />}
-              onCalendarClose={handleUpdate(onChange)}
-              dateFormat="MMMM d, yyyy"
-              ref={ref}
-              portalId="root-portal"
-            />
-          )
-        }}/>
+        customInput={<DateTextInput label={label} onTyping={onTyping}/>}
+        placeholderText={placeholder + " " + DATE_PICKER_EXAMPLE}
+        disabled={disabled}
+        {...pickerProps}
+        {...DATE_PICKER_PROPS}
+        ref={(instance) => {
+          (picker as React.MutableRefObject<DatePicker | null>).current = instance
+          field.ref(instance)
+        }}
+        portalId="root-portal"
+      />
       {error && <div className={"error-line"}>{error.message}</div>}
     </div>
   )

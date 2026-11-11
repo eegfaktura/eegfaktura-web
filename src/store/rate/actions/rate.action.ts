@@ -1,7 +1,6 @@
 import {createAction, createAsyncThunk} from "@reduxjs/toolkit";
 import {featureKey} from "../states/rate.state";
 import {EegTariff} from "../../../models/eeg.model";
-import {HttpError} from "../../../service/base.service";
 import {Api} from "../../../service";
 
 export const fetchRatesModel = createAsyncThunk(
@@ -40,12 +39,11 @@ export const archiveRate = createAsyncThunk(
       await Api.tariffService.archiveTariff(tenant, rate.id);
       return rate.id
     } catch (e) {
-      if (e instanceof HttpError) {
-        return rejectWithValue(e.reasonObject)
-      }
       return rejectWithValue(e)
     }
   }
 )
 
 export const selectRate = createAction<EegTariff | undefined>(`${featureKey}/select/rate`);
+// no tariffs until the community's tariffs are loaded (platform#229: they load after its EEG now)
+export const clearRates = createAction(`${featureKey}/clear`);

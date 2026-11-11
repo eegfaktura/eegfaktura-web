@@ -14,11 +14,939 @@ this changelog highlights the changes relevant for overview and operations.
   only after a 7-day cooldown. Security updates for the language ecosystems are unaffected.
 
 ### Fixed
+- **„Datenfreigabe aufheben“: the optional „Begründung“ reaches the grid operator** (revoke reason, 2026-10-30). The
+  field was never read: the request always went out without a reason. It is now sent as `reason`, cleaned as the
+  backend cleans it (format characters such as soft hyphens and zero-width spaces and characters XML does not allow are
+  dropped, control characters and runs of white space become one space, ends trimmed; blank is not sent).
+  A counter under the field counts the cleaned text in characters (as the backend and CMRevoke count them) up to 50;
+  above 50 „Höchstens 50 Zeichen.“ appears and „Anfordern“ stays disabled. A hint says that the reason goes to the grid
+  operator and is stored in the history (user decision 2026-10-30) and asks not to enter personal data. The
+  confirmation names the reason. Needs eegfaktura/eegfaktura-backend#127 (reads `reason`; an older backend ignores the
+  field) and eegfaktura/eegfaktura-eda-xp#59 (ReasonKey 0 + Reason); deploy order eda-xp → backend → web.
+  When the backend refuses a revoke (codes 5011 reason too long, 5012 a metering point of another member or without
+  grid operator, 5013 a metering point without active consent of the member, 5014 no consent end), the error shows the
+  backend's German text instead of a raw key `E_<code>_…`.
+
+## [1.24.0] – 2026-11-11
+
+### Changed
+- **Peer-to-peer and self-supply: all billing functions, a preview only** (platform#255, decision 11.11.2026): web no
+  longer hides billing for communities of type P2P or EVA (hidden since platform#229). Tariffs (menu, page, member and
+  metering point), the billing switch with preview, the totals, „Meine Rechnungen“, joining fee, direct debit, the
+  creditor ID, the settlement interval, the billing settings and the billing mail texts are there as for any
+  community. After a preview, instead of „ABRECHNUNG DURCHFÜHREN“ the member list says „Bei Peer-to-Peer und
+  Eigenversorgung erstellt eegFaktura nur eine Vorschau, keine endgültige Abrechnung.“; billing refuses a final run
+  for them as well. The tariffs load for every community again.
+
+## [1.23.1] – 2026-11-10
+
+### Fixed
+- **„Gemeinschaft wechseln“ is always offered in the user menu** (platform#254): since 1.22.1 (platform#241) the entry
+  showed only when the backend named more than one community. In the pilot it names only the communities that exist
+  there, so a user whose current community exists only in prod (e.g. CC101172) got „E_1000_sql: no rows in result set“
+  and had no way to switch to the pilot community. The entry is there again with a single community too, as before
+  1.22.1; the picker lists the communities of this zone.
+
+## [1.23.0] – 2026-11-10
+
+### Changed
+- **EEG page: no card „Einstellungen“, the interval under „Allgemeines“** (platform#245): the second community select
+  „Auswahl Gemeinschaft“ is gone — the community is switched in the user menu only. The settlement interval is the first
+  field of „Allgemeines“ and is called **„Abrechnungsintervall“**, also in the change dialog and its message; same rules
+  as before (shown only with billing, changeable only by `EEG_ADMIN`).
+- **Member search with several terms** (platform#244): the search field of the member list splits the input at spaces
+  and finds the members that have **every** term in one of their fields — last name, first name, member number,
+  e-mail, or a metering point's number or name — e.g. „huber maria“ or „huber 0815“; the order does not matter. Before,
+  the whole input was searched as one text, so a first and a last name together found nothing. Meters: a member's
+  metering points are narrowed to those holding every term that the member's own fields do not cover („pv dach“ shows
+  „PV Dach“ only; if no meter holds them all, those holding any); if the fields cover every term, all meters stay („maria huber“ keeps all meters of Maria Huber).
+  Spaces at the edges are ignored.
+  **A hit in the member's own fields keeps all its meters** (platform#253): „markt“ shows every metering point of
+  „Marktgemeinde …“, also when meter names such as „Pumpwerk Marktplatz“ contain the term; „markt pumpwerk“ shows its
+  pumping stations, „pumpwerk“ alone still only the pumping stations. Before (also in 1.22), a single term that hit
+  the member and some meter names showed only those meters.
+- **Member list: the member number in brackets after the name** (08.11.2026), e.g. „Max Mustermann (001)“. A long name
+  is cut before the number, so the number stays visible. Members without a number show the name only.
+- **„Beitrittsgebühr nachverrechnen“ only for members billed with energy already** (decision 08.11.2026): with the
+  status „offen – wird mit der ersten Energieabrechnung verrechnet“ the button is no longer shown, because the fee comes
+  with the first final energy billing anyway; it stays for „nicht verrechnet – Mitglied wurde schon abgerechnet“, as in
+  the status list of the concept. „Außerhalb bezahlt erfassen“ stays in both states. billing is unchanged.
+
+### Fixed
+- **Register a member: correct or remove a metering point** (platform#249): on „Mitglied registrieren“ an added
+  metering point could not be removed, and changing its number added a second entry and kept the wrong one — the
+  member could then not be registered, the input had to be entered again. Now the form of an added metering point
+  has **„Entfernen“**, and **„Übernehmen“** replaces exactly that entry, also with a changed number. A new metering point
+  with the number of a listed one still replaces that one; an entry changed to the number of another one replaces it,
+  so each number is listed once.
+- **„Bankverbindung“ is optional and called „Bank (optional)“** (platform#249): on registration and in the member
+  data, with direct debit (CORE, B2B) the field was required, so a space was entered in its place. It is the name of
+  the bank and is only printed on the invoice („Bankverbindung: <Bank> | ******1234 | <Inhaber>“) and exported with
+  the members. The EEG page keeps its label.
+- **Clear messages instead of „E_…“ keys** (platform#248): web shows the backend's own text for the codes **1207**
+  (metering point assigned to another member — on „Mitglied anlegen“ and on „+“ at a member), **1110** (invalid e-mail
+  address — on create, on saving the member and on changing the e-mail), **1112** (direct debit without IBAN) and
+  **1064** (import sheet missing), as already for 1206. Example: „Das Mitglied konnte nicht angelegt werden. Deine
+  Eingaben bleiben erhalten. (Der Zählpunkt … ist schon einem anderen Mitglied dieser Gemeinschaft zugeordnet. …)“
+  instead of „(E_1104_participant could not be registered)“. Other codes keep the key, so raw database or decoder
+  texts are not shown as if they were meant for the user. The master data import shows „Stammdaten sind nicht
+  korrekt. <Text>“ without the prefix „Error: “. The texts come from eegfaktura-backend with platform#248; with an
+  older backend the messages stay as before.
+- **Adding a metering point the member already has** (platform#247): the reason in brackets after „Der Zählpunkt
+  konnte nicht angelegt werden.“ is no longer „E_1111_Bad Process“ but the text of backend code 1206, e.g. „Dieser
+  Zählpunkt ist bei diesem Mitglied schon vorhanden. Einen inaktiven Zählpunkt meldest du unter Prozesse → Zählpunkt
+  aktivieren wieder an.“ (with an older backend the former text stays).
+- **Metering point details without TechCode and FuelCode** (platform#246, decision 08.11.2026): the two read-only
+  fields of the metering point list (platform#229, since 1.20.0) showed as empty boxes in an own style at every existing
+  metering point, and nothing in V1 uses the codes. They are no longer shown; the backend still stores them from the
+  metering point list, for V3.
+- **„Zählpunkt aktivieren“ registers the metering point for the chosen member** (reported 08.11.2026): after an owner
+  change one metering point number is at two members (the old one inactive). The process took the first member holding
+  the number — the participant list is sorted alphabetically in place, so often the old owner — in the confirmation and
+  in the request sent to the grid operator, and choosing the metering point replaced the chosen member. Now the chosen
+  member counts; without a choice the member follows from the metering point only when one member holds it, otherwise
+  the member has to be chosen (the field is required). The member list is no longer sorted in place.
+
+## [1.22.1] – 2026-11-08
+
+### Changed
+- **CI: no image build for a commit that only changes `CHANGELOG.md`** (platform#239): pushes and pull requests whose
+  only change is the CHANGELOG, such as the release PR, skip the image build and the checks (PR checks, security
+  scan, Snyk Code; the weekly schedules still run). Tag pushes still build. A release promotes
+  the image of the last commit before the release PR; it has the same content.
+
+### Fixed
+- **User menu: current community as information, switching as an entry of its own** (platform#241 follow-up): the
+  caption and the community stood side by side and the name wrapped into a narrow column. The menu now shows
+  „Aktuelle Gemeinschaft“ with number and name on the next line (not clickable) and, with more than one community, an
+  entry „Gemeinschaft wechseln“ next to „Passwort ändern“ and „Abmelden“ that opens the picker.
+
+## [1.22.0] – 2026-11-08
+
+### Added
+- **Search field in „Auswahl Gemeinschaft“** (platform#241, Harald): the community picker of the user menu is a dialog
+  of its own now. With more than one community it has a search field that filters by number and name, ignoring case
+  and accents, like the tariff list („Keine Gemeinschaft gefunden.“ without hits). The current community is marked;
+  switching still asks first when a form holds unsaved input. The user menu shows the current community and opens the
+  dialog. The search folding of the tariff list moved to `util/Search.util.ts` and is shared.
+
+### Changed
+- **EEG master data: the field „Region“ is now called „Modell“** (Harald, 07.11.2026). It shows the community model
+  (e.g. „EEG regional“, „EEG lokal“, BEG, P2P), and „Region“ also appeared in the zone level below („Regionalbereich“).
+  The field now shows the long form in brackets after the short form of admin, e.g. „EEG regional
+  (Erneuerbare-Energie-Gemeinschaft, regional)“, „GEA (Gemeinschaftliche Erzeugungsanlage)“, „BEG
+  (Bürgerenergiegemeinschaft)“, „P2P (Peer-to-Peer)“, „EVA (Eigenversorgungsanlage)“.
+- **EEG master data: „Nahebereich“ shows the official name of the zone level in brackets** (ElWG, from Harald):
+  e.g. „4 (Regionalbereich – gleiches Umspannwerk eines Netzbetreibers)“ instead of „4 Regionalbereich: ein
+  Netzgebiet“. Levels 6 and 7 are now „Gebotszone – mehrere Umspannwerke eines/verschiedener Netzbetreiber“ (before
+  „Keine Verbindung: ein/mehrere Netzgebiete“).
+- **Dashboard „Übersicht EEG“ shows today's state as a whole:** The card names „Stand heute“ once instead of the selected
+  period and the two „(Stand heute)“ marks.
+  - **Counting basis:** Active metering points, consumers/producers and the energy tariffs are now counted like the
+    members over all members as of today. Before, they came from the members of the selected period, so the card mixed
+    two bases.
+  - **Active:** „aktive“ metering points are the ones with an active participation, each number once. Registrations
+    are shown apart as „in Anmeldung“, like for members. Before, the period filter counted them as active.
+  - **Tariff list:** It is split into energy tariffs (counted per active metering point) and membership fees (counted
+    per active member), with the numbers right-aligned.
+  - The energy cards of the dashboard stay per period.
+
+## [1.21.0] – 2026-11-07
+
+### Changed
+- **A rejected deregistration shows the grid operator's reason** (platform#238): the notification „Anfrage auf
+  AUFHEBUNG der DATENFREIGABE abgelehnt“ (`ABLEHNUNG_CCMS`) shows the reason the backend stores before the full stop,
+  as for `ABLEHNUNG_CPF` (e.g. „Keine Datenfreigabe vorhanden“, „ConsentID abgelaufen“, „Prozessdatum falsch“,
+  „ConsentID und Zählpunkt passen nicht zusammen“; an unknown code as its number). Without a code the text stays as
+  before. A rejected participation factor change with an empty reason list no longer shows „()“.
+- **After an interval change the first open period is selected** (eegfaktura-dev#54 #7): after „Wechseln“ the first
+  open period of the new interval is selected and named in the
+  message (the one starting at the new interval's start, which may lie in the past, e.g. „Als Nächstes abzurechnen:
+  2. Quartal 2026.“; today's period without that sentence when the change applies at once, because earlier periods
+  may still be open; eegfaktura-dev#54 #7). Opening the app still
+  selects today's period. Before, the current period of the new interval was selected.
+- **A refused interval change shows the backend's reason** (eegfaktura-dev#54 #2): A refused change shows the
+  backend's reason, including the months not yet billed final that block it (eegfaktura-dev#54 #2, text from the
+  backend; needs eegfaktura-backend#148).
+
+## [1.20.0] – 2026-11-06
+
+### Added
+- **Admins can change the settlement interval on the EEG page** (platform#230). Choosing another „Abrechnungszeitraum“
+  opens a dialog: web reads the billing state from billing (`GET /api/billingRuns/tenant/{tenantId}/settlementState`)
+  and has the backend check the change (`POST /eeg/settlementinterval`, `dryRun`). The dialog shows the old and new
+  interval, from when the new one applies or why the change is not possible yet and from when it is, the last final
+  period, two hints (existing documents stay; membership fee, metering point fee and free energy apply per billing, so
+  the yearly amount changes with the same tariff) and a link to the user guide. „Wechseln“ reads the billing state again and saves the change with it
+  (the dialog cannot be closed meanwhile), then the current period of the new interval is selected; „Abbrechen“ keeps the stored interval. Needs billing and backend
+  with these endpoints (deploy them first).
+- **Peer-to-peer (`P2P`) and self-supply (`EVA`) communities** (vfeeg-development/eegfaktura-platform#229). The EEG
+  page shows the community type in the field „Region“ with the short forms of admin (EEG lokal, EEG regional, GEA,
+  BEG, P2P, EVA). eegfaktura provides no billing for P2P and EVA: web hides the menu item „Tarife“ (for admins and
+  members), the billing mode, totals and invoice details in the member area, „Meine Rechnungen“, the tariff selects of
+  members and metering points, the joining fee, the direct debit fields in the member forms (details and new member;
+  stored values stay, the IBAN is not required then), the billing settings, the settlement interval and the Creditor-ID on the EEG
+  page (IBAN, BIC, Kontoinhaber and Bankverbindung stay; eegfaktura-dev#56 #13),
+  the billing mail in „E-Mail-Texte“ (the backend mails stay), and on the dashboard the tariff block and the box
+  „Energiemengen“ (bought/sold count only metering points with a tariff, and its hint on metering points without
+  one). A direct URL to the tariffs shows a notice instead of the tariff editor.
+  web does not request billing data for them either: the tariffs are loaded only after the community's own load
+  returned a type with billing (so they now load after the EEG, not beside it, for every community; after a failed EEG
+  load they load as before, and another community's tariffs are cleared first), „E-Mail-Texte“ shows the load state
+  until the community is there and then asks billing only with billing, and the member area looks up no billing runs
+  and no joining fees. Energy data,
+  dashboard, metering points and processes stay as they are; the other types are unchanged. billing rejects runs for
+  these communities itself. Deploy order: eda-xp → backend → billing, admin-backend → admin, web.
+- **P2P and EVA run like a BEG; zone level and metering point codes** (platform#229, addendum 05.11.2026). One helper
+  „several grid operators possible“ (BEG, P2P, EVA) replaces the BEG checks: P2P/EVA metering points show their grid
+  operator, and „Zählpunktliste anfordern“ asks for the grid operator. Its choice lists the grid operators of the
+  metering points and the community's own one (trimmed, upper case), preselected, so a community without metering points sees where its
+  first list is requested (eegfaktura-dev#56 #8). A community without any grid operator (for every type) gets a
+  hint instead, and the button stays disabled (for EEG lokal/regional and GEA it was active before and sent nothing). The EEG page shows the community's zone level
+  („Nahebereich“, GET /eeg `ecZoneLevel`: 1 Hauptleitung … 7 Keine Verbindung: mehrere Netzgebiete, none = „unbekannt“),
+  the metering point details show `techCode` and `fuelCode` as code; all three read only (zone level names in the
+  locales, de and en). The metering point saves send the codes along unchanged: the backend ignores them on insert and
+  update and returns the sent metering point, so the codes stay shown after a save. The EEG save sends single fields
+  only, never `ecZoneLevel`. Needs the backend with these fields (empty until then).
+
+### Changed
+- **The general EEG save no longer sends the settlement interval** (platform#230); the backend ignores it there too.
+
+### Security
+- **brotli-libs 1.2.1-r0 in the image** (CVE-2026-111497, from the weekly base image scan): `caddy:2.11.7` ships 1.2.0
+  and there is no newer Caddy image yet, so the Dockerfile updates the package.
+
+### Fixed
+- **After switching the community, the menu shows the page of the URL again** (platform#237, reported 05.11.2026,
+  since web 1.10.0). The app keeps a page left through the menu, hidden. While the new community loaded, the EEG
+  page, the members and the processes swapped their page for a loading page; a hidden page that came back took over
+  the page shown, so e.g. `/page/participants` showed the EEG settings, and every later menu entry showed something
+  else until the browser was reloaded. The same happened after a failed EEG load and „Erneut versuchen“. These pages
+  now keep their page and only swap its content; the first-load spinner of the dashboard is wrapped the same way.
+- **The dashboard has the menu button below 992 px also while its first period loads.** The spinner showed no header,
+  so on narrow screens the menu could not be opened until the dashboard had loaded.
+- **Deleting a member and changing the business type recover from an expiring session like every other call**
+  (WEB-CQ-24). Their token lookup started the session refresh without waiting for it and failed; it now waits and
+  uses the refreshed token. A 401 on these two calls now leads to the login when the session expired; otherwise they
+  show their existing error text, as before. When no session can be found at all, the calls now fail with
+  „Not Authenticated“: error messages that add the reason end in „(Not Authenticated)“ instead of „(new Error())“.
+
+### Removed
+- **Code-quality cleanup** (code-quality review 2026-11-03): about 2,000 lines of code no module used — the old
+  registration forms (they live in eegfaktura-admin), second copies of member/meter forms and the number input, the
+  Login and test pages, the commented-out keycloak-js service, unused selectors and helpers, the old virtual-list
+  code of the member list, the Create-React-App/webpack/nginx leftovers and the Makefile; the packages
+  `@loadable/component`, `react-viewport-list`, `react-virtualized-auto-sizer`, `react-window` and
+  `redux-mock-store`. Tests run in one time zone (Europe/Vienna) and wait for conditions instead of fixed sleeps;
+  pure function tests run without a DOM.
+
+## [1.19.2] – 2026-11-02
+
+### Fixed
+- **A saved tariff no longer stays „unsaved“.** The save worked, but the form counted the empty fields of the answer as
+  changes: „Änderungen speichern“ stayed active, and another tariff or „Zurück“ asked before discarding. A failed save now
+  shows a message; before, nothing happened on screen.
+
+## [1.19.1] – 2026-11-02
+
+### Fixed
+- **The house number of a metering point takes the same characters as the one of a member.** „8a+b“, „8.1“ or „8,10“
+  were rejected only in the metering point form, and „Adresse vom Besitzer übernehmen“ failed for such a member. The
+  character check is gone, the field stays required. The address is not part of any message to the grid operator.
+- **All calendars look and work the same, and a date can be typed** (reported from the pilot). Every date picker has
+  one header with arrows, year and month and the colours of the app; before, half of them had a header without year
+  and month, and all showed the blue of the library. The calendar always shows six week rows, so the arrows stay in
+  place from month to month. A date can be typed or overwritten in every field; so far the text jumped back. In the
+  range pickers („Zählpunktdaten nachfordern“, download of the energy data) a complete „01.08.2026 - 01.10.2026“ is
+  taken over. The year and month of a calendar in the download dialog and in the billing download can be selected;
+  Ionic took the focus away from them. A field now also opens its calendar when reached with the Tab key. A date is
+  saved once, when the calendar closes or the field is left, and only when the day has changed; Escape discards a
+  typed date, and text that is no date falls back to the stored date. A typed range that is not valid empties the
+  range, so that no other period is requested or exported than the field shows. The arrows and the year and month of
+  a calendar only change the month shown, also in the registration and at „aktiv seit“.
+
+## [1.19.0] – 2026-10-31
+
+### Added
+- **Unsaved input in the tariff editor and in „add metering point“ asks before it is lost** (platform#228 step 4).
+  Selecting another tariff, „+“ (new tariff) or „Zurück“ with unsaved changes in the tariff editor, and „Zurück“ or
+  selecting another member or metering point while „Zählpunkt hinzufügen“ holds input, now ask „Die Eingaben sind noch
+  nicht gespeichert. Verwerfen und fortfahren?“. Leaving the page through the menu, browser back, reload or closing the
+  tab asks as well (the existing `UnsavedChangesGuard`, as in the mail templates). Switching to the billing view or to
+  another community while „Zählpunkt hinzufügen“ holds input asks too (declined, the switch and the community select
+  stay). The community switch also asks while the tariff editor holds unsaved changes. In the registration,
+  „Abbrechen“ and opening another metering point ask while the metering point form holds input (the card of the open
+  metering point keeps it), and that input now also counts when leaving the page. The energy direction counts as
+  input.
+- **Member details show whether every change is saved** (platform#228 step 4). The member details save each field on
+  its own; a status above the form now says „Alle Änderungen gespeichert“, „Wird gespeichert …“ or „Nicht gespeichert –
+  erneut versuchen“. A failed save keeps the typed value in the field, and „erneut versuchen“ sends every failed
+  change again.
+  The metering point details (they save on their own as well, the participation factor separately) show the same
+  status, and so do the business type switch and the joining fee actions of the member. Invalid input (e.g. a required
+  field emptied) is not saved; the status then says „Nicht gespeichert – bitte die markierten Felder prüfen“. Stored
+  incomplete data the user did not change does not count.
+  Invalid or failed changes count as unsaved: selecting another member or metering point, another tab of the details
+  (Details, Dokumente, Rechnungen, Zählpunkt), the billing view, another
+  community and leaving the page ask first. Only the answer to the latest save of a field counts, and input typed
+  while a metering point save runs stays.
+
+### Changed
+- **Tariff names may contain umlauts and ß** (platform#228 step 4). The tariff editor rejected „ä ö ü Ä Ö Ü ß“. Checked
+  before: the backend stores the name unchecked (`text`), billing prints it on the invoice PDF (Helvetica/WinAnsi,
+  covers these letters, as member names already do) and in the XLSX „Details“ sheet; the SEPA file is built from the
+  „Liste“ sheet, which has no tariff name; no mail text uses it. Other characters stay rejected, they may not print in
+  the PDF.
+- **Processes to the grid operator ask first, with a summary** (platform#228 step 3). Changing the participation
+  factor, registering a metering point, requesting energy data without „Smart“, revoking the data consent and requesting
+  the metering point list now show what is sent before sending it: the metering point(s), the old and new factor, the
+  period, the end of the consent or the grid operator. „Abbrechen“ sends nothing; „Senden“/„Anfordern“/„Aufheben“ sends
+  the same request as before. The smart energy data request already asked and is unchanged; the approval of a new
+  member keeps its own dialog.
+- **Billing mails: „Senden“ names the number of documents; after the send the button is disabled** (platform#228
+  step 3). The question before sending the billing mails of a run says how many documents go out by mail. billing
+  refuses every further send of a run once it recorded the send (since bc52c5b), so the button no longer offers it: it
+  is disabled and reads „Bereits versendet (<Datum, Uhrzeit>)“, and „Wird versendet …“ while billing sends (with a hint
+  to contact support if it stays). The line „Versand gestartet (…)“ above it is gone, the button shows it. Invoice
+  mails could not go out twice before either; the button just led to a refusal.
+  A double click opens one dialog; the process forms stay disabled while their dialog is open and the request runs
+  (before, the metering point list and the revoke could be sent twice). The participation factor is checked against
+  the time window again after the confirmation.
+- All these confirmations use the shared confirmation dialog (`useConfirm`).
+- **One German notation for numbers and dates on screen** (platform#228, step 1). Numbers use a decimal comma and a
+  thousands dot everywhere: the dashboard showed „185.337 kWh“ for 185,337 kWh, which reads as 185 thousand; it now
+  shows „185,337 kWh“ (energy overview, load curve and day charts, meter chart tooltips). The tariff card shows
+  „12,5 Cent“, „1.234,50 €“, „2,5 %“ instead of mixed „12.5 €“/„12,5 Cent“; amounts that already used a comma now group
+  thousands with a dot instead of a space („1.234,56“, which the amount fields read back). All date fields
+  (invoice date of a billing run, SEPA dates, member and metering point dates, process dates) show „28.10.2026“
+  instead of „October 28, 2026“ (process dates before: „10/28/2026“), with German month and weekday names and Monday
+  as first day of the week. Typed input is read as „28.10.2026“ or „1.2.2026“ and anything else is rejected (before,
+  „05.13.2026“ could become 13 May) in the fields that pass typed text on: the billing run dates (invoice date,
+  SEPA collection and transfer date), „Mitglied seit“ in the registration and older member form, and „aktiv seit“ of
+  a metering point. The SEPA mandate date and „Mitglied seit“ in the member form take calendar clicks only, as before;
+  the process and period fields use the same rule for whatever their input passes on. Billing run status times show „28.10.2026 14:05“ instead of
+  „2026-10-28, 14:05“. Display only: values sent to the services, exports, SEPA files and documents do not change.
+  `date-fns` 2.30.0 (already shipped as part of react-datepicker) is now a direct dependency for the German calendar.
+
+### Removed
+- **No offline registration (ECOF) of metering points from the GUI anymore** (decision 2026-10-30). This changes what
+  is sent to the grid operator: every registration from the GUI is now the online EDA registration. Removed are the
+  checkbox „Offline-Registrierung“ with the field „Aktivierungs-Code“ in „Zählpunkt hinzufügen“ and in the metering
+  point details, the online/offline switch with „Aktivierungs-Code“ per metering point in „Zulassen“, and the
+  checkbox „Offline-Registrierung“ in the process „Zählpunkt aktivieren“. The requests always send
+  `activationMode: "ONLINE"` and no activation code („Zulassen“ sends `activationCode` empty, as before, also for a
+  metering point that still holds a code from an earlier offline registration). Backend 1.14.0 no longer sends offline
+  registrations and refuses `OFFLINE` for online communities (**roll out this release first**). It still processes answers
+  to offline registrations made earlier, and those metering points keep their state. A metering point
+  whose earlier offline registration is still pending stays in the list of „Zählpunkt aktivieren“ (as every metering
+  point that is not active), so it can be registered online now; this is deliberate, an offline registration can no
+  longer be completed from the GUI. Admins of a community that is not online still set „Noch nicht registriert /
+  Bereits registriert“ as before.
+
+### Fixed
+- **A billing run whose mails all failed can be sent again.** The send button showed „Wird versendet …“ for good; it now
+  shows „Erneut senden“ with the hint that the mail server confirmed no mail and that single mails can have arrived anyway. A
+  send that ends this way says so in a toast. **Rollout:** billing with the matching change first, an older
+  billing refuses the send with an error message.
+- **A refused member delete says why** (backend 261005-ca10). Backend refuses the delete of a member with a metering
+  point that took part (409, code 1109); the toast now names the reason. Without that backend the delete goes through as
+  before.
+- **A mail the mail server did not confirm in time is no longer shown as failed** (261030-mm7, with backend#132).
+  A notification entry with code `W_MAIL_UNCONFIRMED` now reads „Mailversand nicht bestätigt: <Zählpunkt> —
+  Zeitüberschreitung – die Mail wurde vermutlich trotzdem verschickt. Vor einem erneuten Versand bitte beim Empfänger
+  nachfragen.“ instead of „Mailversand fehlgeschlagen: …“. Other mail errors and the template notices are shown as
+  before.
+- **„Zulassen“: an unticked metering point stays unticked** (261030-mm3). The dialog now keeps the list of metering
+  points it opened with; before, a re-render of the member details while the dialog was open ticked an unticked
+  metering point again, and it was registered with the member.
+- **Registration: another metering point no longer shows the input of the one before.** With the metering point form
+  open, selecting another metering point card (or „Zählpunkt hinzufügen“) kept the old values in the form, and
+  „Hinzufügen“ then wrote them to the old metering point. The form now starts anew for every opened metering point.
+- **A refused send of the billing mails is shown** (web 261030-mm1). When billing refuses the send (the run is busy,
+  409, or it was sent from elsewhere meanwhile) the pane now says „Der Mailversand ist fehlgeschlagen.“ with billing's reason;
+  before, the result was ignored and nothing (or only a generic text) appeared.
+- **Dashboard: the load curve card waits for the load curve, the first chart request waits for the community**
+  (pre-existing errors found in platform#228 step 2). The load curve card was shown as soon as the day curve data was
+  there. The chart data was requested before the community was loaded (to `/eeg/v2/undefined/…`) and not again once
+  it was.
+- **Dashboard: a failed chart load shows an error instead of an endless spinner** (platform#228 step 2). When the
+  load and day curve data could not be loaded, or the answer held no data, both chart cards kept spinning. A failed
+  load now shows „Die Diagrammdaten konnten nicht geladen werden.“ with „Erneut versuchen“, which loads them again; an
+  answer without data shows „Für diesen Zeitraum liegen keine Diagrammdaten vor.“ A late answer for a period that is no
+  longer selected is ignored.
+- **Dashboard: inactive metering points are counted** (platform#228 step 2). „Übersicht EEG“ showed a fixed
+  „0 inaktive“ next to the metering points. It now counts the metering points that have left (left or revoked) and are
+  neither active nor being registered at any member, over all members and marked „(Stand heute)“ like the member
+  counts; a metering point that moved to another member is not counted. The „aktive“ count of the period is unchanged.
+- **Member list: closing the search clears it** (platform#228 step 2). After closing the search bar the list kept
+  filtering by the last search text, so members were missing without a visible reason. Reopening starts empty; text
+  typed just before closing is not applied afterwards.
+- **Member details: an empty company name shows „Firmenname fehlt!“** (pre-existing error found in platform#228 step 2).
+  It showed the raw text key „company-name_missing“.
+- **Member and metering point forms: invalid input shows a message** (platform#228 step 2). A participation or
+  allocation factor outside 0–100 was rejected with an empty message; it now reads „Teilnahmefaktor muss größer als 0
+  und höchstens 100 sein!“ or „Verteilungsfaktor muss größer als 0 und höchstens 100 sein!“. An empty street in the member details showed no red message, because the
+  message was read from the resident address while the rule sits on the billing address; it now shows „Straße fehlt!“.
+- **Text fields: the caret no longer jumps to the end while typing.** Renaming a tariff moved the caret to the end of
+  the field after the first typed character, so the rest landed at the end („Beitritt2 weiterer ZP026“). The input
+  wrote the form's value back into the field on every render; it now does so only when the value differs from what the
+  field shows (after a reset or when another record is selected). All text fields of the app use this input; the
+  tariff dialog showed it at once because it validates on every keystroke.
+- **Joining fee: the count of members who get the fee is asked a second time when the first call fails.** In prod one
+  save showed „konnte nicht ermittelt werden (Abrechnung nicht erreichbar)“ while billing answered every request with
+  200, so the call failed in the browser (cause unknown: network or token lookup). The tariff dialog, the member's
+  joining fee status and the master data export all use this call. The dialog and the export hint no longer claim that
+  billing is unreachable: the count, or the joining fee state, could not be determined *right now*.
+- **Menu reachable below 992 px** (261024-ca9). Below 992 px window width (tablet in portrait, half-width laptop
+  window) the side menu is hidden, and only the register page had a button to open it. Every page now has one: in the
+  existing toolbar on the member and tariff lists and on „Nachrichten“; the other pages (Dashboard, Meine EEG,
+  E-Mail-Texte, Prozesse, Profile, the not-found page and the EEG load/error page) get a small header with the menu
+  button that shows only below 992 px. From 992 px on nothing changes.
+- **Tariff amounts: 0 is shown, thousands separators are read** (261005-ca5). The amount fields of the tariff form
+  (price per kWh, metering point fee and its VAT, member fee, joining fee and its VAT, time-window prices) showed a
+  stored 0 as an empty field, as if nothing were set; they now show „0“. Their value is now read like the other amount
+  fields: „1.234,56“ is 1234.56 (before 1.234), „1234.56“ stays 1234.56. Stored values do not change.
+
+### Security
+- **`i18next-http-backend` removed** (Dependabot alerts GHSA-3cmx-xjww-583x, GHSA-9jhj-wvmw-cfx5, GHSA-xvq9-wjp8-hwqf,
+  GHSA-q89c-q3h5-w34g; supersedes Dependabot #248, which would have bumped it 2 → 4). The package was never imported:
+  the translations are bundled at build time by `vite-plugin-i18next-loader`. Its now-unused transitive dependencies
+  (`cross-fetch`, `node-fetch` 2 and their helpers) leave the lockfile too. No change in behaviour.
+- **SheetJS (`xlsx`) 0.18.5 → 0.20.3 from the SheetJS CDN** (Dependabot alerts GHSA-4r6h-8v6p-xvw6, fixed in 0.19.3,
+  and GHSA-5pgg-2g8v-p4x9, fixed in 0.20.2). SheetJS no longer publishes to npm (latest there is 0.18.5), so the
+  package now comes from `https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz`, pinned in `pnpm-lock.yaml` by URL and
+  sha512 integrity. Dependabot does not track this source: updates are made by hand (see README → Dependencies).
+  The new workflow `sheetjs-check.yml` fails a pull request whose lockfile lost the hand-added integrity, and fails
+  its weekly run when SheetJS has a newer release. OSV-Scanner keeps reporting xlsx 0.20.3 with both GHSA IDs (the
+  advisories have no fixed version because the fix is not on npm); Trivy does not.
+  Reading the billing export for the SEPA files gives the same values as before (new test with dates and amounts).
+- `vite` 6.4.4 → 6.4.5 (build tool, Dependabot).
+
+## [1.18.0] – 2026-10-28
+
+### Added
+- **Contract upload by drag & drop.** While the upload dialog for a member's documents is open, dropped files join the
+  list as if chosen one by one, several at once, also when they land beside the dialog (the browser no longer opens
+  them). Only PDF, JPEG and PNG are taken, the types the filestore accepts; other files are named in a hint. A file
+  dropped twice is listed once.
+  Files can also be dropped right on the „Verträge“ area of a member: the upload dialog opens with them in its list,
+  to be confirmed with „Hochladen“. A file dropped beside the area no longer makes the browser open it (and leave the
+  app); this holds once a member's contracts have been shown, also on other pages, as the app keeps them mounted.
+
+## [1.17.0] – 2026-10-28
+
+### Added
+- **Tariff list grouped, collapsible, sorted and searchable, with compact cards** (pilot group). The tariffs page groups the tariffs under
+  „Mitgliedstarife“, „Erzeugertarife“ and „Verbrauchertarife“ (the kinds of the tariff form) and sorts them by name,
+  numbers in natural order („Beitritt 2 ZP“ before „Beitritt 10 ZP“); before, they came in the backend's order. A tariff
+  of another kind shows under „Sonstige Tarife“. Every tariff selection (metering point, member) uses the same order.
+  A click on a heading collapses or expands its group (all open when the page opens; the heading shows the number of
+  tariffs). Search as in the member list: the magnifier next to the plus button opens a search bar that filters by
+  tariff name (ignoring case and accents) and opens the groups with hits; the selected tariff always stays visible. The cards
+  on the tariffs page are smaller, in the size of the member list.
+- **Optional Dynatrace Real User Monitoring (`DYNATRACE_RUM_URL`).** When the container sets the variable to the URL of
+  the Dynatrace JavaScript tag, Caddy renders the tag into `index.html` at request time, loaded `async` so it never
+  blocks the page. Without the variable no tag is emitted: self-hosted installations send no session data. **Operations:**
+  set `DYNATRACE_RUM_URL` in the deployments that should report (README, Configuration).
+- **Upload by drag & drop** (pilot group). While the upload dialog of the member list (cloud icon) is open, a dropped
+  file is taken like one chosen with the star, also when it lands beside the dialog (the browser no longer opens it).
+  One file per import, as before: several dropped files are refused with a hint and clear an earlier choice.
+- **Tooltip on the € switch in the member list** (pilot group). It names what a click does: „Abrechnungsmodus
+  aktivieren“ switches to the billing view, „Abrechnungsmodus beenden“ leaves it. While the switch is off-limits it shows the reason (no period
+  chosen, energy data loading or not loadable, no billable member in the period).
+
+### Changed
+- **Mail editor: a new image starts small (200 px)** (users' request). Before, it kept its own size until a size was
+  chosen. Applies to „Bild einfügen“, paste and drop; the size buttons change it as before.
+
+### Fixed
+- **Upload: the sheet name typed in the upload dialog is used** (eegfaktura-dev tracking 261028-mm2). The field never passed
+  its value on, so every import read the default sheet („EEG Stammdaten“ / „Energiedaten“); a workbook with another
+  sheet name had to be renamed in Excel first. The name now goes to the selected import type; an emptied field falls
+  back to the default, surrounding spaces are removed.
+
+### Security
+- **CI: the release workflow pins its actions by commit SHA** (eegfaktura-dev tracking W-261028-mm6). `rolling-release.yml`
+  builds and pushes the shipped image, but used floating tags (`@v4`, `@v3`, …); a moved tag ran in the job that holds
+  the push credentials. Now every action is pinned to a commit, the same SHAs `pr-checks.yml` and `security-scan.yml` already
+  use where the action is the same, otherwise the commit the floating tag pointed to on 2026-10-28.
+
+## [1.16.0] – 2026-10-28
+
+### Changed
+- **Billing always covers the whole community, without a selection (platform#194).** The check boxes in the member
+  list („alle auswählen“ in the period header, one per member) are gone. The billing mode can be switched on as soon
+  as the energy report of the selected period is loaded and holds an entry of at least one billable member (also with 0 kWh);
+  „Vorschau“ and „Abrechnung durchführen“ send all active members with a tariff (on the member or on a registered metering
+  point, the rule of the former „alle auswählen“), built when the run starts. Before, the selection stayed when the
+  period changed, so members new in that period were left out without a note. Members without a tariff are named by
+  „Daten prüfen“ (unchanged). **Visible change** for the EEG admins (release note).
+
+### Fixed
+- **No billing run without energy (platform#189, web part).** A run is only started with entries of at least one
+  billable member from the loaded report of the selected period; while the report loads, after it failed or without
+  any such entry, „Vorschau“ / „Abrechnung durchführen“ say why („Abrechnung nicht möglich“) instead of sending an
+  empty list (which billing finished as a run without documents). Switching the billing mode off no longer greys
+  out the switch. A period without any energy gives no run, also for members marked „Beitrittsgebühr
+  nachverrechnen“: the fee stays requested for the first run with energy (decided 28.10.2026).
+
+### Security
+- Runtime image `caddy:2.8.4` → `caddy:2.11.7` (release 2026-10-03, Docker image tag 2026-10-05). 2.8.4 sat on
+  Alpine 3.20 (end of support) and Go 1.22; the prod image scan of 2026-10-28 counted 7 CRITICAL / 89 HIGH,
+  the new image 0 CRITICAL / 10 HIGH (Trivy 0.75.0). Caddyfile unchanged; responses (`/`, SPA routes, assets,
+  `/config/keycloak-config.json`) are identical apart from the ETag format. New in Caddy 2.11.6: request headers
+  are limited to 16 KiB (larger → `431`).
+
+## [1.15.0] – 2026-10-28
+
+### Added
+- **Member export with the joining fee (platform#217).** „Stammdaten exportieren“ first reads billing's
+  `joiningFeeState` and sends it as JSON body of **`POST /eeg/export/masterdata`** (before `GET` without body); the
+  backend fills the new columns „Beitrittsgebühr (€)“ and „Beitrittsgebühr Status“ of sheet „Mitglieder“ from it
+  (the list is passed on unchanged, incl. `requested` and `paidExternally`). If billing cannot be reached, the export
+  runs without body and a toast says „Die Abrechnung ist nicht erreichbar: Der Export enthält alle Mitglieder, die
+  Spalte „Beitrittsgebühr Status“ bleibt aber leer.“ **Contract:** needs
+  eegfaktura-backend with `POST /eeg/export/masterdata` (an older backend answers the POST with an error, the export
+  then fails) — deploy the backend first.
+- **Joining fee in the membership fee tariff (platform#217).** The tariff dialog of type „Mitgliedsbeitrag“ has a new
+  section „Einmalige Beitrittsgebühr“: the amount in € (net, with cents, e.g. 49,90) and its own VAT setting
+  (yes/no, rate), independent of the running membership fee; empty or 0 means no fee. The tariff card shows the fee
+  (and its VAT rate) when set. Saving a fee above 0 asks first when (a) the fee's VAT rate is above 0 % and no tariff
+  of the community uses it („Dieser USt-Satz kommt in der EEG sonst nicht vor. …“; checked in the browser against the
+  loaded tariffs) or (b) active members (an active metering point, the rule of the member list's „Aktive“) with this
+  tariff were never billed with energy in eegfaktura („N aktive Mitglieder mit diesem Tarif wurden in eegfaktura noch
+  nie mit Energie abgerechnet und bekommen die Beitrittsgebühr mit ihrer nächsten Abrechnung.“); if billing cannot
+  be reached, the question says the number could not be determined. Saving stays possible in every case.
+  **Contract:** sends and reads the new tariff JSON fields `joiningFee`, `joiningFeeUseVat`,
+  `joiningFeeVatInPercent` (eegfaktura-backend `POST/GET /eeg/tariff`) and calls the new billing endpoint
+  `GET /api/billingDocuments/tenant/{tenantId}/joiningFeeState` (header `tenant`). Needs eegfaktura-backend and
+  eegfaktura-billing with the joining fee first; deploy them before this version.
+- **Joining fee in the member details (platform#217, extension of 2026-10-27).** For EEG admins, below the member's
+  tariff, when some tariff of the community has a joining fee:
+  - a status line „Beitrittsgebühr: …“ with one of „verrechnet mit RG… vom TT.MM.JJJJ“, „außerhalb bezahlt am
+    TT.MM.JJJJ“ (+ note), „zur Verrechnung im nächsten Abrechnungslauf vorgemerkt“, „offen – wird mit der ersten
+    Energieabrechnung verrechnet“, „nicht verrechnet – Mitglied wurde schon abgerechnet“, „kein Tarif mit
+    Beitrittsgebühr“;
+  - „Beitrittsgebühr nachverrechnen“ (confirm dialog with amount and VAT from the tariff; only when no fee was charged,
+    no payment is recorded and the member's tariff has a fee) and „Vormerkung zurücknehmen“;
+  - „Außerhalb bezahlt erfassen“ (date required, note optional, no amount), „Zahlung korrigieren“, „Zahlung entfernen“;
+    request and payment exclude each other, nothing can be changed once the fee is charged (billing's 409 shows „Die
+    Beitrittsgebühr wurde inzwischen verrechnet – die Änderung ist nicht mehr möglich.“ and reloads the state);
+  - the hint at the tariff assignment for a member billed with energy already and never charged a fee: „Dieses
+    Mitglied wurde schon abgerechnet – die Beitrittsgebühr wird ihm nicht mehr automatisch verrechnet. Mit
+    „Beitrittsgebühr nachverrechnen“ lässt sie sich im nächsten Abrechnungslauf verrechnen.“ (not when requested or
+    paid outside). Assigning stays possible.
+
+  The tariff dialog's count of members that get the fee with their next billing leaves out members with a recorded
+  payment. Without an answer from billing nothing is shown. **Contract:** reads the new `joiningFeeState` fields
+  `requested` and `paidExternally` (missing = none, older billing) and calls the new billing endpoints
+  `PUT` / `DELETE /api/billingDocuments/tenant/{tenantId}/participants/{participantId}/joiningFee` (body
+  `{"kind":"CHARGE_REQUESTED"}` or `{"kind":"PAID_EXTERNALLY","paidOn":"YYYY-MM-DD","note":…}`). Needs
+  eegfaktura-billing with these endpoints first.
+- **Joining fee in the billing amounts (platform#217).** The member's billing details (preview and final runs) show
+  an own line „Beitrittsgebühr:“ from the new field `ParticipantAmount.joiningFee` (gross) of billing's
+  `POST /api/billing` / `GET /api/billingRuns/{id}/participantAmounts`, and the member's sum, the member list amount
+  and the run's sum include it. Without the fee the amounts are unchanged; an older billing without the field counts
+  as 0 (before, such a billing would show a joining fee as „Mitgliedsbeitrag“).
+
+### Changed
+- **Member list: one choice „Anzeige“ instead of the two tabs.** The tab „Periode“ and the filter tab (Alle / Aktive /
+  Inaktive behind the filter icon) are one entry „Anzeige: …“; a click opens the choice Standard, Alle, Aktive,
+  Inaktive. „Standard“ is the former „Periode“ (members with metering points active in the selected period plus
+  metering points with an open problem, the view for billing) and stays the default; the others are unchanged
+  (status as of today, independent of the period). A tooltip (desktop) explains the chosen view; the entry can be opened with the keyboard. Switching
+  back to „Standard“ now takes the choice (open, pick, Übernehmen) instead of one tab click. The four buttons below
+  the list got tooltips: „Nur Mitglieder (Zählpunkte einklappen)“, „Nur Zählpunkte“, „Nur Erzeuger“, „Nur Verbraucher“.
+
+### Fixed
+- **CI: the Snyk Code scan fails visibly when it cannot run.** An invalid `SNYK_TOKEN` ended the weekly and
+  push scan green without any result (`continue-on-error`); now only „issues found“ keeps the run green (the
+  issues go to Code Scanning), an authentication or tool error fails it. The Snyk CLI is pinned to 1.1308.1
+  instead of the latest version.
+
+## [1.14.0] – 2026-10-27
+
+### Changed
+- **Process metering point selections show the direction.** „Teilnahmefaktor ändern“, „Zählpunkt anmelden“,
+  „Zählpunkt abmelden“ and „Zählpunktdaten nachfordern“ now label each metering point with „Verbraucher“ or
+  „Erzeuger“ (the terms of the meter form), then the equipment name when set, then the number. „Zählpunktdaten
+  nachfordern“ uses the shared label helper instead of its own copy (eegfaktura-platform#222).
+- **Dashboard „Tarife“ shows the membership fees.** Below the metering point tariffs (counted as before) each
+  membership-fee tariff is listed with the number of active members that have it (active as in the member count
+  above and the member list filter „Aktive“: at least one active metering point, all members as of today), plus a
+  line „ohne Mitgliedsbeitrag“ when active members have none (eegfaktura-platform#223).
+- **Process history: time for „Versenden von Energiedaten“, German date format.** „Abgewickelt am:“ of „Versenden von
+  Energiedaten“ now shows the time below the date like the other tables. All dates of the process history (incl. the date range in the header of „Prozess History“ and the process header, „Abgewickelt
+  am:“, „Energiedaten von/bis“, consent end, requested period) are shown as DD.MM.YYYY instead of e.g. „Tue Oct 27
+  2026“, times as HH:mm:ss instead of „09:15:00 GMT+0100 (…)“ (eegfaktura-platform#224).
+### Removed
+- Unused `src/components/processDetails/ProcessHistory.component.tsx` (an older copy of the process history; the
+  app imports `processDetails/ProcessHistory/ProcessHistory.component`).
+
+### Fixed
+- **Emptied number fields keep the old value (261027-mm1).** Clearing a number field (e.g. a price or fee in the
+  tariff dialog) left the previous value in the form, so it was saved again. An emptied field now counts as 0, as
+  typing 0 does.
+- **Tariff dialog: VAT range messages were swapped (261027-mm2).** Above 100 % it said „0% nicht erlaubt!“, below 0
+  „Nur 100% erlaubt!“. Now „Höchstens 100 % erlaubt!“ and „Negative Werte sind nicht erlaubt!“.
+- **Member list sort popover: long texts are no longer cut off.** Options such as „Mitglieder mit nötiger Aktion
+  oben“ or „Mitglied seit (neueste zuerst)“ ended in „…“ in the narrow popover; they now wrap onto a second line
+  (also on mobile).
+
+## [1.13.0] – 2026-10-26
+
+### Added
+- **„E-Mail-Texte“: font size, image size, pasting images, fixed footer.** A toolbar group „Schriftgröße“ sets
+  Klein / Normal / Groß on the paragraph(s), heading(s) or list item(s) at the cursor (stored as
+  `style="font-size: 13px"` / no style / `font-size: 20px`, combinable with the alignment); the client-side copy of
+  the HTML policy keeps exactly these two values and drops other sizes, as the services do with
+  `mail-html-policy.json` version 2. A selected image gets „Bildgröße“ Klein / Mittel / Groß (`width` 200 / 400 /
+  600); a newly inserted image keeps its size as before. Pasting or dropping a PNG/JPEG file into the text uploads
+  it like „Bild einfügen“ (same limits, 1200 px downscaling, draft until saved) and inserts it at the cursor or
+  drop position; only with „Eigenen Text verwenden“ on. Copied text that comes with a picture of itself (e.g. from
+  Word) is still pasted as text, other pasted content is unchanged (`data:` images are still dropped). Below the
+  text a grey line „Wird immer angehängt: …“ shows the new optional field `fixedFooter` of the mail-template
+  definition (the footer the services append to every mail); nothing is shown when a service does not send it.
+  Needs eegfaktura-backend and eegfaktura-billing with policy version 2 to save font sizes (an older service drops
+  them); deploy them before or together with this version.
+- **„E-Mail-Texte“: link rules, no PDF where none is allowed, images without metadata.** When the mail-template
+  definition's `limits` carry the new optional numbers `maxLinks` and `maxLinkDomains`, the editor shows „Links:
+  höchstens 3, zu höchstens 2 Domains; keine Kurz-Links, keine IP-Adressen“ next to the image limits, and the link
+  dialog refuses a new link once the text holds `maxLinks` links („Höchstens 3 Links pro Mail.“). The services check
+  the rules on save, preview and test mail; their 400 messages appear in the „Nicht gespeichert:“ list as before.
+  The „PDF-Anhang“ section is hidden for every mail whose `maxAttachments` is 0 (member mails now too), and a PDF
+  stored before is no longer sent with the save (it would be refused). Every JPEG is drawn anew in the browser
+  before the upload (quality 0.8, at most 1200 px wide), so EXIF/GPS data of photos no longer leaves the browser;
+  a PNG is only redrawn when wider than 1200 px (an optimised logo would grow), the services re-encode every image.
+  An image the browser can not draw gets a clear message, and an image pasted while an upload or save still runs
+  gets „Bitte warten …“ instead of vanishing. The client copy of the HTML policy now keeps the last
+  `font-size`/`text-align` declaration of a style, as the browser does. Needs eegfaktura-backend and
+  eegfaktura-billing with the link rules for the numbers; without them nothing is shown.
+
+### Changed
+- **Member list sorting: fixed sorts only, default „Mitgliedsnummer“** (platform#214, feedback on 1.9.0). „Standard“
+  (the unordered backend order) is gone; without a stored choice, or with the stored „Standard“, the list is sorted by
+  member number (numbers compared as numbers, also in „A006“). A stored other choice is kept. New sorts: „Aktiviert
+  seit“ (earliest „Aktiv seit“ of the member's metering points, newest first, members without one last),
+  „Einzugsart“ (CORE, B2B, Kein SEPA, none; then by last name) and „Ort“ (city of the residence address, German
+  collation, empty last; then by last name). The sort choice is a small popover instead of an alert, because it now
+  also has the checkbox „Mitglieder mit nötiger Aktion oben“ (default on, kept per browser like the sort); off, the
+  sort runs over all members without the action groups. Its buttons read „Abbrechen“ / „Übernehmen“.
+- **Metering points of a member: consumers before producers** (platform#214), the order within each direction
+  unchanged; in all views.
+- **Member list filters „Alle“, „Aktive“, „Inaktive“** (platform#214) replace „Aktive“, „Ausstehende“, „Inaktive“ and
+  „Abgewiesene“. „Alle“ shows every metering point, „Aktive“ the active ones (status ACTIVE, the rule of the
+  dashboard count), „Inaktive“ every other one (registration in progress, rejected, invalid, revoked, left) and also an active one
+  whose process needs action (e.g. a revocation running or rejected) — such a point is under both. A member
+  is listed with exactly the matching metering points and not at all without one, so „Ausstehende“ no longer lists
+  members without such a metering point; members waiting for admission (status NEW / PENDING) are listed under
+  „Alle“ and „Inaktive“ also without one. The filtered views are sorted with the chosen sort (on all metering points
+  of a member); the Erzeuger / Verbraucher toggles still apply. The default filter is „Inaktive“ (it replaces
+  „Ausstehende“ as the view of what needs a look). The filter alert buttons read „Abbrechen“ / „Übernehmen“ instead
+  of „Cancel“ / „Select“. No backend change.
+
+### Fixed
+- Member list: sorting no longer crashes for a member without metering points (the backend can send `meters: null`;
+  pre-existing, found in the review of platform#214).
+
+## [1.12.0] – 2026-10-26
+
+### Changed
+- **„E-Mail-Texte“: switch „Eigenen Text verwenden“ instead of „Auf Standard zurücksetzen“.** Off (standard): a
+  coloured status box says „Verschickt wird der Standardtext von eegfaktura.“; subject, text, toolbar and
+  placeholder pickers show the standard text and are locked, the image/PDF section is hidden; preview and test mails
+  still work (with the standard text). On: the editor starts from a copy of the standard text, the box adds „Noch
+  nicht gespeichert – verschickt wird weiterhin der Standardtext.“ until it is saved; a saved own version shows a green
+  box „Verschickt wird eure eigene Fassung (gespeichert am … von …).“ Switching off asks first: with a saved version it
+  deletes it (with its images and PDF, as the former reset), with unsaved edits only it discards them and deletes the
+  drafts uploaded since. The list shows a label „Standard“ or „Eigener Text“ per mail instead of the grey status text.
+  The notice for hand-made templates on the volume (`legacyTemplateActive`) is gone: backend no longer uses them (see
+  the backend change); the field is ignored if a service still sends it. Preview and test mail no longer send
+  `useDefault` (the locked standard text is the draft). Needs eegfaktura-backend 1.9.0 (or later): deploy the backend
+  first or together with this version, because an older backend still sends a hand-made volume template while this
+  page says „Standardtext“.
+
+## [1.11.0] – 2026-10-26
+
+### Fixed
+- **Dashboard "Übersicht Stromproduktion": "Verteilt" showed the total consumption** (pre-existing). The number next to
+  "Verteilt" now is the energy distributed in the community (also for the previous period); the bar still shows
+  distributed / consumption. Before, "Verteilt" could read larger than "Produziert" (pilot 25.10.2026: 8480 kWh
+  next to 2801 kWh).
+- **"Energiemengen": metering points without a valid tariff are named** (pilot 25.10.2026). "Eingekauft" and
+  "Verkauft" count only metering points with a tariff of the community; a note now says how many metering points
+  with energy in the period have none (or an archived one) and how much energy that is (e.g. "1 Zählpunkt ohne
+  gültigen Tarif ist hier nicht enthalten (224.386 kWh)") — a consumer without tariff gets energy from the community
+  that is not billed. Shown once the tariffs are loaded; metering points without energy are not counted.
+- Member registration (ca18, 1.10.0): after leaving the form with unsaved input through the menu, every later
+  page change asked again ("Die Eingaben sind noch nicht gespeichert"), because the hidden page stays mounted. The
+  question now only comes while the form is shown.
+
+### Added
+- **„E-Mail-Texte“: EEG admins edit the member mails themselves** (konzept-mail-texte-editierbar.md). New page
+  `/page/mailtemplates`, reached from the card „E-Mail-Texte“ on the EEG page, left column below „Netzbetreiber“ (admins only). One list of the four mails —
+  `consent-request`, `zp-active`, `zp-inactive` from backend (`/eeg/mailtemplates`) and `billing-document` from
+  billing (`/api/mailtemplates`) — with status „Standard“ / „Angepasst“ and a hint when the default text changed.
+  Editor (TipTap 3.32.0) for subject and text: bold, italic, underline, H1–H3, lists, https/mailto links,
+  alignment, images; placeholders from the mail's catalogue as non-editable chips (`<span|div data-ph>`; blocks
+  only at the top level), in the subject as plain text `{key}` (inline keys only, within 200 characters).
+  Images are reduced to at most 1200 px width in the browser before the upload and stored as `mailfile:{id}`
+  (UUID, or the built-in `mailfile:eegfaktura-logo` of the default texts). Uploads are drafts until saved: the
+  images and the PDF (sent as `attachmentFileId`) are listed as draft/saved with remove. Hint when a hand-made
+  template still applies (`legacyTemplateActive`). Preview in a sandboxed iframe, test mail to the own login or
+  to the community address, preview and test mail with the chosen PDF (`attachmentFileId`; for the unchanged default of a mail without
+  stored version with `useDefault`, so they show a hand-made template that still applies), save with version check (409 → „wurde inzwischen geändert“, reload; 400 messages
+  shown), reset to the default. With unsaved edits, the back button, the menu links, browser back, a reload and
+  closing the tab ask first (switching the community in the menu does not ask yet). While a save runs, subject, text,
+  toolbar, placeholder pickers, the file chips and the "Standard übernehmen" / reload buttons are locked, so nothing
+  done meanwhile is replaced by the saved version. A community switch clears the list's load errors of the previous
+  community, and a save of its editor that ends after the switch does not reload the old list into the new one. The page and the editor load as a separate chunk (~138 kB gzip), the main
+  bundle grows by ~2 kB gzip. Needs backend and billing with the mail template API.
+- Messages: the backend's notices about customised mails (`Mail` with message code `I_MAIL_TEMPLATE_DEFAULT` — new
+  default available — or `E_MAIL_TEMPLATE` — default sent instead) show their own text under „E-Mail-Texte:“
+  instead of „Mailversand fehlgeschlagen“; failed mails in the same notification are still listed.
+
+## [1.10.1] – 2026-10-25
+
+### Fixed
+- **Dashboard crashed in 1.10.0** ("Etwas ist schiefgelaufen", `Cannot read properties of undefined (reading
+  'split')`): the hourly report of the "Tagesverlauf" card has no bar names (energystore IntraDay), and the new
+  Bilanzdifferenz read `name.split`. A missing name now counts as one day.
+
+## [1.10.0] – 2026-10-25
+
+### Added
+- **Member list filter "Aktive"** (wish from pilot). The filter next to "Periode" also offers "Aktive": members with
+  at least one active metering point, showing only their active metering points (status, not the period), like
+  "Inaktive" for inactive ones.
+- **Dashboard: period in the upper cards** (user feedback). "Übersicht EEG" and "Übersicht Stromproduktion und
+  Verteilung" show "Zeitraum: …" of the selected period, like the load curve and day curve cards; the footnote names
+  the previous period ("*) vorherige Periode: Okt-Dez 2025"). The member counts are marked "(Stand heute)": they
+  count all members by their current state, not by the period. Metering points and tariffs count the members of
+  the period, each metering point with its current tariff (unchanged). A late answer for the previous period of an
+  earlier selection no longer overwrites the values of the current one.
+- **Dashboard load curve: "Bilanzdifferenz"** (platform#220). Production − self-coverage (Eigendeckung) − surplus
+  (Überschuss); with complete energy data it is 0 (checked on pilot data, also for one EEG with multiple
+  participation; a check on production data is open, platform#220). A difference shows that energy data of single
+  metering points is missing (negative: probably producers, positive: probably consumers; explained behind a help
+  icon, also on touch). Shown as a number only, no extra curve (decision 25.10.2026): in the sums line of the day
+  view (also of the "Tagesverlauf" card, which shares it) and under "Zeitraum" in the period views (month, quarter,
+  …). Per bar (a day in the month view, a week or month in longer views): its axis label turns red and bold and a
+  "!" appears above the bar when the bar does not balance; the tooltip shows the value. The period sum reads
+  "ausgeglichen" only when no bar is marked (gaps of opposite sign can cancel out in the sum). Rounding reads "Bilanz
+  ausgeglichen": below 0.01 kWh per day of the period. For the newest days a difference is normal until all data
+  has arrived. energystore already sent the surplus; no backend change.
+
+### Changed
+- **Metering point chart: the day view opens on the last day with data** (wish Harald). "D" opened on yesterday,
+  which usually has no data yet; it now opens on the metering point's last day with energy data (end of its data
+  range), at most yesterday, also in an earlier selected year. Without a known data end it stays yesterday. Gaps
+  inside the range are not looked for.
+- **Dashboard: community data range without energy meta begins on today's date** (pre-existing error): it used the
+  weekday (e.g. "0.10.2026" on a Sunday) instead of the day of the month.
+- **Dashboard period popover: day picker without arrows** (user feedback on pilot). The row "Tag" only has the date
+  chip to choose a day; stepping day by day stays with the arrows of the card in day mode.
+
+### Security
+- **vitest 4.1.11 → 4.1.12** (Dependabot #133, #134, `@vitest/mocker`, medium, test tooling only; published
+  2026-10-15). Not part of the delivered app.
+
+## [1.9.0] – 2026-10-25
+
+### Added
+- **Member list sorting can be chosen** (platform#214). A sort icon next to the filter ("Periode / Ausstehende")
+  offers "Standard" (the order so far, the default), "Nachname", "Vorname", "Mitgliedsnummer" and "Mitglied seit"
+  (newest or oldest first). Members needing an action (not active, or a metering point not active: open problem or
+  registration in progress) stay on top as before; the chosen sort applies within the groups and also in the
+  filtered views ("Ausstehende", "Inaktive", "Abgewiesene"). Names compare in German collation, member numbers as
+  numbers, empty values last. The choice is kept per browser (localStorage), no backend change.
+- **Day picker in the period popover like the meter chart** (platform#210, feedback from dev). The row "Tag" uses
+  the day picker of the metering-point energy chart (MeterChartNavbar): a date chip ("23. Okt. 2026") opening a
+  calendar, with arrows for the previous / next day; still limited to the energy data range and yesterday.
+- **Dashboard day view per card** (platform#210, feedback from dev). "Tag" in a card's period popover switches only
+  that card (Lastverlauf or Tagesverlauf) to the day view; the other card keeps its period. Each card in day mode has
+  its own gear, arrows and day sums. The day Lastverlauf lines follow the day chart of a metering point (MeterChart:
+  monotone, width 2, no dots, grid); Produktion is drawn on top, so it is no longer hidden under Eigendeckung when the
+  community uses all of its production.
+- **Dashboard day view in the period menu** (platform#210, user feedback). The day view is chosen in the period
+  popover (gear) as a new row "Tag" with a date field, limited to the energy data range and yesterday; any other row
+  returns to the period view with that period. The separate switch "Zeitraum | Tag" is gone; the day view keeps its
+  arrows and day sums and has the same gear to go back.
+- **Dashboard day view** (platform#210, konzept-dashboard-tagesansicht). The day view shows one day for the whole community: "Lastverlauf" with
+  quarter-hour lines Produktion, Verbrauch, Eigendeckung and "Tagesverlauf" with hourly bars EEG, EVU, Produziert,
+  plus the day sums (Produktion, Verbrauch, Eigendeckung, Überschuss), to check whether production matches
+  Eigendeckung plus surplus. Arrows step one day, limited to the community's energy data and yesterday. Data from the existing energystore load-curve report for one day (no energystore change); the hourly
+  bars are summed from the quarter hours (the intra-day report shifts hour 0 to 23, energystore known-errors #26).
+  A metering point with an owner change counts once (sums per stored metering point, not per participation). DST
+  days show 23 / 25 hours. "Zeitraum" is unchanged.
+- **Smart re-request of energy data** (konzept-smart-nachfordern). **Needs the eegfaktura-backend change "smart
+  re-request" (per-meter periods, one-hour lock, live entry) deployed first or together**; an older backend ignores
+  the per-meter periods and requests the whole period for the metering points with gaps or L3 values.
+  - "Zählpunktdaten nachfordern" has a new checkbox "Nur fehlende Daten oder L3-Werte anfordern (Smart)", on by
+    default. It checks the energy data of the selected metering points first and requests only those with gaps or L3
+    values (substitute values), each from its first to its last day missing or with L3 values; a day with L3 values
+    counts like a missing day (decision 24.10.2026). A question names the numbers first ("Bei 214 von 2.380
+    Zählpunkten gibt es fehlende Daten oder L3-Werte (zusammen 1.033 Tage). Diese 214 jetzt anfordern?"). Metering
+    points whose data could not be checked are named there and requested over the whole period only on request;
+    otherwise the message after sending names them as not requested. If nothing could be checked (energystore down
+    or timed out), the question warns that every metering point would be requested for the whole period. Nothing
+    missing and no L3 values: an info ("Für den Zeitraum gibt es keine fehlenden Daten oder L3-Werte, es wird nichts
+    angefordert."), nothing is sent. Metering points not registered or not active in the period are left out with
+    Smart. After an owner change or a new registration every entry of a metering point is checked; it counts as
+    complete only if all entries are, and its gaps are requested as one period from the first to the last missing or
+    L3 day over its entries. A period that reaches today is checked and requested up to yesterday (energy data of
+    today cannot exist yet); the question says so.
+  - Without Smart the request is as before; "Gesamte Gemeinschaft" now asks first with the number of metering
+    points.
+  - Metering points requested in the last hour are skipped by the backend; the dialog names how many and when
+    they are all free again ("3 Zählpunkte wurden in der letzten Stunde schon angefordert, alle wieder frei ab
+    14:40.").
+  - Messages: a running request shows as one entry "Energiedaten-Anforderung läuft" (with "Antwort noch offen"),
+    reloaded every minute while it is shown. Summary and live entry have the new groups "Bereits angefordert" (with
+    "frei ab") and "Keine fehlenden Daten oder L3-Werte (nicht angefordert)". "Datenstand prüfen" also lists the
+    accepted metering points still with L3 values ("Noch mit L3-Werten", with their days).
+
+### Fixed
+- **UX defects from the v2 catalogue, round 3** (eegfaktura-dev 261024-ca18–ca25, user decision: only the cheap and
+  useful parts, the rest is left for the v2 web):
+  - ca25: the invoice details and the add-meter pane no longer remount on every render (React.lazy moved out of render).
+  - ca21: German texts instead of "Something went wrong", "Invoicing loading ...", "Enter text" and the validation
+    fallback "error message"; typo "Zählpunkt inaktiv am/seit".
+  - ca19: the messages page is titled "Nachrichten"; its menu entry shows for admins only (the call behind it is admin-only).
+  - ca23: `<html lang="de">` (only this part).
+  - ca20: amounts on screen in Austrian notation ("12,34 €"), dates as DD.MM.YYYY (meter inactive, notifications);
+    display only, SEPA files and exports are unchanged.
+  - ca18: the member registration asks before unsaved input is lost (leaving, reload, closing the tab); other forms
+    unchanged.
+- Metering-point detail pane showed the raw key `meter.status_text_WARN` for a meter in process state
+  `WARN` (pre-existing). It now reads "Zählpunkt hat eine Warnung, bitte die Prozess History prüfen.";
+  the backend defines `WARN` but no code path on its master sets it, so it only comes from older or
+  manually changed data. The state `ARCHIVED` (set when a meter is archived) had no text either and now
+  reads "Zählpunkt wurde archiviert.". Any other state without a text shows "Zählpunkt-Status <STATE>."
+  instead of the raw key.
+- Metering-point detail pane could show the previous meter's active/inactive state after
+  switching between meters (stale render of the disabled `ion-toggle`, observed on
+  Safari/WebKit; text and toggle even contradicted each other). The meter detail block now
+  remounts per metering point via a React `key`, so every switch renders the selected
+  meter's real state (#101).
+- **Energy data request: "angenommen" does not mean the data is there yet.** The single answer
+  ("Energiedatenanfrage … angenommen") and the summary of a request now say that the grid operator sends the data in
+  own messages afterwards and that it can take a while, with many metering points several hours, until it shows
+  in eegFaktura. The summary points to "Datenstand prüfen" for the current state.
+- **Community switch** (261024-ca13): after switching the community, the members, metering points, selected member,
+  checked members (billing selection), tariffs, energy and billing data of the previous community are cleared at
+  once; until the new community is loaded the lists stay empty instead of showing the old community's entries.
+  Answers to requests of the previous community that arrive after the switch are ignored, and a load of the previous
+  community no longer ends the new community's loading state or sets its period.
+- **GUI defects, second bundle (eegfaktura-dev tracking):**
+  - **A failed save of the EEG settings showed the load text (261024-ca7):** "Fehler beim Laden der
+    EEG-Basisdaten!" or a raw key such as `Bad Gateway_eeg_load`. It now shows "Die Änderung der EEG-Daten konnte
+    nicht gespeichert werden." with the reason. An unknown load error shows "Die EEG-Daten konnten nicht geladen
+    werden." with the reason instead of the raw key; the known load texts stay.
+  - **A failed energy report load was silent (261024-ca6):** the dashboard and the member list just showed no
+    energy. It now shows "Die Energiedaten konnten nicht geladen werden." with the reason (only for the latest
+    request; an older one replaced by a newer one stays quiet). A community without any imported energy data yet
+    (energystore answers "Record doesn't exist") still shows an empty report, without an error.
+  - **Billing ZIP and Excel download without busy state, failures only in the console (261024-ca14, part of
+    261024-ca6):** the buttons "ZIP", "DOWNLOAD" and "EXCEL" of a billing run now show "ZIP-Datei wird erstellt
+    ..." / "Excel-Datei wird erstellt ..." while the file is built (no second click meanwhile) and on failure "Die
+    ZIP-Datei konnte nicht erstellt werden." / "Die Excel-Datei konnte nicht erstellt werden." with the reason.
+  - **Billing settings showed "Änderung gespeichert" together with the error (261024-ca15):** a failed save now
+    shows only "Fehler beim Ändern der Abrechnungseinstellungen.". Deleting the logo asks first ("Soll das Bild
+    für das Logo gelöscht werden?").
+  - **"Tarif löschen" archived at once and ignored metering point tariffs (261024-ca16):** it now asks first
+    ("Soll der Tarif „…“ gelöscht werden?"). A tariff that a metering point still uses is refused like one a
+    member uses; the hint names the members and metering points (at most 10 each, then "und N weitere"). Rule (as
+    in eegfaktura-backend#106): members of any status count; a metering point counts only with its current entry,
+    any status. The old owner's entry after an owner change and archived entries do not count. The web has no flag
+    for this: the current entry is the one with the latest start, archived ones have the process state ARCHIVED,
+    and entries with the same start are left to the backend. Until eegfaktura-backend#106 the backend's
+    own check did not stop the archive; with it the backend refuses a used tariff (400, code 4002) and the toast
+    says "Der Tarif wird noch von Mitgliedern oder Zählpunkten verwendet und kann nicht gelöscht werden." (the
+    former check for a code 900 never matched).
+  - **Start: "Keine aktive EEG geladen" while the EEG loads, blank EEG page after a failed load (261024-ca11):**
+    the member list and the EEG page now show a spinner while the EEG loads, and after a failed load the error
+    with "Erneut versuchen" (loads the community again). An account without any community gets "Ihrem Konto ist
+    keine Gemeinschaft zugeordnet. Bitte wenden Sie sich an den Support." instead of "Keine aktive EEG geladen".
+  - **English crash page without a way back, empty page for an unknown URL (261024-ca12):** a render error
+    shows "Etwas ist schiefgelaufen." with "Neu laden" and "Zur Startseite" instead of "Something went wrong".
+    An unknown URL (e.g. an old bookmark) shows "Diese Seite gibt es nicht." with "Zur Startseite". Still one
+    error boundary for the whole app (no boundary per page), nothing is reported to a server.
+  - **Dashboard without error state (261024-ca26):** after a failed energy load it shows "Die Energiedaten
+    konnten nicht geladen werden." with the reason and "Erneut versuchen" above the charts (the layout and its
+    period selection stay), so empty charts no longer read as "no energy"; while the page code loads a spinner
+    instead of "Dashboard loading ...". The page file is now spelled `Dashboard.page.tsx` (URL unchanged).
+  - **A contract file vanished from the list although the server kept it (261005-ca3):** the delete counted
+    every answer as success (no check of the HTTP status or of GraphQL errors). The file now leaves the list only
+    after the filestore deleted it; otherwise "Die Datei … konnte nicht gelöscht werden." with the reason.
+  - **"Passwort ändern" built the Keycloak URL by hand (261005-ca4):** without state or PKCE and with an
+    unencoded `redirect_uri`, so the way back could fail and leave a spinner. It is now a regular sign-in
+    request (state and PKCE, like the login) with the Keycloak action `UPDATE_PASSWORD`.
+- **Error reasons showed "E_undefined_undefined"** (pre-existing). An error answer whose JSON `error` field is
+  a plain text (energystore, e.g. `{"error": "Record doesn't exist"}`; Spring's error body in billing) was looked
+  up as an error code. The toast now names that text, e.g. "(Internal Server Error)".
+- **Dashboard "Energiemengen – Eingekauft/Verkauft" wrong after an owner change** (support 6611112, 6611148).
+  A metering point with two participations in the period (old and new member) counted the value of one of them
+  twice, e.g. 160 or 10 kWh instead of 5 + 80 = 85 kWh. Each participation now adds its own value once.
+  Billing was not affected.
+- **Dashboard "Übersicht EEG" counted a metering point twice after an owner change** (platform#211). A metering
+  point with two participations in the period (old and new member) counted twice in "Zählpunkte – N aktive",
+  "Abnehmer"/"Einspeiser" and under "Tarife". Each metering point now counts once; under "Tarife" it counts with the
+  tariff of its current participation (the active one before one still being registered, then the newest in the
+  period), so the tariff counts add up to the metering points that have a known tariff. Billing was not affected.
+- **Error messages showed "body stream already read" instead of the real error** (pre-existing). When a server
+  error had no JSON body (e.g. 502 from the ingress), the error handler read the body a second time and the
+  browser's read error replaced the status text. The body is now read once; the toast names e.g. "Bad Gateway".
+- **Messages: a card's data check moved to another card after a reload.** The list keyed its cards by position, so
+  when a newer notification came first, the result of "Datenstand prüfen" showed on the wrong summary. Cards are
+  now keyed by the notification id. More likely since the list reloads every minute while a request runs.
+- **Messages: a failed load went unnoticed** (unhandled promise rejection). It now shows "Die Nachrichten konnten
+  nicht geladen werden." with the reason, once until a load works again (the reload every minute during a running
+  request does not repeat it). Switching the community empties the list first, so a failed load never shows the
+  previous community's messages.
+- **UX defects from Karl's analysis (23.10.2026), ids UX-1 … UX-8:**
+  - **Participation factor 0 % was sent as 100 % (UX-4):** "Teilnahmefaktor ändern" sent `partFact || 100`, so
+    an entered 0 reached the grid operator as 100 %. The field now accepts 1–100 only (like the meter form) and
+    sends the entered value.
+  - **"1.234,56" was saved as 1.234 (UX-8):** text fields with number input (`Input`, `isNumber`) replaced
+    only the first comma. With a comma present, dots now count as thousand separators; dot-only input keeps its
+    meaning ("1.5" stays 1.5). The tariff price fields (`NumberInput`) were not affected: they accept no dot.
+  - **Expired session (UX-5):** a 401 counted as success. It now fails the call with "Deine Sitzung ist
+    abgelaufen. Bitte melde Dich neu an." and starts the login (at most once per minute). A 401 with a valid
+    session (the backend also uses 401 for a missing access group) shows "Dafür fehlt Dir die Berechtigung."
+    instead and does not redirect.
+  - **EDA process forms (UX-2):** Change participation factor, register metering point, revoke and request energy
+    data now confirm "Die Anforderung wurde an den Netzbetreiber gesendet.". On failure the input stays and an
+    error stays until it is closed. Before, the form was cleared either way and, except for the energy request,
+    showed nothing. While a request runs, its button is disabled (no duplicate request to the grid operator).
+    "Teilnahmefaktor ändern" parsed the backend's empty 204 answer as JSON; that no longer counts as a failure.
+  - **Confirmations (UX-3):** revoking a data consent ("Anfordern" in the revoke form), deleting a new member
+    ("Nein, Löschen") and deleting a metering point now ask first. A failed delete shows an error.
+  - **New member and new metering point (UX-1):** a failed save no longer loses the form. The page or pane
+    closes only after the save worked; on failure an error names the reason. "Registrieren" is disabled while
+    saving, so a double click no longer creates the member twice.
+  - **Silent failures (UX-6):** failed loads of members and tariffs and failed saves of member, metering
+    point, participation factor, moving a metering point and a new metering point now show an error. A
+    failed partial member update showed the raw key "Rejected_participant_update"; it now shows readable
+    text.
+  - **Auto-saved fields (UX-7):** an invalid value no longer resets the whole form, a store update no longer
+    overwrites unsaved input in other fields, and a metering point field counts as saved only after the save
+    worked. Saving the participation factor no longer clears the other fields of the form. Unsaved input stays
+    with its member or meter and does not move to the next selection.
+  - Not in this change: navigation below 992 px and the member screen on phones (UX-9, deferred).
+- **New member: „Mandatsdatum fehlt!“ stayed after picking a date** (support 23.10.2026). Switching the debit type
+  to CORE/B2B checks the still empty mandate date; the form validates on blur, but the date picker's input never
+  passes the blur on, so picking a date did not re-check the field and the red message stayed — the member could
+  not be saved. Picking a date now re-validates the field. Workaround until release: after picking the date, switch
+  to „Kein SEPA“ and back to CORE/B2B.
 - **Wording: „Teilnahmefaktor“ instead of „Teilnehmerfaktor“** (pilot feedback 22.10.2026). The title and the
   field label of „Teilnahmefaktor ändern“ and the warning for a missing factor said „Teilnehmerfaktor“, the info
   text and the other places already „Teilnahmefaktor“.
 
 ### Security
+- **vitest 3.2.6 → 4.1.11** (dev dependency, published 2026-08-18). Removes `tinypool` 1.1.1 and its two critical
+  advisories (prototype pollution in worker options, GHSA alerts of 2026-10-17); vitest 4 no longer uses tinypool.
+  Test tooling only, the delivered app is unchanged. All 62 test files / 378 tests pass unchanged.
 - `js-yaml` 3.14.1 → 3.15.2 (via xmlbuilder2) and 4.1.0 → 4.3.2 (build/lint tooling) through `pnpm.overrides`: GHSA-2883-xcg3-v3hh, GHSA-52cp-r559-cp3m, GHSA-5p4m-2wfm-xmqj (CVE-2026-59869, CVE-2026-84375) and two moderate advisories (platform#179).
 - `lodash` 4.17.21 → 4.18.1 (via recharts) through `pnpm.overrides`: GHSA-r5fr-rjxr-66jc (CVE-2026-4800, HIGH) and two moderate advisories (platform#179).
 - `vite` 6.4.3 → 6.4.4 (dev server/build): GHSA-587h-7wmj-h5pm (HIGH) and four moderate/low dev-server advisories; replaces Dependabot PR #173. 6.4.5 follows once it is 7 days old (platform#179).
@@ -30,6 +958,9 @@ this changelog highlights the changes relevant for overview and operations.
 - `picomatch` 2.3.1 → 2.3.2 (build tooling) through `pnpm.overrides`: GHSA-c2c7-rcm5-vvqj (HIGH) and GHSA-3v7f-55p6-f55p (platform#179).
 - `source-map-js` 1.2.1 → 1.2.2 (via postcss/vite, build only) through `pnpm.overrides`: GHSA-68fv-2mgg-jv7q (HIGH) (platform#179).
 - `ws` 8.18.0 → 8.22.0 (via jsdom, tests only) through `pnpm.overrides`: GHSA-96hv-2xvq-fx4p (HIGH) and GHSA-58qx-3vcg-4xpx (platform#179).
+
+### CI
+- `rolling-release.yml`: no image build on a draft pull request — it runs when the pull request is marked ready for review (`ready_for_review`) and on every later push to it; `pr-checks.yml` still checks drafts. Pushes, tags and the deploy dispatch are unchanged.
 
 ## [1.8.0] – 2026-10-21
 

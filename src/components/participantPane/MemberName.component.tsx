@@ -1,7 +1,7 @@
 import React, {FC, useContext} from "react";
 import {memberActivity} from "../../util/MemberActivity.util";
 import {selectParticipantById} from "../../store/participant";
-import {CheckboxCustomEvent, IonButton, IonCheckbox, IonCol, IonIcon, IonItem, IonLabel,} from "@ionic/react";
+import {IonButton, IonCol, IonIcon, IonItem, IonLabel,} from "@ionic/react";
 import {eegExclamation} from "../../eegIcons";
 import {EegParticipant} from "../../models/members.model";
 import {EegTariff} from "../../models/eeg.model";
@@ -13,16 +13,14 @@ import {ParticipantContext} from "../../store/hook/ParticipantProvider";
 
 interface MemberNameComponentProps {
   participant: EegParticipant;
-  isChecked: boolean;
   showAmount: boolean;
   tariff?: EegTariff | undefined;
-  onCheck: (e: CheckboxCustomEvent) => void;
   onSelect?: (e: React.MouseEvent<HTMLIonCardElement, MouseEvent>) => void
   onAdd: (p: EegParticipant) => (e: React.MouseEvent<HTMLIonButtonElement, MouseEvent>) => void
 }
 
 const MemberNameComponent: FC<MemberNameComponentProps> =
-  ({participant, isChecked, showAmount, tariff, onCheck, onSelect, onAdd}) => {
+  ({participant, showAmount, tariff, onSelect, onAdd}) => {
 
   const bill = useAppSelector(selectBillByParticipant(participant.id))
   // the list entry can hold only some metering points (filters, period): the status needs all of them
@@ -55,19 +53,20 @@ const MemberNameComponent: FC<MemberNameComponentProps> =
     return name
   }
 
+  // the member number in brackets after the name (08.11.2026); it stays visible when a long name is cut
+  const memberNumber = participant.participantNumber
+    ? <span style={{whiteSpace: "nowrap", flexShrink: 0, marginLeft: "4px"}}>({participant.participantNumber})</span>
+    : null
+
   return (
     <>
-      <IonCol size="2" style={{flexWrap: "nowrap"}}>
-        <IonItem lines="none" style={{background: "transparent", "--min-height": "24px"}}>
-          <IonCheckbox style={{"--size": "16px", margin: "0px"}} onIonChange={onCheck} checked={isChecked} disabled={true} aria-label=""></IonCheckbox>
-        </IonItem>
-      </IonCol>
-      <IonCol size="10">
+      <IonCol size="12">
         <IonItem detail={!showAmount} lines="none" onClick={onSelect} style={{"--min-height": "24px", "--padding-start": "0"}}>
           {isPending() ? (
             <IonLabel style={{margin: "0px", color: "#DC631E"}}>
               <div style={{display: "flex"}}>
                 <span style={{fontSize: "14px"}}>{renderMemberName()}</span>
+                <span style={{fontSize: "14px"}}>{memberNumber}</span>
                 <span style={{marginLeft: "5px"}}><IonIcon size="small" icon={eegExclamation}></IonIcon></span>
               </div>
             </IonLabel>
@@ -75,7 +74,10 @@ const MemberNameComponent: FC<MemberNameComponentProps> =
             <div style={{display: "flex", width: "100%", alignItems: "center", justifyContent: "space-between"}}>
               <IonLabel style={{margin: "0px", width: "200px"}}>
                 <div style={{display: "flex", justifyContent: "space-between"}}>
-                  <span style={{fontSize: "15px", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap"}}>{renderMemberName()}</span>
+                  <span style={{display: "flex", minWidth: 0, fontSize: "15px"}}>
+                    <span style={{textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap"}}>{renderMemberName()}</span>
+                    {memberNumber}
+                  </span>
                   {/* platform#165: no active and no registering metering point left */}
                   {memberActivity(fullParticipant ?? participant) === 'INACTIVE' &&
                     <span style={{fontSize: "11px", color: "var(--ion-color-medium, #92949c)", marginLeft: "6px", whiteSpace: "nowrap"}}>inaktiv</span>}

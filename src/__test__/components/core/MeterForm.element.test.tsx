@@ -55,4 +55,29 @@ describe("<MeterFormElement /> grid operator", () => {
     await screen.findAllByText(/Zählpunkt/)
     expect(screen.queryByText(/Netzbetreiber-ID/)).not.toBeInTheDocument()
   });
+
+  // platform#229 addendum: P2P and EVA run like a BEG, with metering points at several grid operators
+  it.each(['P2P', 'EVA'])("%s: shows the grid operator set by the backend, like a BEG", async (area) => {
+    renderElement(area, {gridOperatorId: 'AT001000', gridOperatorName: 'Wiener Netze'})
+    await screen.findByText('AT001000')
+    screen.getByText('Wiener Netze')
+    screen.getByText(/Netzbetreiber-ID/)
+  });
+});
+
+// platform#246: TechCode and FuelCode of the metering point list are stored by the backend but not shown in V1
+// (decision 08.11.2026, the display comes with V3)
+describe("<MeterFormElement /> codes of the metering point list", () => {
+  it("an existing metering point with codes does not show them", async () => {
+    const {container} = renderElement('LOCAL', {processState: 'ACTIVE', status: 'ACTIVE', techCode: 'PV01',
+      fuelCode: 'E01'} as Partial<Metering>, true)
+    await screen.findAllByText(/Zählpunkt/)
+    expect(screen.queryByText('PV01')).not.toBeInTheDocument()
+    expect(screen.queryByText('E01')).not.toBeInTheDocument()
+    expect(screen.queryByText(/TechCode|FuelCode/)).not.toBeInTheDocument()
+    // neither as a field: an ion-input keeps its value as a property, not as text
+    const values = Array.from(container.querySelectorAll('ion-input')).map(i => (i as unknown as {value?: string}).value)
+    expect(values).not.toContain('PV01')
+    expect(values).not.toContain('E01')
+  });
 });

@@ -13,6 +13,8 @@ export interface EegState extends EntityState<Eeg, string> {
   selectedTenant: string | null;
   error?: ErrorState
   hasError: boolean
+  // text of the failed EEG load, shown on the pages with "Erneut versuchen"; cleared by the next load (261024-ca11)
+  loadError?: string
 }
 
 export const adapter = createEntityAdapter<Eeg, string>({

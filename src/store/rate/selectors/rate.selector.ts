@@ -23,6 +23,7 @@ export const isFetchingSelector = createSelector(
 //   selectAll
 // );
 
+// sorted by the adapter's sortComparer (compareTariffs in states)
 export const ratesSelector = createSelector(
   featureStateSelector,
   selectAll

@@ -4,12 +4,50 @@ import {meteringEnergyGroup1} from "../../store/energy";
 import {store} from "../../store";
 import {hasOpenProblem} from "../../util/FilterHelper.unit";
 
-export const buildAllocationMapFromSelected = (participants: EegParticipant[], checkedParticipant: Record<string, boolean>): MeteringEnergyGroupType[] => {
+/**
+ * A member a billing run includes (platform#194: always the whole community, no selection): active, with a tariff
+ * on the member or on a registered metering point — the rule of the former „alle auswählen“. Members without a
+ * tariff are named by „Daten prüfen“.
+ */
+export const isBillableParticipant = (p: EegParticipant): boolean =>
+  p.status === "ACTIVE" && p.meters.reduce((c, e) => c || (e.tariff_id !== undefined && e.tariff_id !== null && e.status !== 'INIT'),
+    p.tariffId !== undefined && p.tariffId != null)
+
+/**
+ * Why a billing run cannot start now (platform#189), or undefined when it can: the report of the period is still
+ * loading, its load failed, or it holds no entry of a billable member. A run is never started with an empty list.
+ */
+export const billingRunBlocker = (reportLoading: boolean, reportError: string | undefined, allocationCount: number): string | undefined => {
+  if (reportLoading) return "Die Energiedaten des Zeitraums werden noch geladen. Bitte kurz warten und erneut starten."
+  if (reportError) return "Die Energiedaten des Zeitraums konnten nicht geladen werden. Bitte die Seite neu laden und erneut starten."
+  if (allocationCount === 0) return "Im gewählten Zeitraum gibt es keine abrechenbaren Mitglieder (aktiv, mit Tarif) in den geladenen Energiedaten. „Daten prüfen“ zeigt Zählpunkte ohne Tarif."
+  return undefined
+}
+
+/**
+ * Tooltip of the € switch. The switch only opens or closes the billing view (the run is started there), so the text
+ * names that; while it cannot be switched on, the reason. `canSwitchOn` is the switch's own state: while a report loads
+ * the switch keeps its previous state, so the loading text only shows when it is off-limits.
+ */
+export const billingSwitchTooltip = (s: {canSwitchOn: boolean, on: boolean, hasPeriod: boolean, reportLoading: boolean,
+                                          reportError: string | undefined, billableCount: number}): string => {
+  if (!s.canSwitchOn) {
+    if (!s.hasPeriod) return "Bitte zuerst einen Zeitraum wählen."
+    if (s.reportLoading) return "Die Energiedaten des Zeitraums werden geladen."
+    if (s.reportError) return "Die Energiedaten des Zeitraums konnten nicht geladen werden."
+    if (s.billableCount === 0) return "Im Zeitraum gibt es keine abrechenbaren Mitglieder (aktiv, mit Tarif)."
+  }
+  return s.on ? "Abrechnungsmodus beenden" : "Abrechnungsmodus aktivieren"
+}
+
+/** The energy of every billable member of the period, from the loaded energy report; built when the run starts. */
+export const buildAllocationMap = (participants: EegParticipant[]): MeteringEnergyGroupType[] => {
   const participantReport = meteringEnergyGroup1(store.getState())
   const activeMeters = participants.flatMap(p => p.meters.filter(m=>m.status !== "INIT").map(m => m.meteringPoint))
+  const billable = new Set(participants.filter(isBillableParticipant).map(p => p.id))
 
   return participantReport
-    .filter(p => checkedParticipant[p.participantId] !== undefined && checkedParticipant[p.participantId])
+    .filter(p => billable.has(p.participantId))
     .flatMap(p => {
       return p.meters.filter(m => activeMeters.includes(m.meterId)).map(m => {
         // ZVT: die Fenster-Teilsummen (buckets) mit genau den Fenstern mitgeben, fuer die der energystore sie
@@ -47,9 +85,10 @@ export const withOpenProblems = (periodParticipants: EegParticipant[], allPartic
   })
 
 // Gross amount of a member in a billing run: positive is paid by the member, negative is paid to the member.
-// The same items as on the documents and in the Excel export, metering point fees included.
+// The same items as on the documents and in the Excel export, metering point fees and the joining fee included.
 export const billTotal = (bill: ParticipantBillType) =>
-  bill.meteringPoints.reduce((sum, m) => sum + m.amount, bill.participantFee + (bill.meteringPointFeeSum ?? 0))
+  bill.meteringPoints.reduce((sum, m) => sum + m.amount,
+    bill.participantFee + (bill.meteringPointFeeSum ?? 0) + (bill.joiningFee ?? 0))
 
 export const filterMeters = (p: EegParticipant[], hideProducers: boolean, hideConsumers: boolean, showEmptyMembers: boolean = true) => {
   return p
@@ -66,43 +105,41 @@ export const filterMeters = (p: EegParticipant[], hideProducers: boolean, hideCo
     .filter((m) => (m.meters.length > 0 || showEmptyMembers));
 };
 
+// Search of the member list (platform#244): the input is split at spaces into terms; a member matches when every term
+// is found in one of its fields (last name, first name, member number, e-mail) or in one of its metering points
+// (number, name), case-insensitively. Terms that the member's own fields do not cover narrow its metering points to
+// the hits; a term that hits the member itself keeps all its metering points (platform#253: „markt“ shows every
+// metering point of „Marktgemeinde …“, not only „Pumpwerk Marktplatz“).
 export const filterSearchQuery = (entities: EegParticipant[], query: string | undefined) => {
-  if (query && query.length > 0) {
-    const filterEntries = (d: EegParticipant): [boolean, Metering[]] => {
-      return [
-        (d.lastname && d.lastname.toLowerCase().indexOf(query) > -1) ||
-        (d.firstname && d.firstname.toLowerCase().indexOf(query) > -1) ||
-        (d.participantNumber && d.participantNumber.toLowerCase().indexOf(query) > -1) ||
-        (!!d.contact && !!d.contact.email && d.contact.email.toLowerCase().indexOf(query) > -1),
-        filterMetering(d),
-      ];
-    };
-    const filterMetering = (d: EegParticipant): Metering[] => {
-      return (
-        d.meters.filter((m) => {
-          const eq =
-            m.equipmentName && m.equipmentName.length > 0
-              ? m.equipmentName.toLowerCase().indexOf(query) > -1
-              : false
-          return m.meteringPoint.toLowerCase().indexOf(query) > -1 || eq
-        })
-      );
-    };
-
-    return entities.reduce((r: EegParticipant[], d: EegParticipant) => {
-      const [matchParticipant, matchMeter] = filterEntries(d);
-      if (matchParticipant || matchMeter.length > 0) {
-        if (matchMeter.length > 0) {
-          r.push({...d, meters: matchMeter});
-        } else {
-          r.push({...d})
-        }
-      }
-      return r;
-    }, [] as EegParticipant[]);
-  } else {
-    return entities;
+  const terms = (query ?? "").toLowerCase().split(/\s+/).filter(t => t.length > 0)
+  if (terms.length === 0) {
+    return entities
   }
+  const has = (value: string | null | undefined, term: string) => !!value && value.toLowerCase().includes(term)
+  const memberHas = (d: EegParticipant, term: string) =>
+    has(d.lastname, term) || has(d.firstname, term) || has(d.participantNumber, term) || has(d.contact?.email, term)
+  const meterHas = (m: Metering, term: string) => has(m.meteringPoint, term) || has(m.equipmentName, term)
+
+  return entities.reduce((r: EegParticipant[], d: EegParticipant) => {
+    const meters = d.meters ?? []
+    if (!terms.every(t => memberHas(d, t) || meters.some(m => meterHas(m, t)))) {
+      return r
+    }
+    // Narrow the meters by the terms the member's own fields do not cover; none left: all meters stay.
+    // Meters holding all of them („pv dach“ shows „PV Dach“ only), else those holding any. Each term is in some
+    // meter (check above), so the list is never empty.
+    const rest = terms.filter(t => !memberHas(d, t))
+    if (rest.length === 0) {
+      r.push({...d})
+      return r
+    }
+    let hitMeters = meters.filter(m => rest.every(t => meterHas(m, t)))
+    if (hitMeters.length === 0) {
+      hitMeters = meters.filter(m => rest.some(t => meterHas(m, t)))
+    }
+    r.push({...d, meters: hitMeters})
+    return r
+  }, [] as EegParticipant[])
 }
 
 // Uploads the documents chosen when a member is activated. A failed upload must not stop the
@@ -114,4 +151,22 @@ export const uploadActivationDocuments = (upload: (files: File[]) => Promise<unk
   return upload(files).then(
     () => undefined,
     (e) => `Nicht hochgeladen: ${e instanceof Error ? e.message : String(e)}. Die Dokumente können später im Bereich Verträge hochgeladen werden.`)
+}
+
+// A download with a busy overlay (no second click while it runs) and an error toast with the reason (261024-ca14).
+export const downloadWithFeedback = async (
+  download: () => Promise<unknown>,
+  busy: {show: (message: string) => Promise<unknown>, hide: () => Promise<unknown>},
+  failed: (message: string) => void,
+  what: string,
+) => {
+  await busy.show(`${what} wird erstellt ...`)
+  try {
+    await download()
+    await busy.hide()
+  } catch (e) {
+    await busy.hide()
+    const reason = e instanceof Error && e.message ? ` (${e.message})` : ""
+    failed(`Die ${what} konnte nicht erstellt werden.${reason}`)
+  }
 }

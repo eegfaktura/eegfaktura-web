@@ -1,0 +1,103 @@
+import React, {FC, useContext, useEffect, useRef, useState} from "react";
+import {IonBadge, IonCard, IonContent, IonItem, IonLabel, IonList, IonPage, IonText} from "@ionic/react";
+import MenuHeaderComponent from "../components/core/MenuHeader.component";
+import {EegContext, useAccessGroups, useTenant} from "../store/hook/Eeg.provider";
+import EegLoadStateComponent from "../components/EegLoadState.component";
+import {useLocale} from "../store/hook/useLocale";
+import {Api} from "../service";
+import {MailTemplateListItem, MailTemplateSource} from "../models/mailtemplate.model";
+import MailTemplateEditor from "../components/mailtemplate/MailTemplateEditor.component";
+import {savedText} from "../components/mailtemplate/mailTemplate.util";
+
+import "./Eeg.page.scss"
+
+// „E-Mail-Texte“: the member mails of backend (3) and billing (1) in one list
+// (konzept-mail-texte-editierbar.md). Only EEG admins; the services check the role as well.
+const MailTemplatesPage: FC = () => {
+  const {t} = useLocale("common")
+  const {isAdmin} = useAccessGroups()
+  const admin = isAdmin()
+  const {tenant} = useTenant()
+  const {eeg} = useContext(EegContext)
+  // the list waits for the community; while it loads or after a failed load the page shows that, as the other pages do
+  const loaded = !!eeg
+
+  const [items, setItems] = useState<MailTemplateListItem[]>()
+  const [failed, setFailed] = useState<MailTemplateSource[]>([])
+  const [selected, setSelected] = useState<MailTemplateListItem>()
+
+  // only the latest request may set the list: a slow answer for the previous community is dropped
+  const request = useRef(0)
+  // an editor of the previous community may still call its loadList after a save that ended after the switch
+  const currentTenant = useRef(tenant)
+  currentTenant.current = tenant
+  const loadList = () => {
+    if (!tenant || !admin || !loaded || tenant !== currentTenant.current) return
+    const current = ++request.current
+    Api.mailTemplateService.fetchList(tenant).then(r => {
+      if (current !== request.current) return
+      setItems(r.items)
+      setFailed(r.failed)
+    }).catch(() => {
+      if (current !== request.current) return
+      setItems([])
+      setFailed(["backend", "billing"])
+    })
+  }
+
+  useEffect(() => {
+    setSelected(undefined)
+    setItems(undefined)
+    setFailed([])
+    loadList()
+  }, [tenant, admin, loaded])
+
+  if (!eeg) {
+    return <EegLoadStateComponent/>
+  }
+
+  return (
+    <IonPage>
+      <MenuHeaderComponent/>
+      <IonContent fullscreen>
+        <div style={{flexGrow: "1", background: "#EAE7D9", minHeight: "100%"}}>
+          {!admin && <div className="eeg-property-card"><p>{t("mailtemplates.admin_only")}</p></div>}
+          {admin && selected && (
+            <MailTemplateEditor key={`${tenant}-${selected.key}`} tenant={tenant} source={selected.source}
+                                templateKey={selected.key} eegEmail={eeg?.contact?.email?.trim() || undefined}
+                                onClose={() => setSelected(undefined)} onChanged={loadList}/>
+          )}
+          {admin && !selected && (
+            <div className="eeg-property-card" style={{maxWidth: "900px"}}>
+              <div className="header">{t("mailtemplates.header")}</div>
+              <IonCard color="eeglight">
+                {!items && <p style={{padding: "0 16px"}}>{t("mailtemplates.loading")}</p>}
+                {failed.map(s => (
+                  <IonText key={s} color="danger"><p style={{padding: "0 16px"}}>{t(`mailtemplates.load_failed_${s}`)}</p></IonText>
+                ))}
+                {items && <IonList>
+                  {items.map(item => (
+                    <IonItem key={`${item.source}-${item.key}`} button detail onClick={() => setSelected(item)}>
+                      <IonLabel className="ion-text-wrap">
+                        <h2>{item.name}</h2>
+                        <p>{item.description}</p>
+                        <IonBadge color={item.customized ? "success" : "medium"}>
+                          {t(item.customized ? "mailtemplates.status_own_label" : "mailtemplates.status_default")}
+                        </IonBadge>
+                        {item.customized && <p>{savedText(t, item, "status_customized")}</p>}
+                        {item.customized && item.defaultChanged &&
+                          <IonText color="warning"><p>{t("mailtemplates.default_changed")}</p></IonText>}
+                      </IonLabel>
+                    </IonItem>
+                  ))}
+                </IonList>}
+              </IonCard>
+            </div>
+          )}
+        </div>
+      </IonContent>
+    </IonPage>
+  )
+}
+
+export default MailTemplatesPage

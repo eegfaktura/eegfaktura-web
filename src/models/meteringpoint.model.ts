@@ -43,9 +43,12 @@ export interface Metering {
   processState: MeteringProcessStateType,
   participantState: ParticipantState,
   partFact: number,
-  activationCode?: string
   activationMode: 'ONLINE' | 'OFFLINE'
   enabled: boolean
+  // from the grid operator's metering point list (platform#229), read only, null = unknown; not shown in V1
+  // (platform#246). The saves send them along, the backend ignores them
+  techCode?: string | null
+  fuelCode?: string | null
 }
 
 /*
@@ -144,5 +147,7 @@ export interface ParticipantBillType {
   participantFee: number;
   // Missing from older billing versions.
   meteringPointFeeSum?: number;
+  // platform#217, gross; missing from older billing versions.
+  joiningFee?: number;
   meteringPoints: MeteringBillType[]
 }

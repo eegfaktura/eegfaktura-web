@@ -1,4 +1,7 @@
-import {BillingConfig, EdaHistories, Eeg, EegNotification, EegTariff} from "../models/eeg.model";
+import {
+  BillingConfig, EdaHistories, Eeg, EegNotification, EegTariff, JoiningFeeRecord, JoiningFeeState,
+  SettlementIntervalResult, SettlementState
+} from "../models/eeg.model";
 import {EegParticipant} from "../models/members.model";
 import {
   BillingDocumentAmounts,
@@ -10,12 +13,58 @@ import {
   ParticipantBillType
 } from "../models/meteringpoint.model";
 import {EegEnergyReport, SelectedPeriod} from "../models/energy.model";
-import {eegGraphqlQuery} from "./graphql-query";
 import {API_API_SERVER} from "./base.service";
 import {AuthService} from "./auth.service";
 import EegBaseService from "./base.service";
 
 const BILLING_API_SERVER = import.meta.env.VITE_BILLING_SERVER_URL;
+
+// POST /meteringpoint/syncenergy (smart re-request)
+export interface SyncEnergyMeter {
+  meter: string
+  direction: string
+  from?: number
+  to?: number
+}
+
+export interface SyncEnergySkipped {
+  meteringPoint: string
+  reason: string
+  until?: number  // ALREADY_REQUESTED: when the metering point is free again (ms)
+}
+
+// requested is unknown from an older backend (204, no body) or for a community that is not online
+export interface SyncEnergyResult {
+  requested?: number
+  skipped: SyncEnergySkipped[]
+}
+
+export const parseSyncEnergyResult = async (res: Response): Promise<SyncEnergyResult> => {
+  const text = res.status === 204 ? "" : await res.text()
+  if (!text) return {skipped: []}
+  const body = JSON.parse(text)
+  return {requested: body.requested, skipped: body.skipped ?? []}
+}
+
+// billing refuses a send of a run whose mails were already sent or are being sent with 500 and its reason as plain
+// text ("Mailversand fuer … nicht moeglich. Status = SENT"): that text is the error. Only short plain text is shown;
+// a JSON body (409 busy, other errors) goes on to handleErrors, an HTML page or a long text (e.g. from a proxy) gives
+// the generic message there.
+const REFUSAL_MAX_LENGTH = 300
+export const sendmailRefusal = async (res: Response): Promise<Response> => {
+  if (res.status !== 500) return res
+  const text = (await res.clone().text()).trim()
+  if (!text || text.startsWith("{") || text.startsWith("<") || text.length > REFUSAL_MAX_LENGTH) return res
+  throw new Error(text)
+}
+
+// billing answers 409 when the member's joining fee was charged in a final run meanwhile
+export class JoiningFeeAlreadyBilledError extends Error {
+  constructor() {
+    super("Die Beitrittsgebühr kann gerade nicht geändert werden: Sie wurde inzwischen verrechnet, ein endgültiger "
+      + "Abrechnungslauf läuft oder jemand hat sie gleichzeitig geändert. Der aktuelle Stand wird angezeigt.")
+  }
+}
 
 export class EegService extends EegBaseService {
   
@@ -37,16 +86,39 @@ export class EegService extends EegBaseService {
   }
 
 
+  // the interval changes only through changeSettlementInterval (platform#230); the backend drops it here as well
   async updateEeg(tenant: string, eeg: Record<string, any>): Promise<Eeg> {
     const token = await this.lookupToken()
+    const {settlementInterval, ...changes} = eeg
     return await fetch(`${API_API_SERVER}/eeg`, {
       method: 'POST',
       headers: {
         ...this.getSecureHeaders(token, tenant),
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(eeg)
+      body: JSON.stringify(changes)
     }).then(this.handleErrors).then(res => res.json());
+  }
+
+  // platform#230: dryRun checks the change and says from when it applies or why not; without dryRun the backend saves
+  // it (409 with the reason when the rule refuses). The backend's reason (error.message) is the text shown.
+  async changeSettlementInterval(tenant: string, settlementInterval: Eeg["settlementInterval"], dryRun: boolean,
+                                 billingState: SettlementState): Promise<SettlementIntervalResult> {
+    const token = await this.lookupToken()
+    const response = await fetch(`${API_API_SERVER}/eeg/settlementinterval`, {
+      method: 'POST',
+      headers: {
+        ...this.getSecureHeaders(token, tenant),
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({settlementInterval, dryRun, billingState})
+    })
+    if (!response.ok && response.status !== 401) {
+      const body = await response.clone().json().catch(() => undefined)
+      if (typeof body?.error?.message === "string" && body.error.message) throw new Error(body.error.message)
+    }
+    return this.handleErrors(response).then(res => res.json())
   }
 
   async fetchRates(tenant: string, token?: string): Promise<EegTariff[]> {
@@ -216,6 +288,66 @@ export class EegService extends EegBaseService {
     }).then(this.handleErrors).then(res => res.json())
   }
 
+  // platform#217: per member with a final document, energy billed yes/no and the document with the joining fee
+  // asked once more after a failure: in prod (29.10.) a single call failed in the browser while billing answered every
+  // request with 200; the cause is unknown (network or token lookup), a second call usually succeeds
+  async fetchJoiningFeeState(tenant: string): Promise<JoiningFeeState[]> {
+    return this.loadJoiningFeeState(tenant).catch(() => this.loadJoiningFeeState(tenant))
+  }
+
+  private async loadJoiningFeeState(tenant: string): Promise<JoiningFeeState[]> {
+    const token = await this.lookupToken()
+    return await fetch(`${BILLING_API_SERVER}/api/billingDocuments/tenant/${tenant.toUpperCase()}/joiningFeeState`, {
+      method: 'GET',
+      headers: {
+        ...this.getSecureHeaders(token, tenant),
+        'Accept': 'application/json',
+      },
+    }).then(this.handleErrors).then(res => res.json())
+  }
+
+  // platform#230: the billing state the backend checks an interval change against
+  async fetchSettlementState(tenant: string): Promise<SettlementState> {
+    const token = await this.lookupToken()
+    return await fetch(`${BILLING_API_SERVER}/api/billingRuns/tenant/${tenant.toUpperCase()}/settlementState`, {
+      method: 'GET',
+      headers: {
+        ...this.getSecureHeaders(token, tenant),
+        'Accept': 'application/json',
+      },
+    }).then(this.handleErrors).then(res => res.json()).then((state: SettlementState) => {
+      // never pass an incomplete state on: the backend would check against less than billing knows
+      if (!Array.isArray(state?.finalPeriods) || !Array.isArray(state?.runningPeriods)) {
+        throw new Error("unvollständige Antwort von billing")
+      }
+      return state
+    })
+  }
+
+  // extension 2026-10-27: request the fee for the next final run or record a payment made outside eegfaktura (PUT),
+  // or take the record back (DELETE); 409 once the fee is charged
+  async saveJoiningFeeRecord(tenant: string, participantId: string, record: JoiningFeeRecord): Promise<void> {
+    return this.joiningFeeRecordCall(tenant, participantId, 'PUT', record)
+  }
+
+  async deleteJoiningFeeRecord(tenant: string, participantId: string): Promise<void> {
+    return this.joiningFeeRecordCall(tenant, participantId, 'DELETE')
+  }
+
+  private async joiningFeeRecordCall(tenant: string, participantId: string, method: 'PUT' | 'DELETE', record?: JoiningFeeRecord) {
+    const token = await this.lookupToken()
+    const response = await fetch(`${BILLING_API_SERVER}/api/billingDocuments/tenant/${tenant.toUpperCase()}/participants/${encodeURIComponent(participantId)}/joiningFee`, {
+      method,
+      headers: {
+        ...this.getSecureHeaders(token, tenant),
+        'Content-Type': 'application/json',
+      },
+      body: record ? JSON.stringify(record) : undefined,
+    })
+    if (response.status === 409) throw new JoiningFeeAlreadyBilledError()
+    await this.handleErrors(response)
+  }
+
   async fetchBillingDocumentFiles(tenant: string): Promise<InvoiceDocumentResponse[]> {
     const token = await this.lookupToken()
     return await fetch(`${BILLING_API_SERVER}/api/billingDocumentFiles/tenant/${tenant.toUpperCase()}`, {
@@ -282,7 +414,7 @@ export class EegService extends EegBaseService {
       headers: {
         ...this.getSecureHeaders(token, tenant),
       },
-    }).then(this.handleErrors).then(res => true);
+    }).then(sendmailRefusal).then(this.handleErrors).then(res => true);
   }
 
   async fetchBillingConfigByTenantId(tenant: string, token?: string): Promise<BillingConfig>  {
@@ -412,10 +544,12 @@ export class EegService extends EegBaseService {
     }).then(this.handleErrors).then(res => new Promise<void>((resolve) => resolve()));
   }
 
-  async syncMeteringPoint(tenant: string, meters: {meter: string, direction: string}[], from: number, to: number): Promise<any> {
+  // from/to of a metering point (ms) are optional, the request period applies without them; complete are the
+  // metering points found complete, recorded by the backend as skipped (COMPLETE) and not requested
+  async syncMeteringPoint(tenant: string, meters: SyncEnergyMeter[], from: number, to: number, complete?: string[]): Promise<SyncEnergyResult> {
     const token = await this.lookupToken()
 
-    const body = {meteringPoints: meters, from: from, to: to}
+    const body = {meteringPoints: meters, from: from, to: to, ...(complete && complete.length > 0 ? {complete} : {})}
     return await fetch(`${API_API_SERVER}/meteringpoint/syncenergy`, {
       method: 'POST',
       headers: {
@@ -423,7 +557,7 @@ export class EegService extends EegBaseService {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
-    }).then(this.handleErrors); // Response with 201 - no Content
+    }).then(this.handleErrors).then(parseSyncEnergyResult);
   }
 
   async revokeMeteringPoint(tenant: string, participantId: string, meters: {meter: string, direction: string, consentId: string}[], from: number, reason?: string): Promise<any> {
@@ -444,6 +578,7 @@ export class EegService extends EegBaseService {
     const token = await this.lookupToken()
 
     const body = {meteringPoints: meters}
+    // the backend answers 204 No Content: no body to parse
     return await fetch(`${API_API_SERVER}/meteringpoint/changepartitionfactor`, {
       method: 'POST',
       headers: {
@@ -451,12 +586,14 @@ export class EegService extends EegBaseService {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
-    }).then(this.handleErrors).then(res => res.json());
+    }).then(this.handleErrors).then(() => undefined);
   }
 
-  async registerMeteringPoint(tenant: string, participantId: string, meter: string, direction: string, mode: 'ONLINE' | 'OFFLINE', code?: string): Promise<EegEnergyReport> {
+  // the GUI registers online only (decision 2026-10-30): for an online community the backend needs "ONLINE" explicitly
+  // (without a mode the request fails); for other communities it ignores the mode
+  async registerMeteringPoint(tenant: string, participantId: string, meter: string, direction: string): Promise<EegEnergyReport> {
     const token = await this.lookupToken()
-    const body = {meteringPoint: meter, direction: direction, activationCode: code, activationMode: mode}
+    const body = {meteringPoint: meter, direction: direction, activationMode: 'ONLINE'}
     return await fetch(`${API_API_SERVER}/meteringpoint/${participantId}/register`, {
       method: 'POST',
       headers: {
@@ -467,14 +604,17 @@ export class EegService extends EegBaseService {
     }).then(this.handleErrors).then(res => res.json());
   }
 
-  async exportMasterdata(tenant: string) {
+  // platform#217: POST with billing's joiningFeeState as body for the column „Beitrittsgebühr verrechnet“; without
+  // a body (billing not reachable) the backend leaves the column empty
+  async exportMasterdata(tenant: string, joiningFeeState?: JoiningFeeState[]) {
     const token = await this.lookupToken()
     return fetch(`${API_API_SERVER}/eeg/export/masterdata`, {
-      method: 'GET',
+      method: 'POST',
       headers: {
         ...this.getSecureHeaders(token, tenant),
         'Content-Type': 'application/json'
       },
+      body: joiningFeeState ? JSON.stringify(joiningFeeState) : undefined,
     })
       .then(this.handleErrors)
       .then( response => this.handleDownload(response, "energy-export"));

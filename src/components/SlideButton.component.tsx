@@ -7,10 +7,11 @@ import {eegEuro} from "../eegIcons";
 interface SlideButtonComponentProps {
   checked: boolean
   disabled: boolean
+  title?: string
   setChecked: (s: boolean) => void
 }
 
-const SlideButtonComponent: FC<SlideButtonComponentProps> = ({checked,disabled, setChecked}) => {
+const SlideButtonComponent: FC<SlideButtonComponentProps> = ({checked,disabled, title, setChecked}) => {
 
   // const [isChecked, setIsChecked] = useState(checked);
 
@@ -21,7 +22,7 @@ const SlideButtonComponent: FC<SlideButtonComponentProps> = ({checked,disabled, 
   };
 
   return (
-    <label className={disabled ? "eeg-sliding-box disabled" : "eeg-sliding-box"} aria-disabled={disabled}>
+    <label className={disabled ? "eeg-sliding-box disabled" : "eeg-sliding-box"} aria-disabled={disabled} title={title}>
       <input type="checkbox" checked={checked && !disabled} onChange={(e) => changeCheckbox(e)} disabled={disabled}/>
       <div className="eeg-sliding-box-inner">
         <div>

@@ -2,14 +2,13 @@ import React, {FC, useContext, useEffect, useMemo, useRef, useState} from "react
 
 import {EegParticipant} from "../../models/members.model";
 import {
-  CheckboxCustomEvent,
-  IonAlert,
   IonButton,
   IonButtons,
   IonCol,
   IonIcon,
   IonItem,
   IonLabel,
+  IonMenuButton,
   IonRow,
   IonSearchbar,
   IonSpinner,
@@ -20,20 +19,19 @@ import {
   useIonPopover,
   useIonToast,
 } from "@ionic/react";
-import {CheckboxChangeEventDetail} from "@ionic/core";
-import {IonCheckboxCustomEvent} from "@ionic/core/dist/types/components";
 import {createPeriodIdentifier, SelectedPeriod,} from "../../models/energy.model";
 import ParticipantPeriodHeaderComponent from "./ParticipantPeriodHeader.component";
 import MemberComponent from "./Member.component";
 import {ClearingPreviewRequest, Metering,} from "../../models/meteringpoint.model";
 import MeterCardComponent from "./MeterCard.component";
-import {ParticipantContext} from "../../store/hook/ParticipantProvider";
+import {ParticipantContext, useLeaveUnsaved} from "../../store/hook/ParticipantProvider";
 import {MemberViewContext} from "../../store/hook/MemberViewProvider";
 
 import "./ParticipantPane.component.scss";
 import SlideButtonComponent from "../SlideButton.component";
 import {store, useAppDispatch, useAppSelector} from "../../store";
 import {
+  BILLING_POLL_STOPPED,
   billingSelector,
   fetchEnergyBills,
   fetchParticipantAmounts,
@@ -42,7 +40,13 @@ import {
   selectBillFetchingSelector,
   selectBillPollingSelector,
 } from "../../store/billing";
-import {selectMetaRecord, setSelectedPeriod,} from "../../store/energy";
+import {
+  energyReportErrorSelector,
+  energyReportLoadingSelector,
+  meteringEnergyGroup1,
+  selectMetaRecord,
+  setSelectedPeriod,
+} from "../../store/energy";
 import ButtonGroup from "../ButtonGroup.component";
 import {
   add,
@@ -51,7 +55,6 @@ import {
   documentTextOutline,
   downloadOutline,
   flash,
-  mailOutline,
   person,
   reloadCircleOutline,
   search,
@@ -65,28 +68,29 @@ import {
   selectParticipant,
 } from "../../store/participant";
 import cn from "classnames";
-import {isParticipantActivated, reformatDateTimeStamp,} from "../../util/Helper.util";
+import {reformatDateTimeStamp,} from "../../util/Helper.util";
 import DatepickerPopover from "../dialogs/datepicker.popover";
 import {ExcelReportRequest, ParticipantCp} from "../../models/reports.model";
 import UploadPopup from "../dialogs/upload.popup";
-import {EegContext, useRefresh, useTenant} from "../../store/hook/Eeg.provider";
+import {EegContext, usePreviewOnly, useRefresh, useTenant} from "../../store/hook/Eeg.provider";
 import {
   billingRunErrorSelector,
   billingRunIsFetchingSelector,
   billingRunSelector,
-  billingRunSendmail,
   billingRunStatusSelector,
   fetchBillingRun,
-  fetchBillingRunById,
 } from "../../store/billingRun";
 import DatePickerCoreElement from "../core/elements/DatePickerCore.element";
 
 import {filterActiveMeter, filterActiveParticipantAndMeter,} from "../../util/FilterHelper.unit";
 import moment from "moment";
 import {Api} from "../../service";
-import {billTotal, buildAllocationMapFromSelected, filterSearchQuery} from "./ParticipantPane.functions";
+import BillingSendButton, {documentCount} from "./BillingSendButton.component";
+import {billingRunBlocker, billingSwitchTooltip, billTotal, buildAllocationMap, downloadWithFeedback, filterSearchQuery} from "./ParticipantPane.functions";
+import {exportMasterdataWithJoiningFees, hasJoiningFee, JOINING_FEE_EXPORT_WITHOUT_BILLING} from "../../util/JoiningFee.util";
 import {filterParticipant, sortParticipants} from "./ParticipantPane.effects";
 import {withOpenProblems} from "./ParticipantPane.functions";
+import {useMemberSearch} from "./useMemberSearch";
 import {billingTotals, BillingTotals, salesTaxation} from "./BillingTotals.functions";
 import BillingTotalsTable, {
   euro,
@@ -96,7 +100,7 @@ import BillingTotalsTable, {
   writeTotalsOpen
 } from "./BillingTotalsTable.component";
 import FilterSegmentComponent from "./FilterSegment.component";
-import {VariableSizeList} from "react-window";
+import {MemberSort, readActionFirst, readMemberSort, writeActionFirst, writeMemberSort} from "./participantSort";
 
 import HeaderFavButtonComponent from "../core/HeaderFavButton.component";
 import {Virtuoso} from "react-virtuoso";
@@ -138,11 +142,12 @@ const ParticipantPaneComponent: FC = () => {
     activePeriod,
     billingEnabled,
     setBillingEnabled,
-    checkedParticipant,
-    setCheckedParticipant,
     showDetailsPage,
     setShowAddMeterPane,
   } = useContext(ParticipantContext);
+  // another member, metering point or the billing view replaces the "add metering point" pane or the details: ask
+  // first while they hold unsaved input
+  const leaveUnsaved = useLeaveUnsaved(["addMeter", "details"])
   const {
     toggleMembersMeter,
     toggleMetering,
@@ -156,9 +161,10 @@ const ParticipantPaneComponent: FC = () => {
 
   const [presentAlert] = useIonAlert();
 
-  const [searchQuery, setSearchQuery] = useState<string | undefined>(undefined)
-  const [searchActive, setSearchActive] = useState(false);
+  const {searchQuery, searchActive, toggleSearch, onSearchInput} = useMemberSearch()
   const [selectedFilter, setSelectedFilter] = useState<string>('period');
+  const [memberSort, setMemberSort] = useState<MemberSort>(readMemberSort);
+  const [actionFirst, setActionFirst] = useState<boolean>(readActionFirst);
   const [downloadBillingId, setDownloadBillingId] = useState<string | undefined>();
 
   const [billingDownload, billingDownloadDismiss] = useIonModal(DownloadBillingDialog, {
@@ -174,7 +180,8 @@ const ParticipantPaneComponent: FC = () => {
 
   const openBillingDownloadDialog = (billingRunId: string)=> {
     setDownloadBillingId(billingRunId)
-    billingDownload()
+    // the calendars open in a portal outside the modal, the focus trap would take the focus from their year and month
+    billingDownload({cssClass: "ion-disable-focus-trap"})
   }
 
   // Checks before a billing run (platform#148): shown before preview and billing.
@@ -247,16 +254,26 @@ const ParticipantPaneComponent: FC = () => {
     return () => { current = false };
   }, [tenant, billingRun?.id, billingInfo, showAmount]);
 
+  // platform#194/#189: the whole community is billed, no selection. The billing mode can be switched on with the loaded
+  // energy report of the shown period holding an entry of at least one billable member; while a report loads the mode
+  // stays as it is. billingEnabled means "can be switched on" and is set only here.
+  const energyReport = useAppSelector(meteringEnergyGroup1);
+  const reportLoading = useAppSelector(energyReportLoadingSelector);
+  const reportError = useAppSelector(energyReportErrorSelector);
+  // P2P and EVA: a preview only, no final run (platform#255)
+  const previewOnly = usePreviewOnly();
   useEffect(() => {
-    if (checkedParticipant) {
-      const nextBillingEnabled = Object.entries(checkedParticipant).reduce(
-        (r, e) => (isParticipantActivated(participants, e[0]) && e[1]) || r,
-        false
-      );
-      setBillingEnabled(nextBillingEnabled);
-      if (!nextBillingEnabled) toggleShowAmount(false);
-    }
-  }, [checkedParticipant]);
+    if (reportLoading) return;
+    const nextBillingEnabled = !!activePeriod && !billingRunBlocker(false, reportError, buildAllocationMap(participants).length);
+    setBillingEnabled(nextBillingEnabled);
+    if (!nextBillingEnabled) toggleShowAmount(false);
+  }, [activePeriod, participants, energyReport, reportLoading, reportError]);
+
+  // the tooltip is derived on render, so it follows a loading report and a period change at once
+  const billingSwitchTitle = useMemo(() => billingSwitchTooltip({
+    canSwitchOn: billingEnabled, on: showAmount, hasPeriod: !!activePeriod, reportLoading, reportError,
+    billableCount: billingEnabled || reportLoading || reportError || !activePeriod ? 1 : buildAllocationMap(participants).length,
+  }), [billingEnabled, showAmount, activePeriod, reportLoading, reportError, participants, energyReport]);
 
   useEffect(() => {
     if (billingRunErrorMessage) {
@@ -273,6 +290,8 @@ const ParticipantPaneComponent: FC = () => {
     if (billingRunStatus === "RUNNING" && billingRun && billingRun.id && !billPolling) {
       dispatcher(resumeEnergyBillsPolling({tenant, billingRunId: billingRun.id}))
         .then((returnValue: any) => {
+          // stopped on a community switch or replaced by a newer poller: nothing to show (261024-ca13)
+          if (returnValue.payload === BILLING_POLL_STOPPED) return
           if (resumeEnergyBillsPolling.rejected.match(returnValue)) {
             errorToast((returnValue.payload as string) || "Abrechnung fehlgeschlagen.");
           }
@@ -295,7 +314,7 @@ const ParticipantPaneComponent: FC = () => {
 
   // list only: metering points with an open problem stay visible in every period, sorted with them
   const listParticipants = useMemo(() => withOpenProblems(participants, allParticipants), [participants, allParticipants])
-  const sortedParticipants1 = sortParticipants({participants: listParticipants, hideProducers, hideConsumers})
+  const sortedParticipants1 = sortParticipants({participants: listParticipants, memberSort, actionFirst})
 
   const viewEntities = filterParticipant({
     selectedFilter,
@@ -303,8 +322,17 @@ const ParticipantPaneComponent: FC = () => {
     participants: allParticipants,
     hideConsumers,
     hideProducers,
-    hideMeter
+    hideMeter,
+    memberSort,
+    actionFirst
   })
+
+  const onChangeMemberSort = (sort: MemberSort, first: boolean) => {
+    setMemberSort(sort)
+    writeMemberSort(sort)
+    setActionFirst(first)
+    writeActionFirst(first)
+  }
 
   const infoToast = (message: string) => {
     toaster({
@@ -323,31 +351,13 @@ const ParticipantPaneComponent: FC = () => {
     });
   };
 
-  const selectAll = (event: IonCheckboxCustomEvent<CheckboxChangeEventDetail>) => {
-    participants.forEach((p) => {
-      if (p.status === "ACTIVE") {
-        const tariffConfigured =
-          p.meters.reduce((c, e) => c || (e.tariff_id !== undefined && e.tariff_id !== null && e.status !== 'INIT'),
-            p.tariffId !== undefined && p.tariffId != null);
-        if (tariffConfigured) {
-          setCheckedParticipant(p.id, event.detail.checked);
-        }
-      }
-    });
-  };
-
-  const onCheckParticipant = (p: EegParticipant) => (e: CheckboxCustomEvent) => {
-    if (p.status === "ACTIVE") {
-      setCheckedParticipant(p.id, e.detail.checked);
-    }
-  };
-
   const activateBilling = (c: boolean) => {
     if (c) {
-      presentAlert({
+      // the billing view replaces the "add metering point" pane; declined, the switch goes back
+      leaveUnsaved(() => presentAlert({
         subHeader: "Abrechnungsmodus",
         message:
-          "Im Abrechnungsmodus siehst Du je Mitglied die Beträge des gewählten Zeitraums und wählst aus, wer abgerechnet wird. Mit „Vorschau erstellen“ werden Rechnungs- und Gutschriftsentwürfe mit dem Zusatz „VORSCHAU“ erstellt. Dazu kannst Du eine Zusammenstellung als Excel-Datei und alle Belege gesammelt als ZIP-Datei herunterladen. Änderst Du danach Stammdaten, Energiedaten oder Tarife, erstellt „Vorschau Akt.“ die Entwürfe beliebig oft neu. Erst „Abrechnung durchführen“ erstellt die endgültigen Belege mit fortlaufenden Rechnungsnummern; das ist nicht umkehrbar.",
+          "Im Abrechnungsmodus siehst Du je Mitglied die Beträge des gewählten Zeitraums. Abgerechnet werden immer alle aktiven Mitglieder mit Tarif; wer keinen Tarif hat, zeigt „Daten prüfen“. Mit „Vorschau erstellen“ werden Rechnungs- und Gutschriftsentwürfe mit dem Zusatz „VORSCHAU“ erstellt. Dazu kannst Du eine Zusammenstellung als Excel-Datei und alle Belege gesammelt als ZIP-Datei herunterladen. Änderst Du danach Stammdaten, Energiedaten oder Tarife, erstellt „Vorschau Akt.“ die Entwürfe beliebig oft neu. Erst „Abrechnung durchführen“ erstellt die endgültigen Belege mit fortlaufenden Rechnungsnummern; das ist nicht umkehrbar.",
         buttons: [
           {
             text: "Abbrechen",
@@ -378,10 +388,9 @@ const ParticipantPaneComponent: FC = () => {
             toggleShowAmount(false);
           }
         },
-      });
+      }), () => toggleShowAmount(false));
     } else {
       toggleShowAmount(false);
-      setBillingEnabled(false);
     }
   };
 
@@ -401,22 +410,24 @@ const ParticipantPaneComponent: FC = () => {
   };
 
   const onSelectParticipant =
-    (p: EegParticipant) => (e: React.MouseEvent<Element, MouseEvent>) => {
+    (p: EegParticipant) => (e: React.MouseEvent<Element, MouseEvent>) => leaveUnsaved(() => {
       dispatcher(selectParticipant(p.id));
       if (p.meters.length > 0) {
         dispatcher(selectMetering(p.meters[0].meteringPoint));
       }
       setShowAddMeterPane(false);
-    };
+    });
 
   const onShowAddMeterPage = (p: EegParticipant) => (e: React.MouseEvent<HTMLIonButtonElement, MouseEvent>) => {
-    dispatcher(selectParticipant(p.id));
-    if (p.meters.length > 0) {
-      dispatcher(selectMetering(p.meters[0].meteringPoint));
-    }
-    setShowAddMeterPane(true);
     e.preventDefault();
     e.stopPropagation();
+    leaveUnsaved(() => {
+      dispatcher(selectParticipant(p.id));
+      if (p.meters.length > 0) {
+        dispatcher(selectMetering(p.meters[0].meteringPoint));
+      }
+      setShowAddMeterPane(true);
+    })
   };
 
   const onSelectMeter = (
@@ -424,10 +435,12 @@ const ParticipantPaneComponent: FC = () => {
     participantId: string,
     meter: Metering
   ) => {
-    dispatcher(selectParticipant(participantId));
-    dispatcher(selectMetering(meter.meteringPoint));
     e.stopPropagation();
-    setShowAddMeterPane(false);
+    leaveUnsaved(() => {
+      dispatcher(selectParticipant(participantId));
+      dispatcher(selectMetering(meter.meteringPoint));
+      setShowAddMeterPane(false);
+    })
   };
 
   const billingSum = () => {
@@ -502,7 +515,14 @@ const ParticipantPaneComponent: FC = () => {
         } as ExcelReportRequest
         return Api.energyService.createReport({tenant, ecId, rcNr}, exportdata);
       } else {
-        return Api.eegService.exportMasterdata(tenant);
+        // without a tariff with a joining fee the column stays empty anyway: billing is not asked
+        if (!Object.values(rates).some(r => hasJoiningFee(r))) {
+          return Api.eegService.exportMasterdata(tenant)
+        }
+        return exportMasterdataWithJoiningFees(
+          () => Api.eegService.fetchJoiningFeeState(tenant),
+          (state) => Api.eegService.exportMasterdata(tenant, state),
+          () => toaster({message: JOINING_FEE_EXPORT_WITHOUT_BILLING, duration: 6000, position: "bottom", color: "warning"}));
       }
     }
   };
@@ -535,7 +555,7 @@ const ParticipantPaneComponent: FC = () => {
               .then(() => infoToast("Stammdaten-Upload beendet."))
               .catch((e) => {
                 dismissLoading();
-                errorToast("Stammdaten sind nicht korrekt. " + e.toString());
+                errorToast("Stammdaten sind nicht korrekt. " + (e?.message ?? e));
               });
             break;
         }
@@ -550,9 +570,20 @@ const ParticipantPaneComponent: FC = () => {
     && billingRun.runStatus !== "RUNNING" && billingRun.runStatus !== "FAILED" ? runTotals.totals : undefined;
   const onDoBilling =(preview: boolean, documentDate: Date) => {
     if (activePeriod) {
+      // platform#189: never start a run without energy (an empty list gave a finished run without documents). Read
+      // from the store now: this runs from the dialog's closure, the rendered values can be older than the report.
+      const state = store.getState();
+      const loading = energyReportLoadingSelector(state);
+      const error = energyReportErrorSelector(state);
+      const allocations = loading || error ? [] : buildAllocationMap(participants);
+      const blocker = billingRunBlocker(loading, error, allocations.length);
+      if (blocker) {
+        presentAlert({subHeader: "Abrechnung nicht möglich", message: blocker, buttons: ["OK"]});
+        return;
+      }
       documentDate?.setHours(12);
       const invoiceRequest = {
-        allocations: buildAllocationMapFromSelected(participants, checkedParticipant),
+        allocations: allocations,
         tenantId: tenant,
         preview: preview,
         clearingPeriodIdentifier: createPeriodIdentifier(
@@ -570,6 +601,7 @@ const ParticipantPaneComponent: FC = () => {
       // rejected mit Meldung (FAILED.errorSummary bzw. 400/503-Text) — kein
       // abstractText-String-Matching mehr.
       dispatcher(fetchEnergyBills({tenant, invoiceRequest})).then((returnValue: any) => {
+        if (returnValue.payload === BILLING_POLL_STOPPED) return
         if (fetchEnergyBills.rejected.match(returnValue)) {
           setPreviewValid(false);
           // env/billing: a failed asynchronous run shows as runStatus FAILED, the totals hide then (see `totals`)
@@ -604,39 +636,22 @@ const ParticipantPaneComponent: FC = () => {
     if (name === "documentDateBilling") documentDateBilling.current = value;
   };
 
-  async function sendBilling(billingRunId: string) {
-    if (billingRunId) {
-      dispatcher(billingRunSendmail({tenant, billingRunId})).then(() => {
-        dispatcher(fetchBillingRunById({tenant, billingRunId}));
-      });
-    }
-  }
+  const exportBusy = {show: (message: string) => loading({message}), hide: () => dismissLoading()}
 
   async function exportBillingExcel(billingRunId: string) {
-    try {
-      await Api.eegService.exportBillingExcel(tenant, billingRunId);
-    } catch (e) {
-      console.log(e as string);
-    }
+    await downloadWithFeedback(() => Api.eegService.exportBillingExcel(tenant, billingRunId),
+      exportBusy, errorToast, "Excel-Datei");
   }
 
   async function exportBillingArchive(billingRunId: string) {
-    try {
-      await Api.eegService.exportBillingArchive(tenant, billingRunId);
-    } catch (e) {
-      console.log(e as string);
-    }
+    await downloadWithFeedback(() => Api.eegService.exportBillingArchive(tenant, billingRunId),
+      exportBusy, errorToast, "ZIP-Datei");
   }
 
-  // const viewPortRef = useRef<HTMLDivElement | null>(null);
-  const viewPortRef = useRef(null);
-  // const listRef = useRef<ViewportListRef | null>(null);
-  const listRef = useRef<VariableSizeList>(null);
-  const rowHeights = useRef<Record<number, number>>({});
   const popoverRef = useRef<HTMLIonToolbarElement>(null);
 
   const handleSearchInput = (e: CustomEvent<SearchbarInputEventDetail>) => {
-    setSearchQuery(e.detail.value?.toLowerCase())
+    onSearchInput(e.detail.value)
   };
 
   // // const handleSearchClear = (e:  IonSearchbarCustomEvent<void>) => {
@@ -655,22 +670,6 @@ const ParticipantPaneComponent: FC = () => {
 
   const viewPortItems = filterSearchQuery(viewEntities, searchQuery)
 
-  const setRowHeight = (index: number, size: number) => {
-    // listRef.current?.resetAfterIndex(0);
-    console.log("setRowHeight", index, size)
-    rowHeights.current = {...rowHeights.current, [index]: size};
-  }
-
-  const getRowHeight = (index: number) => {
-    if (rowHeights.current) {
-      console.log("getRowHeight", index, rowHeights.current[index] + 8 || 82)
-      return rowHeights.current[index] + 8 || 82;
-    }
-    console.log("getRowHeight", index, "Default 200")
-    return 200
-  }
-
-
   const RowElement: FC<{ participant: EegParticipant }> = ({participant}) => {
     const command = participant
     if (command.meters.length > 0) {
@@ -684,10 +683,6 @@ const ParticipantPaneComponent: FC = () => {
         >
           <MemberComponent
             participant={command}
-            onCheck={onCheckParticipant(command)}
-            isChecked={
-              checkedParticipant && (checkedParticipant[command.id] || false)
-            }
             hideMeter={hideMeter}
             hideMember={hideMember}
             showAmount={showAmount}
@@ -720,10 +715,6 @@ const ParticipantPaneComponent: FC = () => {
         >
           <MemberComponent
             participant={command}
-            onCheck={onCheckParticipant(command)}
-            isChecked={
-              checkedParticipant && (checkedParticipant[command.id] || false)
-            }
             hideMeter={hideMeter}
             hideMember={hideMember}
             showAmount={showAmount}
@@ -746,8 +737,12 @@ const ParticipantPaneComponent: FC = () => {
             style={{"--min-height": "56px"}}
             ref={popoverRef}
           >
+            {/* opens the side menu below 992 px, hidden while the menu is shown beside the page (261024-ca9) */}
+            <IonButtons slot="start">
+              <IonMenuButton/>
+            </IonButtons>
             <IonButtons slot="end">
-              <HeaderFavButtonComponent icon={search} onClick={() => setSearchActive(!searchActive)}/>
+              <HeaderFavButtonComponent icon={search} onClick={toggleSearch}/>
               {/*{eeg && !eeg.online && (*/}
               <HeaderFavButtonComponent icon={cloudUploadOutline} onClick={(e: any) =>
                 uploadPopover({
@@ -766,7 +761,8 @@ const ParticipantPaneComponent: FC = () => {
                   size: "auto",
                   side: "bottom",
                   alignment: "start",
-                  cssClass: "upload-popover",
+                  // the calendar opens in a portal outside the popover, the focus trap would take the focus from its year and month
+                  cssClass: "upload-popover ion-disable-focus-trap",
                   // onDidDismiss: (e: CustomEvent) => onExport(e.detail.data),
                 })}/>
               <HeaderFavButtonComponent icon={add} routerLink="/page/addParticipant" routerDirection="root"/>
@@ -782,47 +778,14 @@ const ParticipantPaneComponent: FC = () => {
               ></IonSearchbar>
             </IonToolbar>
           )}
-          <FilterSegmentComponent selectedOption={selectedFilter} setSelectedOption={setSelectedFilter}/>
+          <FilterSegmentComponent selectedOption={selectedFilter} setSelectedOption={setSelectedFilter}
+                                  memberSort={memberSort} actionFirst={actionFirst} setMemberSort={onChangeMemberSort}/>
           <ParticipantPeriodHeaderComponent
             activePeriod={activePeriod}
-            selectAll={selectAll}
             onUpdatePeriod={onUpdatePeriodSelection}
           />
-          {/*<div className={"scroll-container"} ref={viewPortRef}>*/}
-          {/*<AutoSizer className={"scroll-container"} disableWidth={false}>*/}
-          {/*  {({ height, width }) => (*/}
-          {/*    <VariableSizeList*/}
-          {/*      className="List"*/}
-          {/*      height={height - 74}*/}
-          {/*      itemCount={viewPortItems.length}*/}
-          {/*      itemSize={getRowHeight}*/}
-          {/*      ref={listRef}*/}
-          {/*      width={width}*/}
-          {/*    >*/}
-          {/*      {ListRow}*/}
-          {/*    </VariableSizeList>*/}
-          {/*  )}*/}
-          {/*</AutoSizer>*/}
-          {/*  <AutoSizer disableWidth={true}>*/}
-          {/*    {({ height }) => {*/}
-          {/*      console.log("Autosizer: ", height)*/}
-          {/*      return(*/}
-          {/*  <ViewportList*/}
-
-          {/*    viewportRef={viewPortRef}*/}
-          {/*    items={viewPortItems}*/}
-          {/*    itemSize={Math.max(1, height / viewPortItems.length)}>*/}
-          {/*    {(item) => (*/}
-          {/*      <RowElement key={item.id} participant={item}/>*/}
-          {/*    )}*/}
-          {/*  </ViewportList>*/}
-          {/*      )}}*/}
-          {/*      </AutoSizer>*/}
-          {/*</div>*/}
           {viewPortItems.length > 0 &&
           <Virtuoso style={{overflowX: "hidden"}}
-            // ref={listRef}
-            // viewportRef={viewPortRef}
                     context={{isScrolling}}
                     isScrolling={setIsScrolling}
                     totalCount={viewPortItems.length}
@@ -864,10 +827,6 @@ const ParticipantPaneComponent: FC = () => {
                           >
                             <MemberComponent
                               participant={command}
-                              onCheck={onCheckParticipant(command)}
-                              isChecked={
-                                checkedParticipant && (checkedParticipant[command.id] || false)
-                              }
                               hideMeter={hideMeter}
                               hideMember={hideMember}
                               showAmount={showAmount}
@@ -900,10 +859,6 @@ const ParticipantPaneComponent: FC = () => {
                           >
                             <MemberComponent
                               participant={command}
-                              onCheck={onCheckParticipant(command)}
-                              isChecked={
-                                checkedParticipant && (checkedParticipant[command.id] || false)
-                              }
                               hideMeter={hideMeter}
                               hideMember={hideMember}
                               showAmount={showAmount}
@@ -1032,51 +987,28 @@ const ParticipantPaneComponent: FC = () => {
                           {"EXCEL"}
                         </IonButton>
                       </div>
-                      <IonButton
-                        expand="block"
-                        disabled={activePeriod === undefined || !previewValid}
-                        onClick={() => openBillingCheck('billing', documentDateBilling.current)}
-                      >{`ABRECHNUNG DURCHFÜHREN (${billingInfo.length})`}</IonButton>
+                      {previewOnly
+                        ? <div>Bei Peer-to-Peer und Eigenversorgung erstellt eegFaktura nur eine Vorschau, keine
+                            endgültige Abrechnung.</div>
+                        : <IonButton
+                          expand="block"
+                          disabled={activePeriod === undefined || !previewValid}
+                          onClick={() => openBillingCheck('billing', documentDateBilling.current)}
+                        >{`ABRECHNUNG DURCHFÜHREN (${billingInfo.length})`}</IonButton>}
                     </>
                   )}
                   {!billingRunIsFetching && billingRunStatus === "DONE" && (
                     <>
+                      {/* the send state is shown on the send button („Bereits versendet (…)“) */}
                       <div>
-                        {billingRun.mailStatus === "SENT"
-                          ? "Versand gestartet (" +
-                          reformatDateTimeStamp(
-                            billingRun.mailStatusDateTime
-                          ) +
-                          ")"
-                          : "Abgerechnet (" +
+                        {"Abgerechnet (" +
                           reformatDateTimeStamp(
                             billingRun.runStatusDateTime
                           ) +
                           ")"}
                       </div>
                       <div>
-                        <IonButton id="confirm-send">
-                          <IonIcon slot="end" icon={mailOutline}></IonIcon>
-                          {"SENDEN"}
-                        </IonButton>
-                        <IonAlert
-                          header="SENDEN"
-                          subHeader="Mit Klick auf OK versenden Sie alle Abrechnungsdokumente per E-Mail."
-                          trigger="confirm-send"
-                          buttons={[
-                            {
-                              text: "Abbrechen",
-                              role: "cancel",
-                            },
-                            {
-                              text: "OK",
-                              role: "confirm",
-                              handler: () => {
-                                sendBilling(billingRun.id);
-                              },
-                            },
-                          ]}
-                        ></IonAlert>
+                        <BillingSendButton tenant={tenant} run={billingRun} documentCount={documentCount(totals)}/>
                         <IonButton
                           onClick={() => exportBillingArchive(billingRun.id)}
                         >
@@ -1113,6 +1045,7 @@ const ParticipantPaneComponent: FC = () => {
               <SlideButtonComponent
                 checked={showAmount}
                 disabled={!billingEnabled}
+                title={billingSwitchTitle}
                 setChecked={(c) => activateBilling(c)}
               ></SlideButtonComponent>
             </div>
@@ -1128,8 +1061,9 @@ const ParticipantPaneComponent: FC = () => {
                   buttons={[
                     {
                       icon: <IonIcon slot="icon-only" icon={person}></IonIcon>,
+                      title: "Nur Mitglieder (Zählpunkte einklappen)",
                     },
-                    {icon: <IonIcon slot="icon-only" icon={flash}></IonIcon>},
+                    {icon: <IonIcon slot="icon-only" icon={flash}></IonIcon>, title: "Nur Zählpunkte"},
                   ]}
                   onChange={toggleMembersMeter}
                 />
@@ -1141,9 +1075,11 @@ const ParticipantPaneComponent: FC = () => {
                       icon: (
                         <IonIcon slot="icon-only" icon={eegSolar}></IonIcon>
                       ),
+                      title: "Nur Erzeuger",
                     },
                     {
                       icon: <IonIcon slot="icon-only" icon={eegPlug}></IonIcon>,
+                      title: "Nur Verbraucher",
                     },
                   ]}
                   onChange={toggleMetering}

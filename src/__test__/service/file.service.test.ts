@@ -2,7 +2,7 @@ import {describe, it, expect, vi, beforeEach, afterEach} from "vitest";
 import {FileService} from "../../service/file.service";
 import {AuthService} from "../../service/auth.service";
 
-const authService = {getToken: async () => "token"} as unknown as AuthService;
+const authService = {lookupToken: async () => "token"} as unknown as AuthService;
 const fetchMock = vi.fn();
 
 const reply = (body: any) => ({ok: true, status: 200, json: async () => body});
@@ -52,5 +52,35 @@ describe("FileService.uploadContractDocuments", () => {
     fetchMock.mockResolvedValueOnce(reply({data: null, errors: [{message: "Forbidden"}]}));
     await expect(new FileService(authService).uploadContractDocuments("TE1", "p1", [file("a.pdf")]))
       .rejects.toThrow("a.pdf: Forbidden");
+  });
+});
+
+describe("FileService.deleteContractDocuments (261005-ca3)", () => {
+  beforeEach(() => {
+    fetchMock.mockReset();
+    vi.stubGlobal("fetch", fetchMock);
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  const del = () => new FileService(authService).deleteContractDocuments("TE1", "f1")
+
+  it("resolves when the filestore deleted the file", async () => {
+    fetchMock.mockResolvedValueOnce(reply({data: {deleteFile: {}}}));
+    await expect(del()).resolves.toBeDefined();
+  });
+
+  it("rejects on an HTTP error, so the file stays in the list", async () => {
+    fetchMock.mockResolvedValueOnce({ok: false, status: 500, statusText: "Internal Server Error", text: async () => "boom"});
+    await expect(del()).rejects.toThrow("Internal Server Error");
+  });
+
+  it("rejects on GraphQL errors", async () => {
+    fetchMock.mockResolvedValueOnce(reply({data: null, errors: [{message: "Forbidden"}]}));
+    await expect(del()).rejects.toThrow("Forbidden");
+  });
+
+  it("rejects with the DeleteFileError message", async () => {
+    fetchMock.mockResolvedValueOnce(reply({data: {deleteFile: {message: "Unable to find file with id f1"}}}));
+    await expect(del()).rejects.toThrow("Unable to find file with id f1");
   });
 });
