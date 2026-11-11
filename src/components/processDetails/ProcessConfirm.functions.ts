@@ -37,7 +37,7 @@ export const REVOKE_REASON_MAX = 50
 // the reason as the backend sends it: format characters (U+200B, U+FEFF, U+202E …) and what XML 1.0 does not allow
 // are dropped, control characters and runs of white space become one space, ends trimmed
 export const cleanRevokeReason = (raw?: string) => (raw ?? "")
-  .replace(/[\p{Cf}￾￿\uD800-\uDFFF]/gu, "")
+  .replace(/[\p{Cf}\uFFFE\uFFFF\uD800-\uDFFF]/gu, "")
   .replace(/[\u0000-\u001f\u007f-\u009f\s]+/g, " ")
   .trim()
 
