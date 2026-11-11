@@ -1,4 +1,4 @@
-import {afterEach, describe, expect, it, vi} from "vitest";
+import {afterEach, describe, expect, it, onTestFinished, vi} from "vitest";
 import {act, cleanup, screen} from "@testing-library/react";
 import React from "react";
 import {MemoryRouter} from "react-router";
@@ -9,6 +9,8 @@ import {Eeg} from "../../models/eeg.model";
 import {EegParticipant} from "../../models/members.model";
 import {fetchEegModel, selectTenant} from "../../store/eeg";
 import {fetchParticipantModel} from "../../store/participant";
+import {fetchBillingRun} from "../../store/billingRun";
+import {Api} from "../../service";
 import {ParticipantContext} from "../../store/hook/ParticipantProvider";
 import {MemberViewContext} from "../../store/hook/MemberViewProvider";
 
@@ -34,7 +36,8 @@ import EegOverviewComponent from "../../components/dashboard/EegOverview.compone
 import EnergyOverviewComponent from "../../components/dashboard/EnergyOverview.component";
 import {PieSeriesType} from "../../pages/Dashboard.page";
 
-// platform#229: no billing for P2P and EVA on the EEG page, in the member list and on the dashboard
+// platform#255: P2P and EVA have billing on the EEG page, in the member list and on the dashboard like the other types;
+// in the member list a preview only, no final run (until platform#255 all hidden, platform#229)
 const TENANT = "PP100100"
 const eegOf = (area: string) => ({id: TENANT, name: "Test", rcNumber: TENANT, area, allocationMode: "DYNAMIC",
   settlementInterval: "MONTHLY", online: true, address: {}, contact: {}, accountInfo: {}, optionals: {}} as unknown as Eeg)
@@ -45,10 +48,10 @@ const member = {id: "001", firstname: "Anna", lastname: "Muster", businessRole: 
   participantNumber: "001", meters: [{meteringPoint: "AT0030000000000000000000000000001", direction: "CONSUMPTION",
     status: "ACTIVE", processState: "ACTIVE"}]} as unknown as EegParticipant
 
-describe("no billing for P2P and EVA (platform#229): pages", () => {
+describe("P2P and EVA have the billing functions (platform#255): pages", () => {
   afterEach(() => cleanup())
 
-  it.each([["P2P", false], ["LOCAL", true]])("EEG page of %s: interval and billing settings shown = %s", (area, shown) => {
+  it.each([["P2P", true], ["LOCAL", true]])("EEG page of %s: interval and billing settings shown = %s", (area, shown) => {
     const r = renderWithProviders(<MemoryRouter><EegContext.Provider value={ctx(area)}><EegPage/></EegContext.Provider></MemoryRouter>)
     act(() => {
       r.store.dispatch(selectTenant(TENANT))
@@ -74,7 +77,7 @@ describe("no billing for P2P and EVA (platform#229): pages", () => {
   })
 
   // eegfaktura-dev#56 #13: the creditor ID serves direct debit only; the bank account stays
-  it.each([["P2P", false], ["EVA", false], ["LOCAL", true]])("EEG page of %s: creditor ID shown = %s", (area, shown) => {
+  it.each([["P2P", true], ["EVA", true], ["LOCAL", true]])("EEG page of %s: creditor ID shown = %s", (area, shown) => {
     const r = renderWithProviders(<MemoryRouter><EegContext.Provider value={ctx(area)}><EegPage/></EegContext.Provider></MemoryRouter>)
     act(() => {
       r.store.dispatch(selectTenant(TENANT))
@@ -98,7 +101,7 @@ describe("no billing for P2P and EVA (platform#229): pages", () => {
     expect(zone.readonly).toBe(true)
   })
 
-  it.each([["EVA", false], ["LOCAL", true]])("member list of %s: billing switch and footer shown = %s", (area, shown) => {
+  it.each([["EVA", true], ["LOCAL", true]])("member list of %s: billing switch and footer shown = %s", (area, shown) => {
     const r = renderWithProviders(
       <EegContext.Provider value={ctx(area)}>
         <ParticipantContext.Provider value={{participants: [member], allParticipants: [member], billingEnabled: true,
@@ -116,7 +119,33 @@ describe("no billing for P2P and EVA (platform#229): pages", () => {
     expect(!!screen.queryByText(/Saldo Zahlungen/)).toBe(shown)
   })
 
-  it.each([["P2P", false], ["GEA", true]])("dashboard of %s: tariff block shown = %s", (area, shown) => {
+  it.each([["P2P", false], ["EVA", false], ["LOCAL", true]])("member list of %s after a preview: final run offered = %s", (area, finalRun) => {
+    const eegService = Api.eegService
+    Api.eegService = {fetchBillingDocuments: vi.fn().mockResolvedValue([])} as unknown as typeof Api.eegService
+    onTestFinished(() => { Api.eegService = eegService })
+    const r = renderWithProviders(
+      <EegContext.Provider value={ctx(area)}>
+        <ParticipantContext.Provider value={{participants: [member], allParticipants: [member], billingEnabled: true,
+          unsaved: {}, setUnsaved: vi.fn(), setBillingEnabled: vi.fn(), setShowAddMeterPane: vi.fn(),
+          showDetailsPage: vi.fn(), reloadEnergyReport: vi.fn()} as any}>
+          <MemberViewContext.Provider value={{showAmount: true, toggleShowAmount: vi.fn(), toggleMembersMeter: vi.fn(),
+            toggleMetering: vi.fn(), hideMeter: false, hideMember: false, hideConsumers: false, hideProducers: false} as any}>
+            <ParticipantPaneComponent/>
+          </MemberViewContext.Provider>
+        </ParticipantContext.Provider>
+      </EegContext.Provider>)
+    act(() => {
+      r.store.dispatch(fetchParticipantModel.fulfilled({participants: [member]}, "req", {tenant: TENANT}))
+      r.store.dispatch(fetchBillingRun.fulfilled({billingRunList: [{id: "run1", runStatus: "NEW",
+        runStatusDateTime: "2026-11-11T10:00:00"} as any]}, "req",
+        {tenant: TENANT, clearingPeriodType: "MRP", clearingPeriodIdentifier: "2026-10"}))
+    })
+    expect(screen.getByText(/Vorschau \(/)).toBeTruthy()
+    expect(!!screen.queryByText(/ABRECHNUNG DURCHFÜHREN/)).toBe(finalRun)
+    expect(!!screen.queryByText(/erstellt eegFaktura nur eine Vorschau/)).toBe(!finalRun)
+  })
+
+  it.each([["P2P", true], ["GEA", true]])("dashboard of %s: tariff block shown = %s", (area, shown) => {
     renderWithProviders(<EegContext.Provider value={ctx(area)}>
       <EegOverviewComponent rateMap={{}}/></EegContext.Provider>)
     expect(screen.getByText("Übersicht EEG")).toBeTruthy()
@@ -124,7 +153,7 @@ describe("no billing for P2P and EVA (platform#229): pages", () => {
   })
 
   // both count only metering points with a tariff: without billing they would always read 0 kWh
-  it.each([["EVA", false], ["LOCAL", true]])("dashboard of %s: bought/sold and the hint on metering points without a tariff shown = %s",
+  it.each([["EVA", true], ["LOCAL", true]])("dashboard of %s: bought/sold and the hint on metering points without a tariff shown = %s",
     (area, shown) => {
       const series = {name: "", value: 0, fill: ""} as PieSeriesType
       renderWithProviders(<EegContext.Provider value={ctx(area)}>

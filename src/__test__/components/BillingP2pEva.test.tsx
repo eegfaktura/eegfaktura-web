@@ -37,8 +37,8 @@ const RegisterForm: React.FC = () => {
   </FormProvider>
 }
 
-// Peer-to-peer and self-supply have no billing in eegfaktura (platform#229): web hides tariffs, billing, invoices and
-// the joining fee, for admins and members. The other types keep them.
+// Peer-to-peer and self-supply get every billing function like the other types (platform#255; until then hidden,
+// platform#229): tariffs, billing, invoices, joining fee, for admins and members. Only the final run is missing.
 const ctx = (area: string, admin = false) => ({
   tenant: "RC100100",
   eeg: {name: "Test", area, allocationMode: "DYNAMIC", online: true} as unknown as Eeg,
@@ -57,27 +57,20 @@ const participant = {
   meters: [{meteringPoint: "AT0030000000000000000000000000001", direction: "CONSUMPTION", status: "ACTIVE", processState: "ACTIVE"}],
 } as unknown as EegParticipant
 
-describe("no billing for P2P and EVA (platform#229)", () => {
+describe("P2P and EVA have the billing functions (platform#255)", () => {
   afterEach(() => cleanup())
 
-  it.each(["P2P", "EVA"])("the menu has no „Tarife“ for %s, also for members", (area) => {
-    renderWithProviders(withEeg(area, <Menu/>))
-    expect(screen.queryByText("Tarife")).toBeNull()
-    expect(screen.getByText("Mitglieder")).toBeTruthy()
-  })
-
-  it.each(["LOCAL", "BEG"])("the menu keeps „Tarife“ for %s", (area) => {
+  it.each(["P2P", "EVA", "LOCAL", "BEG"])("the menu has „Tarife“ for %s, also for members", (area) => {
     renderWithProviders(withEeg(area, <Menu/>))
     expect(screen.getByText("Tarife")).toBeTruthy()
   })
 
-  it("a direct URL to the tariffs offers no tariff action", () => {
-    const {container} = renderWithProviders(withEeg("P2P", <RatesPage/>))
-    expect(screen.getByText("Für Peer-to-Peer und Eigenversorgung ist in eegfaktura keine Abrechnung vorgesehen.")).toBeTruthy()
-    expect(container.querySelector(".ratePane")).toBeNull()
+  it("the tariffs page of P2P is the normal page, no „no billing“ text", () => {
+    renderWithProviders(withEeg("P2P", <RatesPage/>))
+    expect(screen.queryByText(/keine Abrechnung vorgesehen/)).toBeNull()
   })
 
-  it.each([["P2P", false], ["LOCAL", true]])("member details of %s: tariff, joining fee and direct debit shown = %s", (area, shown) => {
+  it.each([["P2P", true], ["LOCAL", true]])("member details of %s: tariff, joining fee and direct debit shown = %s", (area, shown) => {
     const {container} = renderWithProviders(withEeg(area,
       <ParticipantContext.Provider value={{setUnsaved: vi.fn()} as any}>
         <MemberFormComponent participant={participant} rates={[]} formId="" onSubmit={vi.fn()}
@@ -88,7 +81,7 @@ describe("no billing for P2P and EVA (platform#229)", () => {
     expect(!!container.querySelector('ion-select[label="Einzugsart"]')).toBe(shown)
   })
 
-  it.each([["EVA", false], ["LOCAL", true]])("new member of %s: direct debit shown and IBAN required = %s", async (area, shown) => {
+  it.each([["EVA", true], ["LOCAL", true]])("new member of %s: direct debit shown and IBAN required = %s", async (area, shown) => {
     const {container} = renderWithProviders(withEeg(area, <RegisterForm/>))
     expect(!!container.querySelector('ion-select[label="Einzugsart"]')).toBe(shown)
     await act(async () => { screen.getByText("prüfen").click() })
@@ -96,14 +89,14 @@ describe("no billing for P2P and EVA (platform#229)", () => {
     expect(iban.helperText === "IBAN fehlt").toBe(shown)
   })
 
-  it.each([["EVA", false], ["GEA", true]])("metering point of %s: tariff shown = %s", (area, shown) => {
+  it.each([["EVA", true], ["GEA", true]])("metering point of %s: tariff shown = %s", (area, shown) => {
     const {container} = renderWithReactHookForm(
       <EegContext.Provider value={ctx(area, true)}><MeterFormElement rates={[]}/></EegContext.Provider>,
       {defaultValues: {status: "INIT", processState: "NEW", direction: "CONSUMPTION"} as Metering})
     expect(!!container.querySelector('ion-select[label="Tarif"]')).toBe(shown)
   })
 
-  it.each([["P2P", false], ["REGIONAL", true]])("member pane of %s: „Meine Rechnungen“ shown = %s", (area, shown) => {
+  it.each([["P2P", true], ["REGIONAL", true]])("member pane of %s: „Meine Rechnungen“ shown = %s", (area, shown) => {
     const r = renderWithProviders(withEeg(area,
       <ParticipantContext.Provider value={{unsaved: {}, setUnsaved: vi.fn()} as any}>
         <ParticipantDetailsPaneComponent/>

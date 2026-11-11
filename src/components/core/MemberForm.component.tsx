@@ -12,7 +12,7 @@ import DatePickerCoreElement from "./elements/DatePickerCore.element";
 import {IbanInputForm} from "../form/IbanInputForm";
 import {PhoneInputForm} from "../form/PhoneInputForm";
 import {useLocale} from "../../store/hook/useLocale";
-import {useAccessGroups, useHasBilling, useTenant} from "../../store/hook/Eeg.provider";
+import {useAccessGroups, useTenant} from "../../store/hook/Eeg.provider";
 import {usePersistBusinessTypeMutation} from "../../store/participant/api";
 import DatePickerFormElement from "../form/DatePickerForm.element";
 import {DebitExtensionComponent} from "./DebitExtensionComponent";
@@ -46,7 +46,6 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
 
   const [persistBusinessType] = usePersistBusinessTypeMutation()
   const {tenant} = useTenant()
-  const billing = useHasBilling()
 
   const formMethods = useForm({
     defaultValues: participant, mode: "all"})
@@ -164,8 +163,8 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
             )
           }
           {/* member tariff and joining fee belong to billing: none for P2P, EVA (platform#229) */}
-          {billing && <SelectForm name={"tariffId"} label={t("participant_tariff")} control={control} options={getRatesOption()} onChangePartial={onUpdateBaseData}/>}
-          {billing && tenant && isAdmin() && <JoiningFeeMember tenant={tenant} participantId={participant.id}
+          <SelectForm name={"tariffId"} label={t("participant_tariff")} control={control} options={getRatesOption()} onChangePartial={onUpdateBaseData}/>
+          {tenant && isAdmin() && <JoiningFeeMember tenant={tenant} participantId={participant.id}
                                                     tariff={rates.find(r => r.id === tariffId)}
                                                     feeInUse={rates.some(hasJoiningFee)}
                                                     track={call => saveStatus.save("joiningFee", call)}/>}
@@ -187,11 +186,10 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
         <IonList>
           <IonListHeader>Bankdaten</IonListHeader>
           <IbanInputForm name={"accountInfo.iban"} control={control} onChangePartial={onUpdateBaseData} error={errors.accountInfo?.iban}
-                         required={billing && isDirectDebit(sepaMode)}/>
+                         required={isDirectDebit(sepaMode)}/>
           <InputForm name={"accountInfo.owner"} label={t("account.owner")} control={control} type="text" onChangePartial={onUpdateBaseData}/>
 
-          {/* direct debit belongs to billing: none for P2P, EVA; the stored values stay (platform#229) */}
-          {billing && <DebitExtensionComponent onUpdateBaseData={onUpdateBaseData}/>}
+          <DebitExtensionComponent onUpdateBaseData={onUpdateBaseData}/>
 
           {/*<SelectForm name={"accountInfo.sepaDirectDebit"} label={t("account.sepaDirectDebit")} control={control} options={getDebitOptions()} onChangePartial={onUpdateBaseData}/>*/}
           {/*{sepaMode !== 'NONE' &&*/}

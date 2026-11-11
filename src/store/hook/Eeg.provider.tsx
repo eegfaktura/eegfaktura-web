@@ -12,7 +12,7 @@ import {firstOpenPeriod} from "../../util/SettlementInterval.util";
 import {useSelector} from "react-redux";
 import {useAuth} from "react-oidc-context";
 import {useGetUserQuery, useLazyGetUserQuery, userApi} from "../user/userApi";
-import {hasBilling} from "../../util/Area.util";
+import {isPreviewOnly} from "../../util/Area.util";
 
 
 export interface EegState {
@@ -163,11 +163,9 @@ export const EegProvider: FC<{ children: ReactNode }> = ({children}) => {
       loadedTenant.current = activeTenant;
       (await Promise.all([
         getUser(),
-        // tariffs only for a community with billing, decided by the type this request loaded (platform#229); after a
-        // failed EEG load as before. Only for the load started last: a late answer of the previous community asks nothing.
-        dispatch(fetchEegModel({tenant: activeTenant})).then(r =>
-          seq === loadSeq.current && (!fetchEegModel.fulfilled.match(r) || hasBilling(r.payload.eeg?.area))
-            ? dispatch(fetchRatesModel({tenant: activeTenant})) : undefined),
+        // tariffs after the EEG, only for the load started last: a late answer of the previous community asks nothing
+        dispatch(fetchEegModel({tenant: activeTenant})).then(() =>
+          seq === loadSeq.current ? dispatch(fetchRatesModel({tenant: activeTenant})) : undefined),
         dispatch(fetchParticipantModel({tenant: activeTenant})),
       ]).then(() => {
         const eeg = eegSelector(store.getState())
@@ -219,10 +217,10 @@ export const useEegArea = () => {
   return eeg?.area
 }
 
-// a boolean, so it can be a hook dependency (platform#229)
-export const useHasBilling = () => {
+// a boolean, so it can be a hook dependency (platform#255)
+export const usePreviewOnly = () => {
   const {eeg} = useContext(EegContext)
-  return hasBilling(eeg?.area)
+  return isPreviewOnly(eeg?.area)
 }
 
 export const useEegAllocation = () => {

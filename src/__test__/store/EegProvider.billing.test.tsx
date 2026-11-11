@@ -44,15 +44,13 @@ describe("EegProvider: tariffs only with billing (platform#229)", () => {
     Api.participantService = participantService
   })
 
-  it("loads no tariffs for P2P, and loads them after a switch to a LOCAL community", async () => {
+  it("loads the tariffs for P2P as well (platform#255), and again after a switch", async () => {
     renderWithProviders(<EegProvider><SwitchButton to="RC100100"/></EegProvider>)
-    await waitFor(() => expect(fetchEeg).toHaveBeenCalledWith("PP100100", undefined))
-    await flush()
-    expect(fetchRates).not.toHaveBeenCalled()
+    await waitFor(() => expect(fetchRates).toHaveBeenCalledWith("PP100100", undefined))
 
     fireEvent.click(screen.getByText("wechseln"))
-    await waitFor(() => expect(fetchRates).toHaveBeenCalledTimes(1))
-    expect(fetchRates.mock.calls[0][0]).toBe("RC100100")
+    await waitFor(() => expect(fetchRates).toHaveBeenCalledTimes(2))
+    expect(fetchRates.mock.calls[1][0]).toBe("RC100100")
   })
 
   it("a failed EEG load loads the tariffs as before; the previous community's tariffs do not stay", async () => {
