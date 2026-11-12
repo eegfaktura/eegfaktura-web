@@ -7,7 +7,7 @@ describe("MemberSortPopover (platform#214)", () => {
   it("offers the sorts without 'Standard', the action toggle and German buttons", () => {
     render(<MemberSortPopover memberSort="participantNumber" actionFirst={true} onApply={vi.fn()} onDismiss={vi.fn()}/>)
     for (const label of ["Mitgliedsnummer", "Nachname", "Vorname", "Mitglied seit (neueste zuerst)",
-      "Mitglied seit (älteste zuerst)", "Aktiviert seit (neueste zuerst)", "Einzugsart", "Ort",
+      "Mitglied seit (älteste zuerst)", "Aktiv ab (neueste zuerst)", "Einzugsart", "Ort",
       "Mitglieder mit nötiger Aktion oben", "Abbrechen", "Übernehmen"]) {
       expect(screen.getByText(label)).toBeTruthy()
     }

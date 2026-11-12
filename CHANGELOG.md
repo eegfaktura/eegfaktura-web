@@ -8,6 +8,11 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **„Aktiv seit“ of a metering point is now „Aktiv ab“** (platform#257), also in the member list sort „Aktiv ab
+  (neueste zuerst)“ (was „Aktiviert seit“). „seit“ reads wrong for a date in the future, which is common when a metering
+  point is added. Text only; the field and its value are unchanged.
+
 ### Fixed
 - **„Datenfreigabe aufheben“: the optional „Begründung“ reaches the grid operator** (revoke reason, 2026-10-30). The
   field was never read: the request always went out without a reason. It is now sent as `reason`, cleaned as the
