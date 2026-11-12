@@ -21,9 +21,10 @@ export function PhoneInputForm<T extends object>({setValue, ...props} : PhoneInp
     },
   });
 
+  // Plain text only: the first clipboard item can be RTF or HTML (see MeterForm.element.tsx)
   const handlePhonePaste = (e: ClipboardEvent<HTMLIonInputElement>) => {
-    e.persist()
-    e.clipboardData.items[0].getAsString(text=>{
+    const text = e.clipboardData.getData("text/plain")
+    setTimeout(() => {
       setValue(props.name, text)
       // setValue(props.name, text.replace(/\+/gi, "00").replace(/\s/gi,""))
       // console.log("Clipboard-Text: ", text, text.replace(/\+/gi, "00").replace(/\s/gi,""))

@@ -79,12 +79,11 @@ const MeterFormElement: FC<MeterFormElementProps> = ({rates, participant, meterR
     }
   }
 
+  // Plain text only: the first clipboard item can be RTF or HTML (copied from a PDF viewer or Word), depending on the
+  // browser and the source program. The value is set after the browser's own paste, as before.
   const handleMeterPaste = (e: ClipboardEvent<HTMLIonInputElement>) => {
-
-    e.persist()
-    e.clipboardData.items[0].getAsString(text => {
-      setValue && setValue("meteringPoint", text.replace(/[-_]/gi, "").replace(/\s/gi, ""))
-    })
+    const text = e.clipboardData.getData("text/plain")
+    setTimeout(() => setValue && setValue("meteringPoint", text.replace(/[-_]/gi, "").replace(/\s/gi, "")))
     e.stopPropagation()
   }
 

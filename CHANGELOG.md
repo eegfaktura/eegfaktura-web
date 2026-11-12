@@ -9,6 +9,10 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Fixed
+- **Pasting into „Zählpunkt“ and „Telefon“ inserted RTF instead of the text** (`{tf1nsi…`). Both fields took
+  the first item of the clipboard, which is RTF or HTML when copying from a PDF viewer or Word, depending on the
+  browser. They now take the plain text, as every other field does; spaces, `-` and `_` are still removed from the
+  metering point number.
 - **„Datenfreigabe aufheben“: the optional „Begründung“ reaches the grid operator** (revoke reason, 2026-10-30). The
   field was never read: the request always went out without a reason. It is now sent as `reason`, cleaned as the
   backend cleans it (format characters such as soft hyphens and zero-width spaces and characters XML does not allow are
