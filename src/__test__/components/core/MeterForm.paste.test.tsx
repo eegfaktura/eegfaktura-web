@@ -6,8 +6,6 @@ import MeterFormElement from "../../../components/core/MeterForm.element";
 import {Metering} from "../../../models/meteringpoint.model";
 import {EegContext, EegState} from "../../../store/hook/Eeg.provider";
 import {Eeg} from "../../../models/eeg.model";
-import {PhoneInputForm} from "../../../components/form/PhoneInputForm";
-import {useFormContext} from "react-hook-form";
 
 const RTF = "{\\rtf1\\ansi\\ansicpg1252\\uc1\\deff0{\\fonttbl{\\f0 Arial;}} AT 003000 0000000000000000000012345}"
 
@@ -34,35 +32,34 @@ const ctxValue = {
 
 const valueOf = (el: Element | null) => (el as unknown as {value?: string} | null)?.value
 
-describe("paste takes the plain text, not the first clipboard item", () => {
+const renderMeter = (meteringPoint: string) => renderWithReactHookForm(
+  <EegContext.Provider value={ctxValue}>
+    <MeterFormElement rates={[]}/>
+  </EegContext.Provider>, {defaultValues: {
+    status: 'INIT', processState: 'NEW', participantId: "", meteringPoint, direction: "CONSUMPTION"
+  } as Metering})
+
+const meterInput = (container: HTMLElement) => waitFor(() => {
+  const el = container.querySelector('ion-input[name=meteringPoint]')
+  expect(el).not.toBeNull()
+  return el!
+})
+
+// platform#256: the phone field has no paste handling of its own any more; the browser pastes plain text itself
+describe("metering point: paste takes the plain text, not the first clipboard item", () => {
   it("metering point: RTF first in the clipboard → plain number without spaces", async () => {
-    const {container} = renderWithReactHookForm(
-      <EegContext.Provider value={ctxValue}>
-        <MeterFormElement rates={[]}/>
-      </EegContext.Provider>, {defaultValues: {
-        status: 'INIT', processState: 'NEW', participantId: "", meteringPoint: "", direction: "CONSUMPTION"
-      } as Metering})
-    const input = await waitFor(() => {
-      const el = container.querySelector('ion-input[name=meteringPoint]')
-      expect(el).not.toBeNull()
-      return el!
-    })
+    const {container} = renderMeter("")
+    const input = await meterInput(container)
     fireEvent.paste(input, {clipboardData: clipboard("AT 003000 0000000000000000000012345")})
     await waitFor(() => expect(valueOf(input)).toBe("AT0030000000000000000000000012345"))
   });
 
-  it("phone: RTF first in the clipboard → the plain text", async () => {
-    const Phone = () => {
-      const {control, setValue} = useFormContext()
-      return <PhoneInputForm name="phone" control={control} setValue={setValue}/>
-    }
-    const {container} = renderWithReactHookForm(<Phone/>, {defaultValues: {phone: ""}})
-    const input = await waitFor(() => {
-      const el = container.querySelector('ion-input[name=phone]')
-      expect(el).not.toBeNull()
-      return el!
-    })
-    fireEvent.paste(input, {clipboardData: clipboard("+43 664 1234567")})
-    await waitFor(() => expect(valueOf(input)).toBe("+43 664 1234567"))
+  it("metering point: a clipboard without text (an image, a file) leaves the field alone", async () => {
+    const {container} = renderMeter("AT0030000000000000000000000012345")
+    const input = await meterInput(container)
+    fireEvent.paste(input, {clipboardData: {items: [{kind: "file", type: "image/png", getAsString: () => {}}],
+      types: ["Files"], getData: () => ""}})
+    await new Promise(r => setTimeout(r, 20))
+    expect(valueOf(input)).toBe("AT0030000000000000000000000012345")
   });
 });

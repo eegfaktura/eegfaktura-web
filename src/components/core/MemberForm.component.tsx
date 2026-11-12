@@ -171,7 +171,7 @@ const MemberFormComponent: FC<MemberFormComponentProps> = ({participant, rates, 
           <InputForm name={"billingAddress.streetNumber"} label="Hausnummer" control={control} type="text" onChangePartial={onUpdateBaseData}/>
           <InputForm name={"billingAddress.zip"} label={t("zip")} control={control} type="text" onChangePartial={onUpdateBaseData}/>
           <InputForm name={"billingAddress.city"} label={t("city")} control={control} type="text" onChangePartial={onUpdateBaseData}/>
-          <PhoneInputForm name={"contact.phone"} control={control} setValue={setValue} onChangePartial={onUpdateBaseData} error={errors.contact?.phone}/>
+          <PhoneInputForm name={"contact.phone"} control={control} onChangePartial={onUpdateBaseData} error={errors.contact?.phone}/>
           <InputForm name={"contact.email"} label={t("email")} control={control} rules={{
             required: t("warnings.email", {context: "missing"}),
             // validate on the normalized form — healable input (outer
