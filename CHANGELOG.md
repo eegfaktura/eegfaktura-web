@@ -18,7 +18,7 @@ this changelog highlights the changes relevant for overview and operations.
   point is added. Text only; the field and its value are unchanged.
 
 ### Fixed
-- **Pasting into „Zählpunkt“ and „Telefon“ inserted RTF instead of the text** (`{tf1nsi…`, platform#256). Both
+- **Pasting into „Zählpunkt“ and „Telefon“ inserted RTF instead of the text** (`{\rtf1\ansi…`, platform#256). Both
   fields took the first item of the clipboard, which is RTF or HTML when copying from a PDF viewer or Word, depending
   on the browser. „Zählpunkt“ now takes the plain text; spaces, `-` and `_` are still removed, the cleaned number is
   validated again, and a clipboard without text (an image, a file) no longer empties the field. „Telefon“ has no
