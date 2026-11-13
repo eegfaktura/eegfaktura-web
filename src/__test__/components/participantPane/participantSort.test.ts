@@ -184,7 +184,7 @@ describe("sortMembers: new sorts (platform#214)", () => {
   const since = (activeSince: string | undefined, direction = "CONSUMPTION") =>
     meter("ACTIVE", {direction, status: "ACTIVE", participantState: {activeSince} as unknown as Metering["participantState"]} as Partial<Metering>)
 
-  it("'Aktiviert seit': earliest active date of the metering points, newest first, none at the end", () => {
+  it("'Aktiv ab': earliest active date of the metering points, newest first, none at the end", () => {
     const list = [
       member("2022", {meters: [since("2024-03-01"), since("2022-06-01", "GENERATION")]}),
       member("none", {meters: [since(undefined)]}),
