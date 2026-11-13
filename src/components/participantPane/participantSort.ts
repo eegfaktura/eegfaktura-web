@@ -37,7 +37,7 @@ const byTime = (value: (p: EegParticipant) => number | undefined, newestFirst: b
   return newestFirst ? tb - ta : ta - tb
 }
 
-// The earliest "Aktiv seit" of the member's metering points, undefined when none has one.
+// The earliest "Aktiv ab" of the member's metering points, undefined when none has one.
 const firstActiveSince = (p: EegParticipant) => (p.meters ?? [])
   .map(m => time(m.participantState?.activeSince))
   .reduce<number | undefined>((min, t) => t === undefined || (min !== undefined && min <= t) ? min : t, undefined)
