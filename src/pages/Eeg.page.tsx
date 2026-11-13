@@ -224,7 +224,7 @@ const EegPage: FC = () => {
                   <InputFormComponent name={"contactPerson"} label={t("contact.person")} control={control}
                                       readonly={!isAdmin()}
                                       onChangePartial={onChangeField("contactPerson")}/>
-                  <PhoneInputForm name={"contact.phone"} control={control} readonly={!isAdmin()} setValue={setValue}
+                  <PhoneInputForm name={"contact.phone"} control={control} readonly={!isAdmin()}
                                   onChangePartial={onChangeField("phone")}/>
                   <InputFormComponent name={"contact.email"} label={t("email")} control={control}
                                       rules={{

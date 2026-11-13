@@ -9,6 +9,12 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Fixed
+- **Pasting into „Zählpunkt“ and „Telefon“ inserted RTF instead of the text** (`{tf1nsi…`, platform#256). Both
+  fields took the first item of the clipboard, which is RTF or HTML when copying from a PDF viewer or Word, depending
+  on the browser. „Zählpunkt“ now takes the plain text; spaces, `-` and `_` are still removed, the cleaned number is
+  validated again, and a clipboard without text (an image, a file) no longer empties the field. „Telefon“ has no
+  paste handling of its own any more: the browser pastes the plain text at the cursor, as in every other field (before,
+  the pasted text replaced the whole number, also in read-only fields).
 - **„Datenfreigabe aufheben“: the optional „Begründung“ reaches the grid operator** (revoke reason, 2026-10-30). The
   field was never read: the request always went out without a reason. It is now sent as `reason`, cleaned as the
   backend cleans it (format characters such as soft hyphens and zero-width spaces and characters XML does not allow are
