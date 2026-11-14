@@ -1,6 +1,6 @@
 import {describe, expect, it} from "vitest"
 import moment from "moment"
-import {chartHalfYearOptions, generatePeriodOptions, transformPeriodFromSegment} from "../../util/PeriodHelper.functions"
+import {chartHalfYearOptions, transformPeriodFromSegment} from "../../util/PeriodHelper.functions"
 import {periodDisplayString} from "../../util/Helper.util"
 import {EnergyService} from "../../service/energy.service"
 import {AuthService} from "../../service/auth.service"
@@ -10,25 +10,20 @@ import {SelectedPeriod} from "../../models/energy.model"
 const summer = (year: number): SelectedPeriod => ({type: 'YS', segment: 1, year})
 const winter = (year: number): SelectedPeriod => ({type: 'YS', segment: 2, year})
 const half = (year: number, segment: number): SelectedPeriod => ({type: 'YH', segment, year})
+const seasons = (endMonth: number, endYear: number, beginMonth: number, beginYear: number) =>
+  chartHalfYearOptions(endMonth, endYear, beginMonth, beginYear).filter(p => p.type === 'YS')
 
-describe("season options", () => {
-  it("all seasons that overlap the data range, newest first, winter across the year end", () => {
-    // data January to November 2026: winter 2025/26 (from January), summer 2026, winter 2026/27 (from October)
-    expect(generatePeriodOptions('YS', 11, 2026, 1, 2026)).toEqual([winter(2026), summer(2026), winter(2025)])
-  })
-
-  it("only the summer when the data lies within it", () => {
-    expect(generatePeriodOptions('YS', 8, 2026, 5, 2026)).toEqual([summer(2026)])
-  })
-
-  it("a winter is offered as soon as one of its months has data", () => {
-    expect(generatePeriodOptions('YS', 3, 2027, 10, 2026)).toEqual([winter(2026)])
-    expect(generatePeriodOptions('YS', 10, 2026, 9, 2026)).toEqual([winter(2026), summer(2026)])
-  })
-
-  it("the half-year list of the charts: half years and seasons by their first month, newest first", () => {
+describe("half-year list of the charts", () => {
+  it("half years and seasons by their first month, newest first", () => {
+    // data January to November 2026: winter 2025/26 (from January) up to winter 2026/27 (from October)
     expect(chartHalfYearOptions(11, 2026, 1, 2026))
       .toEqual([winter(2026), half(2026, 2), summer(2026), half(2026, 1), winter(2025)])
+  })
+
+  it("only the seasons that overlap the data range", () => {
+    expect(seasons(8, 2026, 5, 2026)).toEqual([summer(2026)])
+    expect(seasons(3, 2027, 10, 2026)).toEqual([winter(2026)])
+    expect(seasons(10, 2026, 9, 2026)).toEqual([winter(2026), summer(2026)])
   })
 })
 
@@ -53,11 +48,23 @@ describe("season date range for the energystore", () => {
   })
 })
 
-describe("switching from a season to the other types", () => {
-  it("like from its year", () => {
-    const date = moment("2026-07-15")
-    expect(transformPeriodFromSegment('YQ', summer(2026), date)).toEqual({type: 'YQ', segment: 3, year: 2026})
-    expect(transformPeriodFromSegment('YM', winter(2025), date)).toEqual({type: 'YM', segment: 12, year: 2025})
-    expect(transformPeriodFromSegment('Y', winter(2025), date)).toEqual({type: 'Y', segment: 0, year: 2025})
+describe("switching from a season to the other types stays within the season", () => {
+  it("today after the season: its last month", () => {
+    const today = moment("2026-11-14")
+    expect(transformPeriodFromSegment('YQ', summer(2026), today)).toEqual({type: 'YQ', segment: 3, year: 2026})
+    expect(transformPeriodFromSegment('YM', summer(2026), today)).toEqual({type: 'YM', segment: 9, year: 2026})
+    expect(transformPeriodFromSegment('YM', winter(2025), today)).toEqual({type: 'YM', segment: 3, year: 2026})
+    expect(transformPeriodFromSegment('Y', winter(2025), today)).toEqual({type: 'Y', segment: 0, year: 2026})
+  })
+
+  it("today within the season: the current month, also after the year end", () => {
+    const today = moment("2027-02-10")
+    expect(transformPeriodFromSegment('YM', winter(2026), today)).toEqual({type: 'YM', segment: 2, year: 2027})
+    expect(transformPeriodFromSegment('YQ', winter(2026), today)).toEqual({type: 'YQ', segment: 1, year: 2027})
+  })
+
+  it("today before the season: its first month", () => {
+    expect(transformPeriodFromSegment('YM', summer(2027), moment("2027-02-10")))
+      .toEqual({type: 'YM', segment: 4, year: 2027})
   })
 })

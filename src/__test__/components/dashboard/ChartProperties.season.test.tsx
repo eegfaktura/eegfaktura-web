@@ -1,11 +1,12 @@
 import {describe, expect, it, vi} from "vitest"
-import {fireEvent, render} from "@testing-library/react"
+import {fireEvent, render, screen} from "@testing-library/react"
 import ChartProperties from "../../../components/dashboard/ChartProperties.component"
 
 const periods = {begin: "01.01.2026 00:00:00", end: "31.10.2026 23:45:00"}
 
-// the select of the row "Halbjahr": the second row, after "Jahr"
-const halfYearSelect = () => document.querySelectorAll("ion-select")[1] as HTMLElement
+// the row "Halbjahr", found by its label
+const halfYearRow = () => screen.getByText("Halbjahr").closest("ion-row") as HTMLElement
+const halfYearSelect = () => halfYearRow().querySelector("ion-select") as HTMLElement & {value?: string}
 
 describe("ChartProperties – summer and winter in the row \"Halbjahr\" (platform#258)", () => {
   it("the half-year list holds the seasons of the data range, by their first month", () => {
@@ -23,8 +24,7 @@ describe("ChartProperties – summer and winter in the row \"Halbjahr\" (platfor
 
   it("a selected season marks the row \"Halbjahr\" and stays chosen in its list", () => {
     render(<ChartProperties selectedPeriod={{type: "YS", year: 2025, segment: 2}} periods={periods} onDismiss={vi.fn()}/>)
-    const select = halfYearSelect() as any
-    expect(select.value ?? select.getAttribute("value")).toBe("YS_2_2025")
-    expect(select.closest("ion-row")?.classList.contains("selected")).toBe(true)
+    expect(halfYearSelect().value).toBe("YS_2_2025")
+    expect(halfYearRow().classList.contains("selected")).toBe(true)
   })
 })

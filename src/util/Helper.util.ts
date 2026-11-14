@@ -49,15 +49,22 @@ export const determinePeriodEnd = (period: SelectedPeriod) => {
   }
 }
 
+// The months of a season ('YS', platform#258), 1-based: summer (segment 1) April to September of the year, winter (2)
+// October of the year to March of the next one. The one place that defines them: list, label and query window.
+export const seasonRange = (period: SelectedPeriod) => period.segment === 1
+  ? {startYear: period.year, startMonth: 4, endYear: period.year, endMonth: 9}
+  : {startYear: period.year, startMonth: 10, endYear: period.year + 1, endMonth: 3}
+
 export const periodDisplayString = (period: SelectedPeriod) => {
   switch (period.type) {
     case 'YH': return `${MONTHNAME[(period.segment*6)-5].substring(0, 3)}-${MONTHNAME[period.segment*6].substring(0, 3)} ${period.year}`
     case 'YQ': return `${MONTHNAME[(period.segment*3)-2].substring(0, 3)}-${MONTHNAME[period.segment*3].substring(0, 3)} ${period.year}`
     case 'YM': return `${MONTHNAME[period.segment]} ${period.year}`
     case 'Y' : return `${MONTHNAME[1].substring(0, 3)}-${MONTHNAME[12].substring(0, 3)} ${period.year}`
-    case 'YS': return period.segment === 1
-      ? `${MONTHNAME[4].substring(0, 3)}-${MONTHNAME[9].substring(0, 3)} ${period.year}`
-      : `${MONTHNAME[10].substring(0, 3)} ${period.year}-${MONTHNAME[3].substring(0, 3)} ${period.year + 1}`
+    case 'YS': {
+      const r = seasonRange(period)
+      return `${MONTHNAME[r.startMonth].substring(0, 3)}${r.startYear !== r.endYear ? ' ' + r.startYear : ''}-${MONTHNAME[r.endMonth].substring(0, 3)} ${r.endYear}`
+    }
     case 'D' : {
       const d = dayOfYearToDate(period.year, period.segment)
       return toLocalISODate(d)
