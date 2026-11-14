@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.25.0] – 2026-11-14
+
 ### Added
 - **Dashboard charts: summer and winter as period** (platform#258). In the period popover of „Lastverlauf“ and
   „Tagesverlauf“ the list „Halbjahr“ also offers summer (01.04.–30.09., „Apr-Sep 2026“) and winter (01.10.–31.03.
