@@ -1,14 +1,15 @@
 import {describe, expect, it} from "vitest"
 import moment from "moment"
-import {generatePeriodOptions, transformPeriodFromSegment} from "../../util/PeriodHelper.functions"
+import {chartHalfYearOptions, generatePeriodOptions, transformPeriodFromSegment} from "../../util/PeriodHelper.functions"
 import {periodDisplayString} from "../../util/Helper.util"
 import {EnergyService} from "../../service/energy.service"
 import {AuthService} from "../../service/auth.service"
 import {SelectedPeriod} from "../../models/energy.model"
 
-// platform#258: summer (Apr–Sep) and winter (Oct–Mar) in the dashboard charts
+// platform#258: summer (Apr–Sep) and winter (Oct–Mar) in the half-year list of the dashboard charts
 const summer = (year: number): SelectedPeriod => ({type: 'YS', segment: 1, year})
 const winter = (year: number): SelectedPeriod => ({type: 'YS', segment: 2, year})
+const half = (year: number, segment: number): SelectedPeriod => ({type: 'YH', segment, year})
 
 describe("season options", () => {
   it("all seasons that overlap the data range, newest first, winter across the year end", () => {
@@ -24,13 +25,17 @@ describe("season options", () => {
     expect(generatePeriodOptions('YS', 3, 2027, 10, 2026)).toEqual([winter(2026)])
     expect(generatePeriodOptions('YS', 10, 2026, 9, 2026)).toEqual([winter(2026), summer(2026)])
   })
+
+  it("the half-year list of the charts: half years and seasons by their first month, newest first", () => {
+    expect(chartHalfYearOptions(11, 2026, 1, 2026))
+      .toEqual([winter(2026), half(2026, 2), summer(2026), half(2026, 1), winter(2025)])
+  })
 })
 
 describe("season display", () => {
-  it("summer with its year, winter with both years", () => {
-    expect(periodDisplayString(summer(2026))).toBe("Sommer 2026")
-    expect(periodDisplayString(winter(2026))).toBe("Winter 2026/27")
-    expect(periodDisplayString(winter(2099))).toBe("Winter 2099/00")
+  it("like the other periods: first and last month", () => {
+    expect(periodDisplayString(summer(2025))).toBe("Apr-Sep 2025")
+    expect(periodDisplayString(winter(2025))).toBe("Okt 2025-Mär 2026")
   })
 })
 
@@ -48,21 +53,8 @@ describe("season date range for the energystore", () => {
   })
 })
 
-describe("switching to and from a season", () => {
-  const month = (year: number, segment: number): SelectedPeriod => ({type: 'YM', segment, year})
-
-  it("to a season: the one around the reference date in the period's year", () => {
-    expect(transformPeriodFromSegment('YS', month(2026, 3), moment("2026-07-15"))).toEqual(summer(2026))
-    expect(transformPeriodFromSegment('YS', month(2026, 3), moment("2026-11-02"))).toEqual(winter(2026))
-    expect(transformPeriodFromSegment('YS', month(2026, 3), moment("2026-02-10"))).toEqual(winter(2025))
-  })
-
-  it("to a season from another year: that year's summer; a season stays as it is", () => {
-    expect(transformPeriodFromSegment('YS', month(2025, 3), moment("2026-07-15"))).toEqual(summer(2025))
-    expect(transformPeriodFromSegment('YS', winter(2024), moment("2026-07-15"))).toEqual(winter(2024))
-  })
-
-  it("from a season to the other types: like from its year", () => {
+describe("switching from a season to the other types", () => {
+  it("like from its year", () => {
     const date = moment("2026-07-15")
     expect(transformPeriodFromSegment('YQ', summer(2026), date)).toEqual({type: 'YQ', segment: 3, year: 2026})
     expect(transformPeriodFromSegment('YM', winter(2025), date)).toEqual({type: 'YM', segment: 12, year: 2025})

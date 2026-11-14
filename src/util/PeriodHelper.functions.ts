@@ -35,7 +35,21 @@ export const generatePeriodOptions = (period: ReportType, endMonth: number, endY
   return options.sort((a, b) => (a.year+(a.segment*0.01)) > (b.segment*0.01+b.year) ? -1 : 1);
 }
 
-export const getSegmentFromDate = (periodType: ReportType, year: number, date: moment.Moment): number => {
+// First month of a half year or a season, counted from year 0, to sort both in one list.
+const firstMonth = (p: SelectedPeriod) =>
+  p.year * 12 + (p.type === 'YS' ? (p.segment === 1 ? 4 : 10) : (p.segment - 1) * 6 + 1)
+
+// The half years of the dashboard charts: calendar half years and seasons (Apr-Sep, Oct-Mar) in one list, newest
+// first (platform#258).
+export const chartHalfYearOptions = (endMonth: number, endYear: number, beginMonth: number, beginYear: number) =>
+  [...generatePeriodOptions('YH', endMonth, endYear, beginMonth, beginYear),
+    ...generatePeriodOptions('YS', endMonth, endYear, beginMonth, beginYear)]
+    .sort((a, b) => firstMonth(b) - firstMonth(a))
+
+// The types the period popover switches to; a season is chosen from the half-year list.
+export type SwitchTarget = Exclude<ReportType, 'YS'>
+
+export const getSegmentFromDate = (periodType: SwitchTarget, year: number, date: moment.Moment): number => {
   if (date.year() === year) {
     switch (periodType) {
       case 'Y':
@@ -48,8 +62,6 @@ export const getSegmentFromDate = (periodType: ReportType, year: number, date: m
         return date.month() + 1
       case 'D':
         return date.dayOfYear()
-      case 'YS':
-        return date.month() >= 3 && date.month() <= 8 ? 1 : 2
     }
   } else {
     switch (periodType) {
@@ -63,21 +75,12 @@ export const getSegmentFromDate = (periodType: ReportType, year: number, date: m
         return 12
       case 'D':
         return 1
-      case 'YS':
-        return 2
     }
   }
 }
 
-export const transformPeriodFromSegment = (targetType: ReportType, period: SelectedPeriod, date: moment.Moment): SelectedPeriod => {
-  if (targetType === 'YS') {
-    if (period.type === 'YS') return period
-    // the season around the reference date if it lies in the period's year, otherwise that year's summer
-    if (date.year() !== period.year) return {type: 'YS', segment: 1, year: period.year}
-    const month = date.month() + 1
-    return month < 4 ? {type: 'YS', segment: 2, year: period.year - 1} : {type: 'YS', segment: month < 10 ? 1 : 2, year: period.year}
-  }
-  // from a season ('YS') to the other types: like from the year it starts in
+// From a season ('YS') to the other types: like from the year it starts in.
+export const transformPeriodFromSegment = (targetType: SwitchTarget, period: SelectedPeriod, date: moment.Moment): SelectedPeriod => {
   switch (targetType) {
     case 'D': return {type: 'D', segment: date.dayOfYear(), year: period.year} as SelectedPeriod
     case 'Y': return {type: targetType, segment: 0, year: period.year} as SelectedPeriod

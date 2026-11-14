@@ -106,7 +106,7 @@ export interface ProducerReport extends BaseReport {
 }
 
 // 'YS': season of the dashboard charts (platform#258), segment 1 = summer (Apr–Sep of year), 2 = winter (Oct of year
-// to Mar of the next year); only the charts that query by start and end offer it
+// to Mar of the next year); offered in the half-year list of the charts that query by start and end
 export type ReportType = 'YH' | "YQ" | 'YM' | 'Y' | 'D' | 'YS'
 
 export interface RawData {
