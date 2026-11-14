@@ -2,9 +2,22 @@ import {ReportType, SelectedPeriod} from "../models/energy.model";
 import {getPeriodSegment} from "./Helper.util";
 import moment from "moment";
 
+// Summer (Apr–Sep) and winter (Oct–Mar, across the year end) that overlap the energy data range, newest first.
+const seasonOptions = (endMonth: number, endYear: number, beginMonth: number, beginYear: number) => {
+  const first = beginYear * 12 + beginMonth
+  const last = endYear * 12 + endMonth
+  const options: SelectedPeriod[] = []
+  for (let y = beginYear - 1; y <= endYear; y++) {
+    if (y * 12 + 4 <= last && y * 12 + 9 >= first) options.push({type: 'YS', segment: 1, year: y})
+    if (y * 12 + 10 <= last && (y + 1) * 12 + 3 >= first) options.push({type: 'YS', segment: 2, year: y})
+  }
+  return options.reverse()
+}
+
 export const generatePeriodOptions = (period: ReportType, endMonth: number, endYear: number, beginMonth: number, beginYear: number) => {
   const options: SelectedPeriod[] = [];
   if (period === 'D') return options
+  if (period === 'YS') return seasonOptions(endMonth, endYear, beginMonth, beginYear)
   for (let y = beginYear; y <= endYear; y++) {
     const em = y === endYear ? endMonth : 12
     const bm = y === beginYear ? beginMonth : 1
@@ -35,6 +48,8 @@ export const getSegmentFromDate = (periodType: ReportType, year: number, date: m
         return date.month() + 1
       case 'D':
         return date.dayOfYear()
+      case 'YS':
+        return date.month() >= 3 && date.month() <= 8 ? 1 : 2
     }
   } else {
     switch (periodType) {
@@ -48,16 +63,27 @@ export const getSegmentFromDate = (periodType: ReportType, year: number, date: m
         return 12
       case 'D':
         return 1
+      case 'YS':
+        return 2
     }
   }
 }
 
 export const transformPeriodFromSegment = (targetType: ReportType, period: SelectedPeriod, date: moment.Moment): SelectedPeriod => {
+  if (targetType === 'YS') {
+    if (period.type === 'YS') return period
+    // the season around the reference date if it lies in the period's year, otherwise that year's summer
+    if (date.year() !== period.year) return {type: 'YS', segment: 1, year: period.year}
+    const month = date.month() + 1
+    return month < 4 ? {type: 'YS', segment: 2, year: period.year - 1} : {type: 'YS', segment: month < 10 ? 1 : 2, year: period.year}
+  }
+  // from a season ('YS') to the other types: like from the year it starts in
   switch (targetType) {
     case 'D': return {type: 'D', segment: date.dayOfYear(), year: period.year} as SelectedPeriod
     case 'Y': return {type: targetType, segment: 0, year: period.year} as SelectedPeriod
     case 'YH':
       switch (period.type) {
+        case 'YS':
         case 'Y':
           return {type: targetType, segment: Math.min(getSegmentFromDate(targetType, period.year, date), 2), year: period.year} as SelectedPeriod
         case 'YH':
@@ -71,6 +97,7 @@ export const transformPeriodFromSegment = (targetType: ReportType, period: Selec
       }
     case 'YQ':
       switch (period.type) {
+        case 'YS':
         case 'Y':
           return {type: targetType, segment: Math.min(getSegmentFromDate(targetType, period.year, date), 4), year: period.year} as SelectedPeriod
         case 'YH':
@@ -84,6 +111,7 @@ export const transformPeriodFromSegment = (targetType: ReportType, period: Selec
       }
     case 'YM':
       switch (period.type) {
+        case 'YS':
         case 'Y':
           return {type: targetType, segment: Math.min(getSegmentFromDate(targetType, period.year, date), 12), year: period.year} as SelectedPeriod
         case 'YH':

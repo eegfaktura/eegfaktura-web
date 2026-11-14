@@ -55,6 +55,7 @@ export const periodDisplayString = (period: SelectedPeriod) => {
     case 'YQ': return `${MONTHNAME[(period.segment*3)-2].substring(0, 3)}-${MONTHNAME[period.segment*3].substring(0, 3)} ${period.year}`
     case 'YM': return `${MONTHNAME[period.segment]} ${period.year}`
     case 'Y' : return `${MONTHNAME[1].substring(0, 3)}-${MONTHNAME[12].substring(0, 3)} ${period.year}`
+    case 'YS': return period.segment === 1 ? `Sommer ${period.year}` : `Winter ${period.year}/${String((period.year + 1) % 100).padStart(2, '0')}`
     case 'D' : {
       const d = dayOfYearToDate(period.year, period.segment)
       return toLocalISODate(d)

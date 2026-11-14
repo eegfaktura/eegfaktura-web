@@ -269,6 +269,10 @@ export class EnergyService extends BaseService {
         return {start: new Date(year, (segment * 3) - 3).getTime(), end: new Date(year, (segment * 3), 0).getTime()}
       case "YH":
         return {start: new Date(year, (segment * 6) - 6).getTime(), end: new Date(year, (segment * 6), 0).getTime()}
+      case "YS":   // summer 01.04.–30.09., winter 01.10.–31.03. of the next year (platform#258)
+        return segment === 1
+          ? {start: new Date(year, 3).getTime(), end: new Date(year, 9, 0).getTime()}
+          : {start: new Date(year, 9).getTime(), end: new Date(year + 1, 3, 0).getTime()}
       default:
         return {start: new Date(year, 0).getTime(), end: new Date(year, 11, 31).getTime()}
     }

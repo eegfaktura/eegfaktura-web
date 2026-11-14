@@ -8,6 +8,13 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **Dashboard charts: summer and winter as period** (platform#258). The period popover of „Lastverlauf“ and
+  „Tagesverlauf“ has a row „Sommer/Winter“: summer is 01.04.–30.09. („Sommer 2026“), winter 01.10.–31.03. across the
+  year end („Winter 2026/27“); the seasons that overlap the energy data are offered, newest first. Both charts already
+  query the energystore by start and end, so the energystore is unchanged. The member list and the overview keep their
+  periods (billing intervals).
+
 ### Changed
 - Dependabot (Docker base images): no more major updates (legacy system, replaced by v3 in the medium term; majors
   only for security reasons, decision 23.10.2026), patch and minor updates come in one weekly grouped PR, new versions

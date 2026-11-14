@@ -103,6 +103,7 @@ const ChartProperties:FC<ChartPropertiesProps> = ({selectedPeriod, periods, onDi
       case 'YQ': return selectedPeriod.type === 'YQ';
       case 'YM': return selectedPeriod.type === 'YM';
       case 'D': return selectedPeriod.type === 'D';
+      case 'YS': return selectedPeriod.type === 'YS';
     }
   }
 
@@ -126,6 +127,16 @@ const ChartProperties:FC<ChartPropertiesProps> = ({selectedPeriod, periods, onDi
           <IonCol>
             <IonSelect value={getSelectedPeriod('YH')} onIonChange={(e) => onChange(e.detail.value)}>
               {getPeriodOptions('YH')}
+            </IonSelect>
+          </IonCol>
+        </IonRow>
+        <IonRow className={cn({selected: isSelected('YS')})}>
+          <IonCol style={{margin: "auto"}}>
+            <IonCheckbox labelPlacement="end" checked={isSelected('YS')} onIonChange={() => onChange(getSelectedPeriod('YS'))}>Sommer/Winter</IonCheckbox>
+          </IonCol>
+          <IonCol>
+            <IonSelect value={getSelectedPeriod('YS')} onIonChange={(e) => onChange(e.detail.value)}>
+              {getPeriodOptions('YS')}
             </IonSelect>
           </IonCol>
         </IonRow>
