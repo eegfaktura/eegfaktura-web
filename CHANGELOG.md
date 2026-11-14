@@ -8,6 +8,11 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **Dashboard charts: the half-year list is grouped** (platform#258, user decision 14.11.2026): first the calendar
+  half years, then summer and winter („Apr-Sep“, „Okt-Mär“), each newest first. Before, both were mixed by their
+  first month.
+
 ## [1.25.0] – 2026-11-14
 
 ### Added

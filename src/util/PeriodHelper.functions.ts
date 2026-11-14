@@ -5,7 +5,7 @@ import moment from "moment";
 // A month counted from year 0, to compare months across years.
 const monthIndex = (year: number, month: number) => year * 12 + month
 
-// Summer and winter (seasonRange) that overlap the energy data range.
+// Summer and winter (seasonRange) that overlap the energy data range, oldest first.
 const seasonOptions = (endMonth: number, endYear: number, beginMonth: number, beginYear: number) => {
   const options: SelectedPeriod[] = []
   for (let y = beginYear - 1; y <= endYear; y++) {
@@ -39,19 +39,11 @@ export const generatePeriodOptions = (period: ReportType, endMonth: number, endY
   return options.sort((a, b) => (a.year+(a.segment*0.01)) > (b.segment*0.01+b.year) ? -1 : 1);
 }
 
-// First month of a half year or a season, to sort both in one list.
-const firstMonth = (p: SelectedPeriod) => {
-  if (p.type !== 'YS') return monthIndex(p.year, (p.segment - 1) * 6 + 1)
-  const r = seasonRange(p)
-  return monthIndex(r.startYear, r.startMonth)
-}
-
-// The half years of the dashboard charts: calendar half years and seasons (Apr-Sep, Oct-Mar) in one list, newest
-// first (platform#258).
+// The half years of the dashboard charts (platform#258): the calendar half years first, then the seasons (Apr-Sep,
+// Oct-Mar), each newest first.
 export const chartHalfYearOptions = (endMonth: number, endYear: number, beginMonth: number, beginYear: number) =>
   [...generatePeriodOptions('YH', endMonth, endYear, beginMonth, beginYear),
-    ...seasonOptions(endMonth, endYear, beginMonth, beginYear)]
-    .sort((a, b) => firstMonth(b) - firstMonth(a))
+    ...seasonOptions(endMonth, endYear, beginMonth, beginYear).reverse()]
 
 // The types the period popover switches to; a season is chosen from the half-year list.
 export type SwitchTarget = Exclude<ReportType, 'YS'>

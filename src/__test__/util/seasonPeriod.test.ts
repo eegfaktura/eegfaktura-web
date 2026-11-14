@@ -14,10 +14,10 @@ const seasons = (endMonth: number, endYear: number, beginMonth: number, beginYea
   chartHalfYearOptions(endMonth, endYear, beginMonth, beginYear).filter(p => p.type === 'YS')
 
 describe("half-year list of the charts", () => {
-  it("half years and seasons by their first month, newest first", () => {
+  it("the calendar half years first, then the seasons, each newest first", () => {
     // data January to November 2026: winter 2025/26 (from January) up to winter 2026/27 (from October)
     expect(chartHalfYearOptions(11, 2026, 1, 2026))
-      .toEqual([winter(2026), half(2026, 2), summer(2026), half(2026, 1), winter(2025)])
+      .toEqual([half(2026, 2), half(2026, 1), winter(2026), summer(2026), winter(2025)])
   })
 
   it("only the seasons that overlap the data range", () => {
