@@ -13,11 +13,11 @@ import {
 } from "@ionic/react";
 
 import "./ChartProperty.popup.scss"
-import {generatePeriodOptions, transformPeriodFromSegment} from "../../util/PeriodHelper.functions";
+import {chartHalfYearOptions, generatePeriodOptions, SwitchTarget, transformPeriodFromSegment} from "../../util/PeriodHelper.functions";
 import {CpPeriodType} from "../../models/reports.model";
 import moment from "moment";
 import {dateToDayOfYear, dayOfYearToDate, periodDisplayString, splitCpPeriod, toLocalISODate} from "../../util/Helper.util";
-import {ReportType, SelectedPeriod} from "../../models/energy.model";
+import {SelectedPeriod} from "../../models/energy.model";
 import cn from "classnames";
 import {clampDay, DayBounds} from "./DayView.functions";
 
@@ -43,17 +43,22 @@ const ChartProperties:FC<ChartPropertiesProps> = ({selectedPeriod, periods, onDi
     return period.type + '_' + period.segment + '_' + period.year
   }
 
-  const getPeriodOptions = (periodType: ReportType) => {
+  const getPeriodOptions = (periodType: SwitchTarget) => {
+    // the half-year list also holds summer and winter (Apr-Sep, Oct-Mar, platform#258)
+    const options = periodType === 'YH'
+      ? chartHalfYearOptions(endMonth, endYear, beginMonth, beginYear)
+      : generatePeriodOptions(periodType, endMonth, endYear, beginMonth, beginYear)
     return (
       <>
-        {generatePeriodOptions(periodType, endMonth, endYear, beginMonth, beginYear).map((o, idx) => (
+        {options.map((o, idx) => (
           <IonSelectOption key={idx} value={getPeriodValue(o)}>{periodDisplayString(o)}</IonSelectOption>
         ))}
       </>
     )
   }
 
-  const getSelectedPeriod = (periodType: ReportType) => {
+  const getSelectedPeriod = (periodType: SwitchTarget) => {
+    if (periodType === 'YH' && selectedPeriod.type === 'YS') return getPeriodValue(selectedPeriod)
     // Default segment when switching period: current date, NOT the EEG period
     // end. periods.end is typically the year end → the switch would land in a
     // segment that has no data yet. (Matches prod behaviour.)
@@ -96,10 +101,10 @@ const ChartProperties:FC<ChartPropertiesProps> = ({selectedPeriod, periods, onDi
     onDismiss({type: 'D', year: day.getFullYear(), segment: dateToDayOfYear(day)})
   }
 
-  const isSelected = (period: ReportType): boolean => {
+  const isSelected = (period: SwitchTarget): boolean => {
     switch (period) {
       case 'Y': return selectedPeriod.type === 'Y';
-      case 'YH': return selectedPeriod.type === 'YH';
+      case 'YH': return selectedPeriod.type === 'YH' || selectedPeriod.type === 'YS';
       case 'YQ': return selectedPeriod.type === 'YQ';
       case 'YM': return selectedPeriod.type === 'YM';
       case 'D': return selectedPeriod.type === 'D';

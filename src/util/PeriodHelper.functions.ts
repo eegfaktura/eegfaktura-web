@@ -1,6 +1,23 @@
 import {ReportType, SelectedPeriod} from "../models/energy.model";
-import {getPeriodSegment} from "./Helper.util";
+import {getPeriodSegment, seasonRange} from "./Helper.util";
 import moment from "moment";
+
+// A month counted from year 0, to compare months across years.
+const monthIndex = (year: number, month: number) => year * 12 + month
+
+// Summer and winter (seasonRange) that overlap the energy data range.
+const seasonOptions = (endMonth: number, endYear: number, beginMonth: number, beginYear: number) => {
+  const options: SelectedPeriod[] = []
+  for (let y = beginYear - 1; y <= endYear; y++) {
+    for (const segment of [1, 2]) {
+      const season: SelectedPeriod = {type: 'YS', segment, year: y}
+      const r = seasonRange(season)
+      if (monthIndex(r.startYear, r.startMonth) <= monthIndex(endYear, endMonth)
+        && monthIndex(r.endYear, r.endMonth) >= monthIndex(beginYear, beginMonth)) options.push(season)
+    }
+  }
+  return options
+}
 
 export const generatePeriodOptions = (period: ReportType, endMonth: number, endYear: number, beginMonth: number, beginYear: number) => {
   const options: SelectedPeriod[] = [];
@@ -22,7 +39,24 @@ export const generatePeriodOptions = (period: ReportType, endMonth: number, endY
   return options.sort((a, b) => (a.year+(a.segment*0.01)) > (b.segment*0.01+b.year) ? -1 : 1);
 }
 
-export const getSegmentFromDate = (periodType: ReportType, year: number, date: moment.Moment): number => {
+// First month of a half year or a season, to sort both in one list.
+const firstMonth = (p: SelectedPeriod) => {
+  if (p.type !== 'YS') return monthIndex(p.year, (p.segment - 1) * 6 + 1)
+  const r = seasonRange(p)
+  return monthIndex(r.startYear, r.startMonth)
+}
+
+// The half years of the dashboard charts: calendar half years and seasons (Apr-Sep, Oct-Mar) in one list, newest
+// first (platform#258).
+export const chartHalfYearOptions = (endMonth: number, endYear: number, beginMonth: number, beginYear: number) =>
+  [...generatePeriodOptions('YH', endMonth, endYear, beginMonth, beginYear),
+    ...seasonOptions(endMonth, endYear, beginMonth, beginYear)]
+    .sort((a, b) => firstMonth(b) - firstMonth(a))
+
+// The types the period popover switches to; a season is chosen from the half-year list.
+export type SwitchTarget = Exclude<ReportType, 'YS'>
+
+export const getSegmentFromDate = (periodType: SwitchTarget, year: number, date: moment.Moment): number => {
   if (date.year() === year) {
     switch (periodType) {
       case 'Y':
@@ -52,7 +86,20 @@ export const getSegmentFromDate = (periodType: ReportType, year: number, date: m
   }
 }
 
-export const transformPeriodFromSegment = (targetType: ReportType, period: SelectedPeriod, date: moment.Moment): SelectedPeriod => {
+type SwitchPeriod = Omit<SelectedPeriod, 'type'> & {type: SwitchTarget}
+
+// A season as the month of the reference date, held within the season: switching from it never leaves it.
+const seasonMonth = (season: SelectedPeriod, date: moment.Moment): SwitchPeriod => {
+  const r = seasonRange(season)
+  const month = Math.min(Math.max(monthIndex(date.year(), date.month() + 1), monthIndex(r.startYear, r.startMonth)),
+    monthIndex(r.endYear, r.endMonth)) - 1
+  return {type: 'YM', segment: month % 12 + 1, year: Math.floor(month / 12)}
+}
+
+export const transformPeriodFromSegment = (targetType: SwitchTarget, selected: SelectedPeriod, date: moment.Moment): SelectedPeriod => {
+  const period: SwitchPeriod = selected.type === 'YS' ? seasonMonth(selected, date) : {...selected, type: selected.type}
+  // from a season, that month is the reference instead of today: the target segment then contains it
+  if (selected.type === 'YS') date = moment([period.year, period.segment - 1, 1])
   switch (targetType) {
     case 'D': return {type: 'D', segment: date.dayOfYear(), year: period.year} as SelectedPeriod
     case 'Y': return {type: targetType, segment: 0, year: period.year} as SelectedPeriod

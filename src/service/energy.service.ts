@@ -14,6 +14,7 @@ import {reportDateGraphqlQuery, uploadEnergyGraphqlMutation} from "./graphql-que
 import {ExcelReportRequest} from "../models/reports.model";
 import {ActiveTenant} from "../models/eeg.model";
 import {BillingCheckRequest, BillingCheckResponse} from "../models/billingCheck.model";
+import {seasonRange} from "../util/Helper.util";
 
 const NO_ENERGY_DATA_YET = "Record doesn't exist"
 
@@ -269,6 +270,10 @@ export class EnergyService extends BaseService {
         return {start: new Date(year, (segment * 3) - 3).getTime(), end: new Date(year, (segment * 3), 0).getTime()}
       case "YH":
         return {start: new Date(year, (segment * 6) - 6).getTime(), end: new Date(year, (segment * 6), 0).getTime()}
+      case "YS": {   // summer 01.04.–30.09., winter 01.10.–31.03. of the next year (platform#258)
+        const r = seasonRange(selectedPeroid)
+        return {start: new Date(r.startYear, r.startMonth - 1).getTime(), end: new Date(r.endYear, r.endMonth, 0).getTime()}
+      }
       default:
         return {start: new Date(year, 0).getTime(), end: new Date(year, 11, 31).getTime()}
     }
