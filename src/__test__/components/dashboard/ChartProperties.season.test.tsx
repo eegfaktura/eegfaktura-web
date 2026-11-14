@@ -9,10 +9,10 @@ const halfYearRow = () => screen.getByText("Halbjahr").closest("ion-row") as HTM
 const halfYearSelect = () => halfYearRow().querySelector("ion-select") as HTMLElement & {value?: string}
 
 describe("ChartProperties – summer and winter in the row \"Halbjahr\" (platform#258)", () => {
-  it("the half-year list holds the seasons of the data range, by their first month", () => {
+  it("the half-year list holds the half years, then the seasons of the data range", () => {
     render(<ChartProperties selectedPeriod={{type: "YM", year: 2026, segment: 10}} periods={periods} onDismiss={vi.fn()}/>)
     const labels = Array.from(halfYearSelect().querySelectorAll("ion-select-option")).map(o => o.textContent)
-    expect(labels).toEqual(["Okt 2026-Mär 2027", "Jul-Dez 2026", "Apr-Sep 2026", "Jan-Jun 2026", "Okt 2025-Mär 2026"])
+    expect(labels).toEqual(["Jul-Dez 2026", "Jan-Jun 2026", "Okt 2026-Mär 2027", "Apr-Sep 2026", "Okt 2025-Mär 2026"])
   })
 
   it("choosing a season selects period YS", () => {
