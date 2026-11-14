@@ -98,6 +98,8 @@ const seasonMonth = (season: SelectedPeriod, date: moment.Moment): SwitchPeriod 
 
 export const transformPeriodFromSegment = (targetType: SwitchTarget, selected: SelectedPeriod, date: moment.Moment): SelectedPeriod => {
   const period: SwitchPeriod = selected.type === 'YS' ? seasonMonth(selected, date) : {...selected, type: selected.type}
+  // from a season, that month is the reference instead of today: the target segment then contains it
+  if (selected.type === 'YS') date = moment([period.year, period.segment - 1, 1])
   switch (targetType) {
     case 'D': return {type: 'D', segment: date.dayOfYear(), year: period.year} as SelectedPeriod
     case 'Y': return {type: targetType, segment: 0, year: period.year} as SelectedPeriod

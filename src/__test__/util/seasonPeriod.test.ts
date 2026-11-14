@@ -64,7 +64,9 @@ describe("switching from a season to the other types stays within the season", (
   })
 
   it("today before the season: its first month", () => {
-    expect(transformPeriodFromSegment('YM', summer(2027), moment("2027-02-10")))
-      .toEqual({type: 'YM', segment: 4, year: 2027})
+    const today = moment("2027-02-10")
+    expect(transformPeriodFromSegment('YM', summer(2027), today)).toEqual({type: 'YM', segment: 4, year: 2027})
+    expect(transformPeriodFromSegment('YQ', summer(2027), today)).toEqual({type: 'YQ', segment: 2, year: 2027})
+    expect(transformPeriodFromSegment('YH', summer(2027), today)).toEqual({type: 'YH', segment: 1, year: 2027})
   })
 })
