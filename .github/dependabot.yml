@@ -12,9 +12,29 @@
 # Ergaenzend laeuft im Platform-Repo ein woechentlicher Trivy-Scan der Base-Images
 # (weekly-base-image-scan.yml) — der meldet Schwachstellen, waehrend Dependabot nur
 # meldet, dass eine neuere Version existiert.
+#
+# Richtlinie Altsystem (Entscheidung 23.10.2026): das Altsystem wird mittelfristig durch v3
+# abgeloest. Daher:
+#   - Major-Updates werden nicht vorgeschlagen (ignore semver-major); sie werden nur bei
+#     Sicherheitsluecken von Hand nachgezogen (CRITICAL immer).
+#   - Patch- und Minor-Updates kommen gesammelt in EINEM woechentlichen PR (groups).
+#   - Neue Versionen werden erst nach 7 Tagen vorgeschlagen (cooldown).
+# `ignore` wirkt laut GitHub-Doku auch auf Security-Updates des jeweiligen Oekosystems. Da diese
+# Datei nur `docker` konfiguriert und Docker keine Security-Updates kennt, bleiben die
+# Security-Updates fuer gomod/npm/maven/pip davon unberuehrt. `cooldown` gilt nur fuer
+# Version-Updates.
 version: 2
 updates:
   - package-ecosystem: docker
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      docker-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]

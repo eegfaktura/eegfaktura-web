@@ -9,12 +9,16 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Changed
+- Dependabot (Docker base images): no more major updates (legacy system, replaced by v3 in the medium term; majors
+  only for security reasons, decision 23.10.2026), patch and minor updates come in one weekly grouped PR, new versions
+  only after a 7-day cooldown. Security updates for the language ecosystems are unaffected.
+
 - **„Aktiv seit“ of a metering point is now „Aktiv ab“** (platform#257), also in the member list sort „Aktiv ab
   (neueste zuerst)“ (was „Aktiviert seit“). „seit“ reads wrong for a date in the future, which is common when a metering
   point is added. Text only; the field and its value are unchanged.
 
 ### Fixed
-- **Pasting into „Zählpunkt“ and „Telefon“ inserted RTF instead of the text** (`{tf1nsi…`, platform#256). Both
+- **Pasting into „Zählpunkt“ and „Telefon“ inserted RTF instead of the text** (`{\rtf1\ansi…`, platform#256). Both
   fields took the first item of the clipboard, which is RTF or HTML when copying from a PDF viewer or Word, depending
   on the browser. „Zählpunkt“ now takes the plain text; spaces, `-` and `_` are still removed, the cleaned number is
   validated again, and a clipboard without text (an image, a file) no longer empties the field. „Telefon“ has no
