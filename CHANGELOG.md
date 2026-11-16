@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.26.0] – 2026-11-16
+
 ### Added
 - **Joining fee: text on the invoice** (platform#260). The section „Einmalige Beitrittsgebühr“ of the tariff dialog
   has the new field „Bezeichnung auf der Rechnung“ (at most 80 characters), filled with „Beitrittsgebühr“ for
