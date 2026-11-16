@@ -12,9 +12,11 @@ this changelog highlights the changes relevant for overview and operations.
 - **Joining fee: text on the invoice** (platform#260). The section „Einmalige Beitrittsgebühr“ of the tariff dialog
   has the new field „Bezeichnung auf der Rechnung“ (at most 80 characters), filled with „Beitrittsgebühr“ for
   existing and new tariffs, so the dialog shows what the invoice prints. With a joining fee above 0 the text is
-  required. Needs eegfaktura-backend with the tariff field `joiningFeeText` and eegfaktura-billing that prints it
-  (deploy both before web); an older backend ignores the field. The app itself keeps the term „Beitrittsgebühr“
-  (tariff card, member, export).
+  required; only characters the invoice PDF prints are accepted (Windows-1252: letters with umlauts and accents,
+  digits, punctuation such as – „ “ €; no emoji). Needs eegfaktura-backend with the tariff field `joiningFeeText` and
+  eegfaktura-billing that prints it (deploy both before web). With an older backend the field shows
+  „Beitrittsgebühr“ and saving works, but a changed text is not stored. The app itself keeps the term
+  „Beitrittsgebühr“ (tariff card, member, export).
 
 ## [1.25.1] – 2026-11-14
 

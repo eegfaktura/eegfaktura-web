@@ -10,8 +10,13 @@ const percent = (v: unknown): number => typeof v === "string" ? parseDecimal(v) 
 
 /** Text of the joining fee on the invoice unless the community changes it; as the backend's default (platform#260). */
 export const DEFAULT_JOINING_FEE_TEXT = "Beitrittsgebühr"
-/** Longest text the backend accepts. */
+/** Longest text the backend accepts (it counts characters after trimming; the same for every WinAnsi character). */
 export const JOINING_FEE_TEXT_MAX = 80
+/**
+ * Characters of Windows-1252 (WinAnsi), the encoding billing prints the PDF with (Helvetica): printable ASCII,
+ * Latin-1 and the extra punctuation such as € – „ “. The backend refuses other characters too.
+ */
+export const JOINING_FEE_TEXT_PATTERN = /^[\x20-\x7E\xA0-\xFF€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ]*$/
 
 /** A membership fee tariff with a joining fee above 0. */
 export const hasJoiningFee = (tariff?: EegTariff): boolean =>

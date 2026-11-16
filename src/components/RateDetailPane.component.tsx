@@ -1,4 +1,4 @@
-import React, {FC} from "react";
+import React, {FC, useMemo} from "react";
 import {EegTariff} from "../models/eeg.model";
 import {
   IonButton,
@@ -16,7 +16,12 @@ import RateComponent from "./Rate.component";
 import {useAppDispatch, useAppSelector} from "../store";
 import {archiveRate, ratesSelector, selectedRateSelector, selectRate} from "../store/rate";
 import {Api} from "../service";
-import {hasJoiningFee, joiningFeeVatUnusual, membersNotYetEnergyBilled} from "../util/JoiningFee.util";
+import {
+  DEFAULT_JOINING_FEE_TEXT,
+  hasJoiningFee,
+  joiningFeeVatUnusual,
+  membersNotYetEnergyBilled
+} from "../util/JoiningFee.util";
 import {allParticipantsSelector} from "../store/participant";
 import {FormProvider, useForm} from "react-hook-form";
 import {useTenant} from "../store/hook/Eeg.provider";
@@ -55,7 +60,11 @@ const RateDetailPaneForm: FC<RateDetailPaneComponentProps> = ({onSubmit, submitI
   const {t} = useLocale("common");
   const rates = useAppSelector(ratesSelector)
 
-  const formMethods = useForm<EegTariff>({defaultValues: selectedTariff, values: selectedTariff, mode: 'all'});
+  // an older backend sends no joiningFeeText (platform#260): show the text the invoice prints instead of an empty,
+  // required field that would block saving
+  const formTariff = useMemo(() => selectedTariff &&
+    {...selectedTariff, joiningFeeText: selectedTariff.joiningFeeText ?? DEFAULT_JOINING_FEE_TEXT}, [selectedTariff])
+  const formMethods = useForm<EegTariff>({defaultValues: formTariff, values: formTariff, mode: 'all'});
   const isDirty = formMethods.formState.isDirty
   const confirmDiscard = useConfirmDiscard()
 

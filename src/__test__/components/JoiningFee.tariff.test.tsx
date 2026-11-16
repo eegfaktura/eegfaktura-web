@@ -1,7 +1,7 @@
 import {describe, expect, it, vi} from "vitest";
 import {act, fireEvent, render, screen} from "@testing-library/react";
 import React from "react";
-import {FormProvider, useForm} from "react-hook-form";
+import {FormProvider, useForm, UseFormReturn} from "react-hook-form";
 import "../../util/I18n";
 import RateComponent from "../../components/Rate.component";
 import RateCardComponent from "../../components/RateCard.component";
@@ -10,9 +10,11 @@ import {EegTariff} from "../../models/eeg.model";
 
 // platform#217: the joining fee section of the tariff dialog and its line on the tariff card
 
-const renderForm = (rate: EegTariff, onSubmit = vi.fn()) => {
+const renderForm = (rate: EegTariff, onSubmit = vi.fn(), onMethods?: (m: UseFormReturn<EegTariff>) => void) => {
   const Form = () => {
-    const methods = useForm<EegTariff>({defaultValues: rate})
+    // mode 'all' as in RateDetailPane: fields are checked while typing
+    const methods = useForm<EegTariff>({defaultValues: rate, mode: "all"})
+    onMethods?.(methods)
     return (
       <RateContext.Provider value={{currentRateType: rate.type as any, setRateType: () => {}}}>
         <FormProvider {...methods}>
@@ -58,20 +60,51 @@ describe("tariff dialog: section „Einmalige Beitrittsgebühr“", () => {
     expect(onSubmit.mock.calls[0][0].joiningFeeText).toBe("Einmalige Einrichtungsgebühr")
   })
 
-  it("does not save a joining fee without a text, but a tariff without a joining fee", async () => {
+  const submit = async (container: HTMLElement) => act(async () => {
+    fireEvent.submit(container.querySelector("form#rate-form")!)
+  })
+
+  it("does not save a joining fee without a text", async () => {
     const onSubmit = vi.fn()
     const {container} = renderForm(eeg({joiningFee: 30, joiningFeeText: " "}), onSubmit)
-    await act(async () => {
-      fireEvent.submit(container.querySelector("form#rate-form")!)
-    })
+    await submit(container)
     expect(onSubmit).not.toHaveBeenCalled()
+  })
 
-    const noFeeSubmit = vi.fn()
-    const noFee = renderForm(eeg({joiningFee: 0, joiningFeeText: ""}), noFeeSubmit)
+  it("saves a tariff without a joining fee and without a text", async () => {
+    const onSubmit = vi.fn()
+    const {container} = renderForm(eeg({joiningFee: 0, joiningFeeText: ""}), onSubmit)
+    await submit(container)
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+  })
+
+  it("does not save a text the invoice cannot print, but WinAnsi punctuation", async () => {
+    const refused = vi.fn()
+    await submit(renderForm(eeg({joiningFee: 30, joiningFeeText: "Eintritt ✓"}), refused).container)
+    expect(refused).not.toHaveBeenCalled()
+
+    const saved = vi.fn()
+    await submit(renderForm(eeg({joiningFee: 30, joiningFeeText: "Einrichtung – „einmalig“ (50 €)"}), saved).container)
+    expect(saved).toHaveBeenCalledTimes(1)
+  })
+
+  // review: the text is required only with a fee, so a changed fee checks the text again (deps)
+  it("checks the text again when the fee changes", async () => {
+    let methods: UseFormReturn<EegTariff> | undefined
+    const {container} = renderForm(eeg({joiningFee: 0, joiningFeeText: ""}), vi.fn(), m => methods = m)
+    const fee = container.querySelector('ion-input[name="joiningFee"]') as HTMLIonInputElement
     await act(async () => {
-      fireEvent.submit(noFee.container.querySelectorAll("form#rate-form")[0]!)
+      fee.value = "30"
+      fireEvent(fee, new CustomEvent("ionChange", {detail: {value: "30"}}))
     })
-    expect(noFeeSubmit).toHaveBeenCalledTimes(1)
+    expect(methods!.getFieldState("joiningFeeText").error?.message)
+      .toBe("Bitte eine Bezeichnung für die Rechnung eingeben, z. B. „Beitrittsgebühr“.")
+
+    await act(async () => {
+      fee.value = "0"
+      fireEvent(fee, new CustomEvent("ionChange", {detail: {value: "0"}}))
+    })
+    expect(methods!.getFieldState("joiningFeeText").error).toBeUndefined()
   })
 
   it("is not offered for consumer and producer tariffs", () => {
