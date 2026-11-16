@@ -180,6 +180,9 @@ export interface EegTariff {
   joiningFee?: number
   joiningFeeUseVat?: boolean
   joiningFeeVatInPercent?: number
+  // Text of the joining fee on the invoice (platform#260); a backend with the field always sends one,
+  // „Beitrittsgebühr“ unless the community changed it; an older backend sends none (the form then shows the default)
+  joiningFeeText?: string
 }
 
 // billing GET /api/billingDocuments/tenant/{tenantId}/joiningFeeState: one entry per member with a final document

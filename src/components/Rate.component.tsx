@@ -10,6 +10,7 @@ import NumberInputForm from "./form/NumberInput.component";
 import SelectForm from "./form/SelectForm.component";
 import {useLocale} from "../store/hook/useLocale";
 import {zvtWithoutActiveWindow} from "../util/Helper.util";
+import {hasJoiningFee, JOINING_FEE_TEXT_MAX, JOINING_FEE_TEXT_PATTERN} from "../util/JoiningFee.util";
 
 // ZVT: Von/Bis sind reine Auswahlfelder - genau die 96 Viertelstunden-Werte
 // des Tages (00:00 ... 23:45), passend zum 15-min-Raster der Energiedaten.
@@ -261,7 +262,9 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
       <>
         <IonListHeader>{t("joiningFee.header")}</IonListHeader>
         <NumberInputForm label={t("joiningFee.amount")} control={control} name={"joiningFee"}
-                         rules={{min: {value: 0, message: t("joiningFee.warn_negative")}}}/>
+                         rules={{min: {value: 0, message: t("joiningFee.warn_negative")},
+                           // the text is required only with a fee: check it again when the fee changes
+                           deps: "joiningFeeText"}}/>
         <CheckboxComponent label={t("joiningFee.useVat")}
                            setChecked={(c) => setValue("joiningFeeUseVat", c, {shouldValidate: true, shouldDirty: true})}
                            checked={!!joiningFeeUseVat}/>
@@ -272,6 +275,15 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
                                // the backend stores a whole number; „USt anführen“ with 0 % would print 0 %
                                validate: (v: unknown) => (v !== "" && v !== null && v !== undefined
                                  && Number.isInteger(Number(v)) && Number(v) > 0) || t("joiningFee.warn_vat_whole")}}/>}
+        {/* platform#260: the text of the invoice line, prefilled with what the invoice shows */}
+        <InputFormComponent label={t("joiningFee.text")} control={control} name={"joiningFeeText"} type="text"
+                            maxlength={JOINING_FEE_TEXT_MAX} counter={true}
+                            rules={{
+                              // characters the invoice PDF prints (Helvetica, WinAnsi); the backend checks the same
+                              pattern: {value: JOINING_FEE_TEXT_PATTERN, message: t("joiningFee.warn_text_chars")},
+                              validate: (v: unknown, values: EegTariff) =>
+                                !hasJoiningFee(values) || String(v ?? "").trim() !== ""
+                                || t("joiningFee.warn_text_missing")}}/>
       </>
     )
 

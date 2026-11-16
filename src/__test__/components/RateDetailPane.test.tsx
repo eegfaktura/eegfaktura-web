@@ -9,9 +9,12 @@ vi.mock("@ionic/react", async (importOriginal) => ({
   useIonAlert: () => [alert],
   useIonToast: () => [toaster],
 }))
-// the tariff form is not part of this test; its props give the save handler
-const rateForm = vi.hoisted(() => ({props: undefined as any}))
-vi.mock("../../components/Rate.component", () => ({default: (props: any) => { rateForm.props = props; return <div/> }}))
+// the tariff form is not part of this test; its props give the save handler, the form context the values it shows
+const rateForm = vi.hoisted(() => ({props: undefined as any, values: undefined as any}))
+vi.mock("../../components/Rate.component", async () => {
+  const {useFormContext} = await import("react-hook-form")
+  return {default: (props: any) => { rateForm.props = props; rateForm.values = useFormContext().getValues(); return <div/> }}
+})
 
 import RateDetailPaneComponent from "../../components/RateDetailPane.component";
 import {Api} from "../../service";
@@ -143,5 +146,23 @@ describe("RateDetailPane: saving a joining fee warns first (platform#217)", () =
     expect(Api.eegService.fetchJoiningFeeState).not.toHaveBeenCalled()
     confirmSave()
     expect(onSubmit).toHaveBeenCalledTimes(1)
+  })
+})
+
+// platform#260 (review): an older backend sends no joiningFeeText; the form shows the default instead of an empty
+// required field that would block saving the tariff
+describe("RateDetailPane: text of the joining fee", () => {
+  const show = (t: EegTariff) => {
+    const r = renderWithProviders(<RateDetailPaneComponent onSubmit={vi.fn()} submitId="s"/>)
+    act(() => { r.store.dispatch(selectRate(t)) })
+    return rateForm.values as EegTariff
+  }
+
+  it("shows „Beitrittsgebühr“ for a tariff without the field", () => {
+    expect(show({...tariff, joiningFee: 30}).joiningFeeText).toBe("Beitrittsgebühr")
+  })
+
+  it("keeps the text of the tariff", () => {
+    expect(show({...tariff, joiningFee: 30, joiningFeeText: "Eintritt"}).joiningFeeText).toBe("Eintritt")
   })
 })
