@@ -8,6 +8,11 @@ import {parseDecimal} from "./Number.util";
 
 const percent = (v: unknown): number => typeof v === "string" ? parseDecimal(v) || 0 : Number(v ?? 0) || 0
 
+/** Text of the joining fee on the invoice unless the community changes it; as the backend's default (platform#260). */
+export const DEFAULT_JOINING_FEE_TEXT = "Beitrittsgebühr"
+/** Longest text the backend accepts. */
+export const JOINING_FEE_TEXT_MAX = 80
+
 /** A membership fee tariff with a joining fee above 0. */
 export const hasJoiningFee = (tariff?: EegTariff): boolean =>
   !!tariff && tariff.type === "EEG" && Number(tariff.joiningFee ?? 0) > 0

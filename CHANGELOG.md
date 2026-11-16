@@ -8,6 +8,14 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **Joining fee: text on the invoice** (platform#260). The section „Einmalige Beitrittsgebühr“ of the tariff dialog
+  has the new field „Bezeichnung auf der Rechnung“ (at most 80 characters), filled with „Beitrittsgebühr“ for
+  existing and new tariffs, so the dialog shows what the invoice prints. With a joining fee above 0 the text is
+  required. Needs eegfaktura-backend with the tariff field `joiningFeeText` and eegfaktura-billing that prints it
+  (deploy both before web); an older backend ignores the field. The app itself keeps the term „Beitrittsgebühr“
+  (tariff card, member, export).
+
 ## [1.25.1] – 2026-11-14
 
 ### Changed

@@ -10,6 +10,7 @@ import NumberInputForm from "./form/NumberInput.component";
 import SelectForm from "./form/SelectForm.component";
 import {useLocale} from "../store/hook/useLocale";
 import {zvtWithoutActiveWindow} from "../util/Helper.util";
+import {JOINING_FEE_TEXT_MAX} from "../util/JoiningFee.util";
 
 // ZVT: Von/Bis sind reine Auswahlfelder - genau die 96 Viertelstunden-Werte
 // des Tages (00:00 ... 23:45), passend zum 15-min-Raster der Energiedaten.
@@ -272,6 +273,12 @@ const RateComponent: FC<{ rate: EegTariff, onSubmit: (data: EegTariff) => void, 
                                // the backend stores a whole number; „USt anführen“ with 0 % would print 0 %
                                validate: (v: unknown) => (v !== "" && v !== null && v !== undefined
                                  && Number.isInteger(Number(v)) && Number(v) > 0) || t("joiningFee.warn_vat_whole")}}/>}
+        {/* platform#260: the text of the invoice line, prefilled with what the invoice shows */}
+        <InputFormComponent label={t("joiningFee.text")} control={control} name={"joiningFeeText"} type="text"
+                            maxlength={JOINING_FEE_TEXT_MAX} counter={true}
+                            rules={{validate: (v: unknown, values: EegTariff) =>
+                                !(Number(values.joiningFee ?? 0) > 0) || String(v ?? "").trim() !== ""
+                                || t("joiningFee.warn_text_missing")}}/>
       </>
     )
 

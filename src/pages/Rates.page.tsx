@@ -26,6 +26,7 @@ import { get } from "react-hook-form";
 import {useTenant} from "../store/hook/Eeg.provider";
 import UnsavedChangesGuard, {useConfirmDiscard} from "../components/core/UnsavedChangesGuard.component";
 import {foldForSearch} from "../util/Search.util";
+import {DEFAULT_JOINING_FEE_TEXT} from "../util/JoiningFee.util";
 import {ParticipantContext} from "../store/hook/ParticipantProvider";
 
 // group headings: the kinds of the tariff form
@@ -99,7 +100,8 @@ const RatesPage: FC = () => {
   }
 
   const onNew = () => {
-    const newRate = {id: '', version: 0, name: '', type: 'EEG', useVat: false, useMeteringPointFee: false} as EegTariff
+    const newRate = {id: '', version: 0, name: '', type: 'EEG', useVat: false, useMeteringPointFee: false,
+      joiningFeeText: DEFAULT_JOINING_FEE_TEXT} as EegTariff
     onSelect(newRate)
   }
 
