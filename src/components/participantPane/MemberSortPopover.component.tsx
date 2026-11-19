@@ -1,7 +1,7 @@
 import React, {FC, useState} from "react";
-import {IonButton, IonButtons, IonCheckbox, IonItem, IonList, IonListHeader, IonRadio, IonRadioGroup} from "@ionic/react";
+import {IonButton, IonButtons, IonCheckbox, IonItem, IonList, IonListHeader, IonNote, IonRadio, IonRadioGroup} from "@ionic/react";
 import {useLocale} from "../../store/hook/useLocale";
-import {MEMBER_SORT_OPTIONS, MemberSort} from "./participantSort";
+import {EnergySortState, isEnergySort, MEMBER_SORT_OPTIONS, MemberSort} from "./participantSort";
 
 import "./MemberSortPopover.component.scss"
 
@@ -10,11 +10,12 @@ import "./MemberSortPopover.component.scss"
 interface MemberSortPopoverProps {
   memberSort: MemberSort
   actionFirst: boolean
+  energySort: EnergySortState
   onApply: (memberSort: MemberSort, actionFirst: boolean) => void
   onDismiss: () => void
 }
 
-const MemberSortPopover: FC<MemberSortPopoverProps> = ({memberSort, actionFirst, onApply, onDismiss}) => {
+const MemberSortPopover: FC<MemberSortPopoverProps> = ({memberSort, actionFirst, energySort, onApply, onDismiss}) => {
   const {t} = useLocale("common")
   const [sort, setSort] = useState<MemberSort>(memberSort)
   const [first, setFirst] = useState<boolean>(actionFirst)
@@ -23,12 +24,17 @@ const MemberSortPopover: FC<MemberSortPopoverProps> = ({memberSort, actionFirst,
     <IonList lines="none" className="member-sort-popover">
       <IonListHeader>{t('meterlist.sort_header')}</IonListHeader>
       <IonRadioGroup value={sort} onIonChange={e => setSort(e.detail.value)}>
-        {MEMBER_SORT_OPTIONS.map(o => (
+        {MEMBER_SORT_OPTIONS.filter(o => !(isEnergySort(o) && energySort === 'hidden')).map(o => (
           <IonItem key={o}>
-            <IonRadio value={o} labelPlacement="end" justify="start">{t('meterlist.sort_' + o)}</IonRadio>
+            <IonRadio value={o} labelPlacement="end" justify="start"
+                      disabled={isEnergySort(o) && energySort === 'disabled'}>{t('meterlist.sort_' + o)}</IonRadio>
           </IonItem>
         ))}
       </IonRadioGroup>
+      {energySort === 'disabled' &&
+        <IonItem>
+          <IonNote className="ion-text-wrap">{t('meterlist.sort_energy_hint')}</IonNote>
+        </IonItem>}
       <IonItem>
         <IonCheckbox checked={first} labelPlacement="end" justify="start"
                      onIonChange={e => setFirst(e.detail.checked)}>{t('meterlist.sort_action_first')}</IonCheckbox>

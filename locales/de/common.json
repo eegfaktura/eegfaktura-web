@@ -336,6 +336,9 @@
     "sort_activeSince": "Aktiv ab (neueste zuerst)",
     "sort_debitType": "Einzugsart",
     "sort_city": "Ort",
+    "sort_energyHighest": "Energiemenge (größte zuerst)",
+    "sort_energyLowest": "Energiemenge (kleinste zuerst)",
+    "sort_energy_hint": "Für die Sortierung nach Energiemenge zuerst Erzeuger oder Verbraucher wählen.",
     "cancel": "Abbrechen",
     "apply": "Übernehmen"
   },

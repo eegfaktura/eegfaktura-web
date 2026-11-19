@@ -44,6 +44,7 @@ import {
   energyReportErrorSelector,
   energyReportLoadingSelector,
   meteringEnergyGroup1,
+  meteringEnergyGroup11,
   selectMetaRecord,
   setSelectedPeriod,
 } from "../../store/energy";
@@ -100,7 +101,17 @@ import BillingTotalsTable, {
   writeTotalsOpen
 } from "./BillingTotalsTable.component";
 import FilterSegmentComponent from "./FilterSegment.component";
-import {MemberSort, readActionFirst, readMemberSort, writeActionFirst, writeMemberSort} from "./participantSort";
+import {
+  appliedMemberSort,
+  effectiveMemberSort,
+  energySortState,
+  MemberSort,
+  readActionFirst,
+  readMemberSort,
+  sortByEnergy,
+  writeActionFirst,
+  writeMemberSort
+} from "./participantSort";
 
 import HeaderFavButtonComponent from "../core/HeaderFavButton.component";
 import {Virtuoso} from "react-virtuoso";
@@ -328,8 +339,9 @@ const ParticipantPaneComponent: FC = () => {
   })
 
   const onChangeMemberSort = (sort: MemberSort, first: boolean) => {
-    setMemberSort(sort)
-    writeMemberSort(sort)
+    const kept = appliedMemberSort(memberSort, sort, energySort)
+    setMemberSort(kept)
+    writeMemberSort(kept)
     setActionFirst(first)
     writeActionFirst(first)
   }
@@ -668,7 +680,16 @@ const ParticipantPaneComponent: FC = () => {
   //   return viewEntities.findIndex(v => v.id === participantId)
   // }
 
-  const viewPortItems = filterSearchQuery(viewEntities, searchQuery)
+  // energy sort (platform#259): on the shown list, by the kWh of the metering point cards; a chosen energy sort waits
+  // while it is not available (see energySortState). In the billing view a member's € sum is shown once per entry, so
+  // its metering points stay together there.
+  const meterEnergy = useAppSelector(meteringEnergyGroup11)
+  const energySort = energySortState(hideMeter, hideProducers, hideConsumers)
+  const listSort = effectiveMemberSort(memberSort, energySort)
+  const searchedItems = filterSearchQuery(viewEntities, searchQuery)
+  const viewPortItems = listSort === 'energyHighest' || listSort === 'energyLowest'
+    ? sortByEnergy(searchedItems, meterEnergy, listSort, {perMeter: hideMember && !showAmount, actionFirst})
+    : searchedItems
 
   const RowElement: FC<{ participant: EegParticipant }> = ({participant}) => {
     const command = participant
@@ -779,7 +800,8 @@ const ParticipantPaneComponent: FC = () => {
             </IonToolbar>
           )}
           <FilterSegmentComponent selectedOption={selectedFilter} setSelectedOption={setSelectedFilter}
-                                  memberSort={memberSort} actionFirst={actionFirst} setMemberSort={onChangeMemberSort}/>
+                                  memberSort={listSort} actionFirst={actionFirst} energySort={energySort}
+                                  setMemberSort={onChangeMemberSort}/>
           <ParticipantPeriodHeaderComponent
             activePeriod={activePeriod}
             onUpdatePeriod={onUpdatePeriodSelection}

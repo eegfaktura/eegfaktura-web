@@ -12,7 +12,8 @@ import "../../../util/I18n"
 
 const renderSegment = (selectedOption: string, setSelectedOption = vi.fn()) =>
   render(<FilterSegmentComponent selectedOption={selectedOption} setSelectedOption={setSelectedOption}
-                                 memberSort="participantNumber" actionFirst={true} setMemberSort={vi.fn()}/>)
+                                 memberSort="participantNumber" actionFirst={true} energySort="disabled"
+                                 setMemberSort={vi.fn()}/>)
 
 describe("FilterSegment: one view choice (platform#214, 28.10.2026)", () => {
   it("offers Standard first, then the filters", () => {

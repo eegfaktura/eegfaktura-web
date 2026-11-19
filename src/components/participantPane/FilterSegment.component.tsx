@@ -11,7 +11,7 @@ import './FilterSegment.component.scss'
 import {eegFilterList} from "../../eegIcons";
 import {useLocale} from "../../store/hook/useLocale";
 import {swapVertical} from "ionicons/icons";
-import {MemberSort} from "./participantSort";
+import {EnergySortState, MemberSort} from "./participantSort";
 import {MEMBER_FILTER_OPTIONS, MemberFilter} from "./memberFilter.functions";
 import MemberSortPopover from "./MemberSortPopover.component";
 
@@ -25,15 +25,17 @@ interface FilterSegmentProps {
   setSelectedOption: (option: string) => void;
   memberSort: MemberSort;
   actionFirst: boolean;
+  energySort: EnergySortState;
   setMemberSort: (sort: MemberSort, actionFirst: boolean) => void;
 }
 
-const FilterSegmentComponent: FC<FilterSegmentProps> = ({selectedOption, setSelectedOption, memberSort, actionFirst, setMemberSort}) => {
+const FilterSegmentComponent: FC<FilterSegmentProps> = ({selectedOption, setSelectedOption, memberSort, actionFirst, energySort, setMemberSort}) => {
   const [filterAlert] = useIonAlert();
   const {t} = useLocale("common")
   const [sortPopover, dismissSortPopover] = useIonPopover(MemberSortPopover, {
     memberSort,
     actionFirst,
+    energySort,
     onApply: (sort: MemberSort, first: boolean) => {
       setMemberSort(sort, first)
       dismissSortPopover()
