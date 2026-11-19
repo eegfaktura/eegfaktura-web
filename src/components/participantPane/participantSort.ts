@@ -2,14 +2,28 @@ import {EegParticipant} from "../../models/members.model";
 import {Metering} from "../../models/meteringpoint.model";
 import {debitInstrument} from "../../util/MandateReference.util";
 
-// Sort options of the member list (platform#214). The first one is the default.
+// Sort options of the member list (platform#214, energy platform#259). The first one is the default.
 export type MemberSort = 'participantNumber' | 'lastname' | 'firstname' | 'sinceNewest' | 'sinceOldest'
-  | 'activeSince' | 'debitType' | 'city'
+  | 'activeSince' | 'debitType' | 'city' | 'energyHighest' | 'energyLowest'
 
 export const MEMBER_SORT_OPTIONS: MemberSort[] =
-  ['participantNumber', 'lastname', 'firstname', 'sinceNewest', 'sinceOldest', 'activeSince', 'debitType', 'city']
+  ['participantNumber', 'lastname', 'firstname', 'sinceNewest', 'sinceOldest', 'activeSince', 'debitType', 'city',
+    'energyHighest', 'energyLowest']
 
 export const DEFAULT_MEMBER_SORT: MemberSort = 'participantNumber'
+
+export const isEnergySort = (sort: MemberSort) => sort === 'energyHighest' || sort === 'energyLowest'
+
+// The energy sorts (decided 14.11.2026 with Harald): not offered in „Nur Mitglieder“ (no metering points shown), and
+// greyed out until „Nur Erzeuger“ or „Nur Verbraucher“ says which energy counts.
+export type EnergySortState = 'available' | 'disabled' | 'hidden'
+
+export const energySortState = (hideMeter: boolean, hideProducers: boolean, hideConsumers: boolean): EnergySortState =>
+  hideMeter ? 'hidden' : hideProducers || hideConsumers ? 'available' : 'disabled'
+
+/** The sort the list uses: a chosen energy sort counts only while it is available, else the default. */
+export const effectiveMemberSort = (sort: MemberSort, state: EnergySortState): MemberSort =>
+  isEnergySort(sort) && state !== 'available' ? DEFAULT_MEMBER_SORT : sort
 
 // German collation, case-insensitive, umlauts right after their base letter, digits compared as numbers ("2" < "10")
 const collator = new Intl.Collator('de', {sensitivity: 'accent', numeric: true})
@@ -59,6 +73,9 @@ const compareBy: Record<MemberSort, Compare> = {
   debitType: (a, b) => DEBIT_RANK[debitInstrument(a.accountInfo?.sepaDirectDebit)]
     - DEBIT_RANK[debitInstrument(b.accountInfo?.sepaDirectDebit)] || byName(a, b),
   city: (a, b) => city(a, b) || byName(a, b),
+  // the energy order is applied on the shown list (sortByEnergy); here the member number, its tie-break
+  energyHighest: byText(p => p.participantNumber),
+  energyLowest: byText(p => p.participantNumber),
 }
 
 // The groups of the former list order: members that are not active first, then members with a metering point that is
@@ -83,6 +100,33 @@ export const sortMembers = (participants: EegParticipant[], sort: MemberSort, ac
   return participants
     .map(consumersFirst)
     .sort((a, b) => (actionFirst ? actionRank(a) - actionRank(b) : 0) || compare(a, b))
+}
+
+// kWh of the period per member and metering point, as the metering point card shows them (meteringEnergyGroup11).
+export type MeterEnergy = Record<string, Record<string, number>>
+
+/**
+ * The energy sort of the shown list (platform#259), stable: equal values keep their order. A metering point without
+ * energy in the period counts as 0 kWh. perMeter („Nur Zählpunkte“): one entry per metering point, sorted across all
+ * members; else members by the sum of their shown metering points, these sorted within the member. With actionFirst
+ * the entries needing an action stay on top, judged by the shown metering points.
+ */
+export const sortByEnergy = (participants: EegParticipant[], energy: MeterEnergy, highestFirst: boolean,
+                             perMeter: boolean, actionFirst: boolean): EegParticipant[] => {
+  const kWh = (p: EegParticipant, m: Metering) => {
+    const v = energy[p.id]?.[m.meteringPoint]
+    return v === undefined || isNaN(v) ? 0 : v
+  }
+  const order = highestFirst ? -1 : 1
+  const entries = perMeter
+    ? participants.flatMap(p => (p.meters ?? []).map(m => ({p: {...p, meters: [m]}, value: kWh(p, m)})))
+    : participants.map(p => {
+      const meters = [...(p.meters ?? [])].sort((a, b) => order * (kWh(p, a) - kWh(p, b)))
+      return {p: {...p, meters}, value: meters.reduce((s, m) => s + kWh(p, m), 0)}
+    })
+  return entries
+    .sort((a, b) => (actionFirst ? actionRank(a.p) - actionRank(b.p) : 0) || order * (a.value - b.value))
+    .map(e => e.p)
 }
 
 // Each viewer's choice is kept in the browser. Storage can be missing or blocked: then it is the default. A value that
