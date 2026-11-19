@@ -25,6 +25,13 @@ export const energySortState = (hideMeter: boolean, hideProducers: boolean, hide
 export const effectiveMemberSort = (sort: MemberSort, state: EnergySortState): MemberSort =>
   isEnergySort(sort) && state !== 'available' ? DEFAULT_MEMBER_SORT : sort
 
+/**
+ * The sort to keep when the menu is applied: while a chosen energy sort waits, the menu shows the sort in use;
+ * applied unchanged (e.g. only the action toggle changed), the energy sort stays chosen.
+ */
+export const appliedMemberSort = (chosen: MemberSort, applied: MemberSort, state: EnergySortState): MemberSort =>
+  applied === effectiveMemberSort(chosen, state) ? chosen : applied
+
 // German collation, case-insensitive, umlauts right after their base letter, digits compared as numbers ("2" < "10")
 const collator = new Intl.Collator('de', {sensitivity: 'accent', numeric: true})
 
@@ -62,9 +69,10 @@ const lastname = byText(p => p.lastname)
 const firstname = byText(p => p.firstname)
 const byName: Compare = (a, b) => lastname(a, b) || firstname(a, b)
 const city = byText(p => p.residentAddress?.city)
+const byNumber = byText(p => p.participantNumber)
 
 const compareBy: Record<MemberSort, Compare> = {
-  participantNumber: byText(p => p.participantNumber),
+  participantNumber: byNumber,
   lastname: byName,
   firstname: (a, b) => firstname(a, b) || lastname(a, b),
   sinceNewest: byTime(p => time(p.participantSince), true),
@@ -74,8 +82,8 @@ const compareBy: Record<MemberSort, Compare> = {
     - DEBIT_RANK[debitInstrument(b.accountInfo?.sepaDirectDebit)] || byName(a, b),
   city: (a, b) => city(a, b) || byName(a, b),
   // the energy order is applied on the shown list (sortByEnergy); here the member number, its tie-break
-  energyHighest: byText(p => p.participantNumber),
-  energyLowest: byText(p => p.participantNumber),
+  energyHighest: byNumber,
+  energyLowest: byNumber,
 }
 
 // The groups of the former list order: members that are not active first, then members with a metering point that is
@@ -107,17 +115,18 @@ export type MeterEnergy = Record<string, Record<string, number>>
 
 /**
  * The energy sort of the shown list (platform#259), stable: equal values keep their order. A metering point without
- * energy in the period counts as 0 kWh. perMeter („Nur Zählpunkte“): one entry per metering point, sorted across all
- * members; else members by the sum of their shown metering points, these sorted within the member. With actionFirst
- * the entries needing an action stay on top, judged by the shown metering points.
+ * energy in the period counts as 0 kWh. perMeter („Nur Zählpunkte“ outside the billing view): one entry per metering
+ * point, sorted across all members; else members by the sum of their shown metering points, these sorted within the
+ * member. With actionFirst the entries needing an action stay on top, judged by the shown metering points.
  */
-export const sortByEnergy = (participants: EegParticipant[], energy: MeterEnergy, highestFirst: boolean,
-                             perMeter: boolean, actionFirst: boolean): EegParticipant[] => {
+export const sortByEnergy = (participants: EegParticipant[], energy: MeterEnergy,
+                             sort: 'energyHighest' | 'energyLowest',
+                             {perMeter, actionFirst}: {perMeter: boolean, actionFirst: boolean}): EegParticipant[] => {
   const kWh = (p: EegParticipant, m: Metering) => {
     const v = energy[p.id]?.[m.meteringPoint]
     return v === undefined || isNaN(v) ? 0 : v
   }
-  const order = highestFirst ? -1 : 1
+  const order = sort === 'energyHighest' ? -1 : 1
   const entries = perMeter
     ? participants.flatMap(p => (p.meters ?? []).map(m => ({p: {...p, meters: [m]}, value: kWh(p, m)})))
     : participants.map(p => {

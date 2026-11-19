@@ -102,9 +102,9 @@ import BillingTotalsTable, {
 } from "./BillingTotalsTable.component";
 import FilterSegmentComponent from "./FilterSegment.component";
 import {
+  appliedMemberSort,
   effectiveMemberSort,
   energySortState,
-  isEnergySort,
   MemberSort,
   readActionFirst,
   readMemberSort,
@@ -339,8 +339,9 @@ const ParticipantPaneComponent: FC = () => {
   })
 
   const onChangeMemberSort = (sort: MemberSort, first: boolean) => {
-    setMemberSort(sort)
-    writeMemberSort(sort)
+    const kept = appliedMemberSort(memberSort, sort, energySort)
+    setMemberSort(kept)
+    writeMemberSort(kept)
     setActionFirst(first)
     writeActionFirst(first)
   }
@@ -679,14 +680,15 @@ const ParticipantPaneComponent: FC = () => {
   //   return viewEntities.findIndex(v => v.id === participantId)
   // }
 
-  // energy sort (platform#259): on the shown list, by the kWh the metering point cards show; a chosen energy sort waits
-  // while it is not available (see energySortState)
+  // energy sort (platform#259): on the shown list, by the kWh of the metering point cards; a chosen energy sort waits
+  // while it is not available (see energySortState). In the billing view a member's € sum is shown once per entry, so
+  // its metering points stay together there.
   const meterEnergy = useAppSelector(meteringEnergyGroup11)
   const energySort = energySortState(hideMeter, hideProducers, hideConsumers)
   const listSort = effectiveMemberSort(memberSort, energySort)
   const searchedItems = filterSearchQuery(viewEntities, searchQuery)
-  const viewPortItems = isEnergySort(listSort)
-    ? sortByEnergy(searchedItems, meterEnergy, listSort === 'energyHighest', hideMember, actionFirst)
+  const viewPortItems = listSort === 'energyHighest' || listSort === 'energyLowest'
+    ? sortByEnergy(searchedItems, meterEnergy, listSort, {perMeter: hideMember && !showAmount, actionFirst})
     : searchedItems
 
   const RowElement: FC<{ participant: EegParticipant }> = ({participant}) => {

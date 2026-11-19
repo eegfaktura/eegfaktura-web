@@ -11,12 +11,14 @@ this changelog highlights the changes relevant for overview and operations.
 ### Added
 - **Member list: sort by energy** (platform#259, decided 14.11.2026 with @hargei). The sort menu has „Energiemenge
   (größte zuerst)“ and „Energiemenge (kleinste zuerst)“, by the kWh of the selected period that the metering point
-  cards show (consumer: drawn from the community, producer: fed into it). They are greyed out with a hint until „Nur
-  Erzeuger“ or „Nur Verbraucher“ is chosen, and not offered in „Nur Mitglieder“. In „Nur Zählpunkte“ the metering
-  points are sorted across all members; with members shown, members by the sum of their shown metering points and
-  these within the member. A metering point without energy in the period counts as 0 kWh. „Mitglieder mit nötiger
-  Aktion oben“ still applies. While the energy sort is not available the list uses the member number, the choice is
-  kept and applies again once a direction is chosen. Web only, no backend change.
+  cards show outside the billing view (consumer: drawn from the community, producer: fed into it); in the billing view
+  the cards show € and the order stays by kWh. They are greyed out with a hint until „Nur Erzeuger“ or „Nur
+  Verbraucher“ is chosen, and not offered in „Nur Mitglieder“. In „Nur Zählpunkte“ the metering points are sorted
+  across all members; with members shown, and in the billing view (one € sum per member), members by the sum of their
+  shown metering points and these within the member. A metering point without energy in the period counts as 0 kWh.
+  „Mitglieder mit nötiger Aktion oben“ still applies, judged by the shown metering points. While the energy sort is
+  not available the list uses the member number; the choice is kept (also when the menu is applied unchanged) and
+  applies again once a direction is chosen. Web only, no backend change.
 
 ## [1.26.0] – 2026-11-16
 
