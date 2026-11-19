@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.27.0] – 2026-11-19
+
 ### Added
 - **Member list: sort by energy** (platform#259, decided 14.11.2026 with @hargei). The sort menu has „Energiemenge
   (größte zuerst)“ and „Energiemenge (kleinste zuerst)“, by the kWh of the selected period that the metering point
