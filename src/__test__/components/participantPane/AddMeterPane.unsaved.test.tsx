@@ -119,5 +119,6 @@ describe("adding a metering point registers it online (decision 2026-10-30)", ()
     expect(body.meteringPoint).toBe("AT0030000000000000000000000000001")
     expect(body.activationMode).toBe("ONLINE")
     expect(body).not.toHaveProperty("activationCode")
+    expect(body.partFact).toBe(100)  // prefilled like on the first registration
   })
 })
