@@ -8,6 +8,10 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **Adding a metering point to an existing member: participation factor prefilled with 100 %**, as when the member
+  is registered. It used to start empty. The value can still be changed before „Registrieren“.
+
 ## [1.27.0] – 2026-11-19
 
 ### Added

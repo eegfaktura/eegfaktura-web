@@ -32,6 +32,7 @@ const AddMeterPaneComponent: FC = () => {
     meteringPoint: "",
     direction: "CONSUMPTION",
     registeredSince: moment.utc().toDate(),
+    partFact: 100,  // as when the member is registered
     // participantState: {activeSince: new Date(Date.now()), inactiveSince: moment.utc([2999, 11, 31]).toDate()} as ParticipantState,
     activationMode: 'ONLINE'
   } as Metering
