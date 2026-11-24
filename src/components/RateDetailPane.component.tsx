@@ -32,6 +32,8 @@ import {useConfirmDiscard, useReportDirty} from "./core/UnsavedChangesGuard.comp
 
 // the error key handleErrors builds from the backend's answer {code: 4002, error: "Tariff is currently used"}
 const TARIFF_IN_USE = "E_4002_Tariff is currently used"
+// 409 {code: 4003, error: "Bulk change is running"}: the support runs a bulk change of the community (platform#267)
+const TARIFF_LOCKED = "E_4003_Bulk change is running"
 
 interface RateDetailPaneComponentProps {
   onSubmit: (data: EegTariff) => void;
@@ -95,11 +97,11 @@ const RateDetailPaneForm: FC<RateDetailPaneComponentProps> = ({onSubmit, submitI
       dispatcher(archiveRate({rate, tenant: tenant}))
         .unwrap()
         .catch((e) => {
-            // backend code 4002 (backend#106): the tariff is still used, handleErrors translated it already
-            const inUse = errorT(TARIFF_IN_USE)
-            if (e?.message === inUse) {
+            // backend code 4002 (backend#106, still used) or 4003 (bulk change running): handleErrors translated it already
+            const expected = [errorT(TARIFF_IN_USE), errorT(TARIFF_LOCKED)]
+            if (expected.includes(e?.message)) {
               showToast({
-                message: inUse,
+                message: e.message,
                 duration: 4500,
                 color: "warning"
               })
