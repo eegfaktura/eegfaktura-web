@@ -9,6 +9,9 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Changed
+- **Deleting a tariff while the support runs a bulk change of the community** (backend 409, code 4003,
+  eegfaktura-backend#165, platform#267): a yellow hint „Gerade läuft eine Massenänderung für diese Gemeinschaft. Bitte in
+  ein paar Minuten erneut versuchen.“ instead of the raw key with „Bitte kontaktieren Sie Ihren Administrator“.
 - **Adding a metering point to an existing member: participation factor prefilled with 100 %**, as when the member
   is registered. It used to start empty. The value can still be changed before „Registrieren“.
 

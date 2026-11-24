@@ -74,6 +74,22 @@ describe("RateDetailPane: archive a tariff (261024-ca16)", () => {
       .toBe("Der Tarif wird noch von Mitgliedern oder Zählpunkten verwendet und kann nicht gelöscht werden.")
     vi.unstubAllGlobals()
   })
+
+  it("a bulk change of the support blocks the archive (409, code 4003): German warning, no raw key (platform#267)", async () => {
+    const service = new TariffService({} as AuthService)
+    vi.spyOn(service as any, "lookupToken").mockResolvedValue("token")
+    Api.tariffService = service
+    const body = JSON.stringify({error: {code: 4003, error: "Bulk change is running", message: "Bulk change is running"}})
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(body, {status: 409, statusText: "Conflict"})))
+    toaster.mockReset()
+    render([])
+    await act(async () => alert.mock.lastCall![0].onDidDismiss({detail: {role: "confirm"}}))
+    await act(async () => { await new Promise(r => setTimeout(r, 0)) })
+    expect(toaster.mock.lastCall![0].message)
+      .toBe("Gerade läuft eine Massenänderung für diese Gemeinschaft. Bitte in ein paar Minuten erneut versuchen.")
+    expect(toaster.mock.lastCall![0].color).toBe("warning")
+    vi.unstubAllGlobals()
+  })
 })
 
 describe("RateDetailPane: saving a joining fee warns first (platform#217)", () => {
