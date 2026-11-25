@@ -136,6 +136,18 @@ describe("createSepaDirectDebit", () => {
       expect(new Set(ids.map(x => x.slice(0, 16))).size).toBe(3);
     }
   });
+
+  // platform#270: the banks ask for the ISO 20022 version 2019 (a Sparkasse warns about 2009).
+  it("writes the 2019 versions pain.008.001.08 and pain.001.001.09 with BICFI", async () => {
+    const debit = await createSepaDirectDebit(items, eeg, period, new Date("2026-10-15"), true, "CORE");
+    const transfer = await createSepaCreditTransfer(items, eeg, period, new Date("2026-10-15"), true);
+    expect(debit).toContain('xmlns="urn:iso:std:iso:20022:tech:xsd:pain.008.001.08"');
+    expect(transfer).toContain('xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09"');
+    for (const xml of [debit, transfer]) {
+      expect(xml).toMatch(/<FinInstnId>\s*<BICFI>TESTATWW<\/BICFI>/);
+      expect(xml).not.toMatch(/<BIC>/);
+    }
+  });
 });
 
 describe("toSepaText length limit", () => {
