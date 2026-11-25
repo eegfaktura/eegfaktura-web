@@ -136,6 +136,28 @@ describe("createSepaDirectDebit", () => {
       expect(new Set(ids.map(x => x.slice(0, 16))).size).toBe(3);
     }
   });
+
+  // platform#270: the banks ask for the ISO 20022 version 2019 (a Sparkasse warns about 2009).
+  it("writes the 2019 versions pain.008.001.08 and pain.001.001.09 with BICFI", async () => {
+    const debit = await createSepaDirectDebit(items, eeg, period, new Date("2026-10-15"), true, "CORE");
+    const transfer = await createSepaCreditTransfer(items, eeg, period, new Date("2026-10-15"), true);
+    expect(debit).toContain('xmlns="urn:iso:std:iso:20022:tech:xsd:pain.008.001.08"');
+    expect(transfer).toContain('xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09"');
+    for (const xml of [debit, transfer]) {
+      expect(xml).toMatch(/<FinInstnId>\s*<BICFI>TESTATWW<\/BICFI>/);
+      expect(xml).not.toMatch(/<BIC>/);
+    }
+  });
+
+  it("names the scheme of the creditor identifier \"SEPA\" (EPC AT-02)", async () => {
+    const debit = await createSepaDirectDebit(items, eeg, period, new Date("2026-10-15"), true, "CORE");
+    expect(debit).toMatch(/<Othr>\s*<Id>AT12ZZZ00000000001<\/Id>\s*<SchmeNm>\s*<Prtry>SEPA<\/Prtry>\s*<\/SchmeNm>\s*<\/Othr>/);
+  });
+
+  it("gives the direct debit the service level SEPA before the instrument", async () => {
+    const debit = await createSepaDirectDebit(items, eeg, period, new Date("2026-10-15"), true, "B2B");
+    expect(debit).toMatch(/<PmtTpInf>\s*<SvcLvl>\s*<Cd>SEPA<\/Cd>\s*<\/SvcLvl>\s*<LclInstrm>\s*<Cd>B2B<\/Cd>/);
+  });
 });
 
 describe("toSepaText length limit", () => {

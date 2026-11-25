@@ -48,7 +48,7 @@ describe("SEPA due date in Europe/Vienna", () => {
     const day = `${collectionDate.getFullYear()}-${String(collectionDate.getMonth() + 1).padStart(2, "0")}-15`;
     expect(r.files[0].content).toContain(`<ReqdColltnDt>${day}</ReqdColltnDt>`);
     expect(r.files[1].content).toContain(`<ReqdColltnDt>${day}</ReqdColltnDt>`);
-    expect(r.files[2].content).toContain(`<ReqdExctnDt>${day}</ReqdExctnDt>`);
+    expect(r.files[2].content).toMatch(new RegExp(`<ReqdExctnDt>\\s*<Dt>${day}</Dt>\\s*</ReqdExctnDt>`));
   });
 
   it("writes the transfer date into the credit transfer only (platform#167)", async () => {
@@ -56,6 +56,6 @@ describe("SEPA due date in Europe/Vienna", () => {
     const r = await ConvertExcelToXML("TE1", "run", eeg, new Date(2026, 9, 15), period, true, false, new Date(2026, 9, 20));
     expect(r.files[0].content).toContain(`<ReqdColltnDt>2026-10-15</ReqdColltnDt>`);
     expect(r.files[1].content).toContain(`<ReqdColltnDt>2026-10-15</ReqdColltnDt>`);
-    expect(r.files[2].content).toContain(`<ReqdExctnDt>2026-10-20</ReqdExctnDt>`);
+    expect(r.files[2].content).toMatch(/<ReqdExctnDt>\s*<Dt>2026-10-20<\/Dt>\s*<\/ReqdExctnDt>/);
   });
 });

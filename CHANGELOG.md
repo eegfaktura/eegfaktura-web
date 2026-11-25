@@ -8,6 +8,18 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **SEPA files in the ISO 20022 version 2019** (platform#270). Direct debits (CORE and B2B) are written as
+  `pain.008.001.08` instead of `pain.008.001.02`, and credit transfers as `pain.001.001.09` instead of `pain.001.001.03`.
+  A Sparkasse had warned that the 2009 version no longer meets current requirements. In the file, the bank code is
+  now written as `BICFI` instead of `BIC`, and the execution date of a transfer as `ReqdExctnDt/Dt`. Content does not
+  change: the files still carry no postal address, which is allowed within the EEA. Banks that accept only the
+  2009 version reject the new files.
+- **SEPA direct debits: two details the EPC guidelines ask for** (self-review of platform#270, present before). The
+  creditor identifier names its scheme (`SchmeNm/Prtry` = `SEPA`), and the direct debit carries the service level
+  `SEPA` (`PmtTpInf/SvcLvl`), as the credit transfer already did. Both are optional in the ISO schema; a bank that
+  checks the stricter EPC rules no longer has a reason to reject the file.
+
 ## [1.29.0] – 2026-11-25
 
 ## [1.28.1] – 2026-11-25
