@@ -8,6 +8,10 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.29.0] – 2026-11-25
+
+## [1.28.1] – 2026-11-25
+
 ### Added
 - **Side menu: „Handbuch“** above „Info“ opens the user guide (eegfaktura.github.io/eegfaktura-user-guide) in a new tab,
   for every user (support request 25.11.2026). The address lives in one place (`src/util/UserGuide.util.ts`); the help
