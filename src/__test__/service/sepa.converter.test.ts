@@ -148,6 +148,11 @@ describe("createSepaDirectDebit", () => {
       expect(xml).not.toMatch(/<BIC>/);
     }
   });
+
+  it("names the scheme of the creditor identifier \"SEPA\" (EPC AT-02)", async () => {
+    const debit = await createSepaDirectDebit(items, eeg, period, new Date("2026-10-15"), true, "CORE");
+    expect(debit).toMatch(/<Othr>\s*<Id>AT12ZZZ00000000001<\/Id>\s*<SchmeNm>\s*<Prtry>SEPA<\/Prtry>\s*<\/SchmeNm>\s*<\/Othr>/);
+  });
 });
 
 describe("toSepaText length limit", () => {
