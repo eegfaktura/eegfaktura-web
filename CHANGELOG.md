@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.28.0] – 2026-11-25
+
 ### Changed
 - **Deleting a tariff while the support runs a bulk change of the community** (backend 409, code 4003,
   eegfaktura-backend#165, platform#267): a yellow hint „Gerade läuft eine Massenänderung für diese Gemeinschaft. Bitte in
