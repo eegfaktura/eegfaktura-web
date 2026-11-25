@@ -19,7 +19,8 @@ this changelog highlights the changes relevant for overview and operations.
 - **Adding a metering point: „Registrieren“ stayed grey when the address was typed by hand** (support 25.11.2026). It
   turned active only after „Adresse vom Besitzer übernehmen“. The form validated only when a field was left, and the
   shared input does not report that (since April 2024); it now validates on every change, as the edit form of a
-  metering point does. The button is enabled once metering point and address are valid.
+  metering point does (error messages show while typing). The button is enabled once all required fields are valid
+  (in a community with static allocation also the allocation factor).
 
 ## [1.27.0] – 2026-11-19
 

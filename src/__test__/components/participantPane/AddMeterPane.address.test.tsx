@@ -8,7 +8,8 @@ import "../../../util/I18n";
 // Support report 25.11.2026: adding a metering point to an existing member, „Registrieren“ stayed grey while the
 // address was typed by hand; only „Adresse vom Besitzer übernehmen“ enabled it.
 
-vi.mock("../../../store/hook/Eeg.provider", () => ({
+vi.mock("../../../store/hook/Eeg.provider", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../../store/hook/Eeg.provider")>()),
   useTenant: () => ({tenant: "RC100100"}),
   useOnlineState: () => true,
   useAccessGroups: () => ({isAdmin: () => true}),
@@ -35,7 +36,6 @@ const setup = () => {
     field.value = value
     await act(async () => { fireEvent(field, new CustomEvent("ionInput", {detail: {value}})) })
     await act(async () => { fireEvent(field, new CustomEvent("ionChange", {detail: {value}})) })
-    await act(async () => { fireEvent(field, new CustomEvent("ionBlur")) })
   }
   return {...r, type}
 }
