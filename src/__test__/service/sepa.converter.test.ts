@@ -153,6 +153,11 @@ describe("createSepaDirectDebit", () => {
     const debit = await createSepaDirectDebit(items, eeg, period, new Date("2026-10-15"), true, "CORE");
     expect(debit).toMatch(/<Othr>\s*<Id>AT12ZZZ00000000001<\/Id>\s*<SchmeNm>\s*<Prtry>SEPA<\/Prtry>\s*<\/SchmeNm>\s*<\/Othr>/);
   });
+
+  it("gives the direct debit the service level SEPA before the instrument", async () => {
+    const debit = await createSepaDirectDebit(items, eeg, period, new Date("2026-10-15"), true, "B2B");
+    expect(debit).toMatch(/<PmtTpInf>\s*<SvcLvl>\s*<Cd>SEPA<\/Cd>\s*<\/SvcLvl>\s*<LclInstrm>\s*<Cd>B2B<\/Cd>/);
+  });
 });
 
 describe("toSepaText length limit", () => {
