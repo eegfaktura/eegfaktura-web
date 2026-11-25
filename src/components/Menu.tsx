@@ -14,7 +14,7 @@ import {
 
 import {useLocation} from 'react-router-dom';
 import {
-  informationCircle, logOutOutline, newspaper, swapHorizontalOutline,
+  bookOutline, informationCircle, logOutOutline, newspaper, swapHorizontalOutline,
   people, personCircle, refreshOutline, wallet, walletSharp
 } from 'ionicons/icons';
 import './Menu.css';
@@ -29,6 +29,20 @@ import {User} from "oidc-client-ts";
 import {useAuth} from "react-oidc-context";
 import {useLocale} from "../store/hook/useLocale";
 import TenantPicker from "./core/TenantPicker.component";
+import {USER_GUIDE_URL} from "../util/UserGuide.util";
+
+// The user guide in a new tab, for every user (support request 25.11.2026).
+export const UserGuideMenuItem: FC = () => {
+  const {t} = useLocale("common")
+  return (
+    <IonMenuToggle autoHide={false}>
+      <IonItem href={USER_GUIDE_URL} target="_blank" rel="noopener noreferrer" lines="none" detail={false}>
+        <IonIcon aria-hidden="true" slot="start" icon={bookOutline}/>
+        <IonLabel>{t("menu.userGuide")}</IonLabel>
+      </IonItem>
+    </IonMenuToggle>
+  )
+}
 
 // const UserDetailPopover = (logout: () => Promise<void>, user: User) =>
 export const UserDetailPopover:FC<{authSvc: AuthService | undefined, onPickTenant: () => void}> = ({authSvc, onPickTenant}) => {
@@ -248,6 +262,7 @@ const Menu: FC = () => {
         {/*</IonList>*/}
       </IonContent>
       <IonFooter>
+        <UserGuideMenuItem/>
         <IonMenuToggle autoHide={false}>
           <IonItem className={location.pathname === "/pages/info" ? 'selected' : ''} id={"open-modal"} lines="none"
                    detail={false}>
