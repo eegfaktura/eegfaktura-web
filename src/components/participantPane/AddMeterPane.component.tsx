@@ -37,7 +37,9 @@ const AddMeterPaneComponent: FC = () => {
     activationMode: 'ONLINE'
   } as Metering
 
-  const formMethods = useForm<Metering>({mode: 'onBlur', defaultValues: meter});
+  // validate on every change: „Registrieren“ follows isValid, and the shared Input does not report blur, so with mode
+  // onBlur a typed address never became valid (support 25.11.2026). Errors show while typing, as in the edit form.
+  const formMethods = useForm<Metering>({mode: 'onChange', defaultValues: meter});
   const {handleSubmit, control, watch, setValue, formState: {errors, isDirty, isValid}, reset} = formMethods
 
   const {
