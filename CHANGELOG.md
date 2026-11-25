@@ -15,6 +15,12 @@ this changelog highlights the changes relevant for overview and operations.
 - **Adding a metering point to an existing member: participation factor prefilled with 100 %**, as when the member
   is registered. It used to start empty. The value can still be changed before „Registrieren“.
 
+### Fixed
+- **Adding a metering point: „Registrieren“ stayed grey when the address was typed by hand** (support 25.11.2026). It
+  turned active only after „Adresse vom Besitzer übernehmen“. The form validated only when a field was left, and the
+  shared input does not report that (since April 2024); it now validates on every change, as the edit form of a
+  metering point does. The button is enabled once metering point and address are valid.
+
 ## [1.27.0] – 2026-11-19
 
 ### Added
