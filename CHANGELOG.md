@@ -15,6 +15,10 @@ this changelog highlights the changes relevant for overview and operations.
   now written as `BICFI` instead of `BIC`, and the execution date of a transfer as `ReqdExctnDt/Dt`. Content does not
   change: the files still carry no postal address, which is allowed within the EEA. Banks that accept only the
   2009 version reject the new files.
+- **SEPA direct debits: two details the EPC guidelines ask for** (self-review of platform#270, present before). The
+  creditor identifier names its scheme (`SchmeNm/Prtry` = `SEPA`), and the direct debit carries the service level
+  `SEPA` (`PmtTpInf/SvcLvl`), as the credit transfer already did. Both are optional in the ISO schema; a bank that
+  checks the stricter EPC rules no longer has a reason to reject the file.
 
 ## [1.29.0] – 2026-11-25
 
