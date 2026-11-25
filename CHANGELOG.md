@@ -13,7 +13,7 @@ this changelog highlights the changes relevant for overview and operations.
   `pain.008.001.08` instead of `pain.008.001.02`, and credit transfers as `pain.001.001.09` instead of `pain.001.001.03`.
   A Sparkasse had warned that the 2009 version no longer meets current requirements. In the file, the bank code is
   now written as `BICFI` instead of `BIC`, and the execution date of a transfer as `ReqdExctnDt/Dt`. Content does not
-  change: the files still carry no postal address, which is allowed within the SEPA area. Banks that accept only the
+  change: the files still carry no postal address, which is allowed within the EEA. Banks that accept only the
   2009 version reject the new files.
 
 ## [1.29.0] – 2026-11-25
