@@ -3,9 +3,9 @@ import {IonButton, IonButtons, IonSpinner} from "@ionic/react";
 import {Eeg, SettlementIntervalResult} from "../../models/eeg.model";
 import {Api} from "../../service";
 import {periodLabel, settlementIntervalLabel} from "../../util/SettlementInterval.util";
+import {USER_GUIDE_URL} from "../../util/UserGuide.util";
 
-export const SETTLEMENT_INTERVAL_HELP_URL =
-  "https://eegfaktura.github.io/eegfaktura-user-guide/05-abrechnung/#abrechnungszeitraum-wechseln"
+export const SETTLEMENT_INTERVAL_HELP_URL = `${USER_GUIDE_URL}05-abrechnung/#abrechnungszeitraum-wechseln`
 
 interface SettlementIntervalChangeDialogProps {
   tenant: string
