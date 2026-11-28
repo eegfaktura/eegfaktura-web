@@ -14,6 +14,13 @@ this changelog highlights the changes relevant for overview and operations.
   and invalid metering points.
 - **EEG page: „Netzbetreiber-ID“ and „Netzbetreiber-Name“ are read only for non-admins**, like the other fields of the
   page (platform#281). They could be typed into, but the backend rejected the change, so nothing was saved.
+- **„Registrieren“ only with a metering point** (platform#278). With a metering point typed in but not added, the
+  member is not registered and a yellow hint „Der Zählpunkt ist noch nicht hinzugefügt. Bitte zuerst „Hinzufügen“
+  (bzw. „Übernehmen“) klicken oder die Eingabe mit „Abbrechen“ verwerfen.“ shows instead; before, the member was
+  created without that metering point and was missing from the default view of the member list. Without any
+  metering point the page refuses too, with „Zuerst einen Zählpunkt hinzufügen.“, as its hint „Jedes Mitglied benötigt
+  mindestens einen Zählpunkt.“ says (decided 28.11.2026); before, such a member was created. Only this page changes:
+  the master data import and adding or removing metering points of an existing member work as before.
 
 ## [1.30.0] – 2026-11-28
 
