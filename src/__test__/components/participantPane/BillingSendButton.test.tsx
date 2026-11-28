@@ -11,8 +11,14 @@ vi.mock("@ionic/react", async (importOriginal) => ({
   useIonToast: () => [toaster],
 }))
 
-import BillingSendButton, {documentCount, sendMailState} from "../../../components/participantPane/BillingSendButton.component";
+import BillingSendButton, {
+  documentCount,
+  sendMailState,
+  TEMPLATE_FALLBACK_HINT
+} from "../../../components/participantPane/BillingSendButton.component";
 import {Api} from "../../../service";
+import {useAppSelector} from "../../../store";
+import {billingRunSelector, fetchBillingRunById} from "../../../store/billingRun";
 import {sendmailRefusal} from "../../../service/eeg.service";
 import {BillingRun} from "../../../models/meteringpoint.model";
 import {BillingTotals} from "../../../components/participantPane/BillingTotals.functions";
@@ -126,6 +132,40 @@ describe("BillingSendButton", () => {
     expect(toaster.mock.lastCall![0].message).toBe("Der Mailversand ist fehlgeschlagen. (Dieser Abrechnungslauf wird "
       + "gerade bearbeitet (Export, Mailversand oder Löschen) – bitte danach erneut versuchen.)")
     expect(Api.eegService.fetchBillingRunById).toHaveBeenCalled()
+  })
+
+  // platform#280: billing sent the default text because the EEG's own text could not be used
+  it.each([
+    ["SENT", true, true],
+    ["SENT", false, false],
+    ["SENT", undefined, false],
+    ["FAILED", true, false],
+    ["IN PROGRESS", true, false],
+  ] as [string, boolean | undefined, boolean][])("mailStatus %s, mailTemplateFallback %s: default-text hint %s",
+    (mailStatus, mailTemplateFallback, shown) => {
+      renderWithProviders(<BillingSendButton tenant="TE100200" run={run({mailStatus, mailTemplateFallback})}
+                                             documentCount={43}/>)
+      expect(!!screen.queryByText(TEMPLATE_FALLBACK_HINT)).toBe(shown)
+    })
+
+  it("the hint names where the text is edited", () => {
+    expect(TEMPLATE_FALLBACK_HINT).toContain("„Rechnung / Gutschrift“ unter „E-Mail-Texte“")
+  })
+
+  it("shows the default-text hint right after the send, from the reloaded run", async () => {
+    Api.eegService.fetchBillingRunById = vi.fn().mockResolvedValue(run({mailStatus: "SENT", mailTemplateFallback: true}))
+    // the member list passes the run of the store, which the reload after the send replaces
+    const FromStore = () => {
+      const stored = useAppSelector(billingRunSelector)
+      return stored ? <BillingSendButton tenant="TE100200" run={stored} documentCount={43}/> : null
+    }
+    const {store} = renderWithProviders(<FromStore/>)
+    act(() => { store.dispatch(fetchBillingRunById.fulfilled({billingRun: run()}, "req", {tenant: "TE100200", billingRunId: "run-1"})) })
+    expect(screen.queryByText(TEMPLATE_FALLBACK_HINT)).toBeNull()
+    fireEvent.click(screen.getByText("SENDEN"))
+    await dismiss("confirm")
+    await flush()
+    expect(screen.getByText(TEMPLATE_FALLBACK_HINT)).toBeInTheDocument()
   })
 })
 

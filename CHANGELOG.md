@@ -8,6 +8,30 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **Member list, billing: hint when the mails went out with the default text** (platform#280). When billing could not
+  use the community's own text of the mail „Rechnung / Gutschrift“ and sent the default text, an orange line below the
+  send button of the sent run says „Beim Versand konnte euer eigener Mailtext nicht verwendet werden, die Mails gingen
+  mit dem Standardtext hinaus. Bitte den Text „Rechnung / Gutschrift“ unter „E-Mail-Texte“ auf der Seite eurer
+  Gemeinschaft prüfen.“ It shows right after the send (the run is reloaded once, as before) and whenever the run is
+  opened again; only for a run with the mail status „SENT“. Before, billing noted it only in the run's internal mail
+  protocol. Needs eegfaktura-billing with the run field `mailTemplateFallback`; with an
+  older billing the field is missing and no hint shows.
+
+### Fixed
+- **Member list: metering points with „Anmeldung gesendet“ (INIT) and „Zustimmung erteilt“ (APPROVED) are orange**
+  like the other states of a registration under way (platform#277). They were red. Red now means rejected, revoked
+  or invalid only, also for a member whose registration is still pending (such a metering point used to be orange).
+- **EEG page: „Netzbetreiber-ID“ and „Netzbetreiber-Name“ are read only for non-admins**, like the other fields of the
+  page (platform#281). They could be typed into, but the backend rejected the change, so nothing was saved.
+- **„Registrieren“ only with a metering point** (platform#278). With a metering point typed in but not added, the
+  member is not registered and an orange hint „Der Zählpunkt ist noch nicht hinzugefügt. Bitte zuerst „Hinzufügen“
+  (bzw. „Übernehmen“) klicken oder die Eingabe mit „Abbrechen“ verwerfen.“ shows instead; before, the member was
+  created without that metering point and was missing from the default view of the member list. Without any
+  metering point the page refuses too, with „Zuerst einen Zählpunkt hinzufügen.“, as its hint „Jedes Mitglied benötigt
+  mindestens einen Zählpunkt.“ says (decided 28.11.2026); before, such a member was created. Only this page changes:
+  the master data import and adding or removing metering points of an existing member work as before.
+
 ## [1.30.0] – 2026-11-28
 
 ### Changed

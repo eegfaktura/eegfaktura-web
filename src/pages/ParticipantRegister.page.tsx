@@ -30,6 +30,10 @@ import {useTenant} from "../store/hook/Eeg.provider";
 import moment from "moment/moment";
 import UnsavedChangesGuard from "../components/core/UnsavedChangesGuard.component";
 
+export const METER_NOT_ADDED_MESSAGE = "Der Zählpunkt ist noch nicht hinzugefügt. Bitte zuerst „Hinzufügen“ (bzw. "
+  + "„Übernehmen“) klicken oder die Eingabe mit „Abbrechen“ verwerfen."
+export const NO_METER_MESSAGE = "Zuerst einen Zählpunkt hinzufügen."
+
 const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
 
 
@@ -122,6 +126,13 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
   }
 
   const onSubmit = (data: EegParticipant) => {
+    // the open metering point form holds input that is not in the member yet: registering would leave it out; and
+    // every member needs at least one metering point, as the page says (platform#278)
+    if (meterPaneDirty || data.meters.length === 0) {
+      toaster({message: meterPaneDirty ? METER_NOT_ADDED_MESSAGE : NO_METER_MESSAGE, duration: 6000,
+        position: "bottom", color: "warning"})
+      return
+    }
     data.residentAddress.type = "RESIDENCE"
     data.residentAddress.city = data.billingAddress.city
     data.residentAddress.zip = data.billingAddress.zip
