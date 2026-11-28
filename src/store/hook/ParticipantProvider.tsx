@@ -113,7 +113,8 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
   // The report takes seconds for a large community: fetch it again only when the request changes (community, period,
   // metering points with direction and active range, ZVT time windows - also when the tariffs load after the members).
   // Any other change of a member or metering point gives a new member array, but the same request.
-  const reportKey = JSON.stringify([tenant.tenant, tenant.ecId, tenant.rcNr, reportRequest])
+  const reportKey = useMemo(() => JSON.stringify([tenant.tenant, tenant.ecId, tenant.rcNr, reportRequest]),
+    [tenant.tenant, tenant.ecId, tenant.rcNr, reportRequest])
 
   const newRateFn = () => {
     setState({

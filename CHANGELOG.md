@@ -14,12 +14,14 @@ this changelog highlights the changes relevant for overview and operations.
   (name, participation factor, tariff, …), and the dashboard charts did as well. The report now loads again only when
   the community, the period, the metering points (added, removed, direction, active range) or the ZVT time windows of
   their tariffs change; the dashboard charts when the community, the period or the metering points change. A refresh
-  and „Erneut versuchen“ load as before.
+  and „Erneut versuchen“ load as before. Selecting the same period again or editing member data no longer loads the
+  report again: energy data that arrived meanwhile shows after a refresh or a period change.
 - **Cache headers from Caddy** (performance). Scripts and style sheets of the build (`/assets/<name>-<hash>.js|css`)
   are sent with `Cache-Control: public, max-age=31536000, immutable`; the browser loads them once per release.
-  Everything else – `index.html`, the SPA routes, `/config/keycloak-config.json`, `manifest.json` and the unhashed
-  icons and images under `/assets` – is sent with `Cache-Control: no-cache` and revalidated on every load. A missing
-  file under `/assets` stays a 404 (no `index.html` fallback there).
+  Everything else is sent with `Cache-Control: no-cache`: `manifest.json` and the unhashed icons and images under
+  `/assets` are revalidated (304 if unchanged); `index.html`, the SPA routes and `/config/keycloak-config.json` are
+  small and loaded again on every visit (they are rendered as templates, so they carry no ETag). A missing file under
+  `/assets` stays a 404 (no `index.html` fallback there).
 
 ## [1.30.0] – 2026-11-28
 
