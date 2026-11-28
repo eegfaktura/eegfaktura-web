@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.30.0] – 2026-11-28
+
 ### Changed
 - **SEPA files in the ISO 20022 version 2019** (platform#270). Direct debits (CORE and B2B) are written as
   `pain.008.001.08` instead of `pain.008.001.02`, and credit transfers as `pain.001.001.09` instead of `pain.001.001.03`.
