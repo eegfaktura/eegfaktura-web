@@ -34,6 +34,11 @@ this changelog highlights the changes relevant for overview and operations.
   `/assets` stays a 404 (no `index.html` fallback there).
 
 ### Fixed
+- **A date chosen with the form date picker went to the backend as the day before** („Mitglied seit“ when creating a
+  member, „Aktiv ab“ of a metering point). The picker put a `Date` of local midnight into the form, which serialises
+  as the UTC time of the day before („01.01.2027“ went out as `2026-12-31T23:00:00.000Z`), and the backend keeps the
+  date part. A day picked in the calendar usually kept the time of the shown date and was right; a typed day was
+  one day early. The picker now writes the day as `YYYY-MM-DD`, as the other date pickers since 1.0.13.
 - **Member list: metering points with „Anmeldung gesendet“ (INIT) and „Zustimmung erteilt“ (APPROVED) are orange**
   like the other states of a registration under way (platform#277). They were red. Red now means rejected, revoked
   or invalid only, also for a member whose registration is still pending (such a metering point used to be orange).

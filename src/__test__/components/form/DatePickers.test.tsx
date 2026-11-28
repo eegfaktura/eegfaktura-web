@@ -113,7 +113,22 @@ describe("a date is saved once on leaving, and only when the day changed", () =>
     await typeInto(input, "02.08.2026")
     await leave(input)
     expect(onChangeDate).toHaveBeenCalledTimes(1)
-    expect(ymd(onChangeDate.mock.calls[0][1])).toEqual([2026, 8, 2])
+    expect(onChangeDate.mock.calls[0][1]).toBe("2026-08-02")
+  })
+
+  // a Date of local midnight went out as the UTC time of the day before, and the backend kept that day
+  it("form picker: the form holds the day, which goes out as that day", async () => {
+    let values: any
+    const Form = () => {
+      const {control, getValues} = useForm({defaultValues: {date: new Date(2026, 7, 1)}})
+      values = getValues
+      return <DatePickerFormElement control={control} name="date" label="Datum" placeholder="x"/>
+    }
+    const {container} = render(<Form/>)
+    const input = container.querySelector("ion-input")!
+    await typeInto(input, "01.01.2027")
+    await leave(input)
+    expect(JSON.stringify(values())).toBe('{"date":"2027-01-01"}')
   })
 
   it.each([["a stored string", "2026-08-01"], ["a stored date", new Date(2026, 7, 1)], ["no stored date", undefined]])(
