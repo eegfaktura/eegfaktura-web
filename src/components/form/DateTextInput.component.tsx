@@ -11,7 +11,7 @@ type DateTextInputProps = Pick<ComponentProps<typeof IonInput>, "value" | "label
   // react-datepicker's handler, it reads event.target.value
   onChange?: (event: any) => void
   // single pickers: the text changes, see useDateOnLeave
-  onTyping?: () => void
+  onTyping?: (text: string) => void
   // range pickers: react-datepicker reads no typed range. A complete „01.08.2026 - 01.10.2026“ ends up here; any other
   // text empties the range, the old range must not be used while the field shows something else
   onRange?: (range: [Date, Date] | [null, null]) => void
@@ -47,7 +47,7 @@ const DateTextInput = forwardRef<Pick<HTMLElement, "focus" | "blur">, DateTextIn
       onBlur={onBlur}
       onKeyDown={onKeyDown}
       onIonInput={(event) => {
-        onTyping && onTyping()
+        onTyping && onTyping(event.detail.value ?? "")
         onChange && onChange(event)
         onRange && onRange(parseDateRange(event.detail.value ?? "") ?? [null, null])
       }}

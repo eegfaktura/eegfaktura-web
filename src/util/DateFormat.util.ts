@@ -34,6 +34,12 @@ const TYPED_FORMATS = DATE_PICKER_PROPS.dateFormat.map(format => format.replace(
 // A picker hands back a Date, the form may hold a string: only a different day counts as a change.
 export const isSameDay = (a?: DateInput | null, b?: DateInput | null) => !!a && !!b && moment(a).isSame(b, "day")
 
+// A typed day „01.08.2026“; null while it is incomplete or invalid. „0026“ is a typing error, as for the picker.
+export const parseTypedDate = (text: string): Date | null => {
+  const date = moment(text.trim(), TYPED_FORMATS, true)
+  return date.isValid() && date.year() >= 1000 ? date.toDate() : null
+}
+
 // A typed range „01.08.2026 - 01.10.2026“; null while it is incomplete or invalid, or when it ends before it starts.
 export const parseDateRange = (text: string): [Date, Date] | null => {
   const parts = text.split(" - ")

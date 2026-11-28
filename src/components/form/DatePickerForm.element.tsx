@@ -17,10 +17,15 @@ interface DatePickerFormProps {
   rules?: object,
   error?: FieldError,
   disabled?: boolean,
+  // days outside cannot be chosen in the calendar; a typed day outside is for the rules to reject
+  minDate?: Date,
+  maxDate?: Date,
+  // a line under the field, e.g. what the date means
+  hint?: string,
   onChangeDate?: (name: string, value: any, event?: any) => void
 }
 
-const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, label, placeholder, error, disabled, onChangeDate}) => {
+const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, label, placeholder, error, disabled, minDate, maxDate, hint, onChangeDate}) => {
 
   const {field} = useController({name, control, rules})
   const stored = typeof field.value === 'string' ? (field.value ? new Date(field.value) : undefined) : field.value instanceof Date ? field.value : undefined
@@ -41,6 +46,8 @@ const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, l
         customInput={<DateTextInput label={label} onTyping={onTyping}/>}
         placeholderText={placeholder + " " + DATE_PICKER_EXAMPLE}
         disabled={disabled}
+        minDate={minDate}
+        maxDate={maxDate}
         {...pickerProps}
         {...DATE_PICKER_PROPS}
         ref={(instance) => {
@@ -49,6 +56,7 @@ const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, l
         }}
         portalId="root-portal"
       />
+      {hint && <div className={"hint-line"}>{hint}</div>}
       {error && <div className={"error-line"}>{error.message}</div>}
     </div>
   )
