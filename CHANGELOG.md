@@ -8,6 +8,14 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Changed
+- **Energy report and dashboard charts load again only when their request changes** (performance). For a large
+  community the energy report takes several seconds. It loaded again on every change of a member or metering point
+  (name, participation factor, tariff, …), and the dashboard charts did as well. The report now loads again only when
+  the community, the period, the metering points (added, removed, direction, active range) or the ZVT time windows of
+  their tariffs change; the dashboard charts when the community, the period or the metering points change. A refresh
+  and „Erneut versuchen“ load as before.
+
 ## [1.30.0] – 2026-11-28
 
 ### Changed

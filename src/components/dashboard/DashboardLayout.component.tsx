@@ -37,6 +37,11 @@ const DashboardLayoutComponent: FC<LoadSharingComponentProps> = ({consumed, prod
   const [reportFailed, setReportFailed] = useState(false)
   const [reportLoaded, setReportLoaded] = useState(false)
   const [attempt, setAttempt] = useState(0)
+  // The charts take seconds for a large community. The request carries only the community and the period; they load
+  // again when the metering points change (added, removed, direction, active range), not on every other member or
+  // metering point change (each one gives a new member array).
+  const metersKey = useMemo(() => JSON.stringify(participants.flatMap(p => p.meters.map(m =>
+    [m.meteringPoint, m.direction, m.participantState?.activeSince, m.participantState?.inactiveSince]))), [participants])
 
   useEffect(() => {
     let ignore = false   // a late answer for an earlier period or participant list sets nothing
@@ -61,7 +66,7 @@ const DashboardLayoutComponent: FC<LoadSharingComponentProps> = ({consumed, prod
       })
     }
     return () => { ignore = true }
-  }, [tenant.ecId, activePeriod, participants, attempt]);
+  }, [tenant.ecId, activePeriod, metersKey, attempt]);
 
   const energyDate = useMemo(() => periods, [periods])
 

@@ -13,7 +13,7 @@ import {filterActiveParticipantAndMeter} from "../../util/FilterHelper.unit";
 import {getPeriodDates} from "../../util/FilterHelper";
 import participants from "../../pages/Participants";
 import {ratesMapSelector} from "../rate";
-import {zvtTimeWindows, zvtWindowsKey} from "../../util/Helper.util";
+import {zvtTimeWindows} from "../../util/Helper.util";
 import {useConfirmDiscard, useReportDirty} from "../../components/core/UnsavedChangesGuard.component";
 
 
@@ -74,10 +74,6 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
   // const participants = useAppSelector(activeParticipantsSelector1)
   const allParticipants = useAppSelector(allParticipantsSelector)
   const tariffById = useAppSelector(ratesMapSelector)
-  // ZVT: fetch the energy report again when time windows change (tariff switched to time-based, windows edited,
-  // tariffs loaded after the participants); otherwise billing gets time windows without buckets.
-  const zvtKey = useMemo(() => zvtWindowsKey(tariffById,
-    (allParticipants || []).flatMap(p => p.meters.map(m => m.tariff_id).filter(id => !!id))), [tariffById, allParticipants])
 
   const isFechting = isEEGFetching()
 
@@ -94,6 +90,30 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
     const [start, end] = getPeriodDates(activePeriod)
     return filterActiveParticipantAndMeter(allParticipants, start, end)
   }, [allParticipants, activePeriod])
+
+  // the body of the energy report request for these members; undefined without members
+  const reportRequest = useMemo(() => {
+    if (!activePeriod || activeParticipants.length === 0) return undefined
+    // ZVT: je Zaehlpunkt mit zeitbasiertem Tarif die generischen
+    // Zeitfenster mitschicken - energystore liefert dann buckets zurueck.
+    const participantsReport = activeParticipants.map(p => {
+      return {
+        participantId: p.id,
+        meters: p.meters.filter(m => !!m.participantState).map(m => {
+          const timeWindows = zvtTimeWindows(tariffById[m.tariff_id])
+          return {meterId: m.meteringPoint, meterDir: m.direction,
+            from: new Date(m.participantState.activeSince).getTime(),
+            until: new Date(m.participantState.inactiveSince).getTime(),
+            ...(timeWindows ? {timeWindows} : {})} as MeterReport})
+      } as ParticipantReport
+    })
+    return {year: activePeriod.year, segment: activePeriod.segment, type: activePeriod.type,
+      participants: participantsReport.filter(p => p.meters.length > 0)}
+  }, [activePeriod, activeParticipants, tariffById])
+  // The report takes seconds for a large community: fetch it again only when the request changes (community, period,
+  // metering points with direction and active range, ZVT time windows - also when the tariffs load after the members).
+  // Any other change of a member or metering point gives a new member array, but the same request.
+  const reportKey = JSON.stringify([tenant.tenant, tenant.ecId, tenant.rcNr, reportRequest])
 
   const newRateFn = () => {
     setState({
@@ -132,9 +152,9 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
     // not while the application (re)loads EEG, tariffs and members (tenant switch, refresh): the store can then
     // mix the old members with the new tenant; the load ends by setting the period, which fetches once
     if (activePeriod && allParticipants && !isFechting) {
-      fetchEnergyReport(activeParticipants)
+      fetchEnergyReport()
     }
-  }, [activeParticipants, zvtKey, isFechting]);
+  }, [reportKey, isFechting]);
 
   // useEffect(() => {
   //   fetchEnergyReport(activeParticipants)
@@ -156,26 +176,13 @@ const ParticipantProvider: FC<{children: ReactNode}> = ({children}) => {
     setShowAddMeterPane: setShowAddMeterPane,
     unsaved: unsaved,
     setUnsaved: setUnsaved,
-    reloadEnergyReport: () => fetchEnergyReport(activeParticipants),
+    reloadEnergyReport: () => fetchEnergyReport(),
   } as ParicipantState
 
-  const fetchEnergyReport = (aps: EegParticipant[]) => {
-    if (tenant && activePeriod && aps && aps.length > 0) {
-      // ZVT: je Zaehlpunkt mit zeitbasiertem Tarif die generischen
-      // Zeitfenster mitschicken - energystore liefert dann buckets zurueck.
-      const participantsReport = aps.map(p => {
-        return {
-          participantId: p.id,
-          meters: p.meters.filter(m => !!m.participantState).map(m => {
-            const timeWindows = zvtTimeWindows(tariffById[m.tariff_id])
-            return {meterId: m.meteringPoint, meterDir: m.direction,
-              from: new Date(m.participantState.activeSince).getTime(),
-              until: new Date(m.participantState.inactiveSince).getTime(),
-              ...(timeWindows ? {timeWindows} : {})} as MeterReport})
-        } as ParticipantReport
-      })
-      dispatch(fetchEnergyReportV2({tenant: tenant, year: activePeriod.year, segment: activePeriod.segment, type: activePeriod.type, participants: participantsReport.filter(p => p.meters.length > 0)}))
-    } else if (!aps || aps.length == 0) {
+  const fetchEnergyReport = () => {
+    if (reportRequest) {
+      dispatch(fetchEnergyReportV2({tenant: tenant, ...reportRequest}))
+    } else if (activeParticipants.length == 0) {
       dispatch(clearEnergyState())
     }
   }
