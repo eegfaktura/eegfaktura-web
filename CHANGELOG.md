@@ -10,11 +10,12 @@ this changelog highlights the changes relevant for overview and operations.
 
 ### Added
 - **Member list, billing: hint when the mails went out with the default text** (platform#280). When billing could not
-  use the community's own text of the mail „Rechnung / Gutschrift“ and sent the default text, a yellow line below the
-  send button says „Euer eigener Mailtext konnte nicht verwendet werden, die Mails gingen mit dem Standardtext hinaus.
-  Bitte den Text „Rechnung / Gutschrift“ unter „E-Mail-Texte“ auf der Seite eurer Gemeinschaft prüfen.“ It shows right
-  after the send (the run is reloaded once, as before) and whenever the run is opened again. Before, billing noted it
-  only in the run's internal mail protocol. Needs eegfaktura-billing with the run field `mailTemplateFallback`; with an
+  use the community's own text of the mail „Rechnung / Gutschrift“ and sent the default text, an orange line below the
+  send button of the sent run says „Beim Versand konnte euer eigener Mailtext nicht verwendet werden, die Mails gingen
+  mit dem Standardtext hinaus. Bitte den Text „Rechnung / Gutschrift“ unter „E-Mail-Texte“ auf der Seite eurer
+  Gemeinschaft prüfen.“ It shows right after the send (the run is reloaded once, as before) and whenever the run is
+  opened again; only for a run with the mail status „SENT“. Before, billing noted it only in the run's internal mail
+  protocol. Needs eegfaktura-billing with the run field `mailTemplateFallback`; with an
   older billing the field is missing and no hint shows.
 
 ### Fixed
@@ -24,7 +25,7 @@ this changelog highlights the changes relevant for overview and operations.
 - **EEG page: „Netzbetreiber-ID“ and „Netzbetreiber-Name“ are read only for non-admins**, like the other fields of the
   page (platform#281). They could be typed into, but the backend rejected the change, so nothing was saved.
 - **„Registrieren“ only with a metering point** (platform#278). With a metering point typed in but not added, the
-  member is not registered and a yellow hint „Der Zählpunkt ist noch nicht hinzugefügt. Bitte zuerst „Hinzufügen“
+  member is not registered and an orange hint „Der Zählpunkt ist noch nicht hinzugefügt. Bitte zuerst „Hinzufügen“
   (bzw. „Übernehmen“) klicken oder die Eingabe mit „Abbrechen“ verwerfen.“ shows instead; before, the member was
   created without that metering point and was missing from the default view of the member list. Without any
   metering point the page refuses too, with „Zuerst einen Zählpunkt hinzufügen.“, as its hint „Jedes Mitglied benötigt

@@ -135,18 +135,21 @@ describe("BillingSendButton", () => {
   })
 
   // platform#280: billing sent the default text because the EEG's own text could not be used
-  it("says when the mails went out with the default text", () => {
-    renderWithProviders(<BillingSendButton tenant="TE100200" run={run({mailStatus: "SENT", mailTemplateFallback: true})}
-                                           documentCount={43}/>)
-    expect(screen.getByText(TEMPLATE_FALLBACK_HINT)).toBeInTheDocument()
-    expect(TEMPLATE_FALLBACK_HINT).toContain("„Rechnung / Gutschrift“ unter „E-Mail-Texte“")
-  })
+  it.each([
+    ["SENT", true, true],
+    ["SENT", false, false],
+    ["SENT", undefined, false],
+    ["FAILED", true, false],
+    ["IN PROGRESS", true, false],
+  ] as [string, boolean | undefined, boolean][])("mailStatus %s, mailTemplateFallback %s: default-text hint %s",
+    (mailStatus, mailTemplateFallback, shown) => {
+      renderWithProviders(<BillingSendButton tenant="TE100200" run={run({mailStatus, mailTemplateFallback})}
+                                             documentCount={43}/>)
+      expect(!!screen.queryByText(TEMPLATE_FALLBACK_HINT)).toBe(shown)
+    })
 
-  it("says nothing about the text when the EEG's text was used or the field is missing", () => {
-    renderWithProviders(<BillingSendButton tenant="TE100200" run={run({mailStatus: "SENT", mailTemplateFallback: false})}
-                                           documentCount={43}/>)
-    renderWithProviders(<BillingSendButton tenant="TE100200" run={run({mailStatus: "SENT"})} documentCount={43}/>)
-    expect(screen.queryByText(TEMPLATE_FALLBACK_HINT)).toBeNull()
+  it("the hint names where the text is edited", () => {
+    expect(TEMPLATE_FALLBACK_HINT).toContain("„Rechnung / Gutschrift“ unter „E-Mail-Texte“")
   })
 
   it("shows the default-text hint right after the send, from the reloaded run", async () => {
