@@ -17,6 +17,13 @@ describe("determineErrTxt", () => {
       .toBe("Mindestens ein Zählpunkt gehört nicht zu diesem Mitglied.")
   })
 
+  it("shows the refusals of „Aktiv ab“ readable (platform#272)", () => {
+    const beyond = "„Aktiv ab“ 14.01.2027 des Zählpunkts AT1 liegt nach dem letzten erlaubten Tag 13.01.2027."
+    expect(determineErrTxt(response(1208, beyond))).toBe(beyond)
+    const locked = "„Aktiv ab“ des Zählpunkts AT1 lässt sich nicht ändern, solange die Anmeldung läuft."
+    expect(determineErrTxt(response(1209, locked))).toBe(locked)
+  })
+
   it("keeps the existing per-message texts and the raw key of an unknown error", () => {
     expect(determineErrTxt(response(4002, "Tariff is currently used")))
       .toBe("Der Tarif wird noch von Mitgliedern oder Zählpunkten verwendet und kann nicht gelöscht werden.")

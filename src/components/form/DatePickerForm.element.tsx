@@ -1,6 +1,7 @@
 import React, {FC} from "react";
 import DatePicker from "react-datepicker";
 import {Control, FieldError, useController, UseFormClearErrors} from "react-hook-form";
+import moment from "moment";
 
 import "./DatePickerForm.element.scss"
 import {DATE_PICKER_EXAMPLE, DATE_PICKER_PROPS} from "../../util/DateFormat.util";
@@ -16,17 +17,25 @@ interface DatePickerFormProps {
   rules?: object,
   error?: FieldError,
   disabled?: boolean,
+  // days outside cannot be chosen in the calendar; a typed day outside is for the rules to reject
+  minDate?: Date,
+  maxDate?: Date,
+  // a line under the field, e.g. what the date means
+  hint?: string,
   onChangeDate?: (name: string, value: any, event?: any) => void
 }
 
-const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, label, placeholder, error, disabled, onChangeDate}) => {
+const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, label, placeholder, error, disabled, minDate, maxDate, hint, onChangeDate}) => {
 
   const {field} = useController({name, control, rules})
   const stored = typeof field.value === 'string' ? (field.value ? new Date(field.value) : undefined) : field.value instanceof Date ? field.value : undefined
 
+  // The form gets the day as "YYYY-MM-DD", not as Date: a Date of local midnight serialises as the UTC time of the day
+  // before ("2027-01-01" went out as "2026-12-31T23:00:00.000Z"), and the backend keeps the date part of it
   const {picker, onTyping, pickerProps} = useDateOnLeave(stored, (date) => {
-    field.onChange(date)
-    onChangeDate && onChangeDate(name, date)
+    const day = moment(date).format("YYYY-MM-DD")
+    field.onChange(day)
+    onChangeDate && onChangeDate(name, day)
   })
 
   return (
@@ -37,6 +46,8 @@ const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, l
         customInput={<DateTextInput label={label} onTyping={onTyping}/>}
         placeholderText={placeholder + " " + DATE_PICKER_EXAMPLE}
         disabled={disabled}
+        minDate={minDate}
+        maxDate={maxDate}
         {...pickerProps}
         {...DATE_PICKER_PROPS}
         ref={(instance) => {
@@ -45,6 +56,7 @@ const DatePickerFormElement: FC<DatePickerFormProps> = ({name, control, rules, l
         }}
         portalId="root-portal"
       />
+      {hint && <div className={"hint-line"}>{hint}</div>}
       {error && <div className={"error-line"}>{error.message}</div>}
     </div>
   )

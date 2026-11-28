@@ -34,7 +34,8 @@ export interface Metering {
   zip: string,
   status: MeteringStateType,
   statusCode: number,
-  registeredSince: Date,
+  // "YYYY-MM-DD" from the backend and the date pickers; a Date goes out as UTC, which can be the day before
+  registeredSince: Date | string,
   gridOperatorId: string,
   gridOperatorName: string,
   allocationFactor: number,

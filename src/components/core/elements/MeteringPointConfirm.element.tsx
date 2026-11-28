@@ -7,7 +7,8 @@ import {Metering} from "../../../models/meteringpoint.model";
 import "./MeteringPointConfirm.element.scss"
 
 // one metering point in „zulassen“: only whether it is registered; registration is always online (decision 2026-10-30)
-const MeteringPointConfirmElement: FC<{m: Metering}> = ({m}) => {
+// onChange: the dialog keeps the selection itself; without it the selection is written into m
+const MeteringPointConfirmElement: FC<{m: Metering, onChange?: (enabled: boolean) => void}> = ({m, onChange}) => {
   const [enabled, setEnabled] = useState<boolean>(m.enabled)
 
   useEffect(() => {
@@ -15,8 +16,9 @@ const MeteringPointConfirmElement: FC<{m: Metering}> = ({m}) => {
   }, [m])
 
   const onChangeEnabled = (v: IonCheckboxCustomEvent<CheckboxChangeEventDetail<any>>) => {
-    m.enabled = v.target.checked
-    setEnabled(m.enabled)
+    if (onChange) onChange(v.target.checked)
+    else m.enabled = v.target.checked
+    setEnabled(v.target.checked)
   }
 
   return (

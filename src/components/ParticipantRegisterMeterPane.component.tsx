@@ -8,6 +8,7 @@ import RegisterMeterPaneComponent from "./RegisterMeterPane.component";
 import { Metering } from "../models/meteringpoint.model";
 import {useEegArea, useOnlineState} from "../store/hook/Eeg.provider";
 import {useConfirmDiscard} from "./core/UnsavedChangesGuard.component";
+import {tomorrowDay} from "./form/useRegistrationWindow.hook";
 
 interface ParticipantRegisterMeterPaneComponentProps {
   participant: EegParticipant;
@@ -26,7 +27,8 @@ const ParticipantRegisterMeterPaneComponent: FC<ParticipantRegisterMeterPaneComp
     participantId: "",
     meteringPoint: "",
     direction: "CONSUMPTION",
-    registeredSince: isOnline ? new Date() : new Date(2024, 0, 1, 0, 0, 0, 0),
+    // online: the requested day, tomorrow unless the admin chooses another (platform#272)
+    registeredSince: isOnline ? tomorrowDay() : new Date(2024, 0, 1, 0, 0, 0, 0),
     partFact: 100,
   } as Metering
 

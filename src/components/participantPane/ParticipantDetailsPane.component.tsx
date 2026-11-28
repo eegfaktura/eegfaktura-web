@@ -47,9 +47,9 @@ import {useMoveMeteringPointHook} from "../../store/hook/MoveMeteringPoint.hook"
 import moment from "moment";
 import {formatDate} from "../../util/DateFormat.util";
 import {useDeleteParticipantMutation} from "../../store/participant/api";
-import {deleteParticipantErrTxt} from "../../service/error.text";
+import {deleteParticipantErrTxt, withReason} from "../../service/error.text";
 import {useConfirm} from "../core/useConfirm";
-import {processStateText} from "./meterStatusText";
+import {meterActiveText, processStateText} from "./meterStatusText";
 import {useLeaveUnsaved} from "../../store/hook/ParticipantProvider";
 
 type DynamicComponentKey = "memberForm" | "meterForm" | "documentForm" | "invoiceForm" | "participantDocumentForm"
@@ -197,7 +197,8 @@ const ParticipantDetailsPaneComponent: FC = () => {
             })).unwrap()
         })
         .then((value) => presentToast(`${value.firstname} ist nun Mitglied deiner EEG. Ein Infomail wurde an ${value.contact.email} gesendet.`))
-        .catch(() => presentToast('Mitglied konnte nicht aktiviert werden.'))
+        // with the backend's reason, e.g. a requested day beyond 30 working days (platform#272)
+        .catch((e) => presentToast(withReason('Mitglied konnte nicht aktiviert werden.', e?.message)))
     }
   }
 
@@ -430,7 +431,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
                       <IonIcon icon={caretForwardOutline} slot="start"></IonIcon>
                       <div>
                         <div
-                          className={"detail-header"}>{`Zählpunkt ${selectedMeter.processState === "ACTIVE" ? "aktiv" : "inaktiv"}`}</div>
+                          className={"detail-header"}>{meterActiveText(selectedMeter)}</div>
                       </div>
                       <IonToggle slot="end" checked={selectedMeter.processState === "ACTIVE"}
                                  disabled={true}></IonToggle>
