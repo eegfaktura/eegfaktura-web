@@ -10,6 +10,10 @@ import {formatDate} from "../../../util/DateFormat.util";
 export const formatHistoryDate = (d: Date) => formatDate(d)
 export const formatHistoryTime = (d: Date) => moment(d).format("HH:mm:ss")
 
+// The backend leaves responseData out when it is empty (omitempty): a message without it has no entries. Read
+// unguarded, it threw and the whole list of the process stayed empty (web 261128-mm2).
+export const historyResponseData = (e: EdaHistory): Record<string, any>[] => e.message?.responseData ?? []
+
 const renderTableWithConversationId = (headers: string[], e: EdaHistory[]) => {
   return (
     <div className="ion-padding"
