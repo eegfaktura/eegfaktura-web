@@ -8,6 +8,8 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+## [1.31.0] – 2026-11-28
+
 ### Added
 - **„Aktiv ab“ is the requested activation day of an online community** (platform#272, concept konzepte#29). Before,
   the field did nothing for an online community: the registration started tomorrow or on „Mitglied seit“.
