@@ -74,6 +74,22 @@ this changelog highlights the changes relevant for overview and operations.
   metering point the page refuses too, with „Zuerst einen Zählpunkt hinzufügen.“, as its hint „Jedes Mitglied benötigt
   mindestens einen Zählpunkt.“ says (decided 28.11.2026); before, such a member was created. Only this page changes:
   the master data import and adding or removing metering points of an existing member work as before.
+- **Process history: the last day of the range is complete on the autumn DST day** (pre-existing, web 261128-mm1,
+  found in the review of backend#173). The page asked the backend for the range up to the last day + 24 hours. The
+  day the clocks go back has 25 hours, so a range ending on that day (e.g. 25.10.2026) stopped on the same day, and
+  all messages of that day were missing. The end is now 00:00 of the following calendar day; other days are
+  unchanged.
+- **Process history: a message without response data no longer empties the list** (pre-existing, web 261128-mm2,
+  found in the review of #313). The backend leaves `responseData` out of a message when it is empty. The page read it
+  without a check for answers, rejections and revocations, so one such message threw, and the whole list of the
+  process stayed empty. Such a message now counts as one without entries (no metering point, response code „-“);
+  the other entries show.
+- **Members active in a period: a period ending on the autumn DST day ends at 00:00 of the next day** (pre-existing,
+  web 261128-mm3, found in the review of #313). The filter of the members and metering points active in a period
+  (member list, reports, export) compared with the last day + 24 hours, which stays on the same day when that day
+  has 25 hours (e.g. a month ending on 31.10.2027). It now uses 00:00 of the following calendar day, like the process
+  history. The dates from the backend are read as 00:00 UTC, so with them the result does not change; only dates set
+  in local time in the page could fall into the missing hour.
 
 ## [1.30.0] – 2026-11-28
 

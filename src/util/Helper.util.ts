@@ -92,6 +92,10 @@ export const dateToDayOfYear = (d: Date) => {
 // Format a Date as YYYY-MM-DD from its LOCAL components. Avoids the UTC shift of
 // toISOString(), which renders the previous day in positive-UTC zones (e.g. a
 // local 30.06 00:00 in Europe/Vienna becomes "2026-06-29").
+// 00:00 local time of the day after d. Not "+ 24 h": the autumn DST day has 25 hours, +24 h stays on that day
+// (web 261128-mm1, 261128-mm3).
+export const startOfNextDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime()
+
 export const toLocalISODate = (d: Date) => {
   const pad = (n: number) => n.toString().padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`

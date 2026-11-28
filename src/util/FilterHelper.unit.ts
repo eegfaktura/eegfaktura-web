@@ -2,6 +2,7 @@ import {EegParticipant} from "../models/members.model";
 import {EnergyMeta} from "../models/energy.model";
 import {Metering} from "../models/meteringpoint.model";
 import moment from "moment";
+import {startOfNextDay} from "./Helper.util";
 
 /**
  * A rejected, invalid or revoked registration needs action (register again or archive). The member list shows such a
@@ -21,7 +22,7 @@ export const hasOpenProblem = (m: Metering) =>
  */
 export const filterActiveParticipantAndMeter = (participants: EegParticipant[], start: Date, end: Date) => {
   return participants.map(p => {
-    const endDate = end.getTime() + (24*60*60*1000);
+    const endDate = startOfNextDay(end);
     return {
       ...p, meters: p.meters.filter(m =>
         (m.participantState
