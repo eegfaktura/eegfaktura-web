@@ -13,10 +13,10 @@ const RED = "rgb(220, 30, 30)"
 
 const participant = {id: "p1", status: "ACTIVE", meters: []} as unknown as EegParticipant
 
-const rowColor = (processState: MeteringProcessStateType) => {
+const rowColor = (processState: MeteringProcessStateType, member: EegParticipant = participant) => {
   const meter = {meteringPoint: "AT0030000000000000000000000000001", equipmentName: "Haus",
     direction: "CONSUMPTION", processState} as Metering
-  renderWithProviders(<MeterCardComponent participant={participant} meter={meter} hideMeter={true}/>)
+  renderWithProviders(<MeterCardComponent participant={member} meter={meter} hideMeter={true}/>)
   return (screen.getByText("Haus").closest("ion-row") as HTMLElement).style.color
 }
 
@@ -35,11 +35,11 @@ describe("MeterCard colour per process state", () => {
     expect(rowColor(state)).toBe(color)
   })
 
-  it("a meter of a pending member is orange", () => {
-    const meter = {meteringPoint: "AT0030000000000000000000000000001", equipmentName: "Haus",
-      direction: "CONSUMPTION", processState: "REJECTED"} as Metering
-    renderWithProviders(<MeterCardComponent participant={{...participant, status: "PENDING"} as EegParticipant}
-                                            meter={meter} hideMeter={true}/>)
-    expect((screen.getByText("Haus").closest("ion-row") as HTMLElement).style.color).toBe(ORANGE)
+  // review of #311: the member's state does not hide a rejected metering point
+  it.each([
+    ["NEW", ORANGE],
+    ["REJECTED", RED],
+  ] as [MeteringProcessStateType, string][])("%s of a pending member is shown in %s", (state, color) => {
+    expect(rowColor(state, {...participant, status: "PENDING"} as EegParticipant)).toBe(color)
   })
 })

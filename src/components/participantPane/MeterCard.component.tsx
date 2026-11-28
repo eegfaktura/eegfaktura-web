@@ -103,11 +103,12 @@ const MeterCardComponent: FC<MeterCardComponentProps> = ({participant, meter, hi
   const meterColorStyle = () => {
     if (isMeterActive()) {
       return {color: "#1E4640"}
-    } else if (isMeterPending() || meter.processState === 'INIT' || meter.processState === 'APPROVED') {
-      // registration under way (platform#277): orange; red stays for rejected, revoked and invalid
-      return {color: "#DC631E"}
-    } else {
+    } else if (isMeterRejected()) {
+      // rejected, revoked and invalid: red, also for a member still pending (platform#277)
       return {color: "#dc1e1e"}
+    } else {
+      // registration under way (NEW, INIT, PENDING, APPROVED): orange
+      return {color: "#DC631E"}
     }
   }
 
