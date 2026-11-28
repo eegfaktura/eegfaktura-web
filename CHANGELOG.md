@@ -51,6 +51,11 @@ this changelog highlights the changes relevant for overview and operations.
   day the clocks go back has 25 hours, so a range ending on that day (e.g. 25.10.2026) stopped on the same day, and
   all messages of that day were missing. The end is now 00:00 of the following calendar day; other days are
   unchanged.
+- **Process history: a message without response data no longer empties the list** (pre-existing, web 261128-mm2,
+  found in the review of #313). The backend leaves `responseData` out of a message when it is empty. The page read it
+  without a check for answers, rejections and revocations, so one such message threw, and the whole list of the
+  process stayed empty. Such a message now counts as one without entries (no metering point, response code „-“);
+  the other entries show.
 
 ## [1.30.0] – 2026-11-28
 
