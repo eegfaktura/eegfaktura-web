@@ -8,6 +8,11 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **Legal form „Keine“** (platform#287): the community settings offer „Keine“ (`keine`) besides Verein,
+  Genossenschaft and Gesellschaft, for communities without a legal entity (GEA, P2P). The backend stores the value
+  as it comes; no backend change is needed for saving.
+
 ## [1.31.0] – 2026-11-28
 
 ### Added
