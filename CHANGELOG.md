@@ -15,16 +15,20 @@ this changelog highlights the changes relevant for overview and operations.
     to the backend as `registeredSince` (the requested day). The calendar offers tomorrow up to the 30th Austrian
     working day only; a day typed outside is an error. The bounds come from the new backend endpoint
     `GET /meteringpoint/registration-window`; until it answers, tomorrow is the lower bound and there is no upper one.
-    A hint under the field says what the day does. Creating a member no longer overwrites `registeredSince` of the
+    A hint under the field says what the day does; for an inactive or revoked metering point it adds that a
+    re-activation keeps the date of the first activation. Creating a member no longer overwrites `registeredSince` of the
     metering points with „Mitglied seit“ for online communities (offline unchanged).
   - The metering point form shows by state: „Aktiv ab (noch nicht beantragt)“ (NEW, editable), „Aktiv ab (beantragt)“
     (INIT, PENDING, APPROVED, read only), „Aktiv ab“ (rejected, invalid, revoked, inactive: editable, the day of the
     next registration) and „Aktiv ab (vom Netzbetreiber gemeldet)“ (active: the activation date, read only). Before
     the activation the field shows and saves `registeredSince`, no longer the activation date. Offline unchanged.
-  - Activating a member: the dialog notes each metering point whose day is before „Mitglied seit“ („es gilt
-    „Mitglied seit““); it does not block. A refusal of the backend now shows its reason in the toast.
+  - Activating a member (online): the dialog notes each selected metering point where „Mitglied seit“ decides the
+    start, i.e. is after its day and after tomorrow („es gilt „Mitglied seit““); it does not block. Adding a metering
+    point to a member shows the same note before saving. A refusal of the backend now shows its reason in the toast.
   - „Zählpunkt aktivieren“ (processes): after choosing the metering point an „Aktiv ab“ field shows its stored day
     (a day already past: tomorrow), with the same bounds, and sends it as `from` of `POST /meteringpoint/{pid}/register`.
+    While the registration is under way (INIT, PENDING, APPROVED) the field shows the stored day read only
+    („Aktiv ab (beantragt)“) and a resend sends no `from`. A reload of the members keeps a changed day.
     The unused calendar remnant of the page is removed.
   - Meter details: an active metering point whose „Aktiv ab“ is still ahead shows „Zählpunkt aktiv ab 01.12.2026“
     instead of „Zählpunkt aktiv“ (the grid operator can report the activation days before; EEG Perg, 28.11.2026).
@@ -61,8 +65,8 @@ this changelog highlights the changes relevant for overview and operations.
   (web 261128-mm5). The default „today“ was a `Date`, which goes out as UTC: between 00:00 and 01:00 (02:00 in
   summer) that is the day before, and the backend keeps the date part. The default is now the local day as
   `YYYY-MM-DD`.
-- **A date chosen with the form date picker went to the backend as the day before** („Mitglied seit“ when creating a
-  member, „Aktiv ab“ of a metering point). The picker put a `Date` of local midnight into the form, which serialises
+- **A date chosen with the form date picker went to the backend as the day before** (web 261128-mm5; „Mitglied seit“
+  when creating a member, „Aktiv ab“ of a metering point). The picker put a `Date` of local midnight into the form, which serialises
   as the UTC time of the day before („01.01.2027“ went out as `2026-12-31T23:00:00.000Z`), and the backend keeps the
   date part. A day picked in the calendar usually kept the time of the shown date and was right; a typed day was
   one day early. The picker now writes the day as `YYYY-MM-DD`, as the other date pickers since 1.0.13.

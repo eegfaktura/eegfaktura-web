@@ -14,7 +14,7 @@ import {selectedTenant} from "../../store/eeg";
 import MeterAddressFormElement from "../core/forms/MeterAddressForm/MeterAddressForm.element";
 import {useOnlineState, useTenant} from "../../store/hook/Eeg.provider";
 import moment from "moment";
-import {tomorrowDay} from "../form/useRegistrationWindow.hook";
+import {memberSinceDecides, memberSinceNote, tomorrowDay} from "../form/useRegistrationWindow.hook";
 import UnsavedChangesGuard, {useConfirmDiscard} from "../core/UnsavedChangesGuard.component";
 
 const AddMeterPaneComponent: FC = () => {
@@ -33,7 +33,7 @@ const AddMeterPaneComponent: FC = () => {
     meteringPoint: "",
     direction: "CONSUMPTION",
     // online: the requested day, tomorrow unless the admin chooses another (platform#272)
-    registeredSince: isOnline ? tomorrowDay() as unknown as Date : moment.utc().toDate(),
+    registeredSince: isOnline ? tomorrowDay() : moment.utc().toDate(),
     partFact: 100,  // as when the member is registered
     // participantState: {activeSince: new Date(Date.now()), inactiveSince: moment.utc([2999, 11, 31]).toDate()} as ParticipantState,
     activationMode: 'ONLINE'
@@ -43,6 +43,11 @@ const AddMeterPaneComponent: FC = () => {
   // onBlur a typed address never became valid (support 25.11.2026). Errors show while typing, as in the edit form.
   const formMethods = useForm<Metering>({mode: 'onChange', defaultValues: meter});
   const {handleSubmit, control, watch, setValue, formState: {errors, isDirty, isValid}, reset} = formMethods
+
+  // the registration starts on „Mitglied seit“ when it is later (platform#272): said before saving, not blocking
+  const registeredSince = watch("registeredSince")
+  const memberSinceNoteText = isOnline && participant && memberSinceDecides(participant.participantSince, registeredSince)
+    ? memberSinceNote(participant.participantSince, registeredSince) : undefined
 
   const {
     setShowAddMeterPane,
@@ -86,6 +91,7 @@ const AddMeterPaneComponent: FC = () => {
             <FormProvider {...formMethods}>
               <MeterFormElement rates={rates} participant={participant}/>
               <MeterAddressFormElement participant={participant} isEditable={true} isOnline={isOnline}/>
+              {memberSinceNoteText && <div className="form-element hint-line">{memberSinceNoteText}</div>}
             </FormProvider>
           </EegPaneTemplate>
         </form>

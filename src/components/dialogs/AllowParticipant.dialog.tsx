@@ -18,23 +18,20 @@ import {trash} from "ionicons/icons";
 import "./AllowParticipant.dialog.scss"
 import {Metering} from "../../models/meteringpoint.model";
 import MeteringPointConfirmElement from "../core/elements/MeteringPointConfirm.element";
-import moment from "moment";
+import {useOnlineState} from "../../store/hook/Eeg.provider";
+import {memberSinceDecides, memberSinceNote} from "../form/useRegistrationWindow.hook";
 
 // the metering points offered for „zulassen“: all selected, registered online (no offline registration since 2026-10-30);
 // a code stored with an earlier offline registration is not sent (empty, as before)
 export const metersToConfirm = (meters: Metering[]): Metering[] =>
   meters.map(m => ({...m, activationCode: '', activationMode: 'ONLINE', enabled: true}))
 
-// The registration starts on the later day of „Aktiv ab“ and „Mitglied seit“ (platform#272): one note per selected
-// metering point whose „Aktiv ab“ is earlier. It does not block, the backend applies the rule.
-export const memberSinceLaterNotes = (participant: EegParticipant, meters: Metering[]): string[] => {
-  if (!participant.participantSince) return []
-  const since = moment(participant.participantSince)
-  return meters
-    .filter(m => m.enabled && m.registeredSince && moment(m.registeredSince).isBefore(since, "day"))
-    .map(m => `${m.meteringPoint}: „Mitglied seit“ (${since.format("DD.MM.YYYY")}) liegt nach „Aktiv ab“ `
-      + `(${moment(m.registeredSince).format("DD.MM.YYYY")}), es gilt „Mitglied seit“.`)
-}
+// The registration starts on the latest of „Aktiv ab“, „Mitglied seit“ and tomorrow (platform#272): one note per
+// selected metering point where „Mitglied seit“ decides. It does not block, the backend applies the rule.
+export const memberSinceLaterNotes = (participant: EegParticipant, meters: Metering[]): string[] =>
+  meters
+    .filter(m => m.enabled && memberSinceDecides(participant.participantSince, m.registeredSince))
+    .map(m => memberSinceNote(participant.participantSince, m.registeredSince, m.meteringPoint))
 
 interface AllowParticipantDialogProps {
   trigger: string;
@@ -49,6 +46,9 @@ const AllowParticipantDialog: FC<AllowParticipantDialogProps> = ({trigger, parti
   const [files, setFiles] = useState<File[]>([])
   // built once when the dialog opens: a re-render of the member pane must not tick an unticked meter again (261030-mm3)
   const [confirmMeters, setConfirmMeters] = useState<Metering[]>([])
+  const isOnline = useOnlineState()
+  const select = (idx: number, enabled: boolean) =>
+    setConfirmMeters(ms => ms.map((m, i) => i === idx ? {...m, enabled} : m))
 
   // const formData = new FormData();
   function confirm() {
@@ -98,10 +98,10 @@ const AllowParticipantDialog: FC<AllowParticipantDialogProps> = ({trigger, parti
         <div>
           <div style={{fontSize: "1.1em", paddingTop: "8px", paddingBottom: "4px", borderBottom: "1px solid var(--ion-color-primary-tint)", marginBottom: "4px"}}>Zählpunkte</div>
           {confirmMeters.map((m, idx) => (
-            <MeteringPointConfirmElement key={idx} m={m}/>
+            <MeteringPointConfirmElement key={idx} m={m} onChange={enabled => select(idx, enabled)}/>
             )
           )}
-          {memberSinceLaterNotes(participant, confirmMeters).map((note, idx) => (
+          {isOnline && memberSinceLaterNotes(participant, confirmMeters).map((note, idx) => (
             <p key={idx} className="member-since-note">{note}</p>
           ))}
         </div>
