@@ -26,6 +26,9 @@ this changelog highlights the changes relevant for overview and operations.
   - „Zählpunkt aktivieren“ (processes): after choosing the metering point an „Aktiv ab“ field shows its stored day
     (a day already past: tomorrow), with the same bounds, and sends it as `from` of `POST /meteringpoint/{pid}/register`.
     The unused calendar remnant of the page is removed.
+  - Meter details: an active metering point whose „Aktiv ab“ is still ahead shows „Zählpunkt aktiv ab 01.12.2026“
+    instead of „Zählpunkt aktiv“ (the grid operator can report the activation days before; EEG Perg, 28.11.2026).
+    Text only: it stays active and green; energy data and the billing check count from „Aktiv ab“ as before.
   - **Needs eegfaktura-backend with the registration window** (`GET /meteringpoint/registration-window`, `from` of
     `register` evaluated, `registeredSince` kept on `create`, bounds checked): deploy the backend first. With an
     older backend the window request fails, the calendar has no upper bound, and nothing checks it.

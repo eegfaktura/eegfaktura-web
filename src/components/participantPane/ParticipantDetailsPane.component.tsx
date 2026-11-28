@@ -49,7 +49,7 @@ import {formatDate} from "../../util/DateFormat.util";
 import {useDeleteParticipantMutation} from "../../store/participant/api";
 import {deleteParticipantErrTxt, withReason} from "../../service/error.text";
 import {useConfirm} from "../core/useConfirm";
-import {processStateText} from "./meterStatusText";
+import {meterActiveText, processStateText} from "./meterStatusText";
 import {useLeaveUnsaved} from "../../store/hook/ParticipantProvider";
 
 type DynamicComponentKey = "memberForm" | "meterForm" | "documentForm" | "invoiceForm" | "participantDocumentForm"
@@ -431,7 +431,7 @@ const ParticipantDetailsPaneComponent: FC = () => {
                       <IonIcon icon={caretForwardOutline} slot="start"></IonIcon>
                       <div>
                         <div
-                          className={"detail-header"}>{`Zählpunkt ${selectedMeter.processState === "ACTIVE" ? "aktiv" : "inaktiv"}`}</div>
+                          className={"detail-header"}>{meterActiveText(selectedMeter)}</div>
                       </div>
                       <IonToggle slot="end" checked={selectedMeter.processState === "ACTIVE"}
                                  disabled={true}></IonToggle>
