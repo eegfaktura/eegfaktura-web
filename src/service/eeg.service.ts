@@ -606,10 +606,10 @@ export class EegService extends EegBaseService {
 
   // the GUI registers online only (decision 2026-10-30): for an online community the backend needs "ONLINE" explicitly
   // (without a mode the request fails); for other communities it ignores the mode. from: the day the registration
-  // starts (platform#272); the backend stores it at the metering point
-  async registerMeteringPoint(tenant: string, participantId: string, meter: string, direction: string, from: Date): Promise<EegEnergyReport> {
+  // starts (platform#272); the backend stores it at the metering point. Without from the backend takes the stored day
+  async registerMeteringPoint(tenant: string, participantId: string, meter: string, direction: string, from?: Date): Promise<EegEnergyReport> {
     const token = await this.lookupToken()
-    const body = {meteringPoint: meter, direction: direction, activationMode: 'ONLINE', from: from.getTime()}
+    const body = {meteringPoint: meter, direction: direction, activationMode: 'ONLINE', ...(from ? {from: from.getTime()} : {})}
     return await fetch(`${API_API_SERVER}/meteringpoint/${participantId}/register`, {
       method: 'POST',
       headers: {

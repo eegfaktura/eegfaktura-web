@@ -58,6 +58,13 @@ describe("registration sends ONLINE without an activation code", () => {
     expect(sentBody()).toEqual({meteringPoint: "AT1", direction: "CONSUMPTION", activationMode: "ONLINE", from: from.getTime()})
   })
 
+  it("without a day no from goes out: the backend takes the stored day", async () => {
+    const service = new EegService({} as AuthService);
+    vi.spyOn(service as any, "lookupToken").mockResolvedValue("token");
+    await service.registerMeteringPoint("RC1", "p1", "AT1", "CONSUMPTION")
+    expect(sentBody()).toEqual({meteringPoint: "AT1", direction: "CONSUMPTION", activationMode: "ONLINE"})
+  })
+
   it("the registration window is read from the backend as local days (platform#272)", async () => {
     fetchMock.mockResolvedValue(ok({from: "2026-11-29", to: "2027-01-13"}))
     const service = new EegService({} as AuthService);
@@ -103,7 +110,8 @@ describe("no offline option in the GUI", () => {
   })
 
   it("process „Zählpunkt aktivieren“ offers neither „Offline-Registrierung“ nor „Aktivierungs-Code“", () => {
-    Api.eegService = {fetchRegistrationWindow: vi.fn().mockResolvedValue({from: new Date(2026, 10, 29)})} as unknown as typeof Api.eegService
+    Api.eegService = new EegService({} as AuthService)
+    vi.spyOn(Api.eegService, "fetchRegistrationWindow").mockResolvedValue({from: new Date(2026, 10, 29), to: new Date(2099, 0, 1)})
     const participant = {id: "p1", firstname: "Max", lastname: "Muster", participantNumber: "1", meters: [meter("AT1")]} as unknown as EegParticipant
     render(<ProcessRegisterMeterComponent eeg={{id: "rc1", communityId: "AT00100000RC1"} as Eeg} meters={participant.meters}
                                           participants={[participant]}
@@ -112,6 +120,7 @@ describe("no offline option in the GUI", () => {
     expect(screen.getByText("Zählpunkt aktivieren")).toBeInTheDocument()
     expect(screen.queryByText(/Offline-Registrierung/)).not.toBeInTheDocument()
     expect(screen.queryByText(/Aktivierungs-Code/)).not.toBeInTheDocument()
+    vi.restoreAllMocks()
   })
 })
 

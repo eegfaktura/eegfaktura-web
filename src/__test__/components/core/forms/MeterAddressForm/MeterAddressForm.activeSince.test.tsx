@@ -4,6 +4,8 @@ import React from "react";
 import {FormProvider, useForm} from "react-hook-form";
 import "../../../../../util/I18n";
 import {Api} from "../../../../../service";
+import {EegService} from "../../../../../service/eeg.service";
+import {AuthService} from "../../../../../service/auth.service";
 import MeterAddressFormElement from "../../../../../components/core/forms/MeterAddressForm/MeterAddressForm.element";
 import {EegContext, EegState} from "../../../../../store/hook/Eeg.provider";
 import {Metering} from "../../../../../models/meteringpoint.model";
@@ -11,20 +13,24 @@ import {registrationDateError} from "../../../../../components/form/useRegistrat
 
 // platform#272: „Aktiv ab“ of an online community is the requested day until the grid operator reports the activation
 
-const HINT = "Ab diesem Tag beantragt eegFaktura die Aktivierung beim Netzbetreiber, höchstens 30 Arbeitstage im Voraus. " +
-  "Manche Netzbetreiber aktivieren nur zu bestimmten Tagen."
+const HINT = "Für diesen Tag wird die Aktivierung beim Netzbetreiber beantragt (frühestens morgen, höchstens 30 " +
+  "Arbeitstage im Voraus). Manche Netzbetreiber aktivieren nur zu bestimmten Tagen."
+const REACTIVATION = "Bei einer erneuten Aktivierung bleibt das Datum der ersten Aktivierung erhalten."
 const ctx = {tenant: "TE100100", eeg: undefined, isAdmin: () => true, isOwner: () => false, isUser: () => false,
   getTenants: () => [], setTenant: () => {}, refresh: async () => 1} as unknown as EegState
 
 const regWindow = {from: new Date(2026, 10, 27), to: new Date(2027, 0, 13)}
-let fetchWindow: ReturnType<typeof vi.fn>
+let fetchWindow: ReturnType<typeof vi.spyOn>
 beforeEach(() => {
-  fetchWindow = vi.fn().mockResolvedValue(regWindow)
-  Api.eegService = {fetchRegistrationWindow: fetchWindow} as unknown as typeof Api.eegService
+  Api.eegService = new EegService({} as AuthService)
+  fetchWindow = vi.spyOn(Api.eegService, "fetchRegistrationWindow").mockResolvedValue(regWindow)
 })
-afterEach(() => cleanup())
+afterEach(() => {
+  cleanup()
+  vi.restoreAllMocks()
+})
 
-const setup = (online: boolean, processState: string, registeredSince = "2026-12-01") => {
+const setup = (online: boolean, processState: string | undefined, registeredSince = "2026-12-01") => {
   let form: any
   const Form = () => {
     const methods = useForm<Metering>({mode: "onChange", defaultValues: {processState, status: "INIT", registeredSince,
@@ -61,7 +67,26 @@ describe("„Aktiv ab“ per state of the metering point", () => {
     expect(field().getAttribute("name")).toBe(name)
     expect(field().getAttribute("label")).toBe(label)
     expect(field().disabled).toBe(readOnly)
-    expect(!!screen.queryByText(HINT)).toBe(hint)
+    expect(!!screen.queryByText(HINT, {exact: false})).toBe(hint)
+  })
+
+  it("a new metering point without a state is not yet requested", async () => {
+    const {field} = setup(true, undefined)
+    await flush()
+    expect(field().getAttribute("name")).toBe("registeredSince")
+    expect(field().getAttribute("label")).toBe("Aktiv ab (noch nicht beantragt)")
+  })
+
+  it.each(["INACTIVE", "REVOKED"])("%s: the hint says that a re-activation keeps the first date", async (state) => {
+    setup(true, state)
+    await flush()
+    expect(screen.getByText(`${HINT} ${REACTIVATION}`)).toBeTruthy()
+  })
+
+  it.each(["NEW", "REJECTED", "INVALID"])("%s: no re-activation sentence", async (state) => {
+    setup(true, state)
+    await flush()
+    expect(screen.getByText(HINT)).toBeTruthy()
   })
 
   it("shows the requested day, not the activation date, while not active", async () => {
@@ -85,6 +110,12 @@ describe("„Aktiv ab“ per state of the metering point", () => {
 })
 
 describe("„Aktiv ab“ within the window", () => {
+  it("a stored day beyond the window shows the error once the window arrives", async () => {
+    const {container} = setup(true, "NEW", "2027-02-01")
+    await flush()
+    expect(container.querySelector(".error-line")?.textContent).toBe("Höchstens 30 Arbeitstage im Voraus, also bis 13.01.2027.")
+  })
+
   const typeAndLeave = async (input: Element, value: string) => {
     await act(async () => {
       (input as any).value = value

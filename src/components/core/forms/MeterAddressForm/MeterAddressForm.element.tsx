@@ -1,5 +1,4 @@
-import React, {FC, useEffect, useRef, useState} from "react";
-import moment from "moment";
+import React, {FC, useEffect, useState} from "react";
 import {useFormContext} from "react-hook-form";
 import {Metering} from "../../../../models/meteringpoint.model";
 import {EegParticipant} from "../../../../models/members.model";
@@ -11,10 +10,7 @@ import {useAccessGroups, useTenant} from "../../../../store/hook/Eeg.provider";
 
 import DatePickerFormElement from "../../../form/DatePickerForm.element";
 import {useLocale} from "../../../../store/hook/useLocale";
-import {registrationDateError, useRegistrationWindow} from "../../../form/useRegistrationWindow.hook";
-
-// the registration is on its way: a changed day would not reach it any more (platform#272)
-const REQUESTED_STATES = ["INIT", "PENDING", "APPROVED"]
+import {REQUESTED_STATES, useRegistrationDateRule} from "../../../form/useRegistrationWindow.hook";
 
 interface MeterAddressFormElementProps {
   participant?: EegParticipant
@@ -31,32 +27,30 @@ const MeterAddressFormElement: FC<MeterAddressFormElementProps> = ({
                                                                      onChange,
                                                                    }) => {
   const {t} = useLocale("common")
-  const {control, watch, setValue, formState: {errors, defaultValues}} = useFormContext<Metering>()
+  const {control, watch, setValue, trigger, formState: {errors, defaultValues}} = useFormContext<Metering>()
   const [withOwner, setWithOwner] = useState(false);
   const {isAdmin} = useAccessGroups()
   const {tenant} = useTenant()
 
   // const isEditable = setValue !== undefined
-  const currentMeterProcessState = watch ? watch("processState") : "NEW"
+  // a new metering point without a state counts as not yet requested
+  const currentMeterProcessState = (watch ? watch("processState") : undefined) ?? "NEW"
 
   // „Aktiv ab“ of an online community (platform#272): before the activation it is the requested day (registeredSince),
   // fixed while the registration runs; after it the day the grid operator reported, read only. Offline as before.
   const reported = isOnline && currentMeterProcessState === "ACTIVE"
   const requested = isOnline && REQUESTED_STATES.includes(currentMeterProcessState)
   const choosable = isOnline && !reported && !requested
-  const registrationWindow = useRegistrationWindow(tenant, !!choosable)
-  // the rules read the window of the latest render
-  const windowRef = useRef(registrationWindow)
-  windowRef.current = registrationWindow
-  const day = (d: Date) => moment(d).format("DD.MM.YYYY")
-  const validateRegistrationDate = (value: Date | string) => {
-    const w = windowRef.current
-    switch (registrationDateError(value, w, defaultValues?.registeredSince as Date | undefined)) {
-      case "before": return t("meteringPoint-active-since_before", {date: day(w.from)})
-      case "after": return t("meteringPoint-active-since_after", {date: day(w.to!)})
-      default: return true
-    }
-  }
+  const {window: registrationWindow, validate: validateRegistrationDate} =
+    useRegistrationDateRule(tenant, !!choosable, defaultValues?.registeredSince)
+  // the window can arrive after the day was filled in
+  useEffect(() => {
+    if (choosable && registrationWindow.to) trigger("registeredSince")
+  }, [registrationWindow])
+  // a re-activation keeps the date of the first activation (concept, Fachliche Logik 6)
+  const hint = currentMeterProcessState === "INACTIVE" || currentMeterProcessState === "REVOKED"
+    ? `${t("meteringPoint-active-since_hint")} ${t("meteringPoint-active-since_hint_reactivation")}`
+    : t("meteringPoint-active-since_hint")
   const activeSinceLabel = reported ? t("meteringPoint-active-since_reported")
     : requested ? t("meteringPoint-active-since_requested")
       : isOnline && currentMeterProcessState === "NEW" ? t("meteringPoint-active-since_not-requested")
@@ -129,10 +123,11 @@ const MeterAddressFormElement: FC<MeterAddressFormElementProps> = ({
           <DatePickerFormElement key="registeredSince" control={control} name={"registeredSince"} label={activeSinceLabel}
                                  placeholder={t("date")} error={errors?.registeredSince} onChangeDate={_onChange}
                                  disabled={requested}
-                                 rules={choosable ? {validate: validateRegistrationDate} : undefined}
+                                 // always a rule: react-hook-form keeps a rule that is left out
+                                 rules={{validate: choosable ? validateRegistrationDate : () => true}}
                                  minDate={choosable ? registrationWindow.from : undefined}
                                  maxDate={choosable ? registrationWindow.to : undefined}
-                                 hint={choosable ? t("meteringPoint-active-since_hint") : undefined}/> :
+                                 hint={choosable ? hint : undefined}/> :
           <DatePickerFormElement key="activeSince" control={control} name={"participantState.activeSince"} label={activeSinceLabel}
                                  placeholder={t("date")} error={errors?.registeredSince} onChangeDate={_onChange}
                                  disabled={reported}/>

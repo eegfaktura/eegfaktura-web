@@ -1,4 +1,4 @@
-import {describe, expect, it, vi} from "vitest";
+import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import {act, fireEvent, screen} from "@testing-library/react";
 import React from "react";
 import {MemoryRouter} from "react-router";
@@ -20,9 +20,15 @@ import AddMeterPaneComponent from "../../../components/participantPane/AddMeterP
 import {ParticipantContext} from "../../../store/hook/ParticipantProvider";
 import {initialState as participantInitial} from "../../../store/participant/states/participant.state";
 import {Api} from "../../../service";
+import {EegService} from "../../../service/eeg.service";
+import {AuthService} from "../../../service/auth.service";
 
 // the window of „Aktiv ab“ (platform#272) is not part of this test
-Api.eegService = {fetchRegistrationWindow: vi.fn().mockResolvedValue({from: new Date(2026, 10, 29)})} as unknown as typeof Api.eegService
+beforeEach(() => {
+  Api.eegService = new EegService({} as AuthService)
+  vi.spyOn(Api.eegService, "fetchRegistrationWindow").mockResolvedValue({from: new Date(2026, 10, 29), to: new Date(2099, 0, 1)})
+})
+afterEach(() => vi.restoreAllMocks())
 
 const participant = {id: "p1", firstname: "Anna", lastname: "Muster",
   billingAddress: {street: "Weg", streetNumber: "1", zip: "4020", city: "Linz"}} as any

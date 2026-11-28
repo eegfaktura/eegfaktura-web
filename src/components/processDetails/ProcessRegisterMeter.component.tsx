@@ -1,4 +1,4 @@
-import React, {FC, useEffect, useRef, useState} from "react";
+import React, {FC, useEffect, useState} from "react";
 import {IonButton, IonItem} from "@ionic/react";
 import moment from "moment";
 import InputForm from "../form/InputForm.component";
@@ -19,7 +19,7 @@ import {useProcessFeedback} from "./useProcessFeedback";
 import {useConfirm} from "../core/useConfirm";
 import {registerSummary} from "./ProcessConfirm.functions";
 import DatePickerFormElement from "../form/DatePickerForm.element";
-import {registrationDateError, tomorrowDay, useRegistrationWindow} from "../form/useRegistrationWindow.hook";
+import {REQUESTED_STATES, tomorrow, useRegistrationDateRule} from "../form/useRegistrationWindow.hook";
 
 interface ProcessValues {
   communityId: string | undefined
@@ -69,34 +69,27 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
   const holders = (mp: string) => participants.filter(p => p.meters.some(m => m.meteringPoint === mp))
   const chosenMeter = participants.find(p => p.id === participantId)?.meters.find(m => m.meteringPoint === meteringPoint)
 
-  const registrationWindow = useRegistrationWindow(eeg.id.toUpperCase(), true)
-  // the rules read the window of the latest render
-  const windowRef = useRef(registrationWindow)
-  windowRef.current = registrationWindow
-  const day = (d: Date) => moment(d).format("DD.MM.YYYY")
-  const validateRegistrationDate = (value: string | undefined) => {
-    const w = windowRef.current
-    switch (registrationDateError(value, w)) {
-      case "before": return t("meteringPoint-active-since_before", {date: day(w.from)})
-      case "after": return t("meteringPoint-active-since_after", {date: day(w.to!)})
-      default: return !!value
-    }
-  }
+  // a registration under way keeps its day: shown read only, a resend asks for the stored day (backend: 1209 for
+  // another day)
+  const requested = !!chosenMeter && REQUESTED_STATES.includes(chosenMeter.processState)
+  const {window: registrationWindow, validate: validateRegistrationDate} =
+    useRegistrationDateRule(eeg.id.toUpperCase(), true)
   // the window can arrive after the day was filled in
   useEffect(() => {
-    if (chosenMeter) trigger('registrationDate')
+    if (chosenMeter && !requested) trigger('registrationDate')
   }, [registrationWindow])
 
-  // the field shows the day stored at the chosen metering point; a day already past counts as tomorrow
+  // the field shows the day stored at the chosen metering point; a day already past counts as tomorrow, unless the
+  // registration is under way. Only another choice fills it again: a reload of the members keeps the input
   useEffect(() => {
     if (!chosenMeter) {
       setValue('registrationDate', undefined)
       return
     }
     const stored = chosenMeter.registeredSince ? moment(chosenMeter.registeredSince) : undefined
-    setValue('registrationDate', stored && !stored.isBefore(moment().add(1, "day"), "day")
-      ? stored.format("YYYY-MM-DD") : tomorrowDay(), {shouldValidate: true})
-  }, [chosenMeter])
+    const day = stored && (requested || !stored.isBefore(tomorrow(), "day")) ? stored : moment(tomorrow())
+    setValue('registrationDate', day.format("YYYY-MM-DD"), {shouldValidate: true})
+  }, [participantId, meteringPoint])
 
   useEffect(() => {
     if (meteringPoint && !participantId) {
@@ -130,8 +123,9 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
         // goes to the grid operator: ask first; the submit button stays disabled while the dialog is open
         const member = JoinStrings(" ", "-", p.participantNumber, (p.lastname ? p.lastname : ""), p.firstname)
         if (!await confirm(edaProcess.name, registerSummary(data.meteringPoint, member), "Senden")) return
-        return Api.eegService.registerMeteringPoint(eeg.id.toUpperCase(), p.id, data.meteringPoint, meter.direction,
-          moment(data.registrationDate, "YYYY-MM-DD").toDate())
+        const from = REQUESTED_STATES.includes(meter.processState) || !data.registrationDate ? undefined
+          : moment(data.registrationDate, "YYYY-MM-DD").toDate()
+        return Api.eegService.registerMeteringPoint(eeg.id.toUpperCase(), p.id, data.meteringPoint, meter.direction, from)
           .then(() => {
             sent()
             reset()
@@ -175,11 +169,15 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
                                     }
                                   })} label={t("metering")} rules={{required: true}}/>
             {chosenMeter &&
-              <DatePickerFormElement control={control} name={"registrationDate"} label={t("meteringPoint-active-since")}
+              <DatePickerFormElement key={requested ? "requested" : "choosable"} control={control} name={"registrationDate"}
+                                     label={requested ? t("meteringPoint-active-since_requested") : t("meteringPoint-active-since")}
                                      placeholder={t("date")} error={formState.errors.registrationDate}
-                                     rules={{validate: validateRegistrationDate}}
-                                     minDate={registrationWindow.from} maxDate={registrationWindow.to}
-                                     hint={t("meteringPoint-active-since_hint")}/>}
+                                     disabled={requested}
+                                     // always both rules: react-hook-form keeps a rule that is left out
+                                     rules={{required: !requested, validate: requested ? () => true : validateRegistrationDate}}
+                                     minDate={requested ? undefined : registrationWindow.from}
+                                     maxDate={requested ? undefined : registrationWindow.to}
+                                     hint={requested ? undefined : t("meteringPoint-active-since_hint")}/>}
 
             <IonItem lines="none" style={{zIndex: "0"}}>
               <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={!formState.isValid || formState.isSubmitting}>
