@@ -135,7 +135,8 @@ const EegPage: FC = () => {
                   <SelectForm name={"legal"} label={t("common-info.legal.label")} control={control} options={[
                     {key: "verein", value: t("common-info.legal.verein")},
                     {key: "genossenschaft", value: t("common-info.legal.genossenschaft")},
-                    {key: "gesellschaft", value: t("common-info.legal.gesellschaft")}]}
+                    {key: "gesellschaft", value: t("common-info.legal.gesellschaft")},
+                    {key: "keine", value: t("common-info.legal.keine")}]}
                               placeholder={t("common-info.legal.placeholder")} disabled={!isAdmin()}/>
                   <InputFormComponent name={"description"} label={t("common-info.description")} control={control}
                                       rules={{

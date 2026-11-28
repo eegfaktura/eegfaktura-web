@@ -177,6 +177,7 @@
       "verein": "Verein",
       "genossenschaft": "Genossenschaft",
       "gesellschaft": "Gesellschaft",
+      "keine": "Keine",
       "placeholder": "Rechtsform"
     },
     "description": "EEG Bezeichnung",
