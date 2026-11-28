@@ -179,11 +179,11 @@ const EegPage: FC = () => {
                                       rules={{}}
                                       type="text"
                                       onChangePartial={onChangeField("gridOperator")}
-                                      readonly={false}/>
+                                      readonly={!isAdmin()}/>
                   <InputFormComponent name={"operatorName"} label={t("grid-operator.name")} control={control} rules={{}}
                                       type="text"
                                       onChangePartial={onChangeField("operatorName")}
-                                      readonly={false}/>
+                                      readonly={!isAdmin()}/>
                 </IonCard>
               </div>
               {isAdmin() &&

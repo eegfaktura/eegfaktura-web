@@ -1,5 +1,5 @@
 import React, {FC, useRef, useState} from "react";
-import {IonButton, IonIcon, useIonToast} from "@ionic/react";
+import {IonButton, IonIcon, IonText, useIonToast} from "@ionic/react";
 import {mailOutline} from "ionicons/icons";
 import {BillingRun} from "../../models/meteringpoint.model";
 import {reformatDateTimeStamp} from "../../util/Helper.util";
@@ -19,6 +19,11 @@ export const documentCount = (totals: BillingTotals | undefined) =>
 // then and says why. Only "FAILED" (no send reported success) can be sent again. Before the send it asks and names the number of mails (one per document; the count comes from the
 // documents loaded for the totals, undefined while they load).
 const FAILED_HINT = "Der Mailserver hat beim letzten Versand keine E-Mail bestätigt. Einzelne können trotzdem angekommen sein."
+
+// billing sent the default text because the EEG's own text of „Rechnung / Gutschrift“ could not be used (platform#280);
+// only for a sent run (as billing sets it); the reload after the send shows it at once
+export const TEMPLATE_FALLBACK_HINT = "Beim Versand konnte euer eigener Mailtext nicht verwendet werden, die Mails "
+  + "gingen mit dem Standardtext hinaus. Bitte den Text „Rechnung / Gutschrift“ unter „E-Mail-Texte“ auf der Seite eurer Gemeinschaft prüfen."
 
 const mailCount = (documentCount: number | undefined) => documentCount === undefined
   ? "alle Abrechnungsdokumente"
@@ -93,6 +98,8 @@ const BillingSendButton: FC<BillingSendButtonProps> = ({tenant, run, documentCou
         {state.label}
       </IonButton>
       {state.hint && <div style={{fontSize: "0.85em"}}>{state.hint}</div>}
+      {run.mailStatus === "SENT" && run.mailTemplateFallback &&
+        <IonText color="warning"><div style={{fontSize: "0.85em"}}>{TEMPLATE_FALLBACK_HINT}</div></IonText>}
     </>
   )
 }

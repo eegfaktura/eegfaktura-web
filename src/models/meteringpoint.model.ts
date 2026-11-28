@@ -100,6 +100,8 @@ export interface BillingRun {
   sepaStatusDateTime: string;
   numberOfInvoices: string;
   numberOfCreditNotes: string;
+  // billing: the last mail run sent the default text, the EEG's own text could not be used (platform#280)
+  mailTemplateFallback?: boolean;
 }
 
 //@TODO: Refactor diesen Type --> billing.model.ts (o.ä.)
