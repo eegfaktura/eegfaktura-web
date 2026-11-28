@@ -305,11 +305,3 @@ export const zvtTimeWindows = (tariff?: EegTariff): TariffTimeWindow[] | undefin
 export const zvtWithoutActiveWindow = (tariff?: Partial<EegTariff>): boolean =>
   !!tariff && !!tariff.useTimeTariff && (tariff.type === "EZP" || tariff.type === "VZP")
   && zvtTimeWindows(tariff as EegTariff) === undefined
-
-// Key over the time windows of the time-based tariffs that metering points use: changes when such a tariff becomes
-// time-based or its windows change, so the energy report (it carries the buckets billing needs) is fetched again.
-// Constant for EEGs without time-based tariffs and for unused tariffs, so other tariff edits do not fetch again.
-export const zvtWindowsKey = (tariffById: Record<string, EegTariff>, usedTariffIds: Iterable<string>): string =>
-  JSON.stringify(Array.from(new Set(usedTariffIds)).sort()
-    .map(id => [id, zvtTimeWindows(tariffById[id])])
-    .filter(([, windows]) => windows !== undefined))

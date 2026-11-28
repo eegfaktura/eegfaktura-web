@@ -18,6 +18,21 @@ this changelog highlights the changes relevant for overview and operations.
   protocol. Needs eegfaktura-billing with the run field `mailTemplateFallback`; with an
   older billing the field is missing and no hint shows.
 
+### Changed
+- **Energy report and dashboard charts load again only when their request changes** (performance). For a large
+  community the energy report takes several seconds. It loaded again on every change of a member or metering point
+  (name, participation factor, tariff, …), and the dashboard charts did as well. The report now loads again only when
+  the community, the period, the metering points (added, removed, direction, active range) or the ZVT time windows of
+  their tariffs change; the dashboard charts when the community, the period or the metering points change. A refresh
+  and „Erneut versuchen“ load as before. Selecting the same period again or editing member data no longer loads the
+  report again: energy data that arrived meanwhile shows after a refresh or a period change.
+- **Cache headers from Caddy** (performance). Scripts and style sheets of the build (`/assets/<name>-<hash>.js|css`)
+  are sent with `Cache-Control: public, max-age=31536000, immutable`; the browser loads them once per release.
+  Everything else is sent with `Cache-Control: no-cache`: `manifest.json` and the unhashed icons and images under
+  `/assets` are revalidated (304 if unchanged); `index.html`, the SPA routes and `/config/keycloak-config.json` are
+  small and loaded again on every visit (they are rendered as templates, so they carry no ETag). A missing file under
+  `/assets` stays a 404 (no `index.html` fallback there).
+
 ### Fixed
 - **Member list: metering points with „Anmeldung gesendet“ (INIT) and „Zustimmung erteilt“ (APPROVED) are orange**
   like the other states of a registration under way (platform#277). They were red. Red now means rejected, revoked
