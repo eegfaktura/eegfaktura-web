@@ -14,6 +14,7 @@ import {selectedTenant} from "../../store/eeg";
 import MeterAddressFormElement from "../core/forms/MeterAddressForm/MeterAddressForm.element";
 import {useOnlineState, useTenant} from "../../store/hook/Eeg.provider";
 import moment from "moment";
+import {tomorrowDay} from "../form/useRegistrationWindow.hook";
 import UnsavedChangesGuard, {useConfirmDiscard} from "../core/UnsavedChangesGuard.component";
 
 const AddMeterPaneComponent: FC = () => {
@@ -31,7 +32,8 @@ const AddMeterPaneComponent: FC = () => {
     participantId: "",
     meteringPoint: "",
     direction: "CONSUMPTION",
-    registeredSince: moment.utc().toDate(),
+    // online: the requested day, tomorrow unless the admin chooses another (platform#272)
+    registeredSince: isOnline ? tomorrowDay() as unknown as Date : moment.utc().toDate(),
     partFact: 100,  // as when the member is registered
     // participantState: {activeSince: new Date(Date.now()), inactiveSince: moment.utc([2999, 11, 31]).toDate()} as ParticipantState,
     activationMode: 'ONLINE'

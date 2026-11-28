@@ -16,6 +16,7 @@ import {EegEnergyReport, SelectedPeriod} from "../models/energy.model";
 import {API_API_SERVER} from "./base.service";
 import {AuthService} from "./auth.service";
 import EegBaseService from "./base.service";
+import moment from "moment";
 
 const BILLING_API_SERVER = import.meta.env.VITE_BILLING_SERVER_URL;
 
@@ -589,11 +590,26 @@ export class EegService extends EegBaseService {
     }).then(this.handleErrors).then(() => undefined);
   }
 
-  // the GUI registers online only (decision 2026-10-30): for an online community the backend needs "ONLINE" explicitly
-  // (without a mode the request fails); for other communities it ignores the mode
-  async registerMeteringPoint(tenant: string, participantId: string, meter: string, direction: string): Promise<EegEnergyReport> {
+  // the days a registration may start (platform#272): tomorrow up to the 30th Austrian working day, computed by the
+  // backend so that web and backend count the holidays alike. The days arrive as "YYYY-MM-DD", here local midnight
+  async fetchRegistrationWindow(tenant: string): Promise<{from: Date, to: Date}> {
     const token = await this.lookupToken()
-    const body = {meteringPoint: meter, direction: direction, activationMode: 'ONLINE'}
+    return await fetch(`${API_API_SERVER}/meteringpoint/registration-window`, {
+      method: 'GET',
+      headers: {
+        ...this.getSecureHeaders(token, tenant),
+        'Accept': 'application/json',
+      },
+    }).then(this.handleErrors).then(res => res.json())
+      .then((w: {from: string, to: string}) => ({from: moment(w.from, "YYYY-MM-DD").toDate(), to: moment(w.to, "YYYY-MM-DD").toDate()}));
+  }
+
+  // the GUI registers online only (decision 2026-10-30): for an online community the backend needs "ONLINE" explicitly
+  // (without a mode the request fails); for other communities it ignores the mode. from: the day the registration
+  // starts (platform#272); the backend stores it at the metering point
+  async registerMeteringPoint(tenant: string, participantId: string, meter: string, direction: string, from: Date): Promise<EegEnergyReport> {
+    const token = await this.lookupToken()
+    const body = {meteringPoint: meter, direction: direction, activationMode: 'ONLINE', from: from.getTime()}
     return await fetch(`${API_API_SERVER}/meteringpoint/${participantId}/register`, {
       method: 'POST',
       headers: {

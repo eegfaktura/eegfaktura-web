@@ -49,6 +49,7 @@ import ProcessRevokeMeteringpointComponent from "../../../components/processDeta
 import ProcessPodListComponent from "../../../components/processDetails/ProcessPodList.component";
 import {renderWithProviders} from "../../test-utils";
 import {fetchParticipantModel} from "../../../store/participant";
+import {tomorrow} from "../../../components/form/useRegistrationWindow.hook";
 
 const eeg = {id: "te100200", rcNumber: "RC100200", communityId: "AT00999900000TC100200000000000001",
   gridOperator: "AT003000", area: "LEA"} as unknown as Eeg
@@ -80,6 +81,7 @@ beforeEach(() => {
   Api.eegService = {
     changeMeterPartitionFactor: vi.fn().mockResolvedValue(undefined),
     registerMeteringPoint: vi.fn().mockResolvedValue({}),
+    fetchRegistrationWindow: vi.fn().mockResolvedValue({from: tomorrow()}),
     syncMeteringPoint: vi.fn().mockResolvedValue({skipped: []}),
     revokeMeteringPoint: vi.fn().mockResolvedValue({}),
     syncMeteringPointList: vi.fn().mockResolvedValue(undefined),
@@ -139,7 +141,7 @@ describe("Zählpunkt anmelden", () => {
     await submit("Anfordern")
     await dismiss("confirm")
     expect(Api.eegService.registerMeteringPoint).toHaveBeenCalledWith("TE100200", "p1", m2.meteringPoint,
-      "CONSUMPTION")
+      "CONSUMPTION", tomorrow())
   })
 })
 
@@ -162,7 +164,7 @@ describe("Zählpunkt anmelden nach Besitzerwechsel", () => {
     await submit("Anfordern")
     expect(alert.mock.lastCall![0].message).toBe(`Zählpunkt ${moved} (337 Neu Carl) online beim Netzbetreiber anmelden?`)
     await dismiss("confirm")
-    expect(Api.eegService.registerMeteringPoint).toHaveBeenCalledWith("TE100200", "p9", moved, "CONSUMPTION")
+    expect(Api.eegService.registerMeteringPoint).toHaveBeenCalledWith("TE100200", "p9", moved, "CONSUMPTION", tomorrow())
   })
 
   it("does not pick a member by itself when two hold the metering point, and lists the number once", async () => {
@@ -191,7 +193,7 @@ describe("Zählpunkt anmelden nach Besitzerwechsel", () => {
     await flush()
     await submit("Anfordern")
     await dismiss("confirm")
-    expect(Api.eegService.registerMeteringPoint).toHaveBeenCalledWith("TE100200", "p9", moved, "CONSUMPTION")
+    expect(Api.eegService.registerMeteringPoint).toHaveBeenCalledWith("TE100200", "p9", moved, "CONSUMPTION", tomorrow())
   })
 })
 

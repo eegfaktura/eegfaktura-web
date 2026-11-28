@@ -18,11 +18,23 @@ import {trash} from "ionicons/icons";
 import "./AllowParticipant.dialog.scss"
 import {Metering} from "../../models/meteringpoint.model";
 import MeteringPointConfirmElement from "../core/elements/MeteringPointConfirm.element";
+import moment from "moment";
 
 // the metering points offered for „zulassen“: all selected, registered online (no offline registration since 2026-10-30);
 // a code stored with an earlier offline registration is not sent (empty, as before)
 export const metersToConfirm = (meters: Metering[]): Metering[] =>
   meters.map(m => ({...m, activationCode: '', activationMode: 'ONLINE', enabled: true}))
+
+// The registration starts on the later day of „Aktiv ab“ and „Mitglied seit“ (platform#272): one note per selected
+// metering point whose „Aktiv ab“ is earlier. It does not block, the backend applies the rule.
+export const memberSinceLaterNotes = (participant: EegParticipant, meters: Metering[]): string[] => {
+  if (!participant.participantSince) return []
+  const since = moment(participant.participantSince)
+  return meters
+    .filter(m => m.enabled && m.registeredSince && moment(m.registeredSince).isBefore(since, "day"))
+    .map(m => `${m.meteringPoint}: „Mitglied seit“ (${since.format("DD.MM.YYYY")}) liegt nach „Aktiv ab“ `
+      + `(${moment(m.registeredSince).format("DD.MM.YYYY")}), es gilt „Mitglied seit“.`)
+}
 
 interface AllowParticipantDialogProps {
   trigger: string;
@@ -89,6 +101,9 @@ const AllowParticipantDialog: FC<AllowParticipantDialogProps> = ({trigger, parti
             <MeteringPointConfirmElement key={idx} m={m}/>
             )
           )}
+          {memberSinceLaterNotes(participant, confirmMeters).map((note, idx) => (
+            <p key={idx} className="member-since-note">{note}</p>
+          ))}
         </div>
       </div>
       <div style={{display: "flex", flexDirection: "row-reverse"}}>

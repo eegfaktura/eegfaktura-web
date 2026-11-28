@@ -1,4 +1,5 @@
-import React, {FC, useEffect, useState} from "react";
+import React, {FC, useEffect, useRef, useState} from "react";
+import moment from "moment";
 import {useFormContext} from "react-hook-form";
 import {Metering} from "../../../../models/meteringpoint.model";
 import {EegParticipant} from "../../../../models/members.model";
@@ -6,10 +7,14 @@ import {IonList, IonListHeader} from "@ionic/react";
 import CheckboxComponent from "../../../form/Checkbox.component";
 import InputForm from "../../../form/InputForm.component";
 import SelectForm from "../../../form/SelectForm.component";
-import {useAccessGroups} from "../../../../store/hook/Eeg.provider";
+import {useAccessGroups, useTenant} from "../../../../store/hook/Eeg.provider";
 
 import DatePickerFormElement from "../../../form/DatePickerForm.element";
 import {useLocale} from "../../../../store/hook/useLocale";
+import {registrationDateError, useRegistrationWindow} from "../../../form/useRegistrationWindow.hook";
+
+// the registration is on its way: a changed day would not reach it any more (platform#272)
+const REQUESTED_STATES = ["INIT", "PENDING", "APPROVED"]
 
 interface MeterAddressFormElementProps {
   participant?: EegParticipant
@@ -26,12 +31,36 @@ const MeterAddressFormElement: FC<MeterAddressFormElementProps> = ({
                                                                      onChange,
                                                                    }) => {
   const {t} = useLocale("common")
-  const {control, watch, setValue, formState: {errors}} = useFormContext<Metering>()
+  const {control, watch, setValue, formState: {errors, defaultValues}} = useFormContext<Metering>()
   const [withOwner, setWithOwner] = useState(false);
   const {isAdmin} = useAccessGroups()
+  const {tenant} = useTenant()
 
   // const isEditable = setValue !== undefined
   const currentMeterProcessState = watch ? watch("processState") : "NEW"
+
+  // „Aktiv ab“ of an online community (platform#272): before the activation it is the requested day (registeredSince),
+  // fixed while the registration runs; after it the day the grid operator reported, read only. Offline as before.
+  const reported = isOnline && currentMeterProcessState === "ACTIVE"
+  const requested = isOnline && REQUESTED_STATES.includes(currentMeterProcessState)
+  const choosable = isOnline && !reported && !requested
+  const registrationWindow = useRegistrationWindow(tenant, !!choosable)
+  // the rules read the window of the latest render
+  const windowRef = useRef(registrationWindow)
+  windowRef.current = registrationWindow
+  const day = (d: Date) => moment(d).format("DD.MM.YYYY")
+  const validateRegistrationDate = (value: Date | string) => {
+    const w = windowRef.current
+    switch (registrationDateError(value, w, defaultValues?.registeredSince as Date | undefined)) {
+      case "before": return t("meteringPoint-active-since_before", {date: day(w.from)})
+      case "after": return t("meteringPoint-active-since_after", {date: day(w.to!)})
+      default: return true
+    }
+  }
+  const activeSinceLabel = reported ? t("meteringPoint-active-since_reported")
+    : requested ? t("meteringPoint-active-since_requested")
+      : isOnline && currentMeterProcessState === "NEW" ? t("meteringPoint-active-since_not-requested")
+        : t("meteringPoint-active-since")
 
   const isTakeOverAddressEnabled = () => participant !== undefined && isEditable
   const disableAddressFields = isTakeOverAddressEnabled() && withOwner
@@ -96,8 +125,18 @@ const MeterAddressFormElement: FC<MeterAddressFormElementProps> = ({
           </>
       }
       {/*{currentMeterProcessState === "ACTIVE" &&*/}
-          <DatePickerFormElement control={control} name={"participantState.activeSince"} label={t("meteringPoint-active-since")}
-                                 placeholder={t("date")} error={errors?.registeredSince} onChangeDate={_onChange}/>
+      {isOnline && !reported ?
+          <DatePickerFormElement key="registeredSince" control={control} name={"registeredSince"} label={activeSinceLabel}
+                                 placeholder={t("date")} error={errors?.registeredSince} onChangeDate={_onChange}
+                                 disabled={requested}
+                                 rules={choosable ? {validate: validateRegistrationDate} : undefined}
+                                 minDate={choosable ? registrationWindow.from : undefined}
+                                 maxDate={choosable ? registrationWindow.to : undefined}
+                                 hint={choosable ? t("meteringPoint-active-since_hint") : undefined}/> :
+          <DatePickerFormElement key="activeSince" control={control} name={"participantState.activeSince"} label={activeSinceLabel}
+                                 placeholder={t("date")} error={errors?.registeredSince} onChangeDate={_onChange}
+                                 disabled={reported}/>
+      }
       {/*}*/}
     </IonList>
   )

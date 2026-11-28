@@ -1,5 +1,6 @@
-import React, {FC, forwardRef, useEffect, useState} from "react";
-import {IonButton, IonInput, IonItem} from "@ionic/react";
+import React, {FC, useEffect, useRef, useState} from "react";
+import {IonButton, IonItem} from "@ionic/react";
+import moment from "moment";
 import InputForm from "../form/InputForm.component";
 import {useForm} from "react-hook-form";
 import {Metering} from "../../models/meteringpoint.model";
@@ -17,11 +18,15 @@ import {useLocale} from "../../store/hook/useLocale";
 import {useProcessFeedback} from "./useProcessFeedback";
 import {useConfirm} from "../core/useConfirm";
 import {registerSummary} from "./ProcessConfirm.functions";
+import DatePickerFormElement from "../form/DatePickerForm.element";
+import {registrationDateError, tomorrowDay, useRegistrationWindow} from "../form/useRegistrationWindow.hook";
 
 interface ProcessValues {
   communityId: string | undefined
   participantId: string | undefined
   meteringPoint: string | undefined
+  // „Aktiv ab“: the day the registration starts, stored at the metering point (platform#272), "YYYY-MM-DD"
+  registrationDate: string | undefined
 }
 
 interface ProcessRegisterMeterComponentProps {
@@ -43,6 +48,7 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
     communityId: eeg.communityId,
     participantId: undefined,
     meteringPoint: undefined,
+    registrationDate: undefined,
   }
 
   const {t} = useLocale("common")
@@ -51,8 +57,8 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
   const {
     handleSubmit, reset,
     control, watch,
-    setValue, formState
-  } = useForm<ProcessValues>({defaultValues: processValues})
+    setValue, formState, trigger
+  } = useForm<ProcessValues>({defaultValues: processValues, mode: "onChange"})
   const [useableMeters, setUsableMeters] = useState<Metering[]>(meters)
   const [meteringPoint, participantId] = watch(['meteringPoint', 'participantId'])
 
@@ -61,6 +67,36 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
   // it; choosing another member clears a metering point it does not hold. Before, the first member by number was
   // taken, which could be the old owner (bug 08.11.2026).
   const holders = (mp: string) => participants.filter(p => p.meters.some(m => m.meteringPoint === mp))
+  const chosenMeter = participants.find(p => p.id === participantId)?.meters.find(m => m.meteringPoint === meteringPoint)
+
+  const registrationWindow = useRegistrationWindow(eeg.id.toUpperCase(), true)
+  // the rules read the window of the latest render
+  const windowRef = useRef(registrationWindow)
+  windowRef.current = registrationWindow
+  const day = (d: Date) => moment(d).format("DD.MM.YYYY")
+  const validateRegistrationDate = (value: string | undefined) => {
+    const w = windowRef.current
+    switch (registrationDateError(value, w)) {
+      case "before": return t("meteringPoint-active-since_before", {date: day(w.from)})
+      case "after": return t("meteringPoint-active-since_after", {date: day(w.to!)})
+      default: return !!value
+    }
+  }
+  // the window can arrive after the day was filled in
+  useEffect(() => {
+    if (chosenMeter) trigger('registrationDate')
+  }, [registrationWindow])
+
+  // the field shows the day stored at the chosen metering point; a day already past counts as tomorrow
+  useEffect(() => {
+    if (!chosenMeter) {
+      setValue('registrationDate', undefined)
+      return
+    }
+    const stored = chosenMeter.registeredSince ? moment(chosenMeter.registeredSince) : undefined
+    setValue('registrationDate', stored && !stored.isBefore(moment().add(1, "day"), "day")
+      ? stored.format("YYYY-MM-DD") : tomorrowDay(), {shouldValidate: true})
+  }, [chosenMeter])
 
   useEffect(() => {
     if (meteringPoint && !participantId) {
@@ -94,7 +130,8 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
         // goes to the grid operator: ask first; the submit button stays disabled while the dialog is open
         const member = JoinStrings(" ", "-", p.participantNumber, (p.lastname ? p.lastname : ""), p.firstname)
         if (!await confirm(edaProcess.name, registerSummary(data.meteringPoint, member), "Senden")) return
-        return Api.eegService.registerMeteringPoint(eeg.id.toUpperCase(), p.id, data.meteringPoint, meter.direction)
+        return Api.eegService.registerMeteringPoint(eeg.id.toUpperCase(), p.id, data.meteringPoint, meter.direction,
+          moment(data.registrationDate, "YYYY-MM-DD").toDate())
           .then(() => {
             sent()
             reset()
@@ -103,20 +140,6 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
       }
     }
   }
-
-  const Component = forwardRef<HTMLIonInputElement, {}>(function CustomInput(p, ref) {
-    return (
-      <IonInput
-        {...p}
-        label={t("button_labels.calendar")}
-        placeholder="Datum wählen"
-        fill="outline"
-        labelPlacement={"floating"}
-        ref={ref}
-      >
-      </IonInput>
-    );
-  });
 
   return (
     <>
@@ -151,6 +174,12 @@ const ProcessRegisterMeterComponent: FC<ProcessRegisterMeterComponentProps> = ({
                                       label: registerMeterLabel(p, t)
                                     }
                                   })} label={t("metering")} rules={{required: true}}/>
+            {chosenMeter &&
+              <DatePickerFormElement control={control} name={"registrationDate"} label={t("meteringPoint-active-since")}
+                                     placeholder={t("date")} error={formState.errors.registrationDate}
+                                     rules={{validate: validateRegistrationDate}}
+                                     minDate={registrationWindow.from} maxDate={registrationWindow.to}
+                                     hint={t("meteringPoint-active-since_hint")}/>}
 
             <IonItem lines="none" style={{zIndex: "0"}}>
               <IonButton slot="end" onClick={handleSubmit(onRequest)} disabled={!formState.isValid || formState.isSubmitting}>

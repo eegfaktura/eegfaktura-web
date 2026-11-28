@@ -2,6 +2,7 @@ import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import {act, fireEvent, render, screen} from "@testing-library/react";
 import React from "react";
 import {EegService} from "../../service/eeg.service";
+import {Api} from "../../service";
 import {ParticipantService} from "../../service/participant.service";
 import {AuthService} from "../../service/auth.service";
 import {Metering} from "../../models/meteringpoint.model";
@@ -49,10 +50,23 @@ describe("registration sends ONLINE without an activation code", () => {
   it("process „Zählpunkt aktivieren“ sends activationMode ONLINE and no activationCode", async () => {
     const service = new EegService({} as AuthService);
     vi.spyOn(service as any, "lookupToken").mockResolvedValue("token");
-    await service.registerMeteringPoint("RC1", "p1", "AT1", "CONSUMPTION")
+    const from = new Date(2027, 0, 8)
+    await service.registerMeteringPoint("RC1", "p1", "AT1", "CONSUMPTION", from)
 
     expect(fetchMock.mock.calls[0][0]).toMatch(/\/meteringpoint\/p1\/register$/)
-    expect(sentBody()).toEqual({meteringPoint: "AT1", direction: "CONSUMPTION", activationMode: "ONLINE"})
+    // from: the day the registration starts, epoch ms of local midnight (platform#272)
+    expect(sentBody()).toEqual({meteringPoint: "AT1", direction: "CONSUMPTION", activationMode: "ONLINE", from: from.getTime()})
+  })
+
+  it("the registration window is read from the backend as local days (platform#272)", async () => {
+    fetchMock.mockResolvedValue(ok({from: "2026-11-29", to: "2027-01-13"}))
+    const service = new EegService({} as AuthService);
+    vi.spyOn(service as any, "lookupToken").mockResolvedValue("token");
+    const w = await service.fetchRegistrationWindow("RC1")
+
+    expect(fetchMock.mock.calls[0][0]).toMatch(/\/meteringpoint\/registration-window$/)
+    expect(fetchMock.mock.calls[0][1].method).toBe("GET")
+    expect(w).toEqual({from: new Date(2026, 10, 29), to: new Date(2027, 0, 13)})
   })
 
   it("„zulassen“ sends every selected metering point with activationMode ONLINE and an empty activationCode", async () => {
@@ -89,6 +103,7 @@ describe("no offline option in the GUI", () => {
   })
 
   it("process „Zählpunkt aktivieren“ offers neither „Offline-Registrierung“ nor „Aktivierungs-Code“", () => {
+    Api.eegService = {fetchRegistrationWindow: vi.fn().mockResolvedValue({from: new Date(2026, 10, 29)})} as unknown as typeof Api.eegService
     const participant = {id: "p1", firstname: "Max", lastname: "Muster", participantNumber: "1", meters: [meter("AT1")]} as unknown as EegParticipant
     render(<ProcessRegisterMeterComponent eeg={{id: "rc1", communityId: "AT00100000RC1"} as Eeg} meters={participant.meters}
                                           participants={[participant]}

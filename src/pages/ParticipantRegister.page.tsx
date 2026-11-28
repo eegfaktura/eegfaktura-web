@@ -26,7 +26,7 @@ import ParticipantRegisterMeterPaneComponent from "../components/ParticipantRegi
 import {FormProvider, useForm} from "react-hook-form";
 import {Metering} from "../models/meteringpoint.model";
 import {RouteComponentProps} from "react-router";
-import {useTenant} from "../store/hook/Eeg.provider";
+import {useOnlineState, useTenant} from "../store/hook/Eeg.provider";
 import moment from "moment/moment";
 import UnsavedChangesGuard from "../components/core/UnsavedChangesGuard.component";
 
@@ -40,6 +40,7 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
   const dispatch = useAppDispatch();
 
   const {tenant} = useTenant()
+  const isOnline = useOnlineState()
   // Vorschlag der nächsten Mitglieds-Nr über ALLE Mitglieder (inkl. archivierte),
   // nicht über die Anzahl der aktiven. `activeParticipantsSelector1.length + 1`
   // recycelte Nummern archivierter Mitglieder und kollidierte mit dem
@@ -138,7 +139,10 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
     data.residentAddress.zip = data.billingAddress.zip
     data.residentAddress.street = data.billingAddress.street
     data.residentAddress.streetNumber = data.billingAddress.streetNumber
-    data.meters = data.meters.map(m => {return {...m, registeredSince: data.participantSince} as Metering})
+    // online: each metering point keeps its requested day (platform#272); offline „Mitglied seit“ counts, as before
+    if (!isOnline) {
+      data.meters = data.meters.map(m => {return {...m, registeredSince: data.participantSince} as Metering})
+    }
     return onRegisterParticipant(data)  // handleSubmit keeps isSubmitting until the save finished
   }
 

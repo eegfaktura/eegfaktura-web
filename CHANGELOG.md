@@ -9,6 +9,26 @@ this changelog highlights the changes relevant for overview and operations.
 ## [Unreleased]
 
 ### Added
+- **„Aktiv ab“ is the requested activation day of an online community** (platform#272, concept konzepte#29). Before,
+  the field did nothing for an online community: the registration started tomorrow or on „Mitglied seit“.
+  - Creating a member, adding a metering point to a member: „Aktiv ab“ is tomorrow unless chosen otherwise and goes
+    to the backend as `registeredSince` (the requested day). The calendar offers tomorrow up to the 30th Austrian
+    working day only; a day typed outside is an error. The bounds come from the new backend endpoint
+    `GET /meteringpoint/registration-window`; until it answers, tomorrow is the lower bound and there is no upper one.
+    A hint under the field says what the day does. Creating a member no longer overwrites `registeredSince` of the
+    metering points with „Mitglied seit“ for online communities (offline unchanged).
+  - The metering point form shows by state: „Aktiv ab (noch nicht beantragt)“ (NEW, editable), „Aktiv ab (beantragt)“
+    (INIT, PENDING, APPROVED, read only), „Aktiv ab“ (rejected, invalid, revoked, inactive: editable, the day of the
+    next registration) and „Aktiv ab (vom Netzbetreiber gemeldet)“ (active: the activation date, read only). Before
+    the activation the field shows and saves `registeredSince`, no longer the activation date. Offline unchanged.
+  - Activating a member: the dialog notes each metering point whose day is before „Mitglied seit“ („es gilt
+    „Mitglied seit““); it does not block. A refusal of the backend now shows its reason in the toast.
+  - „Zählpunkt aktivieren“ (processes): after choosing the metering point an „Aktiv ab“ field shows its stored day
+    (a day already past: tomorrow), with the same bounds, and sends it as `from` of `POST /meteringpoint/{pid}/register`.
+    The unused calendar remnant of the page is removed.
+  - **Needs eegfaktura-backend with the registration window** (`GET /meteringpoint/registration-window`, `from` of
+    `register` evaluated, `registeredSince` kept on `create`, bounds checked): deploy the backend first. With an
+    older backend the window request fails, the calendar has no upper bound, and nothing checks it.
 - **Member list, billing: hint when the mails went out with the default text** (platform#280). When billing could not
   use the community's own text of the mail „Rechnung / Gutschrift“ and sent the default text, an orange line below the
   send button of the sent run says „Beim Versand konnte euer eigener Mailtext nicht verwendet werden, die Mails gingen
