@@ -10,6 +10,11 @@ import {formatDate} from "../../../util/DateFormat.util";
 export const formatHistoryDate = (d: Date) => formatDate(d)
 export const formatHistoryTime = (d: Date) => moment(d).format("HH:mm:ss")
 
+// End of the history range (exclusive, backend#173): 00:00 local time of the day after the last day. Not "+ 24 h":
+// the autumn DST day has 25 hours, +24 h stayed on that day and its messages were missing (web 261128-mm1).
+export const historyRangeEnd = (lastDay: Date) =>
+  new Date(lastDay.getFullYear(), lastDay.getMonth(), lastDay.getDate() + 1).getTime()
+
 const renderTableWithConversationId = (headers: string[], e: EdaHistory[]) => {
   return (
     <div className="ion-padding"

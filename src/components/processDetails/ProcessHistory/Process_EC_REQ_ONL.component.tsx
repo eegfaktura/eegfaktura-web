@@ -5,7 +5,7 @@ import {EdaHistories, Eeg} from "../../../models/eeg.model";
 import PaginationComponent from "../../core/Pagination.component";
 import {EdaHistory, EdaHistoryGroup, EdaResponseCode} from "../../../models/process.model";
 import {EegParticipant} from "../../../models/members.model";
-import {formatHistoryDate, mergeProtocolEntries, renderAccordionBody, REVOKE_PROTOCOLS} from "./ProcessHistory.functions";
+import {formatHistoryDate, historyRangeEnd, mergeProtocolEntries, renderAccordionBody, REVOKE_PROTOCOLS} from "./ProcessHistory.functions";
 
 
 export const Process_EC_REQ_ONL_MY_REQ_ONL:FC<{eeg: Eeg, protocols: string[], participants: EegParticipant[], historyDate:[Date | null, Date | null]}> = ({eeg, protocols, participants, historyDate}) => {
@@ -19,7 +19,7 @@ export const Process_EC_REQ_ONL_MY_REQ_ONL:FC<{eeg: Eeg, protocols: string[], pa
     const [beginDate, endDate] = historyDate
     if (beginDate && endDate) {
       setLoading(true)
-      Api.eegService.getHistories1(eeg.id.toUpperCase(), protocols, beginDate.getTime(), endDate.getTime() + (60 * 60 * 24 * 1000))
+      Api.eegService.getHistories1(eeg.id.toUpperCase(), protocols, beginDate.getTime(), historyRangeEnd(endDate))
         .then(h => getEntriesForProcessId(protocol, h))
         .then(e => convertToGroup(e))
         .then(g => setHistoryGroup(g))

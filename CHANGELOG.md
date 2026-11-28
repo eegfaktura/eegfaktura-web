@@ -46,6 +46,11 @@ this changelog highlights the changes relevant for overview and operations.
   metering point the page refuses too, with „Zuerst einen Zählpunkt hinzufügen.“, as its hint „Jedes Mitglied benötigt
   mindestens einen Zählpunkt.“ says (decided 28.11.2026); before, such a member was created. Only this page changes:
   the master data import and adding or removing metering points of an existing member work as before.
+- **Process history: the last day of the range is complete on the autumn DST day** (pre-existing, web 261128-mm1,
+  found in the review of backend#173). The page asked the backend for the range up to the last day + 24 hours. The
+  day the clocks go back has 25 hours, so a range ending on that day (e.g. 25.10.2026) stopped on the same day, and
+  all messages of that day were missing. The end is now 00:00 of the following calendar day; other days are
+  unchanged.
 
 ## [1.30.0] – 2026-11-28
 
