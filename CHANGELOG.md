@@ -8,6 +8,15 @@ this changelog highlights the changes relevant for overview and operations.
 
 ## [Unreleased]
 
+### Added
+- **Member list, billing: hint when the mails went out with the default text** (platform#280). When billing could not
+  use the community's own text of the mail „Rechnung / Gutschrift“ and sent the default text, a yellow line below the
+  send button says „Euer eigener Mailtext konnte nicht verwendet werden, die Mails gingen mit dem Standardtext hinaus.
+  Bitte den Text „Rechnung / Gutschrift“ unter „E-Mail-Texte“ auf der Seite eurer Gemeinschaft prüfen.“ It shows right
+  after the send (the run is reloaded once, as before) and whenever the run is opened again. Before, billing noted it
+  only in the run's internal mail protocol. Needs eegfaktura-billing with the run field `mailTemplateFallback`; with an
+  older billing the field is missing and no hint shows.
+
 ### Fixed
 - **Member list: metering points with „Anmeldung gesendet“ (INIT) and „Zustimmung erteilt“ (APPROVED) are orange**
   like the other states of a registration under way (platform#277). They were red, the colour of rejected, revoked
