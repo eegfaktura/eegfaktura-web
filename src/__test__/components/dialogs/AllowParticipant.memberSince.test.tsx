@@ -10,8 +10,11 @@ import "../../../util/I18n";
 vi.mock("@ionic/react", async (importOriginal) => {
   const ionic = await importOriginal<typeof import("@ionic/react")>()
   const R = await import("react")
-  // IonModal does not open in jsdom: a stand-in that opens on mount
-  const IonModal = R.forwardRef((props: any, _ref) => {
+  // IonModal does not open in jsdom: a stand-in that opens on mount and dismisses through its ref, as the real one does
+  const IonModal = R.forwardRef((props: any, ref) => {
+    R.useImperativeHandle(ref, () => ({
+      dismiss: async (data?: unknown, role?: string) => props.onWillDismiss?.(new CustomEvent("ionModalWillDismiss", {detail: {data, role}}))
+    }) as any)
     R.useEffect(() => { props.onWillPresent?.(new CustomEvent("ionModalWillPresent")) }, [])
     return R.createElement("div", null, props.children)
   })
@@ -37,7 +40,35 @@ describe("„zulassen“: the note „es gilt „Mitglied seit““ (today 28.1
     cleanup()
     vi.useRealTimers()
   })
-  const setup = () => render(<AllowParticipantDialog trigger="t" participant={participant} meters={meters} onDismiss={vi.fn()}/>)
+  const setup = (onDismiss = vi.fn()) =>
+    render(<AllowParticipantDialog trigger="t" participant={participant} meters={meters} onDismiss={onDismiss}/>)
+  const tick = async (box: HTMLIonCheckboxElement, checked: boolean) => {
+    box.checked = checked
+    await act(async () => { fireEvent(box, new CustomEvent("ionChange", {detail: {checked}})) })
+  }
+  const sent = (onDismiss: ReturnType<typeof vi.fn>) =>
+    (onDismiss.mock.calls[0][1] as Metering[]).map(m => [m.meteringPoint, m.enabled])
+
+  it("an unticked metering point reaches „Zulassen“ with enabled false (W-1)", async () => {
+    online.value = true
+    const onDismiss = vi.fn()
+    const {container} = setup(onDismiss)
+    await tick(container.querySelectorAll("ion-checkbox")[0] as HTMLIonCheckboxElement, false)
+    await act(async () => { fireEvent.click(screen.getByText("Zulassen")) })
+    expect(onDismiss.mock.calls[0][2].detail.role).toBe("confirm")
+    expect(sent(onDismiss)).toEqual([["AT1", false], ["AT2", true]])
+  })
+
+  it("ticked again, it reaches „Zulassen“ with enabled true", async () => {
+    online.value = true
+    const onDismiss = vi.fn()
+    const {container} = setup(onDismiss)
+    const box = container.querySelectorAll("ion-checkbox")[0] as HTMLIonCheckboxElement
+    await tick(box, false)
+    await tick(box, true)
+    await act(async () => { fireEvent.click(screen.getByText("Zulassen")) })
+    expect(sent(onDismiss)).toEqual([["AT1", true], ["AT2", true]])
+  })
 
   it("goes away when the metering point is unticked and comes back when ticked again", async () => {
     online.value = true
