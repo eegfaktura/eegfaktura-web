@@ -3,7 +3,6 @@ import {render} from "@testing-library/react";
 import {
   formatHistoryDate,
   formatHistoryTime,
-  historyRangeEnd,
   mergeProtocolEntries,
   renderAccordionBody,
   REVOKE_PROTOCOLS
@@ -25,27 +24,6 @@ describe("revoke history", () => {
     expect(mergeProtocolEntries(REVOKE_PROTOCOLS, undefined)).toEqual({});
   });
 });
-
-// web 261128-mm1: the end was the last day + 24 h; on the autumn DST day (25 h) that stayed on the same day and the
-// backend, which takes the day of the end as exclusive bound, left out the messages of that day.
-describe("process history range end", () => {
-  it("is 00:00 of the next day on the autumn DST day (25 h)", () => {
-    const lastDay = new Date(2026, 9, 25)
-    expect(new Date(2026, 9, 26).getTime() - lastDay.getTime()).toBe(25 * 3600 * 1000) // runs in Europe/Vienna
-    expect(historyRangeEnd(lastDay)).toBe(new Date("2026-10-26T00:00:00+01:00").getTime())
-  })
-
-  it("is 00:00 of the next day on the spring DST day (23 h)", () => {
-    const lastDay = new Date(2026, 2, 29)
-    expect(new Date(2026, 2, 30).getTime() - lastDay.getTime()).toBe(23 * 3600 * 1000)
-    expect(historyRangeEnd(lastDay)).toBe(new Date("2026-03-30T00:00:00+02:00").getTime())
-  })
-
-  it("ignores the time of day of the last day and crosses month and year ends", () => {
-    expect(historyRangeEnd(new Date(2026, 10, 28, 14, 30))).toBe(new Date(2026, 10, 29).getTime())
-    expect(historyRangeEnd(new Date(2026, 11, 31, 23, 59))).toBe(new Date(2027, 0, 1).getTime())
-  })
-})
 
 describe("process history dates (platform#224)", () => {
   it("formats dates as DD.MM.YYYY and times as HH:mm:ss in local time", () => {

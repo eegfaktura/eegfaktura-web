@@ -56,6 +56,12 @@ this changelog highlights the changes relevant for overview and operations.
   without a check for answers, rejections and revocations, so one such message threw, and the whole list of the
   process stayed empty. Such a message now counts as one without entries (no metering point, response code „-“);
   the other entries show.
+- **Members active in a period: a period ending on the autumn DST day ends at 00:00 of the next day** (pre-existing,
+  web 261128-mm3, found in the review of #313). The filter of the members and metering points active in a period
+  (member list, reports, export) compared with the last day + 24 hours, which stays on the same day when that day
+  has 25 hours (e.g. a month ending on 31.10.2027). It now uses 00:00 of the following calendar day, like the process
+  history. The dates from the backend are read as 00:00 UTC, so with them the result does not change; only dates set
+  in local time in the page could fall into the missing hour.
 
 ## [1.30.0] – 2026-11-28
 
