@@ -70,7 +70,9 @@ const ParticipantRegisterPage: FC<RouteComponentProps> = ({history}) => {
   const selectedParticipant: EegParticipant = {
     id: '',
     participantNumber: nextParticipantNumber,
-    participantSince: new Date(),
+    // today as "YYYY-MM-DD": a Date goes out as UTC, between 00:00 and 01:00/02:00 that is the day before, and the
+    // backend keeps the date part (web 261128-mm5)
+    participantSince: moment().format("YYYY-MM-DD") as unknown as EegParticipant["participantSince"],
     firstname: '',
     lastname: '',
     status: 'NEW',

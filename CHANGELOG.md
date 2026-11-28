@@ -57,6 +57,10 @@ this changelog highlights the changes relevant for overview and operations.
   `/assets` stays a 404 (no `index.html` fallback there).
 
 ### Fixed
+- **„Mitglied seit“ of a new member was the day before when the form was opened shortly after midnight**
+  (web 261128-mm5). The default „today“ was a `Date`, which goes out as UTC: between 00:00 and 01:00 (02:00 in
+  summer) that is the day before, and the backend keeps the date part. The default is now the local day as
+  `YYYY-MM-DD`.
 - **A date chosen with the form date picker went to the backend as the day before** („Mitglied seit“ when creating a
   member, „Aktiv ab“ of a metering point). The picker put a `Date` of local midnight into the form, which serialises
   as the UTC time of the day before („01.01.2027“ went out as `2026-12-31T23:00:00.000Z`), and the backend keeps the
