@@ -15,6 +15,11 @@ this changelog highlights the changes relevant for overview and operations.
   the community, the period, the metering points (added, removed, direction, active range) or the ZVT time windows of
   their tariffs change; the dashboard charts when the community, the period or the metering points change. A refresh
   and „Erneut versuchen“ load as before.
+- **Cache headers from Caddy** (performance). Scripts and style sheets of the build (`/assets/<name>-<hash>.js|css`)
+  are sent with `Cache-Control: public, max-age=31536000, immutable`; the browser loads them once per release.
+  Everything else – `index.html`, the SPA routes, `/config/keycloak-config.json`, `manifest.json` and the unhashed
+  icons and images under `/assets` – is sent with `Cache-Control: no-cache` and revalidated on every load. A missing
+  file under `/assets` stays a 404 (no `index.html` fallback there).
 
 ## [1.30.0] – 2026-11-28
 
