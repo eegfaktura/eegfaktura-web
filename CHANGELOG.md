@@ -12,6 +12,8 @@ this changelog highlights the changes relevant for overview and operations.
 - **Member list: metering points with „Anmeldung gesendet“ (INIT) and „Zustimmung erteilt“ (APPROVED) are orange**
   like the other states of a registration under way (platform#277). They were red, the colour of rejected, revoked
   and invalid metering points.
+- **EEG page: „Netzbetreiber-ID“ and „Netzbetreiber-Name“ are read only for non-admins**, like the other fields of the
+  page (platform#281). They could be typed into, but the backend rejected the change, so nothing was saved.
 
 ## [1.30.0] – 2026-11-28
 
